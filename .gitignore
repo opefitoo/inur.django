@@ -1,0 +1,8 @@
+venv
+*.pyc
+staticfiles
+.project
+.pydevproject
+.settings
+.dump
+
