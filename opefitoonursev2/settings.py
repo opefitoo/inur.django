@@ -77,6 +77,9 @@ WSGI_APPLICATION = 'opefitoonursev2.wsgi.application'
 import dj_database_url
 DATABASES['default'] =  dj_database_url.config()
 
+# Enable Connection Pooling
+DATABASES['default']['ENGINE'] = 'django_postgrespool'
+
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -121,24 +124,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-## got from inet: http://kencochrane.net/blog/2011/11/developers-guide-for-running-django-apps-on-heroku/
-import os, sys, urlparse
-urlparse.uses_netloc.append('postgres')
-urlparse.uses_netloc.append('mysql')
-try:
-    if os.environ.has_key('DATABASE_URL'):
-        url = urlparse.urlparse(os.environ['DATABASE_URL'])
-        DATABASES['default'] = {
-            'NAME':     url.path[1:],
-            'USER':     url.username,
-            'PASSWORD': url.password,
-            'HOST':     url.hostname,
-            'PORT':     url.port,
-        }
-        if url.scheme == 'postgres':
-            DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql_psycopg2'
-        if url.scheme == 'mysql':
-            DATABASES['default']['ENGINE'] = 'django.db.backends.mysql'
-except:
-    print "Unexpected error:", sys.exc_info()
+# Simplified static file serving.
+# https://warehouse.python.org/project/whitenoise/
+
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
