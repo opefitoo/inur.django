@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'opefitoonursev2',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -76,7 +77,7 @@ WSGI_APPLICATION = 'opefitoonursev2.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 # Parse database configuration from $DATABASE_URL
 import dj_database_url
-DATABASES = {'default': dj_database_url.config(default='postgres://localhost')}
+DATABASES = {'default': dj_database_url.config(default='postgres://postgres:postgres@localhost:5432/nurse')}
 
 # Enable Connection Pooling
 DATABASES['default']['ENGINE'] = 'django_postgrespool'
@@ -130,3 +131,14 @@ STATIC_URL = '/static/'
 
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
+# define the lookup channels in use on the site
+AJAX_LOOKUP_CHANNELS = {
+    #  simple: search Person.objects.filter(name__icontains=q)
+    # 'patient'  : {'model': 'invoices.patient', 'search_field': 'name'},
+    # define a custom lookup channel
+    #'patientsamoi'   : ('lookups', 'PatientLookup'),
+    'patient_du_mois': ('opefitoonursev2.lookups', 'PatientDuMoisLookup'),
+    'private_patient_a_facturer': ('opefitoonursev2.lookups', 'PrivatePatientDuMoisLookup'),
+    'patient'   : ('opefitoonursev2.lookups', 'PatientLookup'),
+    'carecode'   : ('opefitoonursev2.lookups', 'CareCodeLookup'),
+}

@@ -5,4 +5,6 @@ staticfiles
 .pydevproject
 .settings
 .dump
+.idea
+db.sqlite*
 
