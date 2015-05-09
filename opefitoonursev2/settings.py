@@ -98,15 +98,6 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
 
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
@@ -132,7 +123,7 @@ STATIC_URL = '/static/'
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 # define the lookup channels in use on the site
-AJAX_LOOKUP_CHANNELS = {
+A   JAX_LOOKUP_CHANNELS = {
     #  simple: search Person.objects.filter(name__icontains=q)
     # 'patient'  : {'model': 'invoices.patient', 'search_field': 'name'},
     # define a custom lookup channel
