@@ -123,7 +123,7 @@ STATIC_URL = '/static/'
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 # define the lookup channels in use on the site
-A   JAX_LOOKUP_CHANNELS = {
+AJAX_LOOKUP_CHANNELS = {
     #  simple: search Person.objects.filter(name__icontains=q)
     # 'patient'  : {'model': 'invoices.patient', 'search_field': 'name'},
     # define a custom lookup channel
