@@ -2,7 +2,7 @@
 
 import datetime
 
-from models import Patient, InvoiceItem
+from models import Patient, InvoiceItem, Prestation
 
 
 def previous_months_invoices_october(modeladmin, request, queryset):
@@ -27,5 +27,27 @@ def previous_months_invoices_october(modeladmin, request, queryset):
                                   invoice_paid=False)
         invoiceitem.clean()
         invoiceitem.save()
-        invoice_counters  = invoice_counters + 1 
-    
+        invoice_counters  = invoice_counters + 1
+
+def create_invoice(modeladmin, request, queryset):
+
+    #response = HttpResponse(content_type='text')
+
+    not_invoiced_prestas = Prestation.objects.raw("select p.id,p.patient_id,p.carecode_id,p.date" +
+                            " from invoices_prestation p " +
+                            "left join invoices_invoiceitem_prestations ip on p.id = ip.prestation_id " +
+                            "where ip.prestation_id is NULL")
+    from collections import defaultdict
+    prestations_to_invoice = defaultdict(list)
+    for p in queryset:
+        if p in not_invoiced_prestas:
+            prestations_to_invoice[p.patient].append(p)
+
+    for k,v in prestations_to_invoice.iteritems():
+        invoiceitem = InvoiceItem(patient=k,
+                                  invoice_date=datetime.datetime.now(),
+                                  invoice_sent=False,
+                                  invoice_paid=False)
+        invoiceitem.save()
+        for prestav in v:
+            invoiceitem.prestations.add(prestav)

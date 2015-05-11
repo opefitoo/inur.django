@@ -19,10 +19,12 @@ class PatientAdmin(admin.ModelAdmin):
 admin.site.register(Patient, PatientAdmin)
     
 class PrestationAdmin(AjaxSelectAdmin):
+    from invaction import create_invoice
     date_hierarchy = 'date'
     list_display = ('patient', 'carecode', 'date')
     search_fields = ['patient__name', 'patient__first_name']
     list_filter = ('patient__name',)
+    actions = [create_invoice]
     form = make_ajax_form( Prestation, {'patient': 'patient', 'carecode' : 'carecode'})
 admin.site.register(Prestation, PrestationAdmin)
         
