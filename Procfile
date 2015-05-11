@@ -1,2 +1,2 @@
-web: gunicorn opefitoonursev2.wsgi --log-file -
+web: gunicorn invoices.wsgi --log-file -
 
