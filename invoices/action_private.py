@@ -200,7 +200,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     
     _pouracquit_signature = Table([["Pour acquit, le:", "Signature et cachet"]], [10*cm, 10*cm], 1*[0.5*cm], hAlign='LEFT')
     
-    _infos_iban = Table([["LU40 0019 2255 7386 6000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    _infos_iban = Table([["LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(Spacer(1, 10))
     elements.append(_infos_iban)
     if prescription_date is not None:
