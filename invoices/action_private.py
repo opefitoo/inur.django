@@ -164,7 +164,10 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
     elements.append(Spacer(1, 18))
-    elements.append(Paragraph("<b>Memoire d'Honoraires Num. %s en date du : %s Ordonnance du %s </b>" %( invoice_number, invoice_date, prescription_date), styles['Center']))
+    if(prescription_date is not None):
+        elements.append(Paragraph("<b>Memoire d'Honoraires Num. %s en date du : %s Ordonnance du %s </b>" %( invoice_number, invoice_date, prescription_date), styles['Center']))
+    else:
+        elements.append(Paragraph("<b>Memoire d'Honoraires Num. %s en date du : %s </b>" %( invoice_number, invoice_date), styles['Center']))
     elements.append(Spacer(1, 18))
 
     elements.append(table)
@@ -200,8 +203,10 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     _infos_iban = Table([["LU40 0019 2255 7386 6000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(Spacer(1, 10))
     elements.append(_infos_iban)
-    
-    _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s Ordonnance du %s " %(invoice_number,prescription_date)]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    if prescription_date is not None:
+        _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s Ordonnance du %s " %(invoice_number,prescription_date)]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    else:
+        _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s " %invoice_number]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append( _infos_iban )
     elements.append(_pouracquit_signature)
     return {"elements" : elements

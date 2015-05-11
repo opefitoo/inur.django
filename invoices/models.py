@@ -187,17 +187,14 @@ class PrivateInvoiceItem(models.Model):
         super(PrivateInvoiceItem, self).save(*args, **kwargs)
         pytz_chicago = pytz.timezone("America/Chicago")
         if self.pk is not None:
-            #import pydevd; pydevd.settrace()
-            prestationsq = Prestation.objects.raw("select prestations.id from invoices_prestation prestations "+ 
+            prestationsq = Prestation.objects.raw("select prestations.id from invoices_prestation prestations "+
                                                   "where prestations.patient_id = %s " %(self.private_patient.pk) + 
                                                   "and prestations.id not in ( " +
                                                   "select pp.prestation_id "+ 
                                                   "from public.invoices_privateinvoiceitem priv, public.invoices_privateinvoiceitem_prestations pp "+
                                                   "group by pp.prestation_id)" )
             for p in prestationsq:
-                normalized_date = pytz_chicago.normalize(p.date)
-                if normalized_date.month == self.invoice_date.month:
-                    self.prestations.add(p)                
+                self.prestations.add(p)
             super(PrivateInvoiceItem, self).save(*args, **kwargs)
     
     def prestations_invoiced(self):
