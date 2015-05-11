@@ -70,7 +70,7 @@ class Migration(migrations.Migration):
                 ('medical_prescription_date', models.DateField(null=True, verbose_name=b'Date ordonnance', blank=True)),
                 ('invoice_sent', models.BooleanField()),
                 ('invoice_paid', models.BooleanField()),
-                ('prestations', models.ManyToManyField(related_name='private_invoice_prestations', null=True, editable=False, to='opefitoonursev2.Prestation', blank=True)),
+                ('prestations', models.ManyToManyField(related_name='private_invoice_prestations', editable=False, to='opefitoonursev2.Prestation', blank=True)),
                 ('private_patient', models.ForeignKey(related_name='private_invoice_patient', to='opefitoonursev2.Patient', help_text=b'choisir parmi ces patients pour le mois precedent')),
             ],
         ),
@@ -82,6 +82,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='invoiceitem',
             name='prestations',
-            field=models.ManyToManyField(related_name='prestations', null=True, editable=False, to='opefitoonursev2.Prestation', blank=True),
+            field=models.ManyToManyField(related_name='prestations', editable=False, to='opefitoonursev2.Prestation', blank=True),
         ),
     ]

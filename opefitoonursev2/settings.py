@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'opefitoonursev2',
+    'ajax_select'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -77,10 +78,11 @@ WSGI_APPLICATION = 'opefitoonursev2.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 # Parse database configuration from $DATABASE_URL
 import dj_database_url
-DATABASES = {'default': dj_database_url.config(default='postgres://postgres:postgres@localhost:5432/nurse')}
+DATABASES = {'default': dj_database_url.config(default='postgres://nursev2:nursev2@localhost:5432/nursev2')}
 
 # Enable Connection Pooling
 DATABASES['default']['ENGINE'] = 'django_postgrespool'
+DATABASES['default']['AUTOCOMMIT'] = True
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
