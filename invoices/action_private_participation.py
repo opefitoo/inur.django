@@ -42,37 +42,12 @@ def pdf_private_invoice(modeladmin, request, queryset):
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
             elements.append(PageBreak())
-    #elements.extend(_build_recap(recapitulatif_data))
     doc.build(elements)
     return response
-
-def _build_recap(recaps):
-    """
-    """
-    elements = []
-    data = []
-    i = 0
-    data.append(("No d'ordre", u"Note no°", u"Nom et prénom", "Montant", u"réservé à la caisse"))
-    total = 0.0
-    for recap in recaps:
-        i+=1
-        data.append((i, recap[0], recap[1], recap[2], ""))
-        total = decimal.Decimal(total) + decimal.Decimal(recap[2])
-    data.append(("", "", u"à reporter", round(total, 2), ""))
-
-    table = Table(data, [2*cm, 2*cm , 8*cm, 3*cm, 3*cm], (i+2)*[0.75*cm] )
-    table.setStyle(TableStyle([('ALIGN',(1,1),(-2,-2),'LEFT'),
-                       ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-                       ('FONTSIZE', (0,0), (-1,-1), 9),
-                       ('BOX', (0,0), (-1,-1), 0.25, colors.black),
-                       ]))
-    elements.append(table)
-    return elements
 
 def _build_invoices(prestations, invoice_number, invoice_date, prescription_date, accident_id, accident_date):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
-    #import pydevd; pydevd.settrace()
     elements = []
     i = 0
     data = []
@@ -83,7 +58,6 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     patientAddress = ''
 
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'CNS', 'Part. Client'))
-    #import pydevd; pydevd.settrace()
     for presta in prestations:
         i+=1
         patientSocNumber = presta.patient.code_sn
@@ -101,9 +75,6 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                      "%10.2f" % (decimal.Decimal(presta.carecode.gross_amount) - decimal.Decimal(presta.net_amount))
                      ))
     
-    #grossTotal = 0
-    #netTotal = 0
-   
     for x in range(len(data)  , 22):
         data.append((x, '', '', '', '', '',''))
             
