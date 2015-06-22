@@ -61,7 +61,7 @@ def _build_recap(recaps):
         total = decimal.Decimal(total) + decimal.Decimal(recap[2])
     data.append(("", "", u"à reporter", round(total, 2), ""))
 
-    table = Table(data, [2*cm, 2*cm , 8*cm, 3*cm, 3*cm], (i+2)*[0.75*cm] )
+    table = Table(data, [2*cm, 3*cm , 7*cm, 3*cm, 3*cm], (i+2)*[0.75*cm] )
     table.setStyle(TableStyle([('ALIGN',(1,1),(-2,-2),'LEFT'),
                        ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
                        ('FONTSIZE', (0,0), (-1,-1), 9),
