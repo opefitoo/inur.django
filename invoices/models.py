@@ -101,12 +101,12 @@ class Prestation(models.Model):
 def get_default_invoice_number():
     #for _last_invoice in InvoiceItem.objects.all().order_by("-invoice_number")[0]:
     try:
-        max1 = int(InvoiceItem.objects.all().order_by("-invoice_number")[0].invoice_number)
+        max1 = int(InvoiceItem.objects.all().order_by("-id")[0].invoice_number)
     except:
         max1 = 0
     #for _last_private_invoice in PrivateInvoiceItem.objects.all().order_by("-invoice_number")[0]:
     try:
-        max2 = int (PrivateInvoiceItem.objects.all().order_by("-invoice_number")[0].invoice_number)
+        max2 = int (PrivateInvoiceItem.objects.all().order_by("-id")[0].invoice_number)
     except:
         max2 = 0
     return max(max1, max2) + 1
