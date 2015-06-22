@@ -54,7 +54,6 @@ def _build_recap(recaps):
     i = 0
     data.append(("No d'ordre", u"Note no°", u"Nom et prénom", "Montant", u"réservé à la caisse"))
     total = 0.0
-    #import pydevd; pydevd.settrace()
     for recap in recaps:
         i+=1
         data.append((i, recap[0], recap[1], recap[2], ""))
