@@ -162,7 +162,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
     elements.append(Spacer(1, 18))
-    elements.append(Paragraph("<b>Memoire d'Honoraires Num. %s en date du : %s</b>" %( invoice_number, invoice_date), styles['Center']))
+    elements.append(Paragraph("Memoire d'Honoraires Num. %s en date du : %s" %( invoice_number, invoice_date), styles['Center']))
     elements.append(Spacer(1, 18))
 
     elements.append(table)
