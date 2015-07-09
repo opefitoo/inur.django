@@ -59,7 +59,7 @@ def previous_months_invoices_december(modeladmin, request, queryset):
     previous_month_patients = Patient.objects.raw("select p.id, p.name, p.first_name " +
                                                   "from public.invoices_patient p, public.invoices_prestation prest " +
                                                   "where p.id = prest.patient_id " +
-                                                  "and prest.date between '2014-12-01'::DATE and '2014-12-31'::DATE " +
+                                                  "and prest.date between '2014-12-01'::DATE and '2015-01-01'::DATE " +
                                                   "and p.private_patient = 'f' " +
                                                   "and (select count(inv.id) from public.invoices_invoiceitem inv " +
                                                   "where inv.invoice_date between '2014-12-01'::DATE and '2014-12-31'::DATE " +
