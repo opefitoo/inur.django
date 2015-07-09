@@ -105,7 +105,7 @@ STATICFILES_DIRS = (
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'LU'
+TIME_ZONE = 'Europe/Luxembourg'
 
 USE_I18N = True
 
