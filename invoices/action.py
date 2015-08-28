@@ -8,7 +8,6 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-import pytz
 from django.utils.encoding import smart_unicode
 import decimal
 
@@ -85,7 +84,6 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
 
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers','Executant'))
     #import pydevd; pydevd.settrace()
-    pytz_chicago = pytz.timezone("America/Chicago")
     for presta in prestations:
         i+=1
         patientSocNumber = presta.patient.code_sn
@@ -96,11 +94,11 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
         patientZipCode = presta.patient.zipcode
         patientCity = presta.patient.city
         data.append((i, presta.carecode.code, 
-                     (pytz_chicago.normalize(presta.date)).strftime('%d/%m/%Y'), 
+                     (presta.date).strftime('%d/%m/%Y'),
                      '1', 
                      presta.carecode.gross_amount, 
                      presta.net_amount, 
-                     (pytz_chicago.normalize(presta.date)).strftime('%H:%M'),  
+                     (presta.date).strftime('%H:%M'),
                      "", 
                      "300744-44"))
     
