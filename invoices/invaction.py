@@ -111,6 +111,7 @@ def create_invoice(modeladmin, request, queryset):
 
     prestations_to_invoice = defaultdict(list)
     invoices_created = []
+    invpks = []
     for p in queryset:
         if p in not_invoiced_prestas:
             prestations_to_invoice[p.patient].append(p)
@@ -126,9 +127,11 @@ def create_invoice(modeladmin, request, queryset):
                                       invoice_date=datetime.datetime.now(),
                                       invoice_sent=False,
                                       invoice_paid=False)
-            invoices_created.add(invoiceitem)
+            invoices_created.append(invoiceitem)
+            invpks.append(invoiceitem.pk)
         invoiceitem.save()
         for prestav in v:
             invoiceitem.prestations.add(prestav)
 
-    return HttpResponseRedirect("/admin/invoices/invoiceitem/?ct=%s&ids=%s" % (invoiceitem.pk, ",".join(invoices_created)))
+    #return HttpResponseRedirect("/admin/invoices/invoiceitem/?ct=%s&ids=%s" % (invoiceitem.pk, ",".join(invpks)))
+    return HttpResponseRedirect("/admin/invoices/invoiceitem/")
