@@ -185,7 +185,6 @@ class PrivateInvoiceItem(models.Model):
     
     def save(self, *args, **kwargs):
         super(PrivateInvoiceItem, self).save(*args, **kwargs)
-        pytz_chicago = pytz.timezone("America/Chicago")
         if self.pk is not None:
             prestationsq = Prestation.objects.raw("select prestations.id from invoices_prestation prestations "+
                                                   "where prestations.patient_id = %s " %(self.private_patient.pk) + 
@@ -199,7 +198,7 @@ class PrivateInvoiceItem(models.Model):
     
     def prestations_invoiced(self):
         return '%s prestations. Total = %s' % (len(self.prestations.all()), sum(a.net_amount for a in self.prestations.all()))
-    @property   
+    @property
     def invoice_month(self):
         return self.invoice_date.strftime("%B %Y")
     
