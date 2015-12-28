@@ -1,5 +1,6 @@
 from ajax_select.admin import AjaxSelectAdmin
 from django.contrib import admin
+from ajax_select import make_ajax_form
 
 from models import CareCode, Prestation, Patient, InvoiceItem, \
     PrivateInvoiceItem
