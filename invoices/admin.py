@@ -40,7 +40,7 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     from invoices.action import export_to_pdf
     from invoices.action_private_participation import pdf_private_invoice
     from action_private_with_recap import pdf_private_invoice_with_recap
-    from invaction import previous_months_invoices_april
+    from invaction import previous_months_invoices_april, previous_months_invoices_october
 
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent' )
