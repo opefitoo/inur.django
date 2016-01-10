@@ -59,6 +59,7 @@ class Prestation(models.Model):
     patient = models.ForeignKey(Patient)
     carecode = models.ForeignKey(CareCode)
     date = models.DateTimeField('date')
+    date.editable=True
 #     formfield_overrides = {
 #         models.DateTimeField: {'widget': MyAdminSplitDateTime},
 #     }
