@@ -28,14 +28,10 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-# grappelli constants
-GRAPPELLI_ADMIN_TITLE = 'toto'
-
 # Application definition
 
 INSTALLED_APPS = (
     'django_admin_bootstrapped',
-    'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
