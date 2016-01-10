@@ -1,10 +1,9 @@
 dj-database-url==0.3.0
 dj-static==0.0.6
-Django==1.8.8
+Django==1.9.1
 django-admin-bootstrapped==2.5.0
 django-ajax-selects==1.4.1
 django-autocomplete-light==2.1.1
-django-grappelli==2.7.2
 django-postgrespool==0.3.0
 django-toolbelt==0.0.1
 gunicorn==19.3.0
