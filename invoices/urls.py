@@ -19,7 +19,6 @@ from django.contrib import admin
 from ajax_select import urls as ajax_select_urls
 
 urlpatterns = patterns('',
-                       url(r'^grappelli/', include('grappelli.urls')),  # grappelli URLS
                        url(r'^admin/', include(admin.site.urls)),
-                       (r'^admin/lookups/', include(ajax_select_urls)),
+                       url(r'^admin/lookups/', include(ajax_select_urls)),
                        )
