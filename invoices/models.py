@@ -127,7 +127,6 @@ class InvoiceItem(models.Model):
         super(InvoiceItem, self).save(*args, **kwargs)
         pytz_chicago = pytz.timezone("America/Chicago")
         if self.pk is not None:
-            #import pydevd; pydevd.settrace()
             prestationsq = Prestation.objects.filter(Q(date__month=self.invoice_date.month-1) | Q(date__month=self.invoice_date.month) | Q(date__month=self.invoice_date.month+1)).filter(date__year=self.invoice_date.year).filter(patient__pk=self.patient.pk)
             for p in prestationsq:
                 normalized_date = pytz_chicago.normalize(p.date)
