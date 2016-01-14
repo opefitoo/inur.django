@@ -117,6 +117,7 @@ class InvoiceItem(models.Model):
     accident_id = models.CharField(max_length=30, help_text=u"Numero d'accident est facultatif", null=True, blank=True)
     accident_date = models.DateField( help_text=u"Date d'accident est facultatif", null=True, blank=True)
     invoice_date = models.DateField('Invoice date')
+    patient_invoice_date = models.DateField('Date envoi au patient  ')
     invoice_sent = models.BooleanField()
     invoice_paid = models.BooleanField()
     medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)

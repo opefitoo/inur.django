@@ -38,14 +38,15 @@ def pdf_private_invoice(modeladmin, request, queryset):
                                       qs.invoice_date,
                                       qs.medical_prescription_date, 
                                       qs.accident_id, 
-                                      qs.accident_date )
+                                      qs.accident_date,
+                                      qs.patient_invoice_date)
                                       
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
     doc.build(elements)
     return response
 
-def _build_invoices(prestations, invoice_number, invoice_date, prescription_date, accident_id, accident_date):
+def _build_invoices(prestations, invoice_number, invoice_date, prescription_date, accident_id, accident_date, patient_invoice_date):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
     #import pydevd; pydevd.settrace()
@@ -169,13 +170,20 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     
     _pouracquit_signature = Table([["Pour acquit, le:", "Signature et cachet"]], [10*cm, 10*cm], 1*[0.5*cm], hAlign='LEFT')
     
-    _infos_iban = Table([["LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    _infos_iban = Table([[u"À virer sur le compte IBAN: LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(Spacer(1, 10))
     elements.append(_infos_iban)
     if prescription_date is not None:
         _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s Ordonnance du %s " %(invoice_number,prescription_date)]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     else:
-        _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s " %invoice_number]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+        _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence: %s " %invoice_number]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+
+    if patient_invoice_date is not None:
+        from utils import setlocale
+        with setlocale('fr_FR.utf8'):
+            elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime('%d %B %Y')]], [10*cm], 1*[0.5*cm], hAlign='LEFT'))
+        elements.append(Spacer(1, 10))
+
     elements.append( _infos_iban )
     elements.append(_pouracquit_signature)
     return {"elements" : elements

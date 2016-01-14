@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import decimal
+
 from django.http import HttpResponse
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
@@ -9,7 +11,8 @@ from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from django.utils.encoding import smart_unicode
-import decimal
+import datetime
+
 
 def pdf_private_invoice(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
@@ -37,7 +40,8 @@ def pdf_private_invoice(modeladmin, request, queryset):
                                       qs.invoice_date,
                                       qs.medical_prescription_date, 
                                       qs.accident_id, 
-                                      qs.accident_date )
+                                      qs.accident_date,
+                                      qs.patient_invoice_date)
                                       
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
@@ -45,7 +49,7 @@ def pdf_private_invoice(modeladmin, request, queryset):
     doc.build(elements)
     return response
 
-def _build_invoices(prestations, invoice_number, invoice_date, prescription_date, accident_id, accident_date):
+def _build_invoices(prestations, invoice_number, invoice_date, prescription_date, accident_id, accident_date, patient_invoice_date):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
     elements = []
@@ -133,7 +137,11 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
     elements.append(Spacer(1, 18))
-    elements.append(Paragraph("Memoire d'Honoraires Num. %s en date du : %s Ordonnance du %s" %( invoice_number, invoice_date, prescription_date), styles['Center']))
+    if(prescription_date is not None):
+        elements.append(Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s Ordonnance du %s " %( invoice_number, invoice_date, prescription_date), styles['Heading4']))
+    else:
+        elements.append(Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s " %( invoice_number, invoice_date), styles['Heading4']))
+
     elements.append(Spacer(1, 18))
 
     elements.append(table)
@@ -166,11 +174,24 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     elements.append(Spacer(1, 18))
     _pouracquit_signature = Table([["Pour acquit, le:", "Signature et cachet"]], [10*cm, 10*cm], 1*[0.5*cm], hAlign='LEFT')
     
-    _infos_iban = Table([["LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    _infos_iban = Table([[u"À virer sur le compte IBAN: LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(Spacer(1, 10))
     elements.append(_infos_iban)
-    
-    _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s Ordonnance du %s " %(invoice_number,prescription_date)]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+
+
+    if prescription_date is not None:
+        _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s Ordonnance du %s " %(invoice_number,prescription_date)]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    else:
+        _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence: %s " %invoice_number]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+
+    from django.template.defaultfilters import date as _date
+
+    if patient_invoice_date is not None:
+        from utils import setlocale
+        with setlocale('fr_FR.utf8'):
+            elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime('%d %B %Y')]], [10*cm], 1*[0.5*cm], hAlign='LEFT'))
+        elements.append(Spacer(1, 10))
+
     elements.append( _infos_iban )
     elements.append(_pouracquit_signature)
     return {"elements" : elements
