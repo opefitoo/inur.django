@@ -39,14 +39,14 @@ def pdf_private_invoice(modeladmin, request, queryset):
                                       qs.medical_prescription_date, 
                                       qs.accident_id, 
                                       qs.accident_date,
-                                      qs.patient_invoice_date)
+                                      qs.invoice_send_date)
                                       
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
     doc.build(elements)
     return response
 
-def _build_invoices(prestations, invoice_number, invoice_date, prescription_date, accident_id, accident_date, patient_invoice_date):
+def _build_invoices(prestations, invoice_number, invoice_date, prescription_date, accident_id, accident_date, invoice_send_date):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
     #import pydevd; pydevd.settrace()
@@ -178,10 +178,10 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     else:
         _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence: %s " %invoice_number]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
 
-    if patient_invoice_date is not None:
+    if invoice_send_date is not None:
         from utils import setlocale
         with setlocale('fr_FR.utf8'):
-            elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime('%d %B %Y')]], [10*cm], 1*[0.5*cm], hAlign='LEFT'))
+            elements.append(Table([[u"Date envoi de la présente facture: %s " % invoice_send_date.strftime('%d %B %Y')]], [10*cm], 1*[0.5*cm], hAlign='LEFT'))
         elements.append(Spacer(1, 10))
 
     elements.append( _infos_iban )
