@@ -41,7 +41,7 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     from invoices.action import export_to_pdf
     from invoices.action_private_participation import pdf_private_invoice
     from action_private_with_recap import pdf_private_invoice_with_recap
-    from invaction import previous_months_invoices_may
+    from invaction import previous_months_invoices_june
     from generate_road_book import generate_road_book_2014
 
     date_hierarchy = 'invoice_date'
