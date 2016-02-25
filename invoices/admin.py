@@ -1,10 +1,34 @@
 from ajax_select.admin import AjaxSelectAdmin
 from django.contrib import admin
 from ajax_select import make_ajax_form
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 
 from models import CareCode, Prestation, Patient, InvoiceItem, \
     PrivateInvoiceItem
 
+from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail
+
+class JobPostionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description' )
+
+admin.site.register(JobPosition, JobPostionAdmin)
+
+# Define an inline admin descriptor for Employee model
+# which acts a bit like a singleton
+class EmployeeInline(admin.StackedInline):
+    model = Employee
+    can_delete = False
+    verbose_name_plural = 'employee'
+
+# Define a new User admin
+class UserAdmin(BaseUserAdmin):
+    inlines = (EmployeeInline, )
+
+# Re-register UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
 
 class CareCoreAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'gross_amount')
@@ -69,4 +93,28 @@ class PrivateInvoiceItemAdmin(AjaxSelectAdmin):
 
 admin.site.register(PrivateInvoiceItem, PrivateInvoiceItemAdmin)
 
+class TimesheetDetailInline(admin.TabularInline):
+    model = TimesheetDetail
+    fields = ('start_date','end_date','task_description','patient',)
+    search_fields = ['patient']
+    form = make_ajax_form(TimesheetDetail, {'patient': 'patient'})
 
+class TimesheetAdmin(admin.ModelAdmin):
+
+    fields = ('start_date','end_date','submitted_date','other_details',)
+    inlines = [TimesheetDetailInline]
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        obj.save()
+
+    def save_formset(self, request, form, formset, change):
+        if formset.model == TimesheetDetail:
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.user = request.user
+                instance.save()
+        else:
+            formset.save()
+
+admin.site.register(Timesheet, TimesheetAdmin)
