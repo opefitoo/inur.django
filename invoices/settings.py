@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 # Parse database configuration from $DATABASE_URL
 import dj_database_url
-DATABASES = {'default': dj_database_url.config(default='postgres://nursev2:nursev2@localhost:5432/nursev2')}
+DATABASES = {'default': dj_database_url.config(default='postgres://nursev3:nursev3@localhost:5432/nursev3')}
 
 # Enable Connection Pooling
 DATABASES['default']['ENGINE'] = 'django_postgrespool'
