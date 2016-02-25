@@ -82,7 +82,7 @@ import dj_database_url
 DATABASES = {'default': dj_database_url.config(default='postgres://nursev3:nursev3@localhost:5432/nursev3')}
 
 # Enable Connection Pooling
-DATABASES['default']['ENGINE'] = 'django_postgrespool'
+#DATABASES['default']['ENGINE'] = 'django_postgrespool'
 DATABASES['default']['AUTOCOMMIT'] = True
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
