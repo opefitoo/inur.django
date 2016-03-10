@@ -1,9 +1,10 @@
 from ajax_select import LookupChannel
 
 from models import Patient, CareCode
+from timesheet import TimesheetTask
 from django.utils.html import escape
 from django.db.models.query_utils import Q
-
+from django.utils.six import text_type
 
 class PatientDuMoisLookup(LookupChannel):
     model = Patient
@@ -86,6 +87,30 @@ class PatientLookup(LookupChannel):
     def format_item_display(self, obj):
         """ (HTML) formatted item for displaying item in the selected deck area """
         return u"%s<div><i>%s</i></div>" % (escape(obj.name), escape(obj.first_name))
+
+
+class TimesheetTaskLookup(LookupChannel):
+
+    model = TimesheetTask
+
+    def get_query(self, q, request):
+        return TimesheetTask.objects.filter(name__icontains=q).order_by('name')
+
+    def get_result(self, obj):
+        return text_type(obj)
+
+    def format_match(self, obj):
+        return self.format_item_display(obj)
+
+    def format_item_display(self, obj):
+        return "%s<div><i>%s</i></div>" % (escape(obj.name), escape(obj.description))
+
+    def can_add(self, user, model):
+        """ customize can_add by allowing anybody to add a Group.
+            the superclass implementation uses django's permissions system to check.
+            only those allowed to add will be offered a [+ add] popup link
+            """
+        return True
 
 
 class CareCodeLookup(LookupChannel):

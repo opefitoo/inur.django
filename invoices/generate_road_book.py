@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
-from django.utils import timezone
+import requests
 from django.http import HttpResponse
-from invoices.models import Patient
+from django.utils import timezone
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus.doctemplate import SimpleDocTemplate
-from reportlab.platypus.flowables import Spacer, PageBreak
+from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-from reportlab.lib.pagesizes import letter
-import requests
-
+from invoices.models import Patient
 
 def generate_road_book_2014(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.

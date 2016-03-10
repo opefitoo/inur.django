@@ -1,23 +1,30 @@
-from ajax_select.admin import AjaxSelectAdmin
-from django.contrib import admin
 from ajax_select import make_ajax_form
+from ajax_select.admin import AjaxSelectAdmin, AjaxSelectAdminTabularInline
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-
 from models import CareCode, Prestation, Patient, InvoiceItem, \
     PrivateInvoiceItem
+from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
-from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail
+from django_admin_bootstrapped.admin.models import SortableInline
+
 
 class JobPostionAdmin(admin.ModelAdmin):
     list_display = ('name', 'description' )
 
 admin.site.register(JobPosition, JobPostionAdmin)
 
+
+class TimesheetTaskAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description' )
+
+admin.site.register(TimesheetTask, TimesheetTaskAdmin)
+
+
 # Define an inline admin descriptor for Employee model
 # which acts a bit like a singleton
-class EmployeeInline(admin.StackedInline):
+class EmployeeInline(SortableInline, admin.StackedInline):
     model = Employee
     can_delete = False
     verbose_name_plural = 'employee'
@@ -39,9 +46,11 @@ admin.site.register(CareCode, CareCoreAdmin)
 
 
 class PatientAdmin(admin.ModelAdmin):
+    from generate_pacifico_invoices import generate_pacifico
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     search_fields = ['name', 'first_name', 'code_sn']
+    actions = [generate_pacifico]
 
 
 admin.site.register(Patient, PatientAdmin)
@@ -63,13 +72,13 @@ admin.site.register(Prestation, PrestationAdmin)
 
 class InvoiceItemAdmin(AjaxSelectAdmin):
     from invoices.action import export_to_pdf
-    from invoices.action_private_participation import pdf_private_invoice
+    from invoices.action_private import pdf_private_invoice
     from action_private_with_recap import pdf_private_invoice_with_recap
     from invaction import previous_months_invoices_june
     from generate_road_book import generate_road_book_2014
 
     date_hierarchy = 'invoice_date'
-    list_display = ('invoice_number', 'patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent' )
+    list_display = ('invoice_number', 'patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent',  )
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient']
     actions = [pdf_private_invoice, export_to_pdf, pdf_private_invoice_with_recap, previous_months_invoices_june, generate_road_book_2014]
@@ -93,19 +102,33 @@ class PrivateInvoiceItemAdmin(AjaxSelectAdmin):
 
 admin.site.register(PrivateInvoiceItem, PrivateInvoiceItemAdmin)
 
-class TimesheetDetailInline(admin.TabularInline):
+class TimesheetDetailInline(AjaxSelectAdminTabularInline):
     model = TimesheetDetail
     fields = ('start_date','end_date','task_description','patient',)
     search_fields = ['patient']
+    extra = 1
     form = make_ajax_form(TimesheetDetail, {'patient': 'patient'})
+
+    model = TimesheetDetail
+    form = make_ajax_form(TimesheetDetail, {
+                'patient': 'patient',
+                'task_description': 'task_description'
+            },
+            show_help_text=True)
+    extra = 2
+
 
 class TimesheetAdmin(admin.ModelAdmin):
 
-    fields = ('start_date','end_date','submitted_date','other_details',)
+    fields = ('start_date','end_date','submitted_date','other_details','timesheet_validated')
     inlines = [TimesheetDetailInline]
+    list_display = ('start_date','end_date','timesheet_owner', 'timesheet_validated')
+    list_select_related = True
+    readonly_fields = ('timesheet_validated',)
 
     def save_model(self, request, obj, form, change):
-        obj.user = request.user
+        currentUser = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
+        obj.employee = currentUser[0]
         obj.save()
 
     def save_formset(self, request, form, formset, change):
@@ -116,5 +139,22 @@ class TimesheetAdmin(admin.ModelAdmin):
                 instance.save()
         else:
             formset.save()
+    def timesheet_owner(self, instance):
+        return instance.employee.user.username
+
+    def has_change_permission(self, request, obj=None):
+        has_class_permission = super(TimesheetAdmin, self).has_change_permission(request, obj)
+        if not has_class_permission:
+            return False
+        if obj is not None and not request.user.is_superuser and request.user.id != Employee.objects.filter(user_id=request.user.id)[0].user_id:
+            return False
+        return True
+
+    def get_queryset(self, request):
+        qs = super(TimesheetAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(employee= Employee.objects.filter(user_id=request.user.id)[0])
+
 
 admin.site.register(Timesheet, TimesheetAdmin)

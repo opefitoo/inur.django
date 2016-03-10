@@ -8,7 +8,7 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-#import pytz
+from django.utils.timezone import localtime, now
 from django.utils.encoding import smart_unicode
 import decimal
 
@@ -16,11 +16,17 @@ def pdf_private_invoice_with_recap(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
     # Append invoice number and invoice date
+    _payment_ref = ''
+    _recap_date = ''
     if len(queryset) != 1:
         _file_name = '-'.join([a.invoice_number for a in queryset.order_by("invoice_number")])
+        _payment_ref = _file_name.replace(" ", "")[:10]
+        _recap_date = now().date().strftime('%d-%m-%Y')
         response['Content-Disposition'] = 'attachment; filename="invoice%s.pdf"' %(_file_name.replace(" ", "")[:150])
     else:
-        response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s.pdf"' %(queryset[0].private_patient.name, 
+        _payment_ref = "PI.%s %s" % (queryset[0].invoice_number, queryset[0].invoice_date.strftime('%d.%m.%Y'))
+        _recap_date = queryset[0].invoice_date.strftime('%d-%m-%Y')
+        response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s.pdf"' %(queryset[0].private_patient.name,
                                                                                           queryset[0].invoice_number, 
                                                                                           queryset[0].invoice_date.strftime('%d-%m-%Y'))
     
@@ -43,7 +49,8 @@ def pdf_private_invoice_with_recap(modeladmin, request, queryset):
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
             elements.append(PageBreak())
-    elements.extend(_build_recap(recapitulatif_data))
+    import datetime
+    elements.extend(_build_recap( _recap_date, _payment_ref , recapitulatif_data))
     doc.build(elements)
     return response
 
@@ -75,7 +82,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                      '1', 
                      presta.carecode.gross_amount, 
                      presta.net_amount, 
-                     (presta.date).strftime('%H:%M'),
+                     localtime(presta.date).strftime('%H:%M'),
                      "", 
                      "300744-44"))
     
@@ -194,7 +201,7 @@ def _compute_sum(data, position):
             sum += x[position]
     return sum
 
-def _build_recap(recaps):
+def _build_recap(_recap_date, _recap_ref, recaps):
     """
     """
     elements = []
@@ -228,15 +235,18 @@ def _build_recap(recaps):
     elements.append(Spacer(1, 18))
 
     elements.append(Spacer(1, 18))
-    _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s " %_invoice_nrs]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    _infos_iban = Table([["Lors du virement, veuillez indiquer la r" + u"é" + "f" + u"é" + "rence: %s " % _recap_ref]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
+    _date_infos = Table([["Date facture : %s " % _recap_date]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
 
+    elements.append(_date_infos)
+    elements.append(Spacer(1, 18))
     elements.append(_infos_iban)
     elements.append(Spacer(1, 18))
     _total_a_payer = Table([["Total "+ u"à"+ " payer:",  "%10.2f Euros" % total]], [10*cm, 5*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(_total_a_payer)
     elements.append(Spacer(1, 18))
 
-    _infos_iban = Table([["LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    _infos_iban = Table([["Num"  + u"é" + "ro IBAN: LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append( _infos_iban )
 
     return elements
