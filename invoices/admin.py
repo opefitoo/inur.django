@@ -93,7 +93,8 @@ class PrivateInvoiceItemAdmin(AjaxSelectAdmin):
     from action_private_with_recap import pdf_private_invoice_with_recap
 
     date_hierarchy = 'invoice_date'
-    list_display = ('invoice_number', 'private_patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent' )
+    #list_display = ('invoice_number', 'private_patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent' )
+    list_display = ('invoice_number', 'private_patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'private_patient__name', 'invoice_sent']
     search_fields = ['private_patient']
     actions = [pdf_private_invoice, pdf_private_invoice_with_recap]
