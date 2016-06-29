@@ -78,7 +78,8 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     from generate_pacifico_invoices import niedercorn_nov_decembre
 
     date_hierarchy = 'invoice_date'
-    list_display = ('invoice_number', 'patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent',)
+    #list_display = ('invoice_number', 'patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent',)
+    list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent',)
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient']
     actions = [pdf_private_invoice, export_to_pdf, pdf_private_invoice_with_recap, previous_months_invoices_december, previous_months_invoices_november, niedercorn_nov_decembre]
