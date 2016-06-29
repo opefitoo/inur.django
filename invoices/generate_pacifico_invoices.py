@@ -4,145 +4,63 @@ from datetime import date,timedelta
 
 from invoices.models import Patient, Prestation, CareCode, PrivateInvoiceItem
 
-def mousel_ordonnance(modeladmin, request, queryset):
+def niedercorn_nov_decembre(modeladmin, request, queryset):
 
-    mouseljeannot = Patient.objects.get(name="MOUSEL")
+    ndrcorn = Patient.objects.get(name="NIEDERCORN PERRIN")
 
-    perf_n13_2015 = CareCode.objects.get(name="2015 perfusions intraveineuse ou SC")
+    bains_med_2015 = CareCode.objects.get(code="N29")
+    bande_2015 = CareCode.objects.get(name="2015 BANDAGE COMPRESSIF")
+    bande_2015_2_eme_j = CareCode.objects.get(name="2015 BANDAGE COMPRESSIF 2ème jambe")
+    pansements_multiples = CareCode.objects.get(name="2015 PANSEMENTS MULTIPLES")
     depl_nf1_2015 = CareCode.objects.get(name="2015 NF1")
-    perf_n14_2015 = CareCode.objects.get(name="2015 perfusions ENLEVEMENT")
+
+    d1 = date(2015, 11, 26)
+    d2 = date(2015, 12, 31)
+    dd = [d1 + timedelta(days=x) for x in range((d2 - d1).days + 1)]
 
     import datetime
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n14_2015,
-                    date=datetime.datetime.combine(date(2016,3,25), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
+    for d in dd:
+        try:
+            p1 = Prestation(patient=ndrcorn, carecode=bains_med_2015,
+                            date=datetime.datetime.combine(d, datetime.time(8, 0)))
+            p1.clean()
+            p1.save()
+        except Exception as e:
+            print e
+        try:
+            p1 = Prestation(patient=ndrcorn, carecode=bande_2015,
+                            date=datetime.datetime.combine(d, datetime.time(8, 0)))
+            p1.clean()
+            p1.save()
+        except Exception as e:
+            print e
 
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n14_2015,
-                        date=datetime.datetime.combine(date(2016, 3, 29), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
+        try:
+            p1 = Prestation(patient=ndrcorn, carecode=bande_2015_2_eme_j,
+                            date=datetime.datetime.combine(d, datetime.time(8, 0)))
+            p1.clean()
+            p1.save()
+        except Exception as e:
+            print e
 
+        try:
+            p1 = Prestation(patient=ndrcorn, carecode=pansements_multiples,
+                            date=datetime.datetime.combine(d, datetime.time(8, 0)))
+            p1.clean()
+            p1.save()
+        except Exception as e:
+            print e
 
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n14_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 1), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n14_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 5), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n14_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 8), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n14_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 12), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
+        try:
+            p1 = Prestation(patient=ndrcorn, carecode=depl_nf1_2015,
+                            date=datetime.datetime.combine(d, datetime.time(8, 0)))
+            p1.clean()
+            p1.save()
+        except Exception as e:
+            print e
 
 
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n14_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 15), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
 
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n14_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 19), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n13_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 19), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=depl_nf1_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 19), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n14_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 22), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n13_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 22), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=depl_nf1_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 22), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n13_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 26), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=depl_nf1_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 26), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-
-    try:
-        p1 = Prestation(patient=mouseljeannot, carecode=perf_n14_2015,
-                        date=datetime.datetime.combine(date(2016, 4, 26), datetime.time(8, 0)))
-        p1.clean()
-        p1.save()
-    except Exception as e:
-        print e
-        
 def generate_pacifico(modeladmin, request, queryset):
     # response = HttpResponse(content_type='text')
 
