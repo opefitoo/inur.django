@@ -177,7 +177,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     if prescription_date is not None:
         _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s Ordonnance du %s " %(invoice_number,prescription_date)]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     else:
-        _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence: %s " %invoice_number]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+        _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence: PR%s " %invoice_number]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
 
     if invoice_send_date is not None:
         from utils import setlocale
