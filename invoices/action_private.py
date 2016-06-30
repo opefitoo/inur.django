@@ -8,7 +8,7 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-#import pytz
+import pytz
 from django.utils.encoding import smart_unicode
 import decimal
 

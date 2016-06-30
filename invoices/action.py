@@ -84,7 +84,6 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     patientAddress = ''
 
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers','Executant'))
-    #import pydevd; pydevd.settrace()
     pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
     for presta in prestations:
         i+=1
