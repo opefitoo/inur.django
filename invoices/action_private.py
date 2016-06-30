@@ -60,6 +60,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     patientAddress = ''
 
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers','Executant'))
+    pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
     for presta in prestations:
         i+=1
         patientSocNumber = presta.patient.code_sn
@@ -69,12 +70,12 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         patientAddress = presta.patient.address
         patientZipCode = presta.patient.zipcode
         patientCity = presta.patient.city
-        data.append((i, presta.carecode.code, 
-                     (presta.date).strftime('%d/%m/%Y'),
+        data.append((i, presta.carecode.code,
+                     (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
                      '1', 
                      presta.carecode.gross_amount, 
-                     presta.net_amount, 
-                     (presta.date).strftime('%H:%M'),
+                     presta.net_amount,
+                     (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
                      "", 
                      "300744-44"))
     
