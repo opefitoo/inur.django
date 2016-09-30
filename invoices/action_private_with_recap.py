@@ -143,9 +143,10 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
     elements.append(Spacer(1, 18))
     if(prescription_date is not None):
-        elements.append(Paragraph("Memoire d'Honoraires Num. %s en date du : %s Ordonnance du %s " %( invoice_number, invoice_date, prescription_date), styles['Heading4']))
+        elements.append(Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s Ordonnance du %s " %( invoice_number, invoice_date, prescription_date), styles['Heading4']))
     else:
-        elements.append(Paragraph("Memoire d'Honoraires Num. %s en date du : %s " %( invoice_number, invoice_date), styles['Heading4']))
+        elements.append(Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s " %( invoice_number, invoice_date), styles['Heading4']))
+
     elements.append(Spacer(1, 18))
 
     elements.append(table)

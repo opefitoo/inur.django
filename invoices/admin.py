@@ -73,7 +73,8 @@ admin.site.register(Prestation, PrestationAdmin)
 class InvoiceItemAdmin(AjaxSelectAdmin):
     from invoices.action import export_to_pdf
     from invoices.action_private import pdf_private_invoice
-    from action_private_with_recap import pdf_private_invoice_with_recap
+    #from invoice_pp_with_recap import pdf_private_invoice_with_recap
+    from action_private_participation import pdf_private_invoice
     from invaction import previous_months_invoices_january, previous_months_invoices_february
 
     date_hierarchy = 'invoice_date'
@@ -81,7 +82,7 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent',)
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient']
-    actions = [pdf_private_invoice, export_to_pdf, pdf_private_invoice_with_recap, previous_months_invoices_january, previous_months_invoices_february]
+    actions = [export_to_pdf, pdf_private_invoice]
     form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
 
 

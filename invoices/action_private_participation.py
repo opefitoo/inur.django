@@ -10,9 +10,9 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
+from django.utils.timezone import localtime, now
 from django.utils.encoding import smart_unicode
 import datetime
-
 
 def pdf_private_invoice(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
@@ -20,8 +20,12 @@ def pdf_private_invoice(modeladmin, request, queryset):
     # Append invoice number and invoice date
     if len(queryset) != 1:
         _file_name = '-'.join([a.invoice_number for a in queryset.order_by("invoice_number")])
+        _payment_ref = _file_name.replace(" ", "")[:10]
+        _recap_date = now().date().strftime('%d-%m-%Y')
         response['Content-Disposition'] = 'attachment; filename="invoice%s.pdf"' %(_file_name.replace(" ", "")[:150])
     else:
+        _payment_ref = "PI.%s %s" % (queryset[0].invoice_number, queryset[0].invoice_date.strftime('%d.%m.%Y'))
+        _recap_date = queryset[0].invoice_date.strftime('%d-%m-%Y')
         response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s-part-personnelle.pdf"' %(queryset[0].patient.name, 
                                                                                           queryset[0].invoice_number, 
                                                                                           queryset[0].invoice_date.strftime('%d-%m-%Y'))
@@ -44,8 +48,10 @@ def pdf_private_invoice(modeladmin, request, queryset):
                                       qs.patient_invoice_date)
                                       
             elements.extend(_result["elements"])
-            recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
+            recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_pp"]))
             elements.append(PageBreak())
+
+    elements.extend(_build_recap( _recap_date, _payment_ref , recapitulatif_data))
     doc.build(elements)
     return response
 
@@ -81,7 +87,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     
     for x in range(len(data)  , 22):
         data.append((x, '', '', '', '', '',''))
-            
+
     newData = []
     for y in range(0, len(data) -1) :
         newData.append(data[y])
@@ -145,46 +151,16 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     elements.append(Spacer(1, 18))
 
     elements.append(table)
-    
-    _2derniers_cases = Table([["", "Paiement Direct"]], [1*cm, 4*cm], 1*[0.5*cm], hAlign='LEFT' )
-    _2derniers_cases.setStyle(TableStyle([('ALIGN',(1,1),(-2,-2),'RIGHT'),
-                       ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-                       ('FONTSIZE', (0,0), (-1,-1), 9),
-                       ('BOX', (0,0), (0,0), 0.75, colors.black),
-                       ('SPAN', (1, 1) , (1,2)),
-                       ]))
-    
+
     elements.append(Spacer(1, 18))
     
-    elements.append(_2derniers_cases)
-    _2derniers_cases = Table([["", "Tiers payant"]], [1*cm, 4*cm], 1*[0.5*cm], hAlign='LEFT' )
-    _2derniers_cases.setStyle(TableStyle([('ALIGN',(1,1),(-2,-2),'RIGHT'),
-                       ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-                       ('FONTSIZE', (0,0), (-1,-1), 9),
-                       ('BOX', (0,0), (0,0), 0.75, colors.black),
-                       ('SPAN', (1, 1) , (1,2)),
-                       ]))
-    elements.append(Spacer(1, 18))
-    elements.append(_2derniers_cases)
-    elements.append(Spacer(1, 18))
-    _total_a_payer = Table([["Total "+ u"à"+ " payer:", "%10.2f Euros" % _participation_personnelle ]], [10*cm, 5*cm], 1*[0.5*cm], hAlign='LEFT')
-    #_total_a_payer = Table([["Total "+ u"à"+ " payer:", P0 ]], [10*cm, 5*cm], 1*[0.5*cm], hAlign='LEFT')
+    _total_a_payer = Table([["Total participation personnelle:", "%10.2f Euros" % _participation_personnelle ]], [10*cm, 5*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(Spacer(1, 18))
     elements.append( _total_a_payer )
     elements.append(Spacer(1, 18))
-    _pouracquit_signature = Table([["Pour acquit, le:", "Signature et cachet"]], [10*cm, 10*cm], 1*[0.5*cm], hAlign='LEFT')
-    
-    _infos_iban = Table([[u"À virer sur le compte IBAN: LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+
     elements.append(Spacer(1, 10))
-    elements.append(_infos_iban)
 
-
-    if prescription_date is not None:
-        _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s Ordonnance du %s " %(invoice_number,prescription_date)]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
-    else:
-        _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence: %s " %invoice_number]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
-
-    from django.template.defaultfilters import date as _date
 
     if patient_invoice_date is not None:
         from utils import setlocale
@@ -192,12 +168,11 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
             elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime('%d %B %Y')]], [10*cm], 1*[0.5*cm], hAlign='LEFT'))
         elements.append(Spacer(1, 10))
 
-    elements.append( _infos_iban )
-    elements.append(_pouracquit_signature)
     return {"elements" : elements
             , "invoice_number" : invoice_number
             , "patient_name" : patientName + " " + patientFirstName
-            , "invoice_amount" : newData[23][5]}
+            , "invoice_amount" : newData[23][5]
+            , "invoice_pp" : newData[23][6]}
 
 pdf_private_invoice.short_description = "Facture PDF Participation Personnelle"
 
@@ -208,4 +183,54 @@ def _compute_sum(data, position):
             sum += decimal.Decimal(x[position])
     return sum
     
-    
+
+def _build_recap(_recap_date, _recap_ref, recaps):
+    """
+    """
+    elements = []
+
+    _intro = Table([["Veuillez trouver ci-joint le r"+ u"é"+ "capitulatif des factures ainsi que le montant total " + u"à" +" payer"]], [10*cm, 5*cm], 1*[0.5*cm], hAlign='LEFT')
+    elements.append(_intro)
+    elements.append(Spacer(1, 18))
+
+    data = []
+    i = 0
+    data.append(("N d'ordre", u"Note no°", u"Nom et prénom", "Montant" ))
+    total = 0.0
+    _invoice_nrs = "";
+    for recap in recaps:
+        i+=1
+        data.append((i, recap[0], recap[1], recap[2]))
+        total = decimal.Decimal(total) + decimal.Decimal(recap[2])
+        _invoice_nrs += "-" + recap[0]
+    data.append(("", "", u"à reporter", round(total, 2), ""))
+
+    table = Table(data, [2*cm, 3*cm , 7*cm, 3*cm], (i+2)*[0.75*cm] )
+    table.setStyle(TableStyle([('ALIGN',(1,1),(-2,-2),'LEFT'),
+                       ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+                       ('FONTSIZE', (0,0), (-1,-1), 9),
+                       ('BOX', (0,0), (-1,-1), 0.25, colors.black),
+                       ]))
+    elements.append(table)
+
+
+
+    elements.append(Spacer(1, 18))
+
+    elements.append(Spacer(1, 18))
+    _infos_iban = Table([["Lors du virement, veuillez indiquer la r" + u"é" + "f" + u"é" + "rence: %s " % _recap_ref]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
+    _date_infos = Table([["Date facture : %s " % _recap_date]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
+
+    elements.append(_date_infos)
+    elements.append(Spacer(1, 18))
+    elements.append(_infos_iban)
+    elements.append(Spacer(1, 18))
+    _total_a_payer = Table([["Total "+ u"à"+ " payer:",  "%10.2f Euros" % total]], [10*cm, 5*cm], 1*[0.5*cm], hAlign='LEFT')
+    elements.append(_total_a_payer)
+    elements.append(Spacer(1, 18))
+
+    _infos_iban = Table([["Num"  + u"é" + "ro compte IBAN: LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    elements.append( _infos_iban )
+
+    return elements
+
