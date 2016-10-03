@@ -20,10 +20,15 @@ def pdf_private_invoice(modeladmin, request, queryset):
         _file_name = '-'.join([a.invoice_number for a in queryset.order_by("invoice_number")])
         response['Content-Disposition'] = 'attachment; filename="invoice%s.pdf"' %(_file_name.replace(" ", "")[:150])
     else:
-        response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s.pdf"' %(queryset[0].private_patient.name, 
-                                                                                          queryset[0].invoice_number, 
-                                                                                          queryset[0].invoice_date.strftime('%d-%m-%Y'))
-    
+        if hasattr(queryset[0], 'private_patient'):
+            response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s.pdf"' %(queryset[0].private_patient.name,
+                                                                                              queryset[0].invoice_number,
+                                                                                              queryset[0].invoice_date.strftime('%d-%m-%Y'))
+        elif hasattr(queryset[0], 'patient'):
+            response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s.pdf"' %(queryset[0].patient.name,
+                                                                                              queryset[0].invoice_number,
+                                                                                              queryset[0].invoice_date.strftime('%d-%m-%Y'))
+
     elements = []
     doc = SimpleDocTemplate(response, rightMargin=2*cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1*cm)
     
@@ -192,7 +197,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
             , "patient_name" : patientName + " " + patientFirstName
             , "invoice_amount" : newData[23][5]}
 
-pdf_private_invoice.short_description = "Facture PDF"
+pdf_private_invoice.short_description = u"Facture Privée PDF"
 
 def _compute_sum(data, position):
     sum = 0

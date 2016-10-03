@@ -57,13 +57,13 @@ admin.site.register(Patient, PatientAdmin)
 
 
 class PrestationAdmin(AjaxSelectAdmin):
-    from invaction import create_invoice
+    from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
 
     date_hierarchy = 'date'
     list_display = ('patient', 'carecode', 'date')
     search_fields = ['patient__name', 'patient__first_name']
     list_filter = ('patient__name',)
-    actions = [create_invoice]
+    actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
     form = make_ajax_form(Prestation, {'patient': 'patient', 'carecode': 'carecode'})
 
 
@@ -74,7 +74,8 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     from invoices.action import export_to_pdf
     from invoices.action_private import pdf_private_invoice
     #from invoice_pp_with_recap import pdf_private_invoice_with_recap
-    from action_private_participation import pdf_private_invoice
+    from action_private import pdf_private_invoice
+    #from action_private import pdf_private_invoice
     from invaction import previous_months_invoices_january, previous_months_invoices_february
 
     date_hierarchy = 'invoice_date'

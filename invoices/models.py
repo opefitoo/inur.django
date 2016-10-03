@@ -20,6 +20,7 @@ class CareCode(models.Model):
     # prix net = 88% du montant brut
     # prix brut
     gross_amount = models.DecimalField("montant brut", max_digits=5, decimal_places=2)
+    reimbursed = models.BooleanField("Prise en charge par CNS",default=True)
 
     # previous_gross_amount = models.DecimalField("Ancien montant brut", max_digits=5, decimal_places=2)
     # price_switch_date = models.DateField( help_text=u"Date d'accident est facultatif", null=True, blank=True)
@@ -79,7 +80,10 @@ class Prestation(models.Model):
         #   return round(((self.carecode.gross_amount * 88) / 100), 2)
         # round to only two decimals
         # return round(((self.carecode.previous_gross_amount * 88) / 100), 2)
-        return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
+        if self.carecode.reimbursed:
+            return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
+        else:
+            return self.carecode.gross_amount
 
     @property
     def fin_part(self):
@@ -130,6 +134,7 @@ class InvoiceItem(models.Model):
     accident_date = models.DateField(help_text=u"Date d'accident est facultatif", null=True, blank=True)
     invoice_date = models.DateField('Invoice date')
     patient_invoice_date = models.DateField('Date envoi au patient  ')
+    invoice_send_date = models.DateField('Date envoi facture', null=True, blank=True)
     invoice_sent = models.BooleanField()
     invoice_paid = models.BooleanField()
     medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)
