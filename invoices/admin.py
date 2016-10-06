@@ -38,7 +38,7 @@ admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 class CareCoreAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'gross_amount')
+    list_display = ('code', 'name', 'gross_amount', 'reimbursed')
     search_fields = ['code', 'name']
 
 
@@ -76,14 +76,14 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     #from invoice_pp_with_recap import pdf_private_invoice_with_recap
     from action_private import pdf_private_invoice
     #from action_private import pdf_private_invoice
-    from invaction import previous_months_invoices_january, previous_months_invoices_february
+    from invaction import previous_months_invoices_march
 
     date_hierarchy = 'invoice_date'
     #list_display = ('invoice_number', 'patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent',)
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent',)
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient']
-    actions = [export_to_pdf, pdf_private_invoice]
+    actions = [export_to_pdf, pdf_private_invoice, previous_months_invoices_march]
     form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
 
 
