@@ -130,34 +130,13 @@ class TimesheetAdmin(admin.ModelAdmin):
     readonly_fields = ('timesheet_validated',)
 
     def save_model(self, request, obj, form, change):
-        currentUser = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
-        obj.employee = currentUser[0]
+        if not change:
+            currentUser = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
+            obj.employee = currentUser[0]
         obj.save()
 
-    def save_formset(self, request, form, formset, change):
-        if formset.model == TimesheetDetail:
-            instances = formset.save(commit=False)
-            for instance in instances:
-                instance.user = request.user
-                instance.save()
-        else:
-            formset.save()
     def timesheet_owner(self, instance):
-        return instance.employee.user.username
-
-    def has_change_permission(self, request, obj=None):
-        has_class_permission = super(TimesheetAdmin, self).has_change_permission(request, obj)
-        if not has_class_permission:
-            return False
-        if obj is not None and not request.user.is_superuser and request.user.id != Employee.objects.filter(user_id=request.user.id)[0].user_id:
-            return False
-        return True
-
-    def get_queryset(self, request):
-        qs = super(TimesheetAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(employee= Employee.objects.filter(user_id=request.user.id)[0])
+         return instance.employee.user.username
 
 
 admin.site.register(Timesheet, TimesheetAdmin)
