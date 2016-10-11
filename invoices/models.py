@@ -178,11 +178,11 @@ class InvoiceItem(models.Model):
             iq = InvoiceItem.objects.filter(patient__pk=self.patient.pk).filter(
                 Q(invoice_date__month=self.invoice_date.month) & Q(invoice_date__year=self.invoice_date.year)
             )
-            if iq.exists():
-                for presta_in_db in iq:
-                    if (presta_in_db.pk != self.pk):
-                        raise ValidationError('Patient %s has already an invoice for the month ''%s'' ' % (
-                            self.patient, self.invoice_date.strftime('%B')))
+            # if iq.exists():
+            #     for presta_in_db in iq:
+            #         if (presta_in_db.pk != self.pk) and not self.pk:
+            #             raise ValidationError('Patient %s has already an invoice for the month ''%s'' ' % (
+            #                 self.patient, self.invoice_date.strftime('%B')))
             prestationsq = Prestation.objects.filter(date__month=self.invoice_date.month).filter(
                 date__year=self.invoice_date.year).filter(patient__pk=self.patient.pk)
             if not prestationsq.exists():
