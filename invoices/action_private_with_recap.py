@@ -193,7 +193,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
             , "patient_name" : patientName + " " + patientFirstName
             , "invoice_amount" : newData[23][5]}
 
-pdf_private_invoice_with_recap.short_description = "Facture PDF avec recapitulatif"
+pdf_private_invoice_with_recap.short_description = "Participation P. avec recapitulatif"
 
 def _compute_sum(data, position):
     sum = 0
