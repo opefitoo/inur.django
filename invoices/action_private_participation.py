@@ -14,7 +14,7 @@ from django.utils.timezone import localtime, now
 from django.utils.encoding import smart_unicode
 import datetime
 
-def pdf_private_invoice(modeladmin, request, queryset):
+def pdf_private_invoice_pp(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
     # Append invoice number and invoice date
@@ -174,7 +174,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
             , "invoice_amount" : newData[23][5]
             , "invoice_pp" : newData[23][6]}
 
-pdf_private_invoice.short_description = "Facture PDF Participation Personnelle"
+pdf_private_invoice_pp.short_description = "Facture PDF Participation Personnelle"
 
 def _compute_sum(data, position):
     sum = 0

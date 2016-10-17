@@ -73,13 +73,13 @@ admin.site.register(Prestation, PrestationAdmin)
 class InvoiceItemAdmin(AjaxSelectAdmin):
     from invoices.action import export_to_pdf
     from action_private import pdf_private_invoice
-    from action_private_with_recap import pdf_private_invoice_with_recap
+    from action_private_participation import pdf_private_invoice_pp
     date_hierarchy = 'invoice_date'
     #list_display = ('invoice_number', 'patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent',)
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent',)
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient']
-    actions = [export_to_pdf, pdf_private_invoice, pdf_private_invoice_with_recap]
+    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice]
     form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
 
 

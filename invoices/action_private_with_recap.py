@@ -95,9 +95,11 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         if(y % 10 == 0 and y != 0):
             _gross_sum = _compute_sum(data[y-9:y+1], 4)
             _net_sum = _compute_sum(data[y-9:y+1], 5)
-            newData.append(('', '', '', 'Sous-Total', _gross_sum, _net_sum, '', '',''))
+            _part_sum = _compute_sum(data[y - 9:y + 1], 6)
+            newData.append(('', '', '', 'Sous-Total', "%10.2f" % _gross_sum, "%10.2f" % _net_sum, "%10.2f" % _part_sum))
     _total_facture = _compute_sum(data[1:], 5)
-    newData.append(('', '', '', 'Total', _compute_sum(data[1:], 4), _compute_sum(data[1:], 5), '', '',''))
+    _participation_personnelle = decimal.Decimal(_compute_sum(data[1:], 4)) - decimal.Decimal(_total_facture)
+    newData.append(('', '', '', 'Total', "%10.2f" % _compute_sum(data[1:], 4), "%10.2f" % _compute_sum(data[1:], 5), "%10.2f" % _compute_sum(data[1:], 6)))
             
             
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
@@ -199,7 +201,7 @@ def _compute_sum(data, position):
     sum = 0
     for x in data:
         if x[position] != "" :
-            sum += x[position]
+            sum += decimal.Decimal(x[position])
     return sum
 
 def _build_recap(_recap_date, _recap_ref, recaps):
