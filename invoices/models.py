@@ -83,7 +83,8 @@ class Prestation(models.Model):
         if self.carecode.reimbursed:
             return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
         else:
-            return self.carecode.gross_amount
+            #return self.carecode.gross_amount
+            return 0
 
     @property
     def fin_part(self):
