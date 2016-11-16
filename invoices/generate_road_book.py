@@ -17,10 +17,10 @@ def generate_road_book_2014(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
     now = timezone.now()
-    response['Content-Disposition'] = 'attachment; filename="road-book-2014-%s.pdf"' % now.strftime('%d-%m-%Y')
+    response['Content-Disposition'] = 'attachment; filename="road-book-2015-%s.pdf"' % now.strftime('%d-%m-%Y')
 
     allyear_patients = Patient.objects.raw(
-        "select pr.date,p.* from invoices_prestation pr, invoices_patient p, invoices_carecode cc  where cc.id = pr.carecode_id and cc.code = 'NF1' and pr.patient_id = p.id  and pr.date >= '2014-01-01' and pr.date <= '2014-12-31' group by pr.date,p.id order by pr.date asc")
+        "select pr.date,p.* from invoices_prestation pr, invoices_patient p, invoices_carecode cc  where cc.id = pr.carecode_id and cc.code = 'NF1' and pr.patient_id = p.id  and pr.date >= '2015-01-01' and pr.date <= '2015-12-31' group by pr.date,p.id order by pr.date asc")
     allyear_patients.db
 
     elements = []

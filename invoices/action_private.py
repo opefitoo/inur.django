@@ -64,7 +64,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     patientFirstName = '';
     patientAddress = ''
 
-    data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers','Executant'))
+    data.append(('Num. titre', 'Prestation', 'Date', 'Heure', 'Nombre', 'Brut', 'P. CNS',  'P. Pers','Executant'))
     pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
     for presta in prestations:
         i+=1
@@ -77,11 +77,11 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         patientCity = presta.patient.city
         data.append((i, presta.carecode.code,
                      (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
+                     (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
                      '1', 
                      presta.carecode.gross_amount, 
                      presta.net_amount,
-                     (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
-                     "", 
+                     "%10.2f" % (decimal.Decimal(presta.carecode.gross_amount) - decimal.Decimal(presta.net_amount)),
                      "300744-44"))
     
     for x in range(len(data)  , 22):
@@ -91,11 +91,12 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     for y in range(0, len(data) -1) :
         newData.append(data[y])
         if(y % 10 == 0 and y != 0):
-            _gross_sum = _compute_sum(data[y-9:y+1], 4)
-            _net_sum = _compute_sum(data[y-9:y+1], 5)
-            newData.append(('', '', '', 'Sous-Total', _gross_sum, _net_sum, '', '',''))
-    _total_facture = _compute_sum(data[1:], 5)
-    newData.append(('', '', '', 'Total', _compute_sum(data[1:], 4), _compute_sum(data[1:], 5), '', '',''))
+            _gross_sum = _compute_sum(data[y-9:y+1], 5)
+            _net_sum = _compute_sum(data[y-9:y+1], 6)
+            _part_sum = _compute_sum(data[y - 9:y + 1], 7)
+            newData.append(('', '', '', 'Sous-Total', '', _gross_sum, _net_sum, _part_sum,''))
+    _total_facture = _compute_sum(data[1:], 7)
+    newData.append(('', '', '', 'Total', '', _compute_sum(data[1:], 5), _compute_sum(data[1:], 6), _compute_sum(data[1:], 7),''))
             
             
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
