@@ -86,22 +86,23 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers','Executant'))
     pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
     for presta in prestations:
-        i+=1
-        patientSocNumber = presta.patient.code_sn
-        patientNameAndFirstName = presta.patient
-        patientName = presta.patient.name
-        patientFirstName = presta.patient.first_name
-        patientAddress = presta.patient.address
-        patientZipCode = presta.patient.zipcode
-        patientCity = presta.patient.city
-        data.append((i, presta.carecode.code, 
-                     (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
-                     '1', 
-                     presta.carecode.gross_amount, 
-                     presta.net_amount, 
-                     (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
-                     "", 
-                     "300744-44"))
+        if presta.carecode.reimbursed:
+            i+=1
+            patientSocNumber = presta.patient.code_sn
+            patientNameAndFirstName = presta.patient
+            patientName = presta.patient.name
+            patientFirstName = presta.patient.first_name
+            patientAddress = presta.patient.address
+            patientZipCode = presta.patient.zipcode
+            patientCity = presta.patient.city
+            data.append((i, presta.carecode.code,
+                         (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
+                         '1',
+                         presta.carecode.gross_amount,
+                        presta.net_amount,
+                        (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
+                        "",
+                        "300744-44"))
     
     #grossTotal = 0
     #netTotal = 0
