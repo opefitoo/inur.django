@@ -203,5 +203,5 @@ def _compute_sum(data, position):
     sum = 0
     for x in data:
         if x[position] != "" :
-            sum += x[position]
-    return sum
+            sum += decimal.Decimal(x[position])
+    return round(sum, 2)
