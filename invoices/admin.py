@@ -58,12 +58,13 @@ admin.site.register(Patient, PatientAdmin)
 
 class PrestationAdmin(AjaxSelectAdmin):
     from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
+    from generate_road_book import generate_road_book_2015
 
     date_hierarchy = 'date'
     list_display = ('patient', 'carecode', 'date')
     search_fields = ['patient__name', 'patient__first_name']
     list_filter = ('patient__name',)
-    actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
+    actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed, generate_road_book_2015]
     form = make_ajax_form(Prestation, {'patient': 'patient', 'carecode': 'carecode'})
 
 
@@ -74,13 +75,13 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     from invoices.action import export_to_pdf
     from action_private import pdf_private_invoice
     from action_private_participation import pdf_private_invoice_pp
-    from invaction import previous_months_invoices_may, previous_months_invoices_june
+    from invaction import previous_months_invoices_august, previous_months_invoices_july
     date_hierarchy = 'invoice_date'
     #list_display = ('invoice_number', 'patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent',)
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient']
-    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice]
+    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, previous_months_invoices_august, previous_months_invoices_july]
     form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
 
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
