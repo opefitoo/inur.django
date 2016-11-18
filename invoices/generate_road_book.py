@@ -13,7 +13,7 @@ from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from invoices.models import Patient
 
-def generate_road_book_2014(modeladmin, request, queryset):
+def generate_road_book_2015(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
     now = timezone.now()
@@ -65,11 +65,11 @@ def generate_road_book_2014(modeladmin, request, queryset):
 
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
-    elements.append(Paragraph(u"Livre de bord pour l'année 2014 (génération automatique)", styles['Center']))
+    elements.append(Paragraph(u"Livre de bord pour l'année 2015 (génération automatique)", styles['Center']))
     elements.append(table)
     elements.append(Spacer(1, 18))
     elements.append(
-        Paragraph("La distance totale parcourue en 2014 est de %s KM" % (sumdistance / 1000), styles['Center']))
+        Paragraph("La distance totale parcourue en 2015 est de %s KM" % (sumdistance / 1000), styles['Center']))
     doc = SimpleDocTemplate(response, pagesize=letter, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm,
                             bottomMargin=1 * cm)
 
