@@ -96,7 +96,7 @@ class PrivateInvoiceItemAdmin(AjaxSelectAdmin):
     list_display = ('invoice_number', 'private_patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'private_patient__name', 'invoice_sent']
     search_fields = ['private_patient']
-    actions = [pdf_private_invoice, pdf_private_invoice_with_recap]
+    actions = [pdf_private_invoice]
     form = make_ajax_form(PrivateInvoiceItem, {'private_patient': 'private_patient_a_facturer'})
 
 
