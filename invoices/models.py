@@ -37,6 +37,7 @@ class Patient(models.Model):
     zipcode = models.CharField(max_length=10)
     city = models.CharField(max_length=30)
     phone_number = models.CharField(max_length=30)
+    email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField()
     private_patient = models.BooleanField(default=False)
 
