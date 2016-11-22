@@ -73,17 +73,10 @@ class Prestation(models.Model):
     #     }
     @property
     def net_amount(self):
-        "Returns the net amount"
-        # normalized_price_switch_date = pytz_chicago.normalize( self.carecode.price_switch_date )
-        # if self.date > normalized_price_switch_date:
-        # round to only two decimals
-        #   return round(((self.carecode.gross_amount * 88) / 100), 2)
-        # round to only two decimals
-        # return round(((self.carecode.previous_gross_amount * 88) / 100), 2)
-        if self.carecode.reimbursed:
+        # Returns the net amount
+        if not self.patient.private_patient or not self.carecode.reimbursed:
             return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
         else:
-            #return self.carecode.gross_amount
             return 0
 
     @property
