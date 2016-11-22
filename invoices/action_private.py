@@ -95,7 +95,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
             _net_sum = _compute_sum(data[y-9:y+1], 6)
             _part_sum = _compute_sum(data[y - 9:y + 1], 7)
             newData.append(('', '', '', 'Sous-Total', '', _gross_sum, _net_sum, _part_sum,''))
-    _total_facture = _compute_sum(data[1:], 7)
+    _total_facture = _compute_sum(data[1:], 6)
     newData.append(('', '', '', 'Total', '', _compute_sum(data[1:], 5), _compute_sum(data[1:], 6), _compute_sum(data[1:], 7),''))
             
             
