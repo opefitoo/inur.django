@@ -64,7 +64,7 @@ class PrestationAdmin(AjaxSelectAdmin):
     list_display = ('patient', 'carecode', 'date')
     search_fields = ['patient__name', 'patient__first_name']
     list_filter = ('patient__name',)
-    actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed, generate_road_book_2015]
+    actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
     form = make_ajax_form(Prestation, {'patient': 'patient', 'carecode': 'carecode'})
 
 
@@ -81,7 +81,7 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient']
-    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, previous_months_invoices_august, previous_months_invoices_july]
+    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice]
     form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
 
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
