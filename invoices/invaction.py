@@ -69,17 +69,20 @@ def create_invoice_for_health_insurance(modeladmin, request, queryset):
         if p in not_invoiced_prestas:
             prestations_to_invoice[p.patient].append(p)
 
+    _private_patient_flag = False
     for k, v in prestations_to_invoice.iteritems():
         if (k.private_patient):
             invoiceitem = PrivateInvoiceItem(private_patient=k,
                                              invoice_date=datetime.datetime.now(),
                                              invoice_sent=False,
                                              invoice_paid=False)
+            _private_patient_flag = True
         else:
             invoiceitem = InvoiceItem(patient=k,
                                       invoice_date=datetime.datetime.now(),
                                       invoice_sent=False,
                                       invoice_paid=False)
+            _private_patient_flag = False
             invoices_created.append(invoiceitem)
             invpks.append(invoiceitem.pk)
         invoiceitem.save()
@@ -87,7 +90,10 @@ def create_invoice_for_health_insurance(modeladmin, request, queryset):
             invoiceitem.prestations.add(prestav)
 
     #return HttpResponseRedirect("/admin/invoices/invoiceitem/?ct=%s&ids=%s" % (invoiceitem.pk, ",".join(invpks)))
-    return HttpResponseRedirect("/admin/invoices/invoiceitem/")
+    if not _private_patient_flag:
+        return HttpResponseRedirect("/admin/invoices/invoiceitem/")
+    else:
+        return HttpResponseRedirect("/admin/invoices/privateinvoiceitem/")
 
 create_invoice_for_health_insurance.short_description = u"Créer une facture pour CNS"
 
@@ -108,12 +114,14 @@ def create_invoice_for_client_no_irs_reimbursed(modeladmin, request, queryset):
         if p in not_invoiced_prestas and not p.carecode.reimbursed:
             prestations_to_invoice[p.patient].append(p)
 
+    _private_patient_flag = False
     for k, v in prestations_to_invoice.iteritems():
         if (k.private_patient):
             invoiceitem = PrivateInvoiceItem(private_patient=k,
                                              invoice_date=datetime.datetime.now(),
                                              invoice_sent=False,
                                              invoice_paid=False)
+            _private_patient_flag = True
         else:
             invoiceitem = InvoiceItem(patient=k,
                                       invoice_date=datetime.datetime.now(),
@@ -126,6 +134,9 @@ def create_invoice_for_client_no_irs_reimbursed(modeladmin, request, queryset):
             invoiceitem.prestations.add(prestav)
 
     #return HttpResponseRedirect("/admin/invoices/invoiceitem/?ct=%s&ids=%s" % (invoiceitem.pk, ",".join(invpks)))
-    return HttpResponseRedirect("/admin/invoices/invoiceitem/")
+    if not _private_patient_flag:
+        return HttpResponseRedirect("/admin/invoices/invoiceitem/")
+    else:
+        return HttpResponseRedirect("/admin/invoices/privateinvoiceitem/")
 
 create_invoice_for_client_no_irs_reimbursed.short_description = u"Créer une facture pour client avec soins non remboursés"
