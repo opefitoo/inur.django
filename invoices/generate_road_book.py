@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+import sys
 import requests
 from django.http import HttpResponse
 from django.utils import timezone
@@ -12,6 +14,16 @@ from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from invoices.models import Patient
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 
 def generate_road_book_2015(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
@@ -37,20 +49,49 @@ def generate_road_book_2015(modeladmin, request, queryset):
         now = p.date
         _point_end = _patient_address
         r = requests.get(
-            'http://maps.googleapis.com/maps/api/distancematrix/json?origins=fort%s&destinations=%s&mode=car&language=en-EN&sensor=false' % (
-            _point_start, _point_end))
+            'https://maps.googleapis.com/maps/api/distancematrix/json?origins=fort%s&destinations=%s&mode=car&language=en-EN&sensor=false' % (
+                _point_start, _point_end))
         if r.status_code == 200 and 'OK' == r.json()['status'] and r.json()['rows'][0]['elements'][0][
             'status'] != u'NOT_FOUND':
             pdistance = r.json()['rows'][0]['elements'][0]['distance']['text']
             sumdistance += r.json()['rows'][0]['elements'][0]['distance']['value']
+        elif r.status_code == 200 and 'OK' == r.json()['status'] and r.json()['rows'][0]['elements'][0][
+            'status'] == u'NOT_FOUND':
+            _point_start = p.city
+            r = requests.get(
+                'https://maps.googleapis.com/maps/api/distancematrix/json?origins=fort%s&destinations=%s&mode=car&language=en-EN&sensor=false' % (
+                    _point_start, _point_end))
+
+            # should be 'https://maps.googleapis.com/maps/api/distancematrix/json?origins=fort%s&destinations=%s&mode=car&language=en-EN&sensor=false&key=XXXX' % (_point_start, _point_end))
+
+
+            if r.status_code == 200 and 'OK' == r.json()['status'] and r.json()['rows'][0]['elements'][0][
+                'status'] != u'NOT_FOUND':
+                pdistance = r.json()['rows'][0]['elements'][0]['distance']['text']
+                sumdistance += r.json()['rows'][0]['elements'][0]['distance']['value']
+            else:
+                pdistance = 0
+                _point_end = _point_start
+                # Log an error message
+                eprint('Something went wrong!', r.json()['status'],
+                       r.json()['status'] and r.json()['rows'][0]['elements'][0][
+                           'status'], "p.end:" + _point_end, "p.start:" + _point_start,
+                       r.json()['rows'][0]['elements'][0], sep='--')
+
         else:
             pdistance = 0
             _point_end = _point_start
+            # Log an error message
+            eprint('Something went wrong!', r.json()['status'],
+                   r.json()['status'] and r.json()['rows'][0]['elements'][0][
+                       'status'], "p.end:" + _point_end, "p.start:" + _point_start, r.json()['rows'][0]['elements'][0],
+                   sep='--')
 
         data.append((p.name + ' ' + p.first_name,
                      _patient_address,
                      (p.date).strftime('%d/%m/%Y %H:%M'),
                      pdistance))
+
         _point_start = _point_end
 
     table = Table(data, [7 * cm, 9 * cm, 2.5 * cm, 2 * cm], len(data) * [0.8 * cm])
