@@ -69,14 +69,13 @@ class Prestation(models.Model):
     date = models.DateTimeField('date')
     date.editable = True
 
-    #     formfield_overrides = {
-    #         models.DateTimeField: {'widget': MyAdminSplitDateTime},
-    #     }
     @property
     def net_amount(self):
-        # Returns the net amount
-        if not self.patient.private_patient or not self.carecode.reimbursed:
-            return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
+        if not self.patient.private_patient:
+            if self.carecode.reimbursed:
+                return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
+            else:
+                return 0
         else:
             return 0
 
