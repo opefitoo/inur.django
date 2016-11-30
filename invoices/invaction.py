@@ -56,17 +56,13 @@ def previous_months_invoices_august(modeladmin, request, queryset):
 def create_invoice_for_health_insurance(modeladmin, request, queryset):
     # response = HttpResponse(content_type='text')
 
-    not_invoiced_prestas = Prestation.objects.raw("select p.id,p.patient_id,p.carecode_id,p.date" +
-                                                  " from invoices_prestation p " +
-                                                  "left join invoices_invoiceitem_prestations ip on p.id = ip.prestation_id " +
-                                                  "where ip.prestation_id is NULL")
     from collections import defaultdict
 
     prestations_to_invoice = defaultdict(list)
     invoices_created = []
     invpks = []
     for p in queryset:
-        if p in not_invoiced_prestas:
+        if PrivateInvoiceItem.objects.filter(prestations__id=p.pk).count() == 0 and InvoiceItem.objects.filter(prestations__id=p.pk).count() == 0:
             prestations_to_invoice[p.patient].append(p)
 
     _private_patient_flag = False
@@ -99,19 +95,13 @@ create_invoice_for_health_insurance.short_description = u"Créer une facture pou
 
 
 def create_invoice_for_client_no_irs_reimbursed(modeladmin, request, queryset):
-    # response = HttpResponse(content_type='text')
-
-    not_invoiced_prestas = Prestation.objects.raw("select p.id,p.patient_id,p.carecode_id,p.date" +
-                                                  " from invoices_prestation p " +
-                                                  "left join invoices_invoiceitem_prestations ip on p.id = ip.prestation_id " +
-                                                  "where ip.prestation_id is NULL")
     from collections import defaultdict
 
     prestations_to_invoice = defaultdict(list)
     invoices_created = []
     invpks = []
     for p in queryset:
-        if p in not_invoiced_prestas and not p.carecode.reimbursed:
+        if PrivateInvoiceItem.objects.filter(prestations__id=p.pk).count() == 0 and not p.carecode.reimbursed:
             prestations_to_invoice[p.patient].append(p)
 
     _private_patient_flag = False
@@ -133,7 +123,7 @@ def create_invoice_for_client_no_irs_reimbursed(modeladmin, request, queryset):
         for prestav in v:
             invoiceitem.prestations.add(prestav)
 
-    #return HttpResponseRedirect("/admin/invoices/invoiceitem/?ct=%s&ids=%s" % (invoiceitem.pk, ",".join(invpks)))
+
     if not _private_patient_flag:
         return HttpResponseRedirect("/admin/invoices/invoiceitem/")
     else:
