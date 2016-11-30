@@ -208,18 +208,18 @@ class PrivateInvoiceItem(models.Model):
     prestations = models.ManyToManyField(Prestation, related_name='private_invoice_prestations', editable=False,
                                          blank=True)
 
-    def save(self, *args, **kwargs):
-        super(PrivateInvoiceItem, self).save(*args, **kwargs)
-        if self.pk is not None:
-            prestationsq = Prestation.objects.raw("select prestations.id from invoices_prestation prestations " +
-                                                  "where prestations.patient_id = %s " % (self.private_patient.pk) +
-                                                  "and prestations.id not in ( " +
-                                                  "select pp.prestation_id " +
-                                                  "from public.invoices_privateinvoiceitem priv, public.invoices_privateinvoiceitem_prestations pp " +
-                                                  "group by pp.prestation_id)")
-            for p in prestationsq:
-                self.prestations.add(p)
-            super(PrivateInvoiceItem, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     super(PrivateInvoiceItem, self).save(*args, **kwargs)
+    #     if self.pk is not None:
+    #         prestationsq = Prestation.objects.raw("select prestations.id from invoices_prestation prestations " +
+    #                                               "where prestations.patient_id = %s " % (self.private_patient.pk) +
+    #                                               "and prestations.id not in ( " +
+    #                                               "select pp.prestation_id " +
+    #                                               "from public.invoices_privateinvoiceitem priv, public.invoices_privateinvoiceitem_prestations pp " +
+    #                                               "group by pp.prestation_id)")
+    #         for p in prestationsq:
+    #             self.prestations.add(p)
+    #         super(PrivateInvoiceItem, self).save(*args, **kwargs)
 
     def prestations_invoiced(self):
         return '%s prestations. Total = %s' % (
