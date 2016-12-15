@@ -1,4 +1,4 @@
-Django==1.10.3
+Django==1.10.4
 Pillow==2.8.1
 SQLAlchemy==1.0.3
 argparse==1.2.1
