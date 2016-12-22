@@ -172,12 +172,12 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     if patient_invoice_date is not None:
         from utils import setlocale
         with setlocale('fr_FR.utf8'):
-            if isinstance(patient_invoice_date.strftime('%d %B %Y'), unicode):
+            if isinstance(patient_invoice_date, unicode):
                 elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
                     '%d %B %Y').encode('utf-8')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
             else:
                 elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
-                    '%d %B %Y')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
+                    '%d %B %Y').encode('utf-8')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
         elements.append(Spacer(1, 10))
 
     return {"elements": elements
