@@ -1,4 +1,4 @@
-Django==1.10.4
+Django==1.10.5
 Pillow==2.8.1
 SQLAlchemy==1.0.3
 argparse==1.2.1
@@ -14,7 +14,11 @@ psycopg2==2.6
 pytz==2015.2
 reportlab==3.1.44
 requests==2.9.1
-six==1.9.0
 static3==0.5.1
 whitenoise==1.0.6
 wsgiref==0.1.2
+appdirs==1.4.0
+packaging==16.8
+pyparsing==2.1.10
+six==1.10.0
+
