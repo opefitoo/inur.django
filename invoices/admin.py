@@ -134,3 +134,5 @@ class TimesheetAdmin(admin.ModelAdmin):
 
     def timesheet_owner(self, instance):
          return instance.employee.user.username
+
+admin.site.register(Timesheet, TimesheetAdmin)
