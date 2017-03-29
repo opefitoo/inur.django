@@ -5,23 +5,23 @@ import datetime
 from models import Patient, InvoiceItem, Prestation, PrivateInvoiceItem
 from django.http import HttpResponseRedirect
 
-def previous_months_invoices_october(modeladmin, request, queryset):
+def previous_months_invoices_february_2017(modeladmin, request, queryset):
     # response = HttpResponse(content_type='text')
 
     previous_month_patients = Patient.objects.raw("select p.id, p.name, p.first_name " +
                                                   "from public.invoices_patient p, public.invoices_prestation prest " +
                                                   "where p.id = prest.patient_id " +
-                                                  "and prest.date >= '2016-10-01'and prest.date <= '2016-10-31' " +
+                                                  "and prest.date >= '2017-02-01'and prest.date <= '2017-02-28' " +
                                                   "and p.private_patient = 'f' " +
                                                   "and (select count(inv.id) from public.invoices_invoiceitem inv " +
-                                                  "where inv.invoice_date between '2016-10-01'::DATE and '2016-10-31'::DATE " +
+                                                  "where inv.invoice_date between '2017-02-01'::DATE and '2017-02-28'::DATE " +
                                                   "and inv.patient_id = p.id) = 0" +
                                                   "group by p.id " +
                                                   "order by p.name")
     invoice_counters = 0
     for p in previous_month_patients:
         invoiceitem = InvoiceItem(patient=p,
-                                  invoice_date=datetime.datetime(2016, 10, 31),
+                                  invoice_date=datetime.datetime(2017, 2, 28),
                                   invoice_sent=False,
                                   invoice_paid=False)
         invoiceitem.clean()
@@ -29,23 +29,23 @@ def previous_months_invoices_october(modeladmin, request, queryset):
         invoice_counters = invoice_counters + 1
 
 
-def previous_months_invoices_dec(modeladmin, request, queryset):
+def previous_months_invoices_jan_2017(modeladmin, request, queryset):
     # response = HttpResponse(content_type='text')
 
     previous_month_patients = Patient.objects.raw("select p.id, p.name, p.first_name " +
                                                   "from public.invoices_patient p, public.invoices_prestation prest " +
                                                   "where p.id = prest.patient_id " +
-                                                  "and prest.date >= '2016-12-01'and prest.date <= '2016-12-31' " +
+                                                  "and prest.date >= '2017-01-01'and prest.date <= '2017-01-31' " +
                                                   "and p.private_patient = 'f' " +
                                                   "and (select count(inv.id) from public.invoices_invoiceitem inv " +
-                                                  "where inv.invoice_date between '2016-12-01'::DATE and '2016-12-31'::DATE " +
+                                                  "where inv.invoice_date between '2017-01-01'::DATE and '2017-01-31'::DATE " +
                                                   "and inv.patient_id = p.id) = 0" +
                                                   "group by p.id " +
                                                   "order by p.name")
     invoice_counters = 0
     for p in previous_month_patients:
         invoiceitem = InvoiceItem(patient=p,
-                                  invoice_date=datetime.datetime(2016, 12, 31),
+                                  invoice_date=datetime.datetime(2017, 1, 31),
                                   invoice_sent=False,
                                   invoice_paid=False)
         invoiceitem.clean()
