@@ -5,52 +5,100 @@ import datetime
 from models import Patient, InvoiceItem, Prestation, PrivateInvoiceItem
 from django.http import HttpResponseRedirect
 
-def previous_months_invoices_february_2017(modeladmin, request, queryset):
-    # response = HttpResponse(content_type='text')
 
-    previous_month_patients = Patient.objects.raw("select p.id, p.name, p.first_name " +
-                                                  "from public.invoices_patient p, public.invoices_prestation prest " +
-                                                  "where p.id = prest.patient_id " +
-                                                  "and prest.date >= '2017-02-01'and prest.date <= '2017-02-28' " +
-                                                  "and p.private_patient = 'f' " +
-                                                  "and (select count(inv.id) from public.invoices_invoiceitem inv " +
-                                                  "where inv.invoice_date between '2017-02-01'::DATE and '2017-02-28'::DATE " +
-                                                  "and inv.patient_id = p.id) = 0" +
-                                                  "group by p.id " +
-                                                  "order by p.name")
+def previous_months_invoices_jan(modeladmin, request, queryset):
+    # response = HttpResponse(content_type='text')
+    previous_month_patients = Patient.objects.raw ("SELECT "
+                                                    + "    pat.id, "
+                                                    + "    pat.name, "
+                                                    + "    pat.first_name,"
+                                                    + "    pat.code_sn "
+                                                    + "FROM "
+                                                    + "    invoices_prestation out, "
+                                                    + "    invoices_patient pat, "
+                                                    + "    invoices_carecode cod "
+                                                    + "WHERE "
+                                                    + "    out.date >= '2017-01-01' "
+                                                    + "    AND out.date <= '2017-01-31' "
+                                                    + "    AND pat.id = out.patient_id "
+                                                    + "    AND pat.private_patient = 'f' "
+                                                    + "    AND cod.id = out.carecode_id "
+                                                    + "    AND cod.reimbursed = TRUE "
+                                                    + "    AND out.id NOT IN( "
+                                                    + "        SELECT "
+                                                    + "            prest.id "
+                                                    + "        FROM "
+                                                    + "            public.invoices_invoiceitem_prestations rel, "
+                                                    + "            invoices_prestation prest "
+                                                    + "        WHERE "
+                                                    + "            prest.date >= '2017-01-01' "
+                                                    + "            AND prest.date <= '2017-01-31' "
+                                                    + "            AND rel.prestation_id = prest.id "
+                                                    + "    ) GROUP BY pat.id")
+
     invoice_counters = 0
     for p in previous_month_patients:
-        invoiceitem = InvoiceItem(patient=p,
-                                  invoice_date=datetime.datetime(2017, 2, 28),
-                                  invoice_sent=False,
-                                  invoice_paid=False)
-        invoiceitem.clean()
-        invoiceitem.save()
-        invoice_counters = invoice_counters + 1
+        currInvoices = InvoiceItem.objects.filter(patient__code_sn=p.code_sn).filter(invoice_date__range=["2017-01-01", "2017-01-31"])
+        if currInvoices.exists():
+            currInvoices[0].clean()
+            currInvoices[0].save()
+        else:
+            invoiceitem = InvoiceItem (patient=p,
+                                   invoice_date=datetime.datetime (2017, 1, 31),
+                                   invoice_sent=False,
+                                   invoice_paid=False)
+
+            invoiceitem.clean ()
+            invoiceitem.save ()
+            invoice_counters += 1
 
 
-def previous_months_invoices_jan_2017(modeladmin, request, queryset):
+def previous_months_invoices_feb(modeladmin, request, queryset):
     # response = HttpResponse(content_type='text')
 
-    previous_month_patients = Patient.objects.raw("select p.id, p.name, p.first_name " +
-                                                  "from public.invoices_patient p, public.invoices_prestation prest " +
-                                                  "where p.id = prest.patient_id " +
-                                                  "and prest.date >= '2017-01-01'and prest.date <= '2017-01-31' " +
-                                                  "and p.private_patient = 'f' " +
-                                                  "and (select count(inv.id) from public.invoices_invoiceitem inv " +
-                                                  "where inv.invoice_date between '2017-01-01'::DATE and '2017-01-31'::DATE " +
-                                                  "and inv.patient_id = p.id) = 0" +
-                                                  "group by p.id " +
-                                                  "order by p.name")
+        # response = HttpResponse(content_type='text')
+    previous_month_patients = Patient.objects.raw ("SELECT "
+                                                       + "    pat.id, "
+                                                       + "    pat.name, "
+                                                       + "    pat.first_name,"
+                                                       + "    pat.code_sn "
+                                                       + "FROM "
+                                                       + "    invoices_prestation out, "
+                                                       + "    invoices_patient pat, "
+                                                       + "    invoices_carecode cod "
+                                                       + "WHERE "
+                                                       + "    out.date >= '2017-02-01' "
+                                                       + "    AND out.date <= '2017-02-28' "
+                                                       + "    AND pat.id = out.patient_id "
+                                                       + "    AND pat.private_patient = 'f' "
+                                                       + "    AND cod.id = out.carecode_id "
+                                                       + "    AND cod.reimbursed = TRUE "
+                                                       + "    AND out.id NOT IN( "
+                                                       + "        SELECT "
+                                                       + "            prest.id "
+                                                       + "        FROM "
+                                                       + "            public.invoices_invoiceitem_prestations rel, "
+                                                       + "            invoices_prestation prest "
+                                                       + "        WHERE "
+                                                       + "            prest.date >= '2017-02-28' "
+                                                       + "            AND prest.date <= '2017-02-28' "
+                                                       + "            AND rel.prestation_id = prest.id "
+                                                       + "    ) GROUP BY pat.id")
+
     invoice_counters = 0
     for p in previous_month_patients:
-        invoiceitem = InvoiceItem(patient=p,
-                                  invoice_date=datetime.datetime(2017, 1, 31),
-                                  invoice_sent=False,
-                                  invoice_paid=False)
-        invoiceitem.clean()
-        invoiceitem.save()
-        invoice_counters = invoice_counters + 1
+        currInvoices = InvoiceItem.objects.filter (patient__code_sn=p.code_sn).filter (invoice_date__range=["2017-02-01", "2017-02-28"])
+        if currInvoices.exists ():
+            currInvoices[0].clean ()
+            currInvoices[0].save ()
+        else:
+             invoiceitem = InvoiceItem (patient=p,
+                                        invoice_date=datetime.datetime (2017, 2, 28),
+                                        invoice_sent=False,
+                                        invoice_paid=False)
+             invoiceitem.clean ()
+             invoiceitem.save ()
+             invoice_counters += 1
 
 
 def create_invoice_for_health_insurance(modeladmin, request, queryset):
@@ -58,38 +106,40 @@ def create_invoice_for_health_insurance(modeladmin, request, queryset):
 
     from collections import defaultdict
 
-    prestations_to_invoice = defaultdict(list)
+    prestations_to_invoice = defaultdict (list)
     invoices_created = []
     invpks = []
     for p in queryset:
-        if PrivateInvoiceItem.objects.filter(prestations__id=p.pk).count() == 0 and InvoiceItem.objects.filter(prestations__id=p.pk).count() == 0:
-            prestations_to_invoice[p.patient].append(p)
+        if PrivateInvoiceItem.objects.filter (prestations__id=p.pk).count () == 0 and InvoiceItem.objects.filter (
+                prestations__id=p.pk).count () == 0:
+            prestations_to_invoice[p.patient].append (p)
 
     _private_patient_flag = False
-    for k, v in prestations_to_invoice.iteritems():
+    for k, v in prestations_to_invoice.iteritems ():
         if (k.private_patient):
-            invoiceitem = PrivateInvoiceItem(private_patient=k,
-                                             invoice_date=datetime.datetime.now(),
-                                             invoice_sent=False,
-                                             invoice_paid=False)
+            invoiceitem = PrivateInvoiceItem (private_patient=k,
+                                              invoice_date=datetime.datetime.now (),
+                                              invoice_sent=False,
+                                              invoice_paid=False)
             _private_patient_flag = True
         else:
-            invoiceitem = InvoiceItem(patient=k,
-                                      invoice_date=datetime.datetime.now(),
-                                      invoice_sent=False,
-                                      invoice_paid=False)
+            invoiceitem = InvoiceItem (patient=k,
+                                       invoice_date=datetime.datetime.now (),
+                                       invoice_sent=False,
+                                       invoice_paid=False)
             _private_patient_flag = False
-            invoices_created.append(invoiceitem)
-            invpks.append(invoiceitem.pk)
-        invoiceitem.save()
+            invoices_created.append (invoiceitem)
+            invpks.append (invoiceitem.pk)
+        invoiceitem.save ()
         for prestav in v:
-            invoiceitem.prestations.add(prestav)
+            invoiceitem.prestations.add (prestav)
 
-    #return HttpResponseRedirect("/admin/invoices/invoiceitem/?ct=%s&ids=%s" % (invoiceitem.pk, ",".join(invpks)))
+    # return HttpResponseRedirect("/admin/invoices/invoiceitem/?ct=%s&ids=%s" % (invoiceitem.pk, ",".join(invpks)))
     if not _private_patient_flag:
-        return HttpResponseRedirect("/admin/invoices/invoiceitem/")
+        return HttpResponseRedirect ("/admin/invoices/invoiceitem/")
     else:
-        return HttpResponseRedirect("/admin/invoices/privateinvoiceitem/")
+        return HttpResponseRedirect ("/admin/invoices/privateinvoiceitem/")
+
 
 create_invoice_for_health_insurance.short_description = u"Créer une facture pour CNS"
 
@@ -97,36 +147,36 @@ create_invoice_for_health_insurance.short_description = u"Créer une facture pou
 def create_invoice_for_client_no_irs_reimbursed(modeladmin, request, queryset):
     from collections import defaultdict
 
-    prestations_to_invoice = defaultdict(list)
+    prestations_to_invoice = defaultdict (list)
     invoices_created = []
     invpks = []
     for p in queryset:
-        if PrivateInvoiceItem.objects.filter(prestations__id=p.pk).count() == 0 and not p.carecode.reimbursed:
-            prestations_to_invoice[p.patient].append(p)
+        if PrivateInvoiceItem.objects.filter (prestations__id=p.pk).count () == 0 and not p.carecode.reimbursed:
+            prestations_to_invoice[p.patient].append (p)
 
     _private_patient_flag = False
-    for k, v in prestations_to_invoice.iteritems():
+    for k, v in prestations_to_invoice.iteritems ():
         if (k.private_patient):
-            invoiceitem = PrivateInvoiceItem(private_patient=k,
-                                             invoice_date=datetime.datetime.now(),
-                                             invoice_sent=False,
-                                             invoice_paid=False)
+            invoiceitem = PrivateInvoiceItem (private_patient=k,
+                                              invoice_date=datetime.datetime.now (),
+                                              invoice_sent=False,
+                                              invoice_paid=False)
             _private_patient_flag = True
         else:
-            invoiceitem = InvoiceItem(patient=k,
-                                      invoice_date=datetime.datetime.now(),
-                                      invoice_sent=False,
-                                      invoice_paid=False)
-            invoices_created.append(invoiceitem)
-            invpks.append(invoiceitem.pk)
-        invoiceitem.save()
+            invoiceitem = InvoiceItem (patient=k,
+                                       invoice_date=datetime.datetime.now (),
+                                       invoice_sent=False,
+                                       invoice_paid=False)
+            invoices_created.append (invoiceitem)
+            invpks.append (invoiceitem.pk)
+        invoiceitem.save ()
         for prestav in v:
-            invoiceitem.prestations.add(prestav)
-
+            invoiceitem.prestations.add (prestav)
 
     if not _private_patient_flag:
-        return HttpResponseRedirect("/admin/invoices/invoiceitem/")
+        return HttpResponseRedirect ("/admin/invoices/invoiceitem/")
     else:
-        return HttpResponseRedirect("/admin/invoices/privateinvoiceitem/")
+        return HttpResponseRedirect ("/admin/invoices/privateinvoiceitem/")
+
 
 create_invoice_for_client_no_irs_reimbursed.short_description = u"Créer une facture pour client avec soins non remboursés"
