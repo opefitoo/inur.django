@@ -53,7 +53,7 @@ def previous_months_invoices_jan(modeladmin, request, queryset):
             invoice_counters += 1
 
 
-def previous_months_invoices_feb(modeladmin, request, queryset):
+def previous_months_invoices_march(modeladmin, request, queryset):
     # response = HttpResponse(content_type='text')
 
         # response = HttpResponse(content_type='text')
