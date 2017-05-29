@@ -67,8 +67,8 @@ def previous_months_invoices_feb(modeladmin, request, queryset):
                                                        + "    invoices_patient pat, "
                                                        + "    invoices_carecode cod "
                                                        + "WHERE "
-                                                       + "    out.date >= '2017-02-01' "
-                                                       + "    AND out.date <= '2017-02-28' "
+                                                       + "    out.date >= '2017-03-01' "
+                                                       + "    AND out.date <= '2017-03-31' "
                                                        + "    AND pat.id = out.patient_id "
                                                        + "    AND pat.private_patient = 'f' "
                                                        + "    AND cod.id = out.carecode_id "
@@ -80,20 +80,20 @@ def previous_months_invoices_feb(modeladmin, request, queryset):
                                                        + "            public.invoices_invoiceitem_prestations rel, "
                                                        + "            invoices_prestation prest "
                                                        + "        WHERE "
-                                                       + "            prest.date >= '2017-02-28' "
-                                                       + "            AND prest.date <= '2017-02-28' "
+                                                       + "            prest.date >= '2017-03-01' "
+                                                       + "            AND prest.date <= '2017-03-31' "
                                                        + "            AND rel.prestation_id = prest.id "
                                                        + "    ) GROUP BY pat.id")
 
     invoice_counters = 0
     for p in previous_month_patients:
-        currInvoices = InvoiceItem.objects.filter (patient__code_sn=p.code_sn).filter (invoice_date__range=["2017-02-01", "2017-02-28"])
+        currInvoices = InvoiceItem.objects.filter (patient__code_sn=p.code_sn).filter (invoice_date__range=["2017-03-01", "2017-03-31"])
         if currInvoices.exists ():
             currInvoices[0].clean ()
             currInvoices[0].save ()
         else:
              invoiceitem = InvoiceItem (patient=p,
-                                        invoice_date=datetime.datetime (2017, 2, 28),
+                                        invoice_date=datetime.datetime (2017, 3, 31),
                                         invoice_sent=False,
                                         invoice_paid=False)
              invoiceitem.clean ()
