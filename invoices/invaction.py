@@ -18,8 +18,8 @@ def previous_months_invoices_jan(modeladmin, request, queryset):
                                                     + "    invoices_patient pat, "
                                                     + "    invoices_carecode cod "
                                                     + "WHERE "
-                                                    + "    out.date >= '2017-01-01' "
-                                                    + "    AND out.date <= '2017-01-31' "
+                                                    + "    out.date > '2016-12-31' "
+                                                    + "    AND out.date < '2017-02-01' "
                                                     + "    AND pat.id = out.patient_id "
                                                     + "    AND pat.private_patient = 'f' "
                                                     + "    AND cod.id = out.carecode_id "
@@ -31,8 +31,8 @@ def previous_months_invoices_jan(modeladmin, request, queryset):
                                                     + "            public.invoices_invoiceitem_prestations rel, "
                                                     + "            invoices_prestation prest "
                                                     + "        WHERE "
-                                                    + "            prest.date >= '2017-01-01' "
-                                                    + "            AND prest.date <= '2017-01-31' "
+                                                    + "            prest.date > '2016-12-31' "
+                                                    + "            AND prest.date < '2017-02-01' "
                                                     + "            AND rel.prestation_id = prest.id "
                                                     + "    ) GROUP BY pat.id")
 
