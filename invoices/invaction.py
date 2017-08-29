@@ -149,6 +149,86 @@ def previous_months_invoices_april(modeladmin, request, queryset):
              invoice_counters += 1
 
 
+def previous_months_invoices_may_2017(modeladmin, request, queryset):
+    # response = HttpResponse(content_type='text')
+
+        # response = HttpResponse(content_type='text')
+    previous_month_patients = Patient.objects.raw ("SELECT "
+                                                       + "    pat.id, "
+                                                       + "    pat.name, "
+                                                       + "    pat.first_name,"
+                                                       + "    pat.code_sn "
+                                                       + "FROM "
+                                                       + "    invoices_prestation out, "
+                                                       + "    invoices_patient pat, "
+                                                       + "    invoices_carecode cod "
+                                                       + "WHERE "
+                                                       + "    out.date >= '2017-05-01' "
+                                                       + "    AND out.date <= '2017-05-31' "
+                                                       + "    AND pat.id = out.patient_id "
+                                                       + "    AND pat.private_patient = 'f' "
+                                                       + "    AND cod.id = out.carecode_id "
+                                                       + "    AND cod.reimbursed = TRUE "
+                                                       + "    AND out.id NOT IN( "
+                                                       + "        SELECT "
+                                                       + "            prest.id "
+                                                       + "        FROM "
+                                                       + "            public.invoices_invoiceitem_prestations rel, "
+                                                       + "            invoices_prestation prest "
+                                                       + "        WHERE "
+                                                       + "            prest.date >= '2017-05-01' "
+                                                       + "            AND prest.date <= '2017-05-31' "
+                                                       + "            AND rel.prestation_id = prest.id "
+                                                       + "    ) GROUP BY pat.id")
+
+    invoice_counters = 0
+    for p in previous_month_patients:
+        currInvoices = InvoiceItem.objects.filter (patient__code_sn=p.code_sn).filter (invoice_date__range=["2017-05-01", "2017-05-31"])
+        if currInvoices.exists ():
+            currInvoices[0].clean ()
+            currInvoices[0].save ()
+        else:
+             invoiceitem = InvoiceItem (patient=p,
+                                        invoice_date=datetime.datetime (2017, 5, 31),
+                                        invoice_sent=False,
+                                        invoice_paid=False)
+             invoiceitem.clean ()
+             invoiceitem.save ()
+             invoice_counters += 1
+
+
+def syncro_clients(modeladmin, request, queryset):
+    import requests
+    import os
+
+    #client_id = os.environ['RSRC_GURU_CLIENT_SECRET']
+    #client_secret = 'RSRC_GURU_CLIENT_SECRET'
+    client_id = '5c124391a2412c2d2e8c54a5416167153a37667c7d2884fc9e36c43f92d96e5d'
+    client_secret = '33b20c509a69d32bf2fea63df5ecc72af46bb0ba9d4a4f76aab0e061648e3ac7'
+    redirect_uri = 'https://regine3.herokuapp.com/admin/'
+    authorize_url = "https://api.resourceguruapp.com/oauth/authorize?client_id=$client_id&redirect_uri=$redirect_uri&response_type=code"
+    token_url = 'https://api.resourceguruapp.com/oauth/token'
+
+    from oauthlib.oauth2 import BackendApplicationClient
+    from requests.auth import HTTPBasicAuth
+    from requests_oauthlib import OAuth2Session
+    auth = HTTPBasicAuth (client_id, client_secret)
+    client = BackendApplicationClient (client_id=client_id)
+    oauth = OAuth2Session (client=client)
+    token = oauth.fetch_token (token_url=token_url, auth=auth)
+
+    headers = {"Authorization": "Bearer " + token['access_token']}
+
+    resources = requests.get ("https://api.resourceguruapp.com/v1/example-account-subdomain/resources",
+                              headers=headers)
+    print resources
+
+
+
+
+
+
+
 
 def create_invoice_for_health_insurance(modeladmin, request, queryset):
     # response = HttpResponse(content_type='text')
