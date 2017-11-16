@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from invoices.models import CareCode
+from invoices.models import CareCode, Patient
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -18,4 +18,11 @@ class GroupSerializer(serializers.ModelSerializer):
 class CareCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CareCode
-        fields = ('code', 'name', 'description', 'gross_amount', 'reimbursed')
+        fields = ('id', 'code', 'name', 'description', 'gross_amount', 'reimbursed')
+
+
+class PatientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ('id', 'code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'phone_number', 'email_address',
+                  'participation_statutaire', 'private_patient')

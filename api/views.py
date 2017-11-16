@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
-from serializers import UserSerializer, GroupSerializer, CareCodeSerializer
-from invoices.models import CareCode
+from serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer
+from invoices.models import CareCode, Patient
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -26,3 +26,11 @@ class CareCodeViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = CareCode.objects.all()
     serializer_class = CareCodeSerializer
+
+
+class PatientViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows Patients to be viewed.
+    """
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer
