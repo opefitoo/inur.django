@@ -21,5 +21,6 @@ from ajax_select import urls as ajax_select_urls
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^admin/lookups/', include(ajax_select_urls)),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/v1/', include('api.urls', namespace='api'))
 ]
