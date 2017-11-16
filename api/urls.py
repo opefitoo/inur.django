@@ -10,6 +10,7 @@ router.register(r'care-codes', views.CareCodeViewSet)
 router.register(r'patients', views.PatientViewSet)
 router.register(r'prestations', views.PrestationViewSet)
 router.register(r'invoice-items', views.InvoiceItemViewSet)
+router.register(r'private-invoice-items', views.PrivateInvoiceItemViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
