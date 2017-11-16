@@ -1,8 +1,10 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, PrestationSerializer, \
-    InvoiceItemSerializer, PrivateInvoiceItemSerializer
+    InvoiceItemSerializer, PrivateInvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
+    TimesheetTaskSerializer
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, PrivateInvoiceItem
+from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -55,7 +57,31 @@ class InvoiceItemViewSet(viewsets.ReadOnlyModelViewSet):
 
 class PrivateInvoiceItemViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API endpoint that allows InvoiceItems to be viewed.
+    API endpoint that allows PrivateInvoiceItems to be viewed.
     """
     queryset = PrivateInvoiceItem.objects.all()
     serializer_class = PrivateInvoiceItemSerializer
+
+
+class JobPositionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows JobPositions to be viewed.
+    """
+    queryset = JobPosition.objects.all()
+    serializer_class = JobPositionSerializer
+
+
+class TimesheetViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows Timesheets to be viewed.
+    """
+    queryset = Timesheet.objects.all()
+    serializer_class = TimesheetSerializer
+
+
+class TimesheetTaskViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows TimesheetTasks to be viewed.
+    """
+    queryset = TimesheetTask.objects.all()
+    serializer_class = TimesheetTaskSerializer

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, PrivateInvoiceItem
+from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,3 +48,21 @@ class PrivateInvoiceItemSerializer(serializers.ModelSerializer):
         model = PrivateInvoiceItem
         fields = ('id', 'invoice_number', 'accident_id', 'accident_date', 'invoice_date', 'invoice_send_date',
                   'invoice_sent', 'invoice_paid', 'medical_prescription_date', 'prestations', 'private_patient')
+
+
+class JobPositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobPosition
+        fields = ('id', 'name', 'description')
+
+
+class TimesheetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Timesheet
+        fields = ('id', 'employee', 'start_date', 'end_date', 'submitted_date', 'other_details', 'timesheet_validated')
+
+
+class TimesheetTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TimesheetTask
+        fields = ('id', 'name', 'description')
