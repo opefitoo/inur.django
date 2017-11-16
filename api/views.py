@@ -7,7 +7,7 @@ from invoices.models import CareCode, Patient, Prestation, InvoiceItem, PrivateI
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed.
     """
@@ -15,7 +15,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSerializer
 
 
-class GroupViewSet(viewsets.ReadOnlyModelViewSet):
+class GroupViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed.
     """
@@ -23,7 +23,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = GroupSerializer
 
 
-class CareCodeViewSet(viewsets.ReadOnlyModelViewSet):
+class CareCodeViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows CareCodes to be viewed.
     """
@@ -31,7 +31,7 @@ class CareCodeViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CareCodeSerializer
 
 
-class PatientViewSet(viewsets.ReadOnlyModelViewSet):
+class PatientViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Patients to be viewed.
     """
@@ -39,7 +39,7 @@ class PatientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PatientSerializer
 
 
-class PrestationViewSet(viewsets.ReadOnlyModelViewSet):
+class PrestationViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Prestations to be viewed.
     """
@@ -47,7 +47,7 @@ class PrestationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PrestationSerializer
 
 
-class InvoiceItemViewSet(viewsets.ReadOnlyModelViewSet):
+class InvoiceItemViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows InvoiceItems to be viewed.
     """
@@ -55,7 +55,7 @@ class InvoiceItemViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = InvoiceItemSerializer
 
 
-class PrivateInvoiceItemViewSet(viewsets.ReadOnlyModelViewSet):
+class PrivateInvoiceItemViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows PrivateInvoiceItems to be viewed.
     """
@@ -63,7 +63,7 @@ class PrivateInvoiceItemViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PrivateInvoiceItemSerializer
 
 
-class JobPositionViewSet(viewsets.ReadOnlyModelViewSet):
+class JobPositionViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows JobPositions to be viewed.
     """
@@ -71,7 +71,7 @@ class JobPositionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = JobPositionSerializer
 
 
-class TimesheetViewSet(viewsets.ReadOnlyModelViewSet):
+class TimesheetViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Timesheets to be viewed.
     """
@@ -79,7 +79,7 @@ class TimesheetViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TimesheetSerializer
 
 
-class TimesheetTaskViewSet(viewsets.ReadOnlyModelViewSet):
+class TimesheetTaskViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows TimesheetTasks to be viewed.
     """
