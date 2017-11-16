@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
-from serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer
-from invoices.models import CareCode, Patient
+from serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, PrestationSerializer, \
+    InvoiceItemSerializer
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -34,3 +35,19 @@ class PatientViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
+
+
+class PrestationViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows Prestations to be viewed.
+    """
+    queryset = Prestation.objects.all()
+    serializer_class = PrestationSerializer
+
+
+class InvoiceItemViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows InvoiceItems to be viewed.
+    """
+    queryset = InvoiceItem.objects.all()
+    serializer_class = InvoiceItemSerializer
