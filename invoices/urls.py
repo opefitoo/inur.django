@@ -19,6 +19,7 @@ from django.contrib import admin
 from ajax_select import urls as ajax_select_urls
 
 urlpatterns = [
-                       url(r'^admin/', include(admin.site.urls)),
-                       url(r'^admin/lookups/', include(ajax_select_urls)),
-                       ]
+    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/lookups/', include(ajax_select_urls)),
+    url(r'^api/v1/', include('api.urls', namespace='api'))
+]

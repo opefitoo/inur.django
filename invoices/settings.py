@@ -15,7 +15,6 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -27,7 +26,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = (
@@ -38,7 +36,9 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'invoices',
+    'api',
     'ajax_select'
 )
 
@@ -66,7 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                #'django.core.context_processors.request',
+                # 'django.core.context_processors.request',
             ],
         },
     },
@@ -74,15 +74,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'invoices.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 # Parse database configuration from $DATABASE_URL
 import dj_database_url
+
 DATABASES = {'default': dj_database_url.config(default='postgres://nursev3:nursev3@localhost:5432/nursev3')}
 
 # Enable Connection Pooling
-#DATABASES['default']['ENGINE'] = 'django_postgrespool'
+# DATABASES['default']['ENGINE'] = 'django_postgrespool'
 DATABASES['default']['AUTOCOMMIT'] = True
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
@@ -93,8 +93,9 @@ ALLOWED_HOSTS = ['*']
 
 # Static asset configuration
 import os
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_ROOT= os.path.join(BASE_DIR,'staticfiles/')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles/')
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
@@ -114,7 +115,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
@@ -130,10 +130,18 @@ AJAX_LOOKUP_CHANNELS = {
     #  simple: search Person.objects.filter(name__icontains=q)
     # 'patient'  : {'model': 'invoices.patient', 'search_field': 'name'},
     # define a custom lookup channel
-    #'patientsamoi'   : ('lookups', 'PatientLookup'),
+    # 'patientsamoi'   : ('lookups', 'PatientLookup'),
     'patient_du_mois': ('invoices.lookups', 'PatientDuMoisLookup'),
     'private_patient_a_facturer': ('invoices.lookups', 'PrivatePatientDuMoisLookup'),
-    'patient'   : ('invoices.lookups', 'PatientLookup'),
-    'carecode'   : ('invoices.lookups', 'CareCodeLookup'),
-    'task_description'  : ('invoices.lookups', 'TimesheetTaskLookup'),
+    'patient': ('invoices.lookups', 'PatientLookup'),
+    'carecode': ('invoices.lookups', 'CareCodeLookup'),
+    'task_description': ('invoices.lookups', 'TimesheetTaskLookup'),
+}
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
 }
