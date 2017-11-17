@@ -10,8 +10,6 @@ import pytz
 logger = logging.getLogger(__name__)
 
 
-
-
 # Create your models here.
 class CareCode(models.Model):
     code = models.CharField(max_length=30)
