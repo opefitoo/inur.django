@@ -136,6 +136,8 @@ AJAX_LOOKUP_CHANNELS = {
     'private_patient_a_facturer': ('invoices.lookups', 'PrivatePatientDuMoisLookup'),
     'patient': ('invoices.lookups', 'PatientLookup'),
     'carecode': ('invoices.lookups', 'CareCodeLookup'),
+    'prestation': ('invoices.lookups', 'PrestationLookup'),
+    'invoiceitem': ('invoices.lookups', 'InvoiceItemLookup'),
     'task_description': ('invoices.lookups', 'TimesheetTaskLookup'),
 }
 

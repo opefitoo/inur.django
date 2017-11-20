@@ -1,6 +1,6 @@
 from ajax_select import LookupChannel
 
-from models import Patient, CareCode
+from models import Patient, CareCode, Prestation, InvoiceItem
 from timesheet import TimesheetTask
 from django.utils.html import escape
 from django.db.models.query_utils import Q
@@ -118,6 +118,46 @@ class CareCodeLookup(LookupChannel):
 
     def get_query(self, q, request):
         return CareCode.objects.filter(Q(code__istartswith=q) | Q(name__icontains=q)).order_by('code')
+
+    def get_result(self, obj):
+        u""" result is the simple text that is the completion of what the person typed """
+        return obj.code
+
+    def format_match(self, obj):
+        """ (HTML) formatted item for display in the dropdown """
+        return u"%s<div><i>%s</i></div>" % (escape(obj.code), escape(obj.name))
+        # return self.format_item_display(obj)
+
+    def format_item_display(self, obj):
+        """ (HTML) formatted item for displaying item in the selected deck area """
+        return u"%s<div><i>%s</i></div>" % (escape(obj.code), escape(obj.name))
+
+
+class PrestationLookup(LookupChannel):
+    model = Prestation
+
+    def get_query(self, q, request):
+        return Prestation.objects.filter(Q(patient__name__icontains=q) | Q(patient__first_name__icontains=q)).order_by('patient__name')
+
+    def get_result(self, obj):
+        u""" result is the simple text that is the completion of what the person typed """
+        return str(obj)
+
+    def format_match(self, obj):
+        """ (HTML) formatted item for display in the dropdown """
+        return u"%s<div><i>%s</i></div>" % (escape(str(obj.date)), escape(str(obj)))
+        # return self.format_item_display(obj)
+
+    def format_item_display(self, obj):
+        """ (HTML) formatted item for displaying item in the selected deck area """
+        return u"%s<div><i>%s</i></div>" % (escape(str(obj.date)), escape(str(obj)))
+
+
+class InvoiceItemLookup(LookupChannel):
+    model = InvoiceItem
+
+    def get_query(self, q, request):
+        return InvoiceItem.objects.filter(Q(invoice_number__istartswith=q) | Q(invoice_number__icontains=q)).order_by('invoice_number')
 
     def get_result(self, obj):
         u""" result is the simple text that is the completion of what the person typed """

@@ -132,7 +132,8 @@ class InvoiceItem(models.Model):
     medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)
     patient = models.ForeignKey(Patient, related_name='patient',
                                 help_text='choisir parmi ces patients pour le mois precedent')
-    prestations = models.ManyToManyField(Prestation, related_name='prestations', editable=False, blank=True)
+    prestations = models.ManyToManyField(Prestation, related_name='prestations', through='InvoiceItemPrestation',
+                                         editable=False, blank=True)
 
     def save(self, *args, **kwargs):
         super(InvoiceItem, self).save(*args, **kwargs)
@@ -190,6 +191,14 @@ class InvoiceItem(models.Model):
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return 'invocie no.: %s - nom patient: %s' % (self.invoice_number, self.patient)
+
+
+class InvoiceItemPrestation(models.Model):
+    invoiceitem = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE)
+    prestation = models.ForeignKey(Prestation, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'invoices_invoiceitem_prestations'
 
 
 class PrivateInvoiceItem(models.Model):
