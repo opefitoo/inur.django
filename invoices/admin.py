@@ -82,7 +82,7 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     #list_display = ('invoice_number', 'patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent',)
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
-    search_fields = ['patient__first_name', 'patient__name']
+    search_fields = ['patient__name', 'patient__first_name']
     actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, syncro_clients, previous_months_invoices_april, previous_months_invoices_july_2017, niedercorn_avril_mai_2017]
     form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
 
@@ -97,7 +97,7 @@ class PrivateInvoiceItemAdmin(AjaxSelectAdmin):
     #list_display = ('invoice_number', 'private_patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent' )
     list_display = ('invoice_number', 'private_patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'private_patient__name', 'invoice_sent']
-    search_fields = ['private_patient']
+    search_fields = ['private_patient__name', 'private_patient__first_name']
     actions = [pdf_private_invoice]
     form = make_ajax_form(PrivateInvoiceItem, {'private_patient': 'private_patient_a_facturer'})
 
