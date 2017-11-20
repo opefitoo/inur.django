@@ -26,7 +26,7 @@ class CareCode(models.Model):
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s: %s' % (self.code, self.name)
 
-
+#TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
     code_sn = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
@@ -60,13 +60,29 @@ class Patient(models.Model):
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
+#TODO: 1. can maybe be extending common class with Patient ?
+#TODO: 2. synchronize physician details with Google contacts
+class Physcian(models.Model):
+    code_sn = models.CharField(max_length=30)
+    first_name = models.CharField(max_length=30)
+    name = models.CharField(max_length=30)
+    address = models.TextField(max_length=30)
+    zipcode = models.CharField(max_length=10)
+    city = models.CharField(max_length=30)
+    phone_number = models.CharField(max_length=30)
+    email_address = models.EmailField(default=None, blank=True, null=True)
+
+    def __unicode__(self):  # Python 3: def __str__(self):
+        return '%s %s' % (self.name.strip(), self.first_name.strip())
+
 
 class Prestation(models.Model):
-    patient = models.ForeignKey(Patient)
+    #patient = models.ForeignKey(Patient)
     carecode = models.ForeignKey(CareCode)
     date = models.DateTimeField('date')
     date.editable = True
 
+    # TODO retrieve private_patient from Patient or compute it in a different way
     @property
     def net_amount(self):
         if not self.patient.private_patient:
@@ -77,11 +93,10 @@ class Prestation(models.Model):
         else:
             return 0
 
+    # TODO retrieve partificaption statutaire from Patient or compute it in a different way
     @property
     def fin_part(self):
         "Returns the financial participation of the client"
-        # pytz_chicago = pytz.timezone("America/Chicago")
-        # normalized_price_switch_date = pytz_chicago.normalize( self.carecode.price_switch_date )
         if self.patient.participation_statutaire:
             return 0
         # round to only two decimals
@@ -89,21 +104,21 @@ class Prestation(models.Model):
         #    return round(((self.carecode.gross_amount * 12) / 100), 2)
         return round(((self.carecode.gross_amount * 12) / 100), 2)
 
-    def clean(self):
-        "if same prestation same date same code same patient, disallow creation"
-        prestationsq = Prestation.objects.filter(date=self.date).filter(patient__pk=self.patient.pk).filter(
-            carecode__pk=self.carecode.pk)
-        if prestationsq.exists():
-            for presta_in_db in prestationsq:
-                if (presta_in_db.pk != self.pk):
-                    raise ValidationError(
-                        'Cannot create medical service "code:%s on:%s for:%s" because is already exists' % (
-                            self.carecode,
-                            self.date.strftime('%d-%m-%Y'),
-                            self.patient))
+    # def clean(self):
+    #     "if same prestation same date same code same patient, disallow creation"
+    #     prestationsq = Prestation.objects.filter(date=self.date).filter(patient__pk=self.patient.pk).filter(
+    #         carecode__pk=self.carecode.pk)
+    #     if prestationsq.exists():
+    #         for presta_in_db in prestationsq:
+    #             if (presta_in_db.pk != self.pk):
+    #                 raise ValidationError(
+    #                     'Cannot create medical service "code:%s on:%s for:%s" because is already exists' % (
+    #                         self.carecode,
+    #                         self.date.strftime('%d-%m-%Y'),
+    #                         self.patient))
 
     def __unicode__(self):  # Python 3: def __str__(self):
-        return 'code: %s - nom patient: %s' % (self.carecode.code, self.patient.name)
+        return 'code: %s - nom : %s' % (self.carecode.code, self.carecode.name)
 
 
 def get_default_invoice_number():
@@ -121,6 +136,8 @@ def get_default_invoice_number():
 
 
 class InvoiceItem(models.Model):
+    #TODO: when checked only patient which private_patient = true must be looked up via the ajax search lookup
+    is_private = models.BooleanField(default=False)
     invoice_number = models.CharField(max_length=50, default=get_default_invoice_number)
     accident_id = models.CharField(max_length=30, help_text=u"Numero d'accident est facultatif", null=True, blank=True)
     accident_date = models.DateField(help_text=u"Date d'accident est facultatif", null=True, blank=True)
@@ -132,8 +149,14 @@ class InvoiceItem(models.Model):
     medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)
     patient = models.ForeignKey(Patient, related_name='patient',
                                 help_text='choisir parmi ces patients pour le mois precedent')
+    #TODO: I would like to store the file Field in Google drive
+    # maybe this can be helpful https://github.com/torre76/django-googledrive-storage
+    upload_scan_medical_prescription = models.FileField()
+    physician = models.ForeignKey(Physcian, related_name='physician', null=True, blank=True,
+                                  help_text='Please chose the physican who is givng the medical prescription')
     prestations = models.ManyToManyField(Prestation, related_name='prestations', through='InvoiceItemPrestation',
                                          editable=False, blank=True)
+
 
     def save(self, *args, **kwargs):
         super(InvoiceItem, self).save(*args, **kwargs)

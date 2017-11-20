@@ -63,14 +63,13 @@ admin.site.register(Patient, PatientAdmin)
 
 class PrestationAdmin(AjaxSelectAdmin):
     from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
-    from generate_road_book import generate_road_book_2015
 
     date_hierarchy = 'date'
-    list_display = ('patient', 'carecode', 'date')
-    search_fields = ['patient__name', 'patient__first_name']
-    list_filter = ('patient__name',)
+    list_display = ('carecode', 'date')
+    search_fields = ['carecode__code', 'carecode__name']
+    #list_filter = ('patient__name',)
     actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
-    form = make_ajax_form(Prestation, {'patient': 'patient', 'carecode': 'carecode'})
+    form = make_ajax_form(Prestation, {'carecode': 'carecode'})
 
 
 admin.site.register(Prestation, PrestationAdmin)
