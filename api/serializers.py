@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
@@ -27,6 +27,12 @@ class PatientSerializer(serializers.ModelSerializer):
         model = Patient
         fields = ('id', 'code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'phone_number', 'email_address',
                   'participation_statutaire', 'is_private')
+
+
+class PhysicianSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Physician
+        fields = ('id', 'code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'phone_number', 'email_address')
 
 
 class PrestationSerializer(serializers.ModelSerializer):
