@@ -82,7 +82,7 @@ def get_default_invoice_number():
 
 
 class InvoiceItem(models.Model):
-    invoice_number = models.CharField(max_length=50, default=get_default_invoice_number)
+    invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)
     accident_id = models.CharField(max_length=30, help_text=u"Numero d'accident est facultatif", null=True, blank=True)
     accident_date = models.DateField(help_text=u"Date d'accident est facultatif", null=True, blank=True)
     invoice_date = models.DateField('Invoice date')
@@ -104,19 +104,19 @@ class InvoiceItem(models.Model):
     # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
     is_private = models.BooleanField(default=False)
 
-    def save(self, *args, **kwargs):
-        super(InvoiceItem, self).save(*args, **kwargs)
-        pytz_chicago = pytz.timezone("America/Chicago")
-        if self.pk is not None:
-            prestationsq = Prestation.objects.filter(
-                Q(date__month=self.invoice_date.month - 1) | Q(date__month=self.invoice_date.month) | Q(
-                    date__month=self.invoice_date.month + 1)).filter(date__year=self.invoice_date.year).filter(
-                patient__pk=self.patient.pk)
-            for p in prestationsq:
-                normalized_date = pytz_chicago.normalize(p.date)
-                if normalized_date.month == self.invoice_date.month:
-                    self.prestations.add(p)
-            super(InvoiceItem, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     super(InvoiceItem, self).save(*args, **kwargs)
+    #     pytz_chicago = pytz.timezone("America/Chicago")
+    #     if self.pk is not None:
+    #         prestationsq = Prestation.objects.filter(
+    #             Q(date__month=self.invoice_date.month - 1) | Q(date__month=self.invoice_date.month) | Q(
+    #                 date__month=self.invoice_date.month + 1)).filter(date__year=self.invoice_date.year).filter(
+    #             patient__pk=self.patient.pk)
+    #         for p in prestationsq:
+    #             normalized_date = pytz_chicago.normalize(p.date)
+    #             if normalized_date.month == self.invoice_date.month:
+    #                 self.prestations.add(p)
+    #         super(InvoiceItem, self).save(*args, **kwargs)
 
     def prestations_invoiced(self):
         return '%s prestations. Total = %s' % (
@@ -132,26 +132,6 @@ class InvoiceItem(models.Model):
         for i in qinvoices_of_current_month:
             patients_pks_having_an_invoice.append(i.patient.pk)
         return patients_pks_having_an_invoice
-
-    def clean(self, *args, **kwargs):
-        # # don't allow patient to have more than one invoice for a month
-        # import pydevd; pydevd.settrace()
-        if hasattr(self, 'patient') and hasattr(self, 'invoice_date') and self.invoice_date is not None:
-            iq = InvoiceItem.objects.filter(patient__pk=self.patient.pk).filter(
-                Q(invoice_date__month=self.invoice_date.month) & Q(invoice_date__year=self.invoice_date.year)
-            )
-            prestationsq = Prestation.objects.filter(date__month=self.invoice_date.month).filter(
-                date__year=self.invoice_date.year).filter(patient__pk=self.patient.pk)
-            if not prestationsq.exists():
-                raise ValidationError(
-                    'Cannot create an invoice for this perdiod ''%s ''  for this patient ''%s'' because there were no medical service ' % (
-                        self.invoice_date.strftime('%B-%Y'), self.patient))
-            invoice_items = InvoiceItem.objects.filter(invoice_number=self.invoice_number)
-            if invoice_items.exists():
-                for invoice in invoice_items:
-                    if invoice.pk != self.pk:
-                        raise ValidationError('Already an invoice with this number ''%s ''  ' % self.invoice_number)
-        super(InvoiceItem, self).clean()
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return 'invocie no.: %s - nom patient: %s' % (self.invoice_number, self.patient)

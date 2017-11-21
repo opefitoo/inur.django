@@ -66,7 +66,6 @@ class PrestationAdmin(AjaxSelectAdmin):
     date_hierarchy = 'date'
     list_display = ('carecode', 'date')
     search_fields = ['carecode__code', 'carecode__name']
-    #list_filter = ('patient__name',)
     actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
     form = make_ajax_form(Prestation, {'carecode': 'carecode'})
 
@@ -80,7 +79,7 @@ class PrestationInline(AjaxSelectAdminTabularInline):
     fields = ('date', 'carecode')
     search_fields = ['carecode']
     form = make_ajax_form(Prestation, {
-        'carecode': 'carecode',
+        'carecode': 'carecode'
     }, show_help_text=True)
 
 
@@ -92,7 +91,6 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     from generate_pacifico_invoices import niedercorn_avril_mai_2017
     from invaction import syncro_clients
     date_hierarchy = 'invoice_date'
-    # list_display = ('invoice_number', 'patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent',)
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient__name', 'patient__first_name']
@@ -105,36 +103,15 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
 
 
-# class PrivateInvoiceItemAdmin(AjaxSelectAdmin):
-#     from action_private import pdf_private_invoice
-#     from action_private_with_recap import pdf_private_invoice_with_recap
-#
-#     date_hierarchy = 'invoice_date'
-#     # list_display = ('invoice_number', 'private_patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent' )
-#     list_display = ('invoice_number', 'private_patient', 'invoice_month', 'invoice_sent')
-#     list_filter = ['invoice_date', 'private_patient__name', 'invoice_sent']
-#     search_fields = ['private_patient__name', 'private_patient__first_name']
-#     actions = [pdf_private_invoice]
-#     form = make_ajax_form(PrivateInvoiceItem, {'private_patient': 'private_patient_a_facturer'})
-#
-#
-# admin.site.register(PrivateInvoiceItem, PrivateInvoiceItemAdmin)
-
-
 class TimesheetDetailInline(AjaxSelectAdminTabularInline):
+    extra = 2
     model = TimesheetDetail
     fields = ('start_date', 'end_date', 'task_description', 'patient',)
     search_fields = ['patient']
-    extra = 1
-    form = make_ajax_form(TimesheetDetail, {'patient': 'patient'})
-
-    model = TimesheetDetail
     form = make_ajax_form(TimesheetDetail, {
         'patient': 'patient',
         'task_description': 'task_description'
-    },
-                          show_help_text=True)
-    extra = 2
+    }, show_help_text=True)
 
 
 class TimesheetAdmin(admin.ModelAdmin):

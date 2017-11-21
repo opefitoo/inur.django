@@ -128,12 +128,7 @@ STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 # define the lookup channels in use on the site
 AJAX_LOOKUP_CHANNELS = {
-    #  simple: search Person.objects.filter(name__icontains=q)
-    # 'patient'  : {'model': 'invoices.patient', 'search_field': 'name'},
-    # define a custom lookup channel
-    # 'patientsamoi'   : ('lookups', 'PatientLookup'),
     'patient_du_mois': ('invoices.lookups', 'PatientDuMoisLookup'),
-    'private_patient_a_facturer': ('invoices.lookups', 'PrivatePatientDuMoisLookup'),
     'patient': ('invoices.lookups', 'PatientLookup'),
     'carecode': ('invoices.lookups', 'CareCodeLookup'),
     'prestation': ('invoices.lookups', 'PrestationLookup'),
@@ -142,8 +137,6 @@ AJAX_LOOKUP_CHANNELS = {
 }
 
 REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated'
     ],
