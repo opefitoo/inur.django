@@ -3,8 +3,7 @@ from ajax_select.admin import AjaxSelectAdmin, AjaxSelectAdminTabularInline, Aja
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from models import CareCode, Prestation, Patient, InvoiceItem, \
-    PrivateInvoiceItem, InvoiceItemPrestation
+from models import CareCode, Prestation, Patient, InvoiceItem
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
 from django_admin_bootstrapped.admin.models import SortableInline
@@ -75,15 +74,15 @@ class PrestationAdmin(AjaxSelectAdmin):
 admin.site.register(Prestation, PrestationAdmin)
 
 
-class InvoiceItemPrestationInline(AjaxSelectAdminStackedInline):
-    model = InvoiceItemPrestation
-    search_fields = ['prestation__patient__name', 'prestation__patient__first_name', ]
-    extra = 1
-    form = make_ajax_form(InvoiceItemPrestation, {
-        'invoiceitem': 'invoiceitem',
-        'prestation': 'prestation'
-    },
-                          show_help_text=True)
+# class InvoiceItemPrestationInline(AjaxSelectAdminStackedInline):
+#     model = InvoiceItemPrestation
+#     search_fields = ['prestation__patient__name', 'prestation__patient__first_name', ]
+#     extra = 1
+#     form = make_ajax_form(InvoiceItemPrestation, {
+#         'invoiceitem': 'invoiceitem',
+#         'prestation': 'prestation'
+#     },
+#                           show_help_text=True)
 
 
 class InvoiceItemAdmin(AjaxSelectAdmin):
@@ -101,26 +100,26 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, syncro_clients,
                previous_months_invoices_april, previous_months_invoices_july_2017, niedercorn_avril_mai_2017]
     form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
-    inlines = [InvoiceItemPrestationInline]
+    # inlines = [InvoiceItemPrestationInline]
 
 
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
 
 
-class PrivateInvoiceItemAdmin(AjaxSelectAdmin):
-    from action_private import pdf_private_invoice
-    from action_private_with_recap import pdf_private_invoice_with_recap
-
-    date_hierarchy = 'invoice_date'
-    # list_display = ('invoice_number', 'private_patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent' )
-    list_display = ('invoice_number', 'private_patient', 'invoice_month', 'invoice_sent')
-    list_filter = ['invoice_date', 'private_patient__name', 'invoice_sent']
-    search_fields = ['private_patient__name', 'private_patient__first_name']
-    actions = [pdf_private_invoice]
-    form = make_ajax_form(PrivateInvoiceItem, {'private_patient': 'private_patient_a_facturer'})
-
-
-admin.site.register(PrivateInvoiceItem, PrivateInvoiceItemAdmin)
+# class PrivateInvoiceItemAdmin(AjaxSelectAdmin):
+#     from action_private import pdf_private_invoice
+#     from action_private_with_recap import pdf_private_invoice_with_recap
+#
+#     date_hierarchy = 'invoice_date'
+#     # list_display = ('invoice_number', 'private_patient', 'invoice_month', 'prestations_invoiced', 'invoice_sent' )
+#     list_display = ('invoice_number', 'private_patient', 'invoice_month', 'invoice_sent')
+#     list_filter = ['invoice_date', 'private_patient__name', 'invoice_sent']
+#     search_fields = ['private_patient__name', 'private_patient__first_name']
+#     actions = [pdf_private_invoice]
+#     form = make_ajax_form(PrivateInvoiceItem, {'private_patient': 'private_patient_a_facturer'})
+#
+#
+# admin.site.register(PrivateInvoiceItem, PrivateInvoiceItemAdmin)
 
 
 class TimesheetDetailInline(AjaxSelectAdminTabularInline):

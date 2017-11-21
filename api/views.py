@@ -1,9 +1,9 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, PrestationSerializer, \
-    InvoiceItemSerializer, PrivateInvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
+    InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, PrivateInvoiceItem
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
@@ -53,14 +53,6 @@ class InvoiceItemViewSet(viewsets.ModelViewSet):
     """
     queryset = InvoiceItem.objects.all()
     serializer_class = InvoiceItemSerializer
-
-
-class PrivateInvoiceItemViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows PrivateInvoiceItems to be viewed.
-    """
-    queryset = PrivateInvoiceItem.objects.all()
-    serializer_class = PrivateInvoiceItemSerializer
 
 
 class JobPositionViewSet(viewsets.ModelViewSet):

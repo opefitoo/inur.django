@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, PrivateInvoiceItem
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
@@ -41,13 +41,6 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
         fields = ('id', 'invoice_number', 'accident_id', 'accident_date', 'invoice_date', 'patient_invoice_date',
                   'invoice_send_date', 'invoice_sent', 'invoice_paid', 'medical_prescription_date', 'patient',
                   'prestations')
-
-
-class PrivateInvoiceItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PrivateInvoiceItem
-        fields = ('id', 'invoice_number', 'accident_id', 'accident_date', 'invoice_date', 'invoice_send_date',
-                  'invoice_sent', 'invoice_paid', 'medical_prescription_date', 'prestations', 'private_patient')
 
 
 class JobPositionSerializer(serializers.ModelSerializer):

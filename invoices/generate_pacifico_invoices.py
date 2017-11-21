@@ -2,7 +2,7 @@
 import calendar
 from datetime import date,timedelta
 
-from invoices.models import Patient, Prestation, CareCode, PrivateInvoiceItem
+from invoices.models import Patient, Prestation, CareCode#, PrivateInvoiceItem
 
 def niedercorn_avril_mai_2017(modeladmin, request, queryset):
 
@@ -92,10 +92,10 @@ def generate_pacifico(modeladmin, request, queryset):
                 print e
 
 
-    invoiceitem= PrivateInvoiceItem(private_patient=paolaPacifico,
-                                  invoice_date=datetime.datetime(2016, 03, 14),
-                                  invoice_sent=False,
-                                  invoice_paid=False,
-                                  medical_prescription_date = datetime.datetime(2014, 10, 14))
-    invoiceitem.clean()
-    invoiceitem.save()
+    # invoiceitem= PrivateInvoiceItem(private_patient=paolaPacifico,
+    #                               invoice_date=datetime.datetime(2016, 03, 14),
+    #                               invoice_sent=False,
+    #                               invoice_paid=False,
+    #                               medical_prescription_date = datetime.datetime(2014, 10, 14))
+    # invoiceitem.clean()
+    # invoiceitem.save()
