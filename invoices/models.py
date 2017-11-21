@@ -31,8 +31,7 @@ class Patient(models.Model):
     phone_number = models.CharField(max_length=30)
     email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField()
-    # TODO: rename to is_private
-    private_patient = models.BooleanField(default=False)
+    is_private = models.BooleanField(default=False)
 
     def get_patients_that_have_prestations(self, monthyear):
         ##XXX use this later for raw sql
@@ -102,7 +101,7 @@ class InvoiceItem(models.Model):
     physician = models.ForeignKey(Physician, related_name='physician', null=True, blank=True,
                                   help_text='Please chose the physican who is givng the medical prescription')
 
-    # TODO: when checked only patient which private_patient = true must be looked up via the ajax search lookup
+    # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
     is_private = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
@@ -164,10 +163,10 @@ class Prestation(models.Model):
     date = models.DateTimeField('date')
     date.editable = True
 
-    # TODO retrieve private_patient from Patient or compute it in a different way
+    # TODO retrieve is_private from Patient or compute it in a different way
     @property
     def net_amount(self):
-        if not self.patient.private_patient:
+        if not self.patient.is_private:
             if self.carecode.reimbursed:
                 return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
             else:

@@ -13,7 +13,7 @@ class PatientDuMoisLookup(LookupChannel):
         return Patient.objects.raw("select p.id, p.name, p.first_name " +
                                    "from public.invoices_patient p, public.invoices_prestation prest " +
                                    "where p.id = prest.patient_id " +
-                                   # "where p.id = prest.patient_id and p.private_patient = 't'"+
+                                   # "where p.id = prest.patient_id and p.is_private = 't'"+
                                    "and prest.date between '2014-12-01'::DATE and '2014-12-31'::DATE " +
                                    "and (select count(inv.id) from public.invoices_invoiceitem inv " +
                                    "where inv.invoice_date between '2014-12-01'::DATE and '2014-12-31'::DATE " +
@@ -43,7 +43,7 @@ class PrivatePatientDuMoisLookup(LookupChannel):
     def get_query(self, q, request):
         pp = Patient.objects.raw("select p.id, p.name, p.first_name " +
                                        "from invoices_patient p, invoices_prestation prest " +
-                                       "where p.private_patient ='t' " +
+                                       "where p.is_private ='t' " +
                                        "and prest.patient_id = p.id " +
                                        "and prest.id not in (select pp.prestation_id " +
                                        "from invoices_privateinvoiceitem priv, invoices_privateinvoiceitem_prestations pp group by pp.prestation_id) " +

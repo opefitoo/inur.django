@@ -26,7 +26,7 @@ class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = ('id', 'code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'phone_number', 'email_address',
-                  'participation_statutaire', 'private_patient')
+                  'participation_statutaire', 'is_private')
 
 
 class PrestationSerializer(serializers.ModelSerializer):
