@@ -36,11 +36,17 @@ class PrestationSerializer(serializers.ModelSerializer):
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        if data['is_private'] != data['patient'].is_private:
+            raise serializers.ValidationError("Only private Patients allowed in private Invoice Item.")
+
+        return data
+
     class Meta:
         model = InvoiceItem
         fields = ('id', 'invoice_number', 'accident_id', 'accident_date', 'invoice_date', 'patient_invoice_date',
-                  'invoice_send_date', 'invoice_sent', 'invoice_paid', 'medical_prescription_date', 'patient',
-                  'prestations')
+                  'invoice_send_date', 'invoice_sent', 'invoice_paid', 'medical_prescription_date', 'physician',
+                  'patient', 'prestations', 'is_private')
 
 
 class JobPositionSerializer(serializers.ModelSerializer):

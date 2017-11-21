@@ -86,23 +86,15 @@ class InvoiceItem(models.Model):
     # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
     is_private = models.BooleanField(default=False)
 
-    # def save(self, *args, **kwargs):
-    #     super(InvoiceItem, self).save(*args, **kwargs)
-    #     pytz_chicago = pytz.timezone("America/Chicago")
-    #     if self.pk is not None:
-    #         prestationsq = Prestation.objects.filter(
-    #             Q(date__month=self.invoice_date.month - 1) | Q(date__month=self.invoice_date.month) | Q(
-    #                 date__month=self.invoice_date.month + 1)).filter(date__year=self.invoice_date.year).filter(
-    #             patient__pk=self.patient.pk)
-    #         for p in prestationsq:
-    #             normalized_date = pytz_chicago.normalize(p.date)
-    #             if normalized_date.month == self.invoice_date.month:
-    #                 self.prestations.add(p)
-    #         super(InvoiceItem, self).save(*args, **kwargs)
-
     def prestations_invoiced(self):
         return '%s prestations. Total = %s' % (
             len(self.prestations.all()), sum(a.net_amount for a in self.prestations.all()))
+
+    def clean(self, *args, **kwargs):
+        if self.is_private != self.patient.is_private:
+            raise ValidationError({'patient': 'Only private Patients allowed in private Invoice Item.'})
+
+        super(InvoiceItem, self).clean()
 
     @property
     def invoice_month(self):
