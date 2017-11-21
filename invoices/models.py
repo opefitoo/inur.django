@@ -33,24 +33,6 @@ class Patient(models.Model):
     participation_statutaire = models.BooleanField()
     is_private = models.BooleanField(default=False)
 
-    def get_patients_that_have_prestations(self, monthyear):
-        ##XXX use this later for raw sql
-        #         Patient.objects.raw("select p.name, p.first_name "
-        #         + " from public.invoices_patient p, public.invoices_prestation prest"
-        #         + " where p.id = prest.patient_id"
-        #         + " and prest.date between '2013-10-01'::DATE and '2013-10-31'::DATE group by p.id" % (start_date, end_date)
-
-        patients_sans_facture = Patient.objects.raw("select p.name, p.first_name " +
-                                                    "from public.invoices_patient p, public.invoices_prestation prest " +
-                                                    "where p.id = prest.patient_id " +
-                                                    "and prest.date between '2013-10-01'::DATE and '2013-10-31'::DATE " +
-                                                    "and (select count(inv.id) from public.invoices_invoiceitem inv " +
-                                                    "where inv.invoice_date between '2013-10-01'::DATE and '2013-10-31'::DATE " +
-                                                    "and inv.patient_id = p.id) = 0 " +
-                                                    "group by p.id " +
-                                                    "order by p.name")
-        return patients_sans_facture
-
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
