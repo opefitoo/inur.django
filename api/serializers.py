@@ -32,7 +32,7 @@ class PatientSerializer(serializers.ModelSerializer):
 class PrestationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Prestation
-        fields = ('id', 'patient', 'carecode', 'date')
+        fields = ('id', 'invoice_item', 'carecode', 'date')
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):

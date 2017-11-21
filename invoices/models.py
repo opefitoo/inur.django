@@ -78,7 +78,7 @@ def get_default_invoice_number():
     except:
         max1 = 0
 
-    return max(max1) + 1
+    return max1 + 1
 
 
 class InvoiceItem(models.Model):
@@ -91,14 +91,14 @@ class InvoiceItem(models.Model):
     invoice_sent = models.BooleanField()
     invoice_paid = models.BooleanField()
     medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)
-    patient = models.ForeignKey(Patient, related_name='patient',
+    patient = models.ForeignKey(Patient, related_name='invoice_items',
                                 help_text='choisir parmi ces patients pour le mois precedent')
 
     # TODO: I would like to store the file Field in Google drive
     # maybe this can be helpful https://github.com/torre76/django-googledrive-storage
     # upload_scan_medical_prescription = models.FileField()
 
-    physician = models.ForeignKey(Physician, related_name='physician', null=True, blank=True,
+    physician = models.ForeignKey(Physician, related_name='invoice_items', null=True, blank=True,
                                   help_text='Please chose the physican who is givng the medical prescription')
 
     # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
@@ -158,8 +158,8 @@ class InvoiceItem(models.Model):
 
 
 class Prestation(models.Model):
-    invoice_item = models.ForeignKey(InvoiceItem)
-    carecode = models.ForeignKey(CareCode)
+    invoice_item = models.ForeignKey(InvoiceItem, related_name='prestations')
+    carecode = models.ForeignKey(CareCode, related_name='prestations')
     date = models.DateTimeField('date')
     date.editable = True
 

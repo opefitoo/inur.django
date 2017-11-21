@@ -74,15 +74,14 @@ class PrestationAdmin(AjaxSelectAdmin):
 admin.site.register(Prestation, PrestationAdmin)
 
 
-# class InvoiceItemPrestationInline(AjaxSelectAdminStackedInline):
-#     model = InvoiceItemPrestation
-#     search_fields = ['prestation__patient__name', 'prestation__patient__first_name', ]
-#     extra = 1
-#     form = make_ajax_form(InvoiceItemPrestation, {
-#         'invoiceitem': 'invoiceitem',
-#         'prestation': 'prestation'
-#     },
-#                           show_help_text=True)
+class PrestationInline(AjaxSelectAdminTabularInline):
+    extra = 1
+    model = Prestation
+    fields = ('date', 'carecode')
+    search_fields = ['carecode']
+    form = make_ajax_form(Prestation, {
+        'carecode': 'carecode',
+    }, show_help_text=True)
 
 
 class InvoiceItemAdmin(AjaxSelectAdmin):
@@ -100,7 +99,7 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, syncro_clients,
                previous_months_invoices_april, previous_months_invoices_july_2017, niedercorn_avril_mai_2017]
     form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
-    # inlines = [InvoiceItemPrestationInline]
+    inlines = [PrestationInline]
 
 
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
