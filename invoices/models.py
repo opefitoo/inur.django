@@ -5,7 +5,6 @@ from django.db import models
 from django.db.models import Q
 import pytz
 
-
 # from invoices.widgets import MyAdminSplitDateTime
 logger = logging.getLogger(__name__)
 
@@ -15,13 +14,13 @@ class CareCode(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100)
     gross_amount = models.DecimalField("montant brut", max_digits=5, decimal_places=2)
-    reimbursed = models.BooleanField("Prise en charge par CNS",default=True)
+    reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s: %s' % (self.code, self.name)
 
 
-#TODO: synchronize patient details with Google contacts
+# TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
     code_sn = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
@@ -32,6 +31,7 @@ class Patient(models.Model):
     phone_number = models.CharField(max_length=30)
     email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField()
+    # TODO: rename to is_private
     private_patient = models.BooleanField(default=False)
 
     def get_patients_that_have_prestations(self, monthyear):
@@ -56,8 +56,8 @@ class Patient(models.Model):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
 
-#TODO: 1. can maybe be extending common class with Patient ?
-#TODO: 2. synchronize physician details with Google contacts
+# TODO: 1. can maybe be extending common class with Patient ?
+# TODO: 2. synchronize physician details with Google contacts
 class Physician(models.Model):
     code_sn = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
