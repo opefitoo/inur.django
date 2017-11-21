@@ -10,21 +10,16 @@ import pytz
 logger = logging.getLogger(__name__)
 
 
-# Create your models here.
 class CareCode(models.Model):
     code = models.CharField(max_length=30)
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100)
-    # prix net = 88% du montant brut
-    # prix brut
     gross_amount = models.DecimalField("montant brut", max_digits=5, decimal_places=2)
     reimbursed = models.BooleanField("Prise en charge par CNS",default=True)
 
-    # previous_gross_amount = models.DecimalField("Ancien montant brut", max_digits=5, decimal_places=2)
-    # price_switch_date = models.DateField( help_text=u"Date d'accident est facultatif", null=True, blank=True)
-
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s: %s' % (self.code, self.name)
+
 
 #TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
@@ -60,9 +55,10 @@ class Patient(models.Model):
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
+
 #TODO: 1. can maybe be extending common class with Patient ?
 #TODO: 2. synchronize physician details with Google contacts
-class Physcian(models.Model):
+class Physician(models.Model):
     code_sn = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
@@ -77,7 +73,7 @@ class Physcian(models.Model):
 
 
 class Prestation(models.Model):
-    #patient = models.ForeignKey(Patient)
+    patient = models.ForeignKey(Patient)
     carecode = models.ForeignKey(CareCode)
     date = models.DateTimeField('date')
     date.editable = True
@@ -104,19 +100,6 @@ class Prestation(models.Model):
         #    return round(((self.carecode.gross_amount * 12) / 100), 2)
         return round(((self.carecode.gross_amount * 12) / 100), 2)
 
-    # def clean(self):
-    #     "if same prestation same date same code same patient, disallow creation"
-    #     prestationsq = Prestation.objects.filter(date=self.date).filter(patient__pk=self.patient.pk).filter(
-    #         carecode__pk=self.carecode.pk)
-    #     if prestationsq.exists():
-    #         for presta_in_db in prestationsq:
-    #             if (presta_in_db.pk != self.pk):
-    #                 raise ValidationError(
-    #                     'Cannot create medical service "code:%s on:%s for:%s" because is already exists' % (
-    #                         self.carecode,
-    #                         self.date.strftime('%d-%m-%Y'),
-    #                         self.patient))
-
     def __unicode__(self):  # Python 3: def __str__(self):
         return 'code: %s - nom : %s' % (self.carecode.code, self.carecode.name)
 
@@ -137,7 +120,7 @@ def get_default_invoice_number():
 
 class InvoiceItem(models.Model):
     #TODO: when checked only patient which private_patient = true must be looked up via the ajax search lookup
-    is_private = models.BooleanField(default=False)
+    # is_private = models.BooleanField(default=False)
     invoice_number = models.CharField(max_length=50, default=get_default_invoice_number)
     accident_id = models.CharField(max_length=30, help_text=u"Numero d'accident est facultatif", null=True, blank=True)
     accident_date = models.DateField(help_text=u"Date d'accident est facultatif", null=True, blank=True)
@@ -151,10 +134,10 @@ class InvoiceItem(models.Model):
                                 help_text='choisir parmi ces patients pour le mois precedent')
     #TODO: I would like to store the file Field in Google drive
     # maybe this can be helpful https://github.com/torre76/django-googledrive-storage
-    upload_scan_medical_prescription = models.FileField()
-    physician = models.ForeignKey(Physcian, related_name='physician', null=True, blank=True,
+    # upload_scan_medical_prescription = models.FileField()
+    physician = models.ForeignKey(Physician, related_name='physician', null=True, blank=True,
                                   help_text='Please chose the physican who is givng the medical prescription')
-    prestations = models.ManyToManyField(Prestation, related_name='prestations', through='InvoiceItemPrestation',
+    prestations = models.ManyToManyField(Prestation, related_name='prestations',
                                          editable=False, blank=True)
 
 
@@ -194,11 +177,6 @@ class InvoiceItem(models.Model):
             iq = InvoiceItem.objects.filter(patient__pk=self.patient.pk).filter(
                 Q(invoice_date__month=self.invoice_date.month) & Q(invoice_date__year=self.invoice_date.year)
             )
-            # if iq.exists():
-            #     for presta_in_db in iq:
-            #         if (presta_in_db.pk != self.pk) and not self.pk:
-            #             raise ValidationError('Patient %s has already an invoice for the month ''%s'' ' % (
-            #                 self.patient, self.invoice_date.strftime('%B')))
             prestationsq = Prestation.objects.filter(date__month=self.invoice_date.month).filter(
                 date__year=self.invoice_date.year).filter(patient__pk=self.patient.pk)
             if not prestationsq.exists():
@@ -216,14 +194,6 @@ class InvoiceItem(models.Model):
         return 'invocie no.: %s - nom patient: %s' % (self.invoice_number, self.patient)
 
 
-class InvoiceItemPrestation(models.Model):
-    invoiceitem = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE)
-    prestation = models.ForeignKey(Prestation, on_delete=models.CASCADE)
-
-    class Meta:
-        db_table = 'invoices_invoiceitem_prestations'
-
-
 class PrivateInvoiceItem(models.Model):
     invoice_number = models.CharField(max_length=50, default=get_default_invoice_number)
     accident_id = models.CharField(max_length=30, help_text=u"Numero d'accident est facultatif", null=True, blank=True)
@@ -237,19 +207,6 @@ class PrivateInvoiceItem(models.Model):
                                         help_text='choisir parmi ces patients pour le mois precedent')
     prestations = models.ManyToManyField(Prestation, related_name='private_invoice_prestations', editable=False,
                                          blank=True)
-
-    # def save(self, *args, **kwargs):
-    #     super(PrivateInvoiceItem, self).save(*args, **kwargs)
-    #     if self.pk is not None:
-    #         prestationsq = Prestation.objects.raw("select prestations.id from invoices_prestation prestations " +
-    #                                               "where prestations.patient_id = %s " % (self.private_patient.pk) +
-    #                                               "and prestations.id not in ( " +
-    #                                               "select pp.prestation_id " +
-    #                                               "from public.invoices_privateinvoiceitem priv, public.invoices_privateinvoiceitem_prestations pp " +
-    #                                               "group by pp.prestation_id)")
-    #         for p in prestationsq:
-    #             self.prestations.add(p)
-    #         super(PrivateInvoiceItem, self).save(*args, **kwargs)
 
     def prestations_invoiced(self):
         return '%s prestations. Total = %s' % (
