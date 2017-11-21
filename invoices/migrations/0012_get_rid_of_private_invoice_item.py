@@ -5,6 +5,28 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 
 
+def move_private_invoice_items(apps, schema_editor):
+    InvoiceItemModel = apps.get_model('invoices', 'InvoiceItem')
+    PrivateInvoiceItemModel = apps.get_model('invoices', 'PrivateInvoiceItem')
+    for private_invoice_item in PrivateInvoiceItemModel.objects.all():
+        invoice_item = InvoiceItemModel()
+        invoice_item.invoice_number = private_invoice_item.invoice_number
+        invoice_item.accident_id = private_invoice_item.accident_id
+        invoice_item.accident_date = private_invoice_item.accident_date
+        invoice_item.invoice_date = private_invoice_item.invoice_date
+        invoice_item.invoice_send_date = private_invoice_item.invoice_send_date
+        invoice_item.invoice_sent = private_invoice_item.invoice_sent
+        invoice_item.invoice_paid = private_invoice_item.invoice_paid
+
+        invoice_item.medical_prescription_date = private_invoice_item.medical_prescription_date
+        invoice_item.patient_id = private_invoice_item.private_patient_id
+        invoice_item.is_private = True
+        invoice_item.save()
+
+        for private_invoice_item_prestation in private_invoice_item.prestations.all():
+            invoice_item.prestations.add(private_invoice_item_prestation)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -12,6 +34,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddField(
+            model_name='invoiceitem',
+            name='is_private',
+            field=models.BooleanField(default=False),
+        ),
+        migrations.RunPython(move_private_invoice_items),
         migrations.RemoveField(
             model_name='privateinvoiceitem',
             name='prestations',
@@ -19,11 +47,6 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='privateinvoiceitem',
             name='private_patient',
-        ),
-        migrations.AddField(
-            model_name='invoiceitem',
-            name='is_private',
-            field=models.BooleanField(default=False),
         ),
         migrations.DeleteModel(
             name='PrivateInvoiceItem',
