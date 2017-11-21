@@ -73,7 +73,7 @@ class Physician(models.Model):
 
 
 class Prestation(models.Model):
-    patient = models.ForeignKey(Patient)
+    # patient = models.ForeignKey(Patient)
     carecode = models.ForeignKey(CareCode)
     date = models.DateTimeField('date')
     date.editable = True
