@@ -72,38 +72,6 @@ class Physician(models.Model):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
 
-class Prestation(models.Model):
-    # patient = models.ForeignKey(Patient)
-    carecode = models.ForeignKey(CareCode)
-    date = models.DateTimeField('date')
-    date.editable = True
-
-    # TODO retrieve private_patient from Patient or compute it in a different way
-    @property
-    def net_amount(self):
-        if not self.patient.private_patient:
-            if self.carecode.reimbursed:
-                return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
-            else:
-                return 0
-        else:
-            return 0
-
-    # TODO retrieve partificaption statutaire from Patient or compute it in a different way
-    @property
-    def fin_part(self):
-        "Returns the financial participation of the client"
-        if self.patient.participation_statutaire:
-            return 0
-        # round to only two decimals
-        # if self.date > normalized_price_switch_date:
-        #    return round(((self.carecode.gross_amount * 12) / 100), 2)
-        return round(((self.carecode.gross_amount * 12) / 100), 2)
-
-    def __unicode__(self):  # Python 3: def __str__(self):
-        return 'code: %s - nom : %s' % (self.carecode.code, self.carecode.name)
-
-
 def get_default_invoice_number():
     # for _last_invoice in InvoiceItem.objects.all().order_by("-invoice_number")[0]:
     try:
@@ -136,8 +104,6 @@ class InvoiceItem(models.Model):
 
     # TODO: when checked only patient which private_patient = true must be looked up via the ajax search lookup
     is_private = models.BooleanField(default=False)
-    prestations = models.ManyToManyField(Prestation, related_name='prestations',
-                                         editable=False, blank=True)
 
     def save(self, *args, **kwargs):
         super(InvoiceItem, self).save(*args, **kwargs)
@@ -190,3 +156,35 @@ class InvoiceItem(models.Model):
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return 'invocie no.: %s - nom patient: %s' % (self.invoice_number, self.patient)
+
+
+class Prestation(models.Model):
+    invoice_item = models.ForeignKey(InvoiceItem)
+    carecode = models.ForeignKey(CareCode)
+    date = models.DateTimeField('date')
+    date.editable = True
+
+    # TODO retrieve private_patient from Patient or compute it in a different way
+    @property
+    def net_amount(self):
+        if not self.patient.private_patient:
+            if self.carecode.reimbursed:
+                return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
+            else:
+                return 0
+        else:
+            return 0
+
+    # TODO retrieve partificaption statutaire from Patient or compute it in a different way
+    @property
+    def fin_part(self):
+        "Returns the financial participation of the client"
+        if self.patient.participation_statutaire:
+            return 0
+        # round to only two decimals
+        # if self.date > normalized_price_switch_date:
+        #    return round(((self.carecode.gross_amount * 12) / 100), 2)
+        return round(((self.carecode.gross_amount * 12) / 100), 2)
+
+    def __unicode__(self):  # Python 3: def __str__(self):
+        return 'code: %s - nom : %s' % (self.carecode.code, self.carecode.name)
