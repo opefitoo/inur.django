@@ -77,8 +77,12 @@ class InvoiceItem(models.Model):
     invoice_sent = models.BooleanField()
     invoice_paid = models.BooleanField()
     medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)
+    # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
+    is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
+                                     help_text='Seuls les patients qui ne disposent pas de la prise en charge CNS seront recherches dans le champ Patient (prive)',
+                                     default=False)
     patient = models.ForeignKey(Patient, related_name='invoice_items',
-                                help_text=u"choisir parmi les patients en entrant quelques lettres de son nom ou prénom")
+                                help_text=u"choisir parmi les patients en entrant quelques lettres de son nom ou prenom")
 
     # TODO: I would like to store the file Field in Google drive
     # maybe this can be helpful https://github.com/torre76/django-googledrive-storage
@@ -87,8 +91,6 @@ class InvoiceItem(models.Model):
     physician = models.ForeignKey(Physician, related_name='invoice_items', null=True, blank=True,
                                   help_text='Please chose the physican who is givng the medical prescription')
 
-    # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
-    is_private = models.BooleanField(default=False)
 
     def prestations_invoiced(self):
         return '%s prestations. Total = %s' % (
@@ -144,4 +146,4 @@ class Prestation(models.Model):
         return round(((self.carecode.gross_amount * 12) / 100), 2)
 
     def __unicode__(self):  # Python 3: def __str__(self):
-        return 'code: %s - nom : %s' % (self.carecode.code, self.carecode.name)
+        return '%s - %s' % (self.carecode.code, self.carecode.name)
