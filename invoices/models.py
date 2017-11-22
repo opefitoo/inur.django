@@ -2,7 +2,8 @@ import logging
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, IntegerField, Max
+from django.db.models.functions import Cast
 import pytz
 
 # from invoices.widgets import MyAdminSplitDateTime
@@ -54,13 +55,16 @@ class Physician(models.Model):
 
 
 def get_default_invoice_number():
-    # for _last_invoice in InvoiceItem.objects.all().order_by("-invoice_number")[0]:
-    try:
-        max1 = int(InvoiceItem.objects.all().order_by("-id")[0].invoice_number)
-    except:
-        max1 = 0
+    default_invoice_number = 0
+    max_invoice_number = InvoiceItem.objects.filter(Q(invoice_number__iregex=r'^\d+$')).annotate(
+        invoice_number_int=Cast('invoice_number', IntegerField())).aggregate(Max('invoice_number_int'))
 
-    return max1 + 1
+    if max_invoice_number['invoice_number_int__max'] is not None:
+        default_invoice_number = max_invoice_number['invoice_number_int__max']
+
+    default_invoice_number += 1
+
+    return default_invoice_number
 
 
 class InvoiceItem(models.Model):

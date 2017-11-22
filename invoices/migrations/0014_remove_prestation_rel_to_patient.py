@@ -8,7 +8,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('invoices', '0012_get_rid_of_private_invoice_item'),
+        ('invoices', '0013_change_rel_invoiceitem_to_prestation'),
     ]
 
     operations = [
