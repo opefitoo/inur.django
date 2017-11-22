@@ -29,6 +29,7 @@ class Patient(models.Model):
     address = models.TextField(max_length=30)
     zipcode = models.CharField(max_length=10)
     city = models.CharField(max_length=30)
+    country = models.CharField(max_length=30, blank=True, null=True)
     phone_number = models.CharField(max_length=30)
     email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField()
@@ -41,13 +42,15 @@ class Patient(models.Model):
 # TODO: 1. can maybe be extending common class with Patient ?
 # TODO: 2. synchronize physician details with Google contacts
 class Physician(models.Model):
-    code_sn = models.CharField(max_length=30)
+    provider_code = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
     address = models.TextField(max_length=30)
     zipcode = models.CharField(max_length=10)
     city = models.CharField(max_length=30)
+    country = models.CharField(max_length=30, blank=True, null=True)
     phone_number = models.CharField(max_length=30)
+    fax_number = models.CharField(max_length=30, blank=True, null=True)
     email_address = models.EmailField(default=None, blank=True, null=True)
 
     def __unicode__(self):  # Python 3: def __str__(self):
@@ -69,6 +72,12 @@ def get_default_invoice_number():
 
 class InvoiceItem(models.Model):
     invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)
+    # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
+    is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
+                                     help_text='Seuls les patients qui ne disposent pas de la prise en charge CNS seront recherches dans le champ Patient (prive)',
+                                     default=False)
+    patient = models.ForeignKey(Patient, related_name='invoice_items',
+                                help_text=u"choisir parmi les patients en entrant quelques lettres de son nom ou prenom")
     accident_id = models.CharField(max_length=30, help_text=u"Numero d'accident est facultatif", null=True, blank=True)
     accident_date = models.DateField(help_text=u"Date d'accident est facultatif", null=True, blank=True)
     invoice_date = models.DateField('Invoice date')
@@ -77,12 +86,6 @@ class InvoiceItem(models.Model):
     invoice_sent = models.BooleanField()
     invoice_paid = models.BooleanField()
     medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)
-    # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
-    is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
-                                     help_text='Seuls les patients qui ne disposent pas de la prise en charge CNS seront recherches dans le champ Patient (prive)',
-                                     default=False)
-    patient = models.ForeignKey(Patient, related_name='invoice_items',
-                                help_text=u"choisir parmi les patients en entrant quelques lettres de son nom ou prenom")
 
     # TODO: I would like to store the file Field in Google drive
     # maybe this can be helpful https://github.com/torre76/django-googledrive-storage

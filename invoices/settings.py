@@ -129,6 +129,7 @@ STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 # define the lookup channels in use on the site
 AJAX_LOOKUP_CHANNELS = {
     'patient_du_mois': ('invoices.lookups', 'PatientDuMoisLookup'),
+    'physician_lookup' : ('invoices.lookups', 'PhysicianLookup'),
     'patient': ('invoices.lookups', 'PatientLookup'),
     'carecode': ('invoices.lookups', 'CareCodeLookup'),
     'prestation': ('invoices.lookups', 'PrestationLookup'),

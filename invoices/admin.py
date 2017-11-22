@@ -3,7 +3,7 @@ from ajax_select.admin import AjaxSelectAdmin, AjaxSelectAdminTabularInline, Aja
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from models import CareCode, Prestation, Patient, InvoiceItem
+from models import CareCode, Prestation, Patient, InvoiceItem, Physician
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
 from django_admin_bootstrapped.admin.models import SortableInline
@@ -50,33 +50,37 @@ admin.site.register(CareCode, CareCoreAdmin)
 
 
 class PatientAdmin(admin.ModelAdmin):
-    from generate_pacifico_invoices import generate_pacifico
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     search_fields = ['name', 'first_name', 'code_sn']
-    actions = [generate_pacifico]
-
 
 admin.site.register(Patient, PatientAdmin)
 
+class PhysicianAdmin(admin.ModelAdmin):
+    list_filter = ('city',)
+    list_display = ('name', 'first_name', 'phone_number', 'provider_code')
+    search_fields = ['name', 'first_name', 'code_sn']
 
-class PrestationAdmin(AjaxSelectAdmin):
-    from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
-
-    date_hierarchy = 'date'
-    list_display = ('carecode', 'date')
-    search_fields = ['carecode__code', 'carecode__name']
-    actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
-    form = make_ajax_form(Prestation, {'carecode': 'carecode'})
+admin.site.register(Physician, PhysicianAdmin)
 
 
-admin.site.register(Prestation, PrestationAdmin)
+# class PrestationAdmin(AjaxSelectAdmin):
+#     from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
+#
+#     date_hierarchy = 'date'
+#     list_display = ('carecode', 'date')
+#     search_fields = ['carecode__code', 'carecode__name']
+#     actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
+#     form = make_ajax_form(Prestation, {'carecode': 'carecode'})
+#
+#
+# admin.site.register(Prestation, PrestationAdmin)
 
 
 class PrestationInline(AjaxSelectAdminTabularInline):
     extra = 1
     model = Prestation
-    fields = ('date', 'carecode')
+    fields = ('carecode','date')
     search_fields = ['carecode']
     form = make_ajax_form(Prestation, {
         'carecode': 'carecode'
@@ -96,7 +100,8 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     search_fields = ['patient__name', 'patient__first_name']
     actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, syncro_clients,
                previous_months_invoices_april, previous_months_invoices_july_2017, niedercorn_avril_mai_2017]
-    form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
+    form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois',
+                                        'physician':'physician_lookup'})
     inlines = [PrestationInline]
 
 
