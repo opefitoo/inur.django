@@ -72,13 +72,13 @@ class InvoiceItem(models.Model):
     accident_id = models.CharField(max_length=30, help_text=u"Numero d'accident est facultatif", null=True, blank=True)
     accident_date = models.DateField(help_text=u"Date d'accident est facultatif", null=True, blank=True)
     invoice_date = models.DateField('Invoice date')
-    patient_invoice_date = models.DateField('Date envoi au patient  ')
+    patient_invoice_date = models.DateField('Date envoi au patient', null=True, blank=True)
     invoice_send_date = models.DateField('Date envoi facture', null=True, blank=True)
     invoice_sent = models.BooleanField()
     invoice_paid = models.BooleanField()
     medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)
     patient = models.ForeignKey(Patient, related_name='invoice_items',
-                                help_text='choisir parmi ces patients pour le mois precedent')
+                                help_text=u"choisir parmi les patients en entrant quelques lettres de son nom ou prénom")
 
     # TODO: I would like to store the file Field in Google drive
     # maybe this can be helpful https://github.com/torre76/django-googledrive-storage
