@@ -96,7 +96,7 @@ class InvoiceItem(models.Model):
 
     def clean(self, *args, **kwargs):
         super(InvoiceItem, self).clean()
-        if self.is_private != self.patient.is_private:
+        if self.patient_id is not None and self.is_private != self.patient.is_private:
             raise ValidationError({'patient': 'Only private Patients allowed in private Invoice Item.'})
 
     @property
