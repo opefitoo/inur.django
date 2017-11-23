@@ -70,13 +70,17 @@ class InvoiceItem(models.Model):
     accident_id = models.CharField(max_length=30, help_text=u"Numero d'accident est facultatif", null=True, blank=True)
     accident_date = models.DateField(help_text=u"Date d'accident est facultatif", null=True, blank=True)
     invoice_date = models.DateField('Invoice date')
-    patient_invoice_date = models.DateField('Date envoi au patient')
+    patient_invoice_date = models.DateField('Date envoi au patient', null=True, blank=True)
     invoice_send_date = models.DateField('Date envoi facture', null=True, blank=True)
     invoice_sent = models.BooleanField()
     invoice_paid = models.BooleanField()
     medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)
+    # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
+    is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
+                                     help_text='Seuls les patients qui ne disposent pas de la prise en charge CNS seront recherches dans le champ Patient (prive)',
+                                     default=False)
     patient = models.ForeignKey(Patient, related_name='invoice_items',
-                                help_text='choisir parmi ces patients pour le mois precedent')
+                                help_text=u"choisir parmi les patients en entrant quelques lettres de son nom ou prenom")
 
     # TODO: I would like to store the file Field in Google drive
     # maybe this can be helpful https://github.com/torre76/django-googledrive-storage
@@ -85,8 +89,6 @@ class InvoiceItem(models.Model):
     physician = models.ForeignKey(Physician, related_name='invoice_items', null=True, blank=True,
                                   help_text='Please chose the physican who is givng the medical prescription')
 
-    # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
-    is_private = models.BooleanField(default=False)
 
     def prestations_invoiced(self):
         return '%s prestations. Total = %s' % (
@@ -142,4 +144,4 @@ class Prestation(models.Model):
         return round(((self.carecode.gross_amount * 12) / 100), 2)
 
     def __unicode__(self):  # Python 3: def __str__(self):
-        return 'code: %s - nom : %s' % (self.carecode.code, self.carecode.name)
+        return '%s - %s' % (self.carecode.code, self.carecode.name)
