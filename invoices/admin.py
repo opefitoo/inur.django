@@ -84,7 +84,7 @@ admin.site.register(Prestation, PrestationAdmin)
 class PrestationInline(AjaxSelectAdminTabularInline):
     extra = 1
     model = Prestation
-    fields = ('date', 'carecode', 'employee')
+    fields = ('carecode','date','employee')
     search_fields = ['carecode', 'employee']
     form = PrestationForm
 
