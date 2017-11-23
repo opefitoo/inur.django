@@ -113,7 +113,8 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     search_fields = ['patient__name', 'patient__first_name']
     actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, syncro_clients,
                previous_months_invoices_april, previous_months_invoices_july_2017, niedercorn_avril_mai_2017]
-    form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
+    form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois',
+                                        'physician': 'physician_lookup'})
     inlines = [PrestationInline]
 
 
