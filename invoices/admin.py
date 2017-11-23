@@ -3,9 +3,11 @@ from ajax_select.admin import AjaxSelectAdmin, AjaxSelectAdminTabularInline, Aja
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+
+from forms import PrestationForm
 from models import CareCode, Prestation, Patient, InvoiceItem
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
-
 from django_admin_bootstrapped.admin.models import SortableInline
 
 
@@ -84,10 +86,18 @@ class PrestationInline(AjaxSelectAdminTabularInline):
     model = Prestation
     fields = ('date', 'carecode', 'employee')
     search_fields = ['carecode', 'employee']
-    form = make_ajax_form(Prestation, {
-        'carecode': 'carecode',
-        'employee': 'employee'
-    }, show_help_text=True)
+    form = PrestationForm
+
+    def get_formset(self, request, obj=None, **kwargs):
+        fs = super(AjaxSelectAdminTabularInline, self).get_formset(request, obj=None, **kwargs)
+        user = request.user
+        try:
+            employee = user.employee
+            fs.form.declared_fields['employee'].initial = employee.id
+        except ObjectDoesNotExist:
+            pass
+
+        return fs
 
 
 class InvoiceItemAdmin(AjaxSelectAdmin):
