@@ -45,8 +45,14 @@ class CareCoreAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'gross_amount', 'reimbursed')
     search_fields = ['code', 'name']
 
-
 admin.site.register(CareCode, CareCoreAdmin)
+
+
+class EmployeeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'start_contract', 'end_contract', 'occupation')
+    search_fields = ['user', 'occupation']
+
+admin.site.register(Employee, EmployeeAdmin)
 
 
 class PatientAdmin(admin.ModelAdmin):
@@ -76,10 +82,11 @@ admin.site.register(Prestation, PrestationAdmin)
 class PrestationInline(AjaxSelectAdminTabularInline):
     extra = 1
     model = Prestation
-    fields = ('date', 'carecode')
-    search_fields = ['carecode']
+    fields = ('date', 'carecode', 'employee')
+    search_fields = ['carecode', 'employee']
     form = make_ajax_form(Prestation, {
-        'carecode': 'carecode'
+        'carecode': 'carecode',
+        'employee': 'employee'
     }, show_help_text=True)
 
 

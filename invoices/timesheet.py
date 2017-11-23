@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from invoices.models import Patient
 
+
 class JobPosition(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100, blank=True,
@@ -17,6 +18,7 @@ class Employee(models.Model):
     end_contract = models.DateField('end date', blank=True,
                                     null=True)
     occupation = models.ForeignKey(JobPosition)
+
     def __str__(self):  # Python 3: def __str__(self):
         return '%s' % (self.user.username.strip())
 
@@ -35,11 +37,11 @@ class Timesheet(models.Model):
     timesheet_validated = models.BooleanField("Valide", default=False)
 
 
-
 class TimesheetTask(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100, blank=True,
                                    null=True)
+
     def __str__(self):  # Python 3: def __str__(self):
         return '%s' % (self.name.strip())
 
