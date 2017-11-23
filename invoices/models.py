@@ -4,9 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
-import pytz
 
-# from invoices.widgets import MyAdminSplitDateTime
 logger = logging.getLogger(__name__)
 
 
@@ -100,10 +98,9 @@ class InvoiceItem(models.Model):
             len(self.prestations.all()), sum(a.net_amount for a in self.prestations.all()))
 
     def clean(self, *args, **kwargs):
-        if self.is_private != self.patient.is_private:
-            raise ValidationError({'patient': 'Only private Patients allowed in private Invoice Item.'})
-
         super(InvoiceItem, self).clean()
+        if self.patient_id is not None and self.is_private != self.patient.is_private:
+            raise ValidationError({'patient': 'Only private Patients allowed in private Invoice Item.'})
 
     @property
     def invoice_month(self):
@@ -122,6 +119,7 @@ class InvoiceItem(models.Model):
 
 class Prestation(models.Model):
     invoice_item = models.ForeignKey(InvoiceItem, related_name='prestations')
+    employee = models.ForeignKey('invoices.Employee', related_name='prestations', null=True, default=None)
     carecode = models.ForeignKey(CareCode, related_name='prestations')
     date = models.DateTimeField('date')
     date.editable = True

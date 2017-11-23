@@ -1,7 +1,7 @@
 from ajax_select import LookupChannel
 
-from models import Patient, CareCode, Prestation, InvoiceItem, Physician
-from timesheet import TimesheetTask
+from models import Patient, CareCode, Prestation, InvoiceItem
+from timesheet import TimesheetTask, Employee
 from django.utils.html import escape
 from django.db.models.query_utils import Q
 from django.utils.six import text_type
@@ -18,26 +18,6 @@ class PatientDuMoisLookup(LookupChannel):
             queryset = queryset.filter(Q(is_private=is_private))
 
         return queryset.order_by('name')
-
-    def get_result(self, obj):
-        u""" result is the simple text that is the completion of what the person typed """
-        return obj.name
-
-    def format_match(self, obj):
-        """ (HTML) formatted item for display in the dropdown """
-        return u"%s<div><i>%s</i></div>" % (escape(obj.name), escape(obj.first_name))
-        # return self.format_item_display(obj)
-
-    def format_item_display(self, obj):
-        """ (HTML) formatted item for displaying item in the selected deck area """
-        return u"%s<div><i>%s</i></div>" % (escape(obj.name), escape(obj.first_name))
-
-
-class PhysicianLookup(LookupChannel):
-    model = Patient
-
-    def get_query(self, q, request):
-        return Physician.objects.filter(Q(name__icontains=q) | Q(first_name__icontains=q)).order_by('name')
 
     def get_result(self, obj):
         u""" result is the simple text that is the completion of what the person typed """
@@ -74,7 +54,6 @@ class PatientLookup(LookupChannel):
 
 
 class TimesheetTaskLookup(LookupChannel):
-
     model = TimesheetTask
 
     def get_query(self, q, request):
@@ -121,7 +100,8 @@ class PrestationLookup(LookupChannel):
     model = Prestation
 
     def get_query(self, q, request):
-        return Prestation.objects.filter(Q(patient__name__icontains=q) | Q(patient__first_name__icontains=q)).order_by('patient__name')
+        return Prestation.objects.filter(Q(patient__name__icontains=q) | Q(patient__first_name__icontains=q)).order_by(
+            'patient__name')
 
     def get_result(self, obj):
         u""" result is the simple text that is the completion of what the person typed """
@@ -141,7 +121,8 @@ class InvoiceItemLookup(LookupChannel):
     model = InvoiceItem
 
     def get_query(self, q, request):
-        return InvoiceItem.objects.filter(Q(invoice_number__istartswith=q) | Q(invoice_number__icontains=q)).order_by('invoice_number')
+        return InvoiceItem.objects.filter(Q(invoice_number__istartswith=q) | Q(invoice_number__icontains=q)).order_by(
+            'invoice_number')
 
     def get_result(self, obj):
         u""" result is the simple text that is the completion of what the person typed """
@@ -155,3 +136,26 @@ class InvoiceItemLookup(LookupChannel):
     def format_item_display(self, obj):
         """ (HTML) formatted item for displaying item in the selected deck area """
         return u"%s<div><i>%s</i></div>" % (escape(obj.code), escape(obj.name))
+
+
+class EmployeeLookup(LookupChannel):
+    model = Employee
+
+    def get_query(self, q, request):
+        return Employee.objects.all()
+        # return Employee.objects.filter(
+        #     Q(occupation__icontains=q) | Q(user__first_name__icontains=q) | Q(user__last_name__icontains=q)).order_by(
+        #     'occupation')
+
+    def get_result(self, obj):
+        u""" result is the simple text that is the completion of what the person typed """
+        return obj.user.first_name
+
+    def format_match(self, obj):
+        """ (HTML) formatted item for display in the dropdown """
+        return u"%s<div><i>%s</i></div>" % (escape(obj.user.first_name), escape(obj.user.first_name))
+        # return self.format_item_display(obj)
+
+    def format_item_display(self, obj):
+        """ (HTML) formatted item for displaying item in the selected deck area """
+        return u"%s<div><i>%s</i></div>" % (escape(obj.user.first_name), escape(obj.user.first_name))

@@ -135,6 +135,7 @@ AJAX_LOOKUP_CHANNELS = {
     'prestation': ('invoices.lookups', 'PrestationLookup'),
     'invoiceitem': ('invoices.lookups', 'InvoiceItemLookup'),
     'task_description': ('invoices.lookups', 'TimesheetTaskLookup'),
+    'employee': ('invoices.lookups', 'EmployeeLookup'),
 }
 
 REST_FRAMEWORK = {

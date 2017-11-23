@@ -3,9 +3,11 @@ from ajax_select.admin import AjaxSelectAdmin, AjaxSelectAdminTabularInline, Aja
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from models import CareCode, Prestation, Patient, InvoiceItem, Physician
-from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
+from django.core.exceptions import ObjectDoesNotExist
 
+from forms import PrestationForm
+from models import CareCode, Prestation, Patient, InvoiceItem
+from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 from django_admin_bootstrapped.admin.models import SortableInline
 
 
@@ -45,46 +47,57 @@ class CareCoreAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'gross_amount', 'reimbursed')
     search_fields = ['code', 'name']
 
-
 admin.site.register(CareCode, CareCoreAdmin)
 
 
+class EmployeeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'start_contract', 'end_contract', 'occupation')
+    search_fields = ['user', 'occupation']
+
+admin.site.register(Employee, EmployeeAdmin)
+
+
 class PatientAdmin(admin.ModelAdmin):
+    from generate_pacifico_invoices import generate_pacifico
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     search_fields = ['name', 'first_name', 'code_sn']
+    actions = [generate_pacifico]
+
 
 admin.site.register(Patient, PatientAdmin)
 
-class PhysicianAdmin(admin.ModelAdmin):
-    list_filter = ('city',)
-    list_display = ('name', 'first_name', 'phone_number', 'provider_code')
-    search_fields = ['name', 'first_name', 'code_sn']
 
-admin.site.register(Physician, PhysicianAdmin)
+class PrestationAdmin(AjaxSelectAdmin):
+    from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
+
+    date_hierarchy = 'date'
+    list_display = ('carecode', 'date')
+    search_fields = ['carecode__code', 'carecode__name']
+    actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
+    form = make_ajax_form(Prestation, {'carecode': 'carecode'})
 
 
-# class PrestationAdmin(AjaxSelectAdmin):
-#     from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
-#
-#     date_hierarchy = 'date'
-#     list_display = ('carecode', 'date')
-#     search_fields = ['carecode__code', 'carecode__name']
-#     actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
-#     form = make_ajax_form(Prestation, {'carecode': 'carecode'})
-#
-#
-# admin.site.register(Prestation, PrestationAdmin)
+admin.site.register(Prestation, PrestationAdmin)
 
 
 class PrestationInline(AjaxSelectAdminTabularInline):
     extra = 1
     model = Prestation
-    fields = ('carecode','date')
-    search_fields = ['carecode']
-    form = make_ajax_form(Prestation, {
-        'carecode': 'carecode'
-    }, show_help_text=True)
+    fields = ('date', 'carecode', 'employee')
+    search_fields = ['carecode', 'employee']
+    form = PrestationForm
+
+    def get_formset(self, request, obj=None, **kwargs):
+        fs = super(AjaxSelectAdminTabularInline, self).get_formset(request, obj=None, **kwargs)
+        user = request.user
+        try:
+            employee = user.employee
+            fs.form.declared_fields['employee'].initial = employee.id
+        except ObjectDoesNotExist:
+            pass
+
+        return fs
 
 
 class InvoiceItemAdmin(AjaxSelectAdmin):
@@ -100,8 +113,7 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     search_fields = ['patient__name', 'patient__first_name']
     actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, syncro_clients,
                previous_months_invoices_april, previous_months_invoices_july_2017, niedercorn_avril_mai_2017]
-    form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois',
-                                        'physician':'physician_lookup'})
+    form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois'})
     inlines = [PrestationInline]
 
 
