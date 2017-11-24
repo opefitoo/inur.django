@@ -1,14 +1,12 @@
-from ajax_select import make_ajax_form, make_ajax_field
-from ajax_select.admin import AjaxSelectAdmin, AjaxSelectAdminTabularInline, AjaxSelectAdminStackedInline
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.functional import curry
 
 from forms import PrestationForm
 from models import CareCode, Prestation, Patient, InvoiceItem, Physician
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
-from django_admin_bootstrapped.admin.models import SortableInline
 
 
 class JobPostionAdmin(admin.ModelAdmin):
@@ -27,7 +25,7 @@ admin.site.register(TimesheetTask, TimesheetTaskAdmin)
 
 # Define an inline admin descriptor for Employee model
 # which acts a bit like a singleton
-class EmployeeInline(SortableInline, admin.StackedInline):
+class EmployeeInline(admin.StackedInline):
     model = Employee
     can_delete = False
     verbose_name_plural = 'employee'
@@ -68,14 +66,13 @@ class PatientAdmin(admin.ModelAdmin):
 admin.site.register(Patient, PatientAdmin)
 
 
-class PrestationAdmin(AjaxSelectAdmin):
+class PrestationAdmin(admin.ModelAdmin):
     from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
 
     date_hierarchy = 'date'
     list_display = ('carecode', 'date')
     search_fields = ['carecode__code', 'carecode__name']
     actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
-    form = make_ajax_form(Prestation, {'carecode': 'carecode'})
 
 
 admin.site.register(Prestation, PrestationAdmin)
@@ -89,26 +86,31 @@ class PhysicianAdmin(admin.ModelAdmin):
 admin.site.register(Physician, PhysicianAdmin)
 
 
-class PrestationInline(AjaxSelectAdminTabularInline):
-    extra = 1
+class PrestationInline(admin.TabularInline):
+    extra = 0
     model = Prestation
-    fields = ('carecode','date','employee')
-    search_fields = ['carecode', 'employee']
+    fields = ('carecode', 'date', 'employee')
+    search_fields = ['carecode', 'date', 'employee']
     form = PrestationForm
 
     def get_formset(self, request, obj=None, **kwargs):
-        fs = super(AjaxSelectAdminTabularInline, self).get_formset(request, obj=None, **kwargs)
+        initial = []
         user = request.user
         try:
             employee = user.employee
-            fs.form.declared_fields['employee'].initial = employee.id
+            if request.method == "GET":
+                initial.append({
+                    'employee': employee.id,
+                })
         except ObjectDoesNotExist:
             pass
 
-        return fs
+        formset = super(PrestationInline, self).get_formset(request, obj, **kwargs)
+        formset.__init__ = curry(formset.__init__, initial=initial)
+        return formset
 
 
-class InvoiceItemAdmin(AjaxSelectAdmin):
+class InvoiceItemAdmin(admin.ModelAdmin):
     from invoices.action import export_to_pdf
     from action_private import pdf_private_invoice
     from action_private_participation import pdf_private_invoice_pp
@@ -121,23 +123,17 @@ class InvoiceItemAdmin(AjaxSelectAdmin):
     search_fields = ['patient__name', 'patient__first_name']
     actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, syncro_clients,
                previous_months_invoices_april, previous_months_invoices_july_2017, niedercorn_avril_mai_2017]
-    form = make_ajax_form(InvoiceItem, {'patient': 'patient_du_mois',
-                                        'physician': 'physician_lookup'})
     inlines = [PrestationInline]
 
 
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
 
 
-class TimesheetDetailInline(AjaxSelectAdminTabularInline):
+class TimesheetDetailInline(admin.ModelAdmin):
     extra = 2
     model = TimesheetDetail
     fields = ('start_date', 'end_date', 'task_description', 'patient',)
     search_fields = ['patient']
-    form = make_ajax_form(TimesheetDetail, {
-        'patient': 'patient',
-        'task_description': 'task_description'
-    }, show_help_text=True)
 
 
 class TimesheetAdmin(admin.ModelAdmin):

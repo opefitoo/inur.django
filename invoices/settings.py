@@ -40,8 +40,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework.authtoken',
     'invoices',
-    'api',
-    'ajax_select'
+    'api'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -68,7 +67,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                # 'django.core.context_processors.request',
             ],
         },
     },
@@ -126,18 +124,6 @@ STATIC_URL = '/static/'
 # https://warehouse.python.org/project/whitenoise/
 
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
-
-# define the lookup channels in use on the site
-AJAX_LOOKUP_CHANNELS = {
-    'patient_du_mois': ('invoices.lookups', 'PatientDuMoisLookup'),
-    'physician_lookup': ('invoices.lookups', 'PhysicianLookup'),
-    'patient': ('invoices.lookups', 'PatientLookup'),
-    'carecode': ('invoices.lookups', 'CareCodeLookup'),
-    'prestation': ('invoices.lookups', 'PrestationLookup'),
-    'invoiceitem': ('invoices.lookups', 'InvoiceItemLookup'),
-    'task_description': ('invoices.lookups', 'TimesheetTaskLookup'),
-    'employee': ('invoices.lookups', 'EmployeeLookup'),
-}
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

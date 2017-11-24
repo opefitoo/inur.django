@@ -19,6 +19,10 @@ class Employee(models.Model):
                                     null=True)
     occupation = models.ForeignKey(JobPosition)
 
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'occupation', 'user__first_name', 'user__last_name'
+
     def __str__(self):  # Python 3: def __str__(self):
         return '%s' % (self.user.username.strip())
 
@@ -41,6 +45,10 @@ class TimesheetTask(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100, blank=True,
                                    null=True)
+
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'name'
 
     def __str__(self):  # Python 3: def __str__(self):
         return '%s' % (self.name.strip())

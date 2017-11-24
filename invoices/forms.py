@@ -1,7 +1,10 @@
-from ajax_select.fields import AutoCompleteSelectField
-from django.forms import ModelForm
+from django.forms import ModelForm, ChoiceField, ModelChoiceField
+
+from invoices.models import Prestation
+from invoices.timesheet import Employee
 
 
 class PrestationForm(ModelForm):
-    carecode = AutoCompleteSelectField('carecode')
-    employee = AutoCompleteSelectField('employee')
+    class Meta:
+        model = Prestation
+        fields = ('employee',)

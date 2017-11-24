@@ -18,6 +18,10 @@ class CareCode(models.Model):
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s: %s' % (self.code, self.name)
 
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'name', 'code'
+
 
 # TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
@@ -32,6 +36,10 @@ class Patient(models.Model):
     email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField()
     is_private = models.BooleanField(default=False)
+
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'name', 'first_name'
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
@@ -50,6 +58,10 @@ class Physician(models.Model):
     phone_number = models.CharField(max_length=30)
     fax_number = models.CharField(max_length=30, blank=True, null=True)
     email_address = models.EmailField(default=None, blank=True, null=True)
+
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'name', 'first_name'
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
@@ -92,7 +104,6 @@ class InvoiceItem(models.Model):
     physician = models.ForeignKey(Physician, related_name='invoice_items', null=True, blank=True,
                                   help_text='Please chose the physican who is givng the medical prescription')
 
-
     def prestations_invoiced(self):
         return '%s prestations. Total = %s' % (
             len(self.prestations.all()), sum(a.net_amount for a in self.prestations.all()))
@@ -115,6 +126,10 @@ class InvoiceItem(models.Model):
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return 'invocie no.: %s - nom patient: %s' % (self.invoice_number, self.patient)
+
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'invoice_number'
 
 
 class Prestation(models.Model):
@@ -148,3 +163,7 @@ class Prestation(models.Model):
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s - %s' % (self.carecode.code, self.carecode.name)
+
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'patient__name', 'patient__first_name'
