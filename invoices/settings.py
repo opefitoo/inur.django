@@ -169,3 +169,6 @@ JET_THEMES = [
         'title': 'Light Gray'
     }
 ]
+
+COUNTRIES_FIRST = ['LU','FR','BE','DE']
+COUNTRIES_FIRST_BREAK = '...'

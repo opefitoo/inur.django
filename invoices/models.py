@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
+from django_countries.fields import CountryField
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class Patient(models.Model):
     address = models.TextField(max_length=30)
     zipcode = models.CharField(max_length=10)
     city = models.CharField(max_length=30)
-    country = models.CharField(max_length=30, blank=True, null=True)
+    country = CountryField(blank_label='...', blank=True, null=True)
     phone_number = models.CharField(max_length=30)
     email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField()
@@ -41,7 +42,7 @@ class Patient(models.Model):
     def autocomplete_search_fields():
         return 'name', 'first_name'
 
-    def __unicode__(self):  # Python 3: def __str__(self):
+    def __unicode__(self):  # Python 3: def __str__(self):,
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
 
