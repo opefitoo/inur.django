@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
 from forms import PrestationForm
-from models import CareCode, Prestation, Patient, InvoiceItem
+from models import CareCode, Prestation, Patient, InvoiceItem, Physician
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 from django_admin_bootstrapped.admin.models import SortableInline
 
@@ -79,6 +79,14 @@ class PrestationAdmin(AjaxSelectAdmin):
 
 
 admin.site.register(Prestation, PrestationAdmin)
+
+
+class PhysicianAdmin(admin.ModelAdmin):
+    list_filter = ('city',)
+    list_display = ('name', 'first_name', 'phone_number', 'provider_code')
+    search_fields = ['name', 'first_name', 'code_sn']
+
+admin.site.register(Physician, PhysicianAdmin)
 
 
 class PrestationInline(AjaxSelectAdminTabularInline):
