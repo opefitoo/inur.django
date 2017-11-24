@@ -19,8 +19,9 @@ from django.contrib import admin
 from ajax_select import urls as ajax_select_urls
 from rest_framework.authtoken import views as authtoken_views
 
-
 urlpatterns = [
+    url(r'^jet/', include('jet.urls', 'jet')),
+    url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^admin/lookups/', include(ajax_select_urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
