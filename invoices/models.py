@@ -35,7 +35,7 @@ class Patient(models.Model):
     country = CountryField(blank_label='...', blank=True, null=True)
     phone_number = models.CharField(max_length=30)
     email_address = models.EmailField(default=None, blank=True, null=True)
-    participation_statutaire = models.BooleanField()
+    participation_statutaire = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
 
     @staticmethod
@@ -94,8 +94,8 @@ class InvoiceItem(models.Model):
     invoice_date = models.DateField('Invoice date')
     patient_invoice_date = models.DateField('Date envoi au patient', null=True, blank=True)
     invoice_send_date = models.DateField('Date envoi facture', null=True, blank=True)
-    invoice_sent = models.BooleanField()
-    invoice_paid = models.BooleanField()
+    invoice_sent = models.BooleanField(default=False)
+    invoice_paid = models.BooleanField(default=False)
     medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)
 
     # TODO: I would like to store the file Field in Google drive
@@ -105,10 +105,6 @@ class InvoiceItem(models.Model):
     physician = models.ForeignKey(Physician, related_name='invoice_items', null=True, blank=True,
                                   help_text='Please chose the physican who is givng the medical prescription')
 
-    def prestations_invoiced(self):
-        return '%s prestations. Total = %s' % (
-            len(self.prestations.all()), sum(a.net_amount for a in self.prestations.all()))
-
     def clean(self, *args, **kwargs):
         super(InvoiceItem, self).clean()
         if self.patient_id is not None and self.is_private != self.patient.is_private:
@@ -117,13 +113,6 @@ class InvoiceItem(models.Model):
     @property
     def invoice_month(self):
         return self.invoice_date.strftime("%B %Y")
-
-    def __get_patients_without_invoice(self, current_month):
-        qinvoices_of_current_month = InvoiceItem.objects.filter(date__month=current_month.month)
-        patients_pks_having_an_invoice = list()
-        for i in qinvoices_of_current_month:
-            patients_pks_having_an_invoice.append(i.patient.pk)
-        return patients_pks_having_an_invoice
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return 'invocie no.: %s - nom patient: %s' % (self.invoice_number, self.patient)
