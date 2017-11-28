@@ -55,7 +55,7 @@ class Physician(models.Model):
     address = models.TextField(max_length=30)
     zipcode = models.CharField(max_length=10)
     city = models.CharField(max_length=30)
-    country = models.CharField(max_length=30, blank=True, null=True)
+    country = CountryField(blank_label='...', blank=True, null=True)
     phone_number = models.CharField(max_length=30)
     fax_number = models.CharField(max_length=30, blank=True, null=True)
     email_address = models.EmailField(default=None, blank=True, null=True)
