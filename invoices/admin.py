@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.functional import curry
 
 from forms import PrestationForm
-from models import CareCode, Prestation, Patient, InvoiceItem, Physician
+from models import CareCode, Prestation, Patient, InvoiceItem, Physician, CareCodeValidityDates
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
 
@@ -41,9 +41,17 @@ admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 
+class CareCodeValidityDatesInline(admin.TabularInline):
+    extra = 0
+    model = CareCodeValidityDates
+    fields = ('start_date', 'end_date', 'gross_amount')
+    search_fields = ['start_date', 'end_date', 'gross_amount']
+
+
 class CareCoreAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'gross_amount', 'reimbursed')
+    list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
+    inlines = [CareCodeValidityDatesInline]
 
 admin.site.register(CareCode, CareCoreAdmin)
 

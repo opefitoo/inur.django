@@ -9,11 +9,11 @@ from django_countries.fields import CountryField
 logger = logging.getLogger(__name__)
 
 
+# TODO:  code must be unique
 class CareCode(models.Model):
     code = models.CharField(max_length=30)
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100)
-    gross_amount = models.DecimalField("montant brut", max_digits=5, decimal_places=2)
     reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
 
     def __unicode__(self):  # Python 3: def __str__(self):
@@ -22,6 +22,19 @@ class CareCode(models.Model):
     @staticmethod
     def autocomplete_search_fields():
         return 'name', 'code'
+
+
+# TODO 1: migration..?
+# TODO 2: CareCode cannot have start and end validity dates that overlap
+# TODO 3: depending on Prestation date, gross_amount that is calculated in Invoice will differ
+class CareCodeValidityDates(models.Model):
+    start_date = models.DateField("date debut validite")
+    end_date = models.DateField("date fin validite", blank=True, null=True)
+    gross_amount = models.DecimalField("montant brut", max_digits=5, decimal_places=2)
+    validity_dates = models.ForeignKey(CareCode, related_name='validitiy_dates')
+
+    def __unicode__(self):  # Python 3: def __str__(self):
+        return 'from %s to %s' % (self.start_date, self.end_date)
 
 
 # TODO: synchronize patient details with Google contacts
