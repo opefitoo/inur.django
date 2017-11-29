@@ -24,7 +24,10 @@ class CareCodeSerializer(serializers.ModelSerializer):
 
 class PatientSerializer(serializers.ModelSerializer):
     def validate(self, data):
-        is_code_sn_valid, message = Patient.is_code_sn_valid(data['is_private'], data['code_sn'])
+        is_private = False
+        if 'is_private' in data:
+            is_private = data['is_private']
+        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private, data['code_sn'])
         if not is_code_sn_valid:
             raise serializers.ValidationError(message)
 

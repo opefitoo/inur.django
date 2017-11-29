@@ -18,6 +18,15 @@ class CareCodeTestCase(TestCase):
 
 
 class PatientTestCase(TestCase):
+    def setUp(self):
+        Patient.objects.create(code_sn='1245789764822',
+                               first_name='first name 0',
+                               name='name 0',
+                               address='address 0',
+                               zipcode='zipcode 0',
+                               city='city 0',
+                               phone_number='000'),
+
     def test_string_representation(self):
         patient = Patient(first_name='first name',
                           name='name')
@@ -26,6 +35,22 @@ class PatientTestCase(TestCase):
 
     def test_autocomplete(self):
         self.assertEqual(Patient.autocomplete_search_fields(), ('name', 'first_name'))
+
+    def test_code_sn(self):
+        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private=True, code_sn='0123')
+        self.assertEqual(is_code_sn_valid, True)
+
+        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private=False, code_sn='0123')
+        self.assertEqual(is_code_sn_valid, False)
+
+        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private=False, code_sn='0245789764822')
+        self.assertEqual(is_code_sn_valid, False)
+
+        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private=False, code_sn='1245789764822')
+        self.assertEqual(is_code_sn_valid, False)
+
+        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private=False, code_sn='2245789764822')
+        self.assertEqual(is_code_sn_valid, True)
 
 
 class PhysicianTestCase(TestCase):
