@@ -9,7 +9,6 @@ class CareCodeTestCase(TestCase):
         carecode = CareCode(code='code',
                             name='some name',
                             description='description',
-                            gross_amount=10.2,
                             reimbursed=False)
 
         self.assertEqual(str(carecode), '%s: %s' % (carecode.code, carecode.name))
@@ -45,7 +44,6 @@ class PrestationTestCase(TestCase):
         carecode = CareCode(code='code',
                             name='some name',
                             description='description',
-                            gross_amount=10.2,
                             reimbursed=False)
 
         prestation = Prestation(carecode=carecode)

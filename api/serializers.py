@@ -19,7 +19,7 @@ class GroupSerializer(serializers.ModelSerializer):
 class CareCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CareCode
-        fields = ('id', 'code', 'name', 'description', 'gross_amount', 'reimbursed')
+        fields = ('id', 'code', 'name', 'description', 'reimbursed')
 
 
 class PatientSerializer(serializers.ModelSerializer):
@@ -32,7 +32,8 @@ class PatientSerializer(serializers.ModelSerializer):
 class PhysicianSerializer(serializers.ModelSerializer):
     class Meta:
         model = Physician
-        fields = ('id', 'code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'phone_number', 'email_address')
+        fields = (
+            'id', 'provider_code', 'first_name', 'name', 'address', 'zipcode', 'city', 'phone_number', 'email_address')
 
 
 class PrestationSerializer(serializers.ModelSerializer):
