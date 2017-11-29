@@ -137,7 +137,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
 
 
-class TimesheetDetailInline(admin.ModelAdmin):
+class TimesheetDetailInline(admin.TabularInline):
     extra = 2
     model = TimesheetDetail
     fields = ('start_date', 'end_date', 'task_description', 'patient',)
