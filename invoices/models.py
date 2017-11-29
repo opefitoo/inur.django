@@ -61,14 +61,24 @@ class Patient(models.Model):
 
     def clean(self, *args, **kwargs):
         super(Patient, self).clean()
-        pattern = re.compile('^([1-9]{1}[0-9]{12})$')
-        if not self.is_private:
-            if pattern.match(self.code_sn) is None:
+        is_code_sn_valid, message = self.is_code_sn_valid(self.is_private, self.code_sn)
+        if not is_code_sn_valid:
+            raise ValidationError({'code_sn': message})
+
+    @staticmethod
+    def is_code_sn_valid(is_private, code_sn):
+        is_valid = True
+        message = ''
+        if not is_private:
+            pattern = re.compile('^([1-9]{1}[0-9]{12})$')
+            if pattern.match(code_sn) is None:
                 message = 'Code SN should start with non zero digit and be followed by 12 digits'
-                raise ValidationError({'code_sn': message})
-            elif Patient.objects.filter(code_sn=self.code_sn).count() > 0:
+                is_valid = False
+            elif Patient.objects.filter(code_sn=code_sn).count() > 0:
                 message = 'Code SN must be unique'
-                raise ValidationError({'code_sn': message})
+                is_valid = False
+
+        return is_valid, message
 
 
 # TODO: 1. can maybe be extending common class with Patient ?

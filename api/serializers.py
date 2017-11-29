@@ -23,6 +23,13 @@ class CareCodeSerializer(serializers.ModelSerializer):
 
 
 class PatientSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        is_code_sn_valid, message = Patient.is_code_sn_valid(data['is_private'], data['code_sn'])
+        if not is_code_sn_valid:
+            raise serializers.ValidationError(message)
+
+        return data
+
     class Meta:
         model = Patient
         fields = ('id', 'code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'phone_number', 'email_address',
