@@ -1,4 +1,5 @@
 import logging
+import re
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -57,6 +58,17 @@ class Patient(models.Model):
 
     def __unicode__(self):  # Python 3: def __str__(self):,
         return '%s %s' % (self.name.strip(), self.first_name.strip())
+
+    def clean(self, *args, **kwargs):
+        super(Patient, self).clean()
+        pattern = re.compile('^([1-9]{1}[0-9]{12})$')
+        if not self.is_private:
+            if pattern.match(self.code_sn) is None:
+                message = 'Code SN should start with non zero digit and be followed by 12 digits'
+                raise ValidationError({'code_sn': message})
+            elif Patient.objects.filter(code_sn=self.code_sn).count() > 0:
+                message = 'Code SN must be unique'
+                raise ValidationError({'code_sn': message})
 
 
 # TODO: 1. can maybe be extending common class with Patient ?
