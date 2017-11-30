@@ -12,13 +12,13 @@ class ValidityDateFormSet(BaseInlineFormSet):
                     if index == row_index:
                         continue
 
-                    if row_data['start_date'] > data['start_date'] and data['end_date'] is None:
+                    if row_data['start_date'] >= data['start_date'] and data['end_date'] is None:
                         is_valid = False
                     elif data['end_date'] is not None:
-                        if data['start_date'] < row_data['start_date'] < data['end_date']:
+                        if data['start_date'] <= row_data['start_date'] <= data['end_date']:
                             is_valid = False
                         if row_data['end_date'] is not None:
-                            if data['start_date'] < row_data['end_date'] < data['end_date']:
+                            if data['start_date'] <= row_data['end_date'] <= data['end_date']:
                                 is_valid = False
 
                 if not is_valid:

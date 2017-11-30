@@ -45,7 +45,7 @@ class ValidityDate(models.Model):
 
     @staticmethod
     def check_dates(start_date, end_date):
-        is_valid = end_date is None or start_date < end_date
+        is_valid = end_date is None or start_date <= end_date
 
         return is_valid
 
