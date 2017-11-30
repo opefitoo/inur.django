@@ -6,7 +6,7 @@ from django.utils.functional import curry
 
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
 from forms import PrestationForm
-from models import CareCode, Prestation, Patient, InvoiceItem, Physician, CareCodeValidityDates
+from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
 
@@ -42,18 +42,18 @@ admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 
-class CareCodeValidityDatesInline(admin.TabularInline):
+class ValidityDateInline(admin.TabularInline):
     extra = 0
-    model = CareCodeValidityDates
+    model = ValidityDate
     fields = ('start_date', 'end_date', 'gross_amount')
     search_fields = ['start_date', 'end_date', 'gross_amount']
 
 
 class CareCoreAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'reimbursed', 'start_date', 'end_date')
+    list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
     actions = [apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private]
-    inlines = [CareCodeValidityDatesInline]
+    inlines = [ValidityDateInline]
 
 admin.site.register(CareCode, CareCoreAdmin)
 
