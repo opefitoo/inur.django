@@ -6,6 +6,18 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def create_validity_dates(apps, schema_editor):
+    CareCodeModel = apps.get_model('invoices', 'CareCode')
+    CareCodeValidityDatesModel = apps.get_model('invoices', 'CareCodeValidityDates')
+    for care_code_item in CareCodeModel.objects.all():
+        validity_date_item = CareCodeValidityDatesModel()
+        validity_date_item.start_date = care_code_item.start_date
+        validity_date_item.end_date = care_code_item.end_date
+        validity_date_item.gross_amount = care_code_item.gross_amount
+        validity_date_item.validity_dates = care_code_item
+        validity_date_item.save()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -22,13 +34,14 @@ class Migration(migrations.Migration):
                 ('gross_amount', models.DecimalField(decimal_places=2, max_digits=5, verbose_name=b'montant brut')),
             ],
         ),
-        migrations.RemoveField(
-            model_name='carecode',
-            name='gross_amount',
-        ),
         migrations.AddField(
             model_name='carecodevaliditydates',
             name='validity_dates',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='validitiy_dates', to='invoices.CareCode'),
+        ),
+        migrations.RunPython(create_validity_dates),
+        migrations.RemoveField(
+            model_name='carecode',
+            name='gross_amount',
         ),
     ]
