@@ -1,7 +1,8 @@
 from datetime import datetime
 from django.test import TestCase
 
-from invoices.models import CareCode, Patient, Physician, Prestation, InvoiceItem, get_default_invoice_number
+from invoices.models import CareCode, Patient, Physician, Prestation, InvoiceItem, get_default_invoice_number, \
+    ValidityDate
 
 
 class CareCodeTestCase(TestCase):
@@ -15,6 +16,22 @@ class CareCodeTestCase(TestCase):
 
     def test_autocomplete(self):
         self.assertEqual(CareCode.autocomplete_search_fields(), ('name', 'code'))
+
+
+class ValidityDateTestCase(TestCase):
+    def setUp(self):
+        self.care_code = CareCode.objects.create(code='code',
+                                                 name='some name',
+                                                 description='description',
+                                                 reimbursed=False)
+
+    def test_string_representation(self):
+        date = datetime.now()
+        validity_date = ValidityDate(start_date=date,
+                                     gross_amount=10.5,
+                                     care_code=self.care_code)
+
+        self.assertEqual(str(validity_date), 'from %s to %s' % (validity_date.start_date, validity_date.end_date))
 
 
 class PatientTestCase(TestCase):
