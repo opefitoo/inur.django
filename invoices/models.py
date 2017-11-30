@@ -25,7 +25,6 @@ class CareCode(models.Model):
         return 'name', 'code'
 
 
-# TODO 1: migration..?
 # TODO 2: CareCode cannot have start and end validity dates that overlap
 # TODO 3: depending on Prestation date, gross_amount that is calculated in Invoice will differ
 class ValidityDate(models.Model):
@@ -36,6 +35,19 @@ class ValidityDate(models.Model):
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return 'from %s to %s' % (self.start_date, self.end_date)
+
+    def clean(self, *args, **kwargs):
+        super(ValidityDate, self).clean()
+        is_valid = self.check_dates(self.start_date, self.end_date)
+
+        if not is_valid:
+            raise ValidationError({'end_date': 'End date must be bigger than Start date'})
+
+    @staticmethod
+    def check_dates(start_date, end_date):
+        is_valid = end_date is None or start_date < end_date
+
+        return is_valid
 
 
 # TODO: synchronize patient details with Google contacts

@@ -33,6 +33,12 @@ class ValidityDateTestCase(TestCase):
 
         self.assertEqual(str(validity_date), 'from %s to %s' % (validity_date.start_date, validity_date.end_date))
 
+    def test_dates_validation(self):
+        now = datetime.now()
+
+        self.assertEqual(ValidityDate.check_dates(now.replace(month=1), now.replace(month=12)), True)
+        self.assertEqual(ValidityDate.check_dates(now.replace(month=12), now.replace(month=1)), False)
+
 
 class PatientTestCase(TestCase):
     def setUp(self):
