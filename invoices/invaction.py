@@ -149,6 +149,40 @@ def previous_months_invoices_april(modeladmin, request, queryset):
              invoice_counters += 1
 
 
+def make_private(modeladmin, request, queryset):
+    # response = HttpResponse(content_type='text')
+    for ccode in queryset:
+        ccode.reimbursed = False
+        ccode.clean()
+        ccode.save()
+
+
+def apply_start_date_2017(modeladmin, request, queryset):
+    # response = HttpResponse(content_type='text')
+    for ccode in queryset:
+        ccode.start_date = datetime.datetime(2017, 1, 1)
+        ccode.clean()
+        ccode.save()
+
+
+def apply_start_date_2015(modeladmin, request, queryset):
+    # response = HttpResponse(content_type='text')
+    for ccode in queryset:
+        ccode.start_date = datetime.datetime(2015, 1, 1)
+        ccode.end_date = datetime.datetime(2016, 12, 31)
+        ccode.clean()
+        ccode.save()
+
+
+def apply_start_date_2013(modeladmin, request, queryset):
+    # response = HttpResponse(content_type='text')
+    for ccode in queryset:
+        ccode.start_date = datetime.datetime(2013, 1, 1)
+        ccode.end_date = datetime.datetime(2015, 12, 31)
+        ccode.clean()
+        ccode.save()
+
+
 def previous_months_invoices_july_2017(modeladmin, request, queryset):
     # response = HttpResponse(content_type='text')
 

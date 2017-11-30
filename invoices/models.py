@@ -1,5 +1,6 @@
 import logging
 import re
+from datetime import datetime
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -10,12 +11,18 @@ from django_countries.fields import CountryField
 logger = logging.getLogger(__name__)
 
 
+def get_default_carecode_start_date():
+    return datetime.now().date().replace(month=1, day=1)
+
+
 # TODO:  code must be unique
 class CareCode(models.Model):
     code = models.CharField(max_length=30)
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100)
     reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
+    start_date = models.DateField()
+    end_date = models.DateField(blank=True, null=True)
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s: %s' % (self.code, self.name)
