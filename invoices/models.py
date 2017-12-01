@@ -170,11 +170,14 @@ class InvoiceItem(models.Model):
 
 
 class Prestation(models.Model):
+    AT_HOME_CARE_CODE = 'NF01'
+
     invoice_item = models.ForeignKey(InvoiceItem, related_name='prestations')
     employee = models.ForeignKey('invoices.Employee', related_name='prestations', null=True, default=None)
     carecode = models.ForeignKey(CareCode, related_name='prestations')
     quantity = IntegerField(default=1)
     date = models.DateTimeField('date')
+    at_home = models.BooleanField(default=False)
     date.editable = True
 
     def clean(self):
@@ -182,6 +185,9 @@ class Prestation(models.Model):
         is_valid = self.is_carecode_valid(self.id, self.carecode, self.invoice_item, self.date)
         if not is_valid:
             raise ValidationError({'carecode': 'Another Prestation with exclusive CareCode already exists.'})
+
+        if not self.is_at_home_carecode_valid(self.at_home, self.carecode.code):
+            raise ValidationError({'carecode': "At home Prestation's CareCode should be 'NF01'."})
 
     @staticmethod
     def is_carecode_valid(prestation_id, carecode, invoice_item, date):
@@ -191,6 +197,14 @@ class Prestation(models.Model):
                 invoice_item=invoice_item)).exclude(pk=prestation_id)
 
         is_valid = 0 == prestations_queryset.count()
+
+        return is_valid
+
+    @staticmethod
+    def is_at_home_carecode_valid(at_home, code):
+        is_valid = True
+        if at_home:
+            is_valid = code == Prestation.AT_HOME_CARE_CODE
 
         return is_valid
 

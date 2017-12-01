@@ -139,6 +139,13 @@ class PrestationTestCase(TestCase):
         self.assertTrue(Prestation.is_carecode_valid(None, self.care_code_third, self.invoice_item,
                                                      self.date.replace(month=5, day=1)))
 
+    def test_is_at_home_carecode_valid(self):
+        self.assertTrue(Prestation.is_at_home_carecode_valid(False, 'some random care code'))
+        self.assertTrue(Prestation.is_at_home_carecode_valid(False, Prestation.AT_HOME_CARE_CODE))
+        
+        self.assertFalse(Prestation.is_at_home_carecode_valid(True, 'some random care code'))
+        self.assertTrue(Prestation.is_at_home_carecode_valid(True, Prestation.AT_HOME_CARE_CODE))
+
     def test_string_representation(self):
         carecode = CareCode(code='code',
                             name='some name',
