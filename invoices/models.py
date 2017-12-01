@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # TODO:  code must be unique
 class CareCode(models.Model):
-    code = models.CharField(max_length=30)
+    code = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100)
     reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
