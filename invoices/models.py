@@ -10,7 +10,6 @@ from django_countries.fields import CountryField
 logger = logging.getLogger(__name__)
 
 
-# TODO:  code must be unique
 class CareCode(models.Model):
     code = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=50)
@@ -173,6 +172,7 @@ class Prestation(models.Model):
     invoice_item = models.ForeignKey(InvoiceItem, related_name='prestations')
     employee = models.ForeignKey('invoices.Employee', related_name='prestations', null=True, default=None)
     carecode = models.ForeignKey(CareCode, related_name='prestations')
+    quantity = IntegerField(default=1)
     date = models.DateTimeField('date')
     date.editable = True
 
