@@ -15,6 +15,7 @@ class CareCode(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100)
     reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
+    exclusive_care_codes = models.ManyToManyField("self", blank=True)
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s: %s' % (self.code, self.name)
@@ -175,6 +176,23 @@ class Prestation(models.Model):
     quantity = IntegerField(default=1)
     date = models.DateTimeField('date')
     date.editable = True
+
+    def clean(self):
+        super(Prestation, self).clean()
+        is_valid = self.is_carecode_valid(self.id, self.carecode, self.invoice_item, self.date)
+        if not is_valid:
+            raise ValidationError({'carecode': 'Another Prestation with exclusive CareCode already exists.'})
+
+    @staticmethod
+    def is_carecode_valid(prestation_id, carecode, invoice_item, date):
+        exclusive_care_codes = carecode.exclusive_care_codes.all()
+        prestations_queryset = Prestation.objects.filter(
+            (Q(carecode__in=exclusive_care_codes) | Q(carecode=carecode.id)) & Q(date=date) & Q(
+                invoice_item=invoice_item)).exclude(pk=prestation_id)
+
+        is_valid = 0 == prestations_queryset.count()
+
+        return is_valid
 
     # TODO retrieve is_private from Patient or compute it in a different way
     @property

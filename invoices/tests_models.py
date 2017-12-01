@@ -1,8 +1,11 @@
 from datetime import datetime
+from django.utils import timezone
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from invoices.models import CareCode, Patient, Physician, Prestation, InvoiceItem, get_default_invoice_number, \
     ValidityDate
+from invoices.timesheet import Employee, JobPosition
 
 
 class CareCodeTestCase(TestCase):
@@ -88,6 +91,54 @@ class PhysicianTestCase(TestCase):
 
 
 class PrestationTestCase(TestCase):
+    def setUp(self):
+        self.date = timezone.now().replace(month=6, day=10)
+        jobposition = JobPosition.objects.create(name='name 0')
+        user = User.objects.create_user('testuser', email='testuser@test.com', password='testing')
+        user.save()
+        self.employee = Employee.objects.create(user=user,
+                                                start_contract=self.date,
+                                                occupation=jobposition)
+
+        patient = Patient.objects.create(first_name='first name',
+                                         name='name')
+
+        self.invoice_item = InvoiceItem.objects.create(invoice_number='936 some invoice_number',
+                                                       invoice_date=self.date,
+                                                       patient=patient)
+
+        self.care_code_first = CareCode.objects.create(code='code0',
+                                                       name='some name',
+                                                       description='description',
+                                                       reimbursed=False)
+        self.care_code_second = CareCode.objects.create(code='code1',
+                                                        name='some name1',
+                                                        description='description1',
+                                                        reimbursed=False)
+        self.care_code_third = CareCode.objects.create(code='code2',
+                                                       name='some name2',
+                                                       description='description2',
+                                                       reimbursed=False)
+        self.care_code_third.save()
+        self.care_code_third.exclusive_care_codes.add(self.care_code_first)
+        self.care_code_third.exclusive_care_codes.add(self.care_code_second)
+
+        self.existing_prestation = Prestation.objects.create(invoice_item=self.invoice_item,
+                                                             employee=self.employee,
+                                                             carecode=self.care_code_third,
+                                                             date=self.date)
+
+    def test_is_carecode_valid(self):
+        self.assertFalse(Prestation.is_carecode_valid(None, self.care_code_first, self.invoice_item, self.date))
+        self.assertFalse(Prestation.is_carecode_valid(None, self.care_code_second, self.invoice_item, self.date))
+        self.assertFalse(Prestation.is_carecode_valid(None, self.care_code_third, self.invoice_item, self.date))
+        self.assertTrue(
+            Prestation.is_carecode_valid(self.existing_prestation.id, self.care_code_second, self.invoice_item,
+                                         self.date))
+
+        self.assertTrue(Prestation.is_carecode_valid(None, self.care_code_third, self.invoice_item,
+                                                     self.date.replace(month=5, day=1)))
+
     def test_string_representation(self):
         carecode = CareCode(code='code',
                             name='some name',
