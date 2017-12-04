@@ -1,4 +1,10 @@
-from django.forms import BaseInlineFormSet, ValidationError
+from dal import autocomplete
+
+from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, ModelForm
+
+from invoices.models import Prestation, CareCode
+from invoices.timesheet import Employee
+from invoices.widgets import AutocompleteModelSelect2CustomWidget
 
 
 class ValidityDateFormSet(BaseInlineFormSet):
@@ -23,3 +29,18 @@ class ValidityDateFormSet(BaseInlineFormSet):
 
                 if not is_valid:
                     raise ValidationError('Validity Dates periods should not intersect')
+
+
+class PrestationForm(ModelForm):
+    carecode = ModelChoiceField(
+        queryset=CareCode.objects.all(),
+        widget=AutocompleteModelSelect2CustomWidget(url='carecode-autocomplete', forward=['at_home'])
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(PrestationForm, self).__init__(*args, **kwargs)
+        self.fields['carecode'].autocomplete = False
+
+    class Meta:
+        model = Prestation
+        fields = '__all__'

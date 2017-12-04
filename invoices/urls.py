@@ -19,7 +19,14 @@ from django.contrib import admin
 from ajax_select import urls as ajax_select_urls
 from rest_framework.authtoken import views as authtoken_views
 
+from invoices.views import CareCodeAutocomplete
+
 urlpatterns = [
+    url(
+        r'^carecode-autocomplete/$',
+        CareCodeAutocomplete.as_view(create_field='name'),
+        name='carecode-autocomplete',
+    ),
     url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
     url(r'^admin/', include(admin.site.urls)),

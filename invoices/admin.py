@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.functional import curry
 
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
-from forms import ValidityDateFormSet
+from forms import ValidityDateFormSet, PrestationForm
 from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
@@ -84,6 +84,7 @@ class PrestationAdmin(admin.ModelAdmin):
     list_display = ('carecode', 'date')
     search_fields = ['carecode__code', 'carecode__name']
     actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
+    form = PrestationForm
 
 
 admin.site.register(Prestation, PrestationAdmin)
