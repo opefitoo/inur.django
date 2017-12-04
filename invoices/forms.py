@@ -1,5 +1,3 @@
-from dal import autocomplete
-
 from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, ModelForm
 
 from invoices.models import Prestation, CareCode

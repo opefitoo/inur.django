@@ -9,8 +9,4 @@ class AutocompleteModelSelect2CustomWidget(autocomplete.ModelSelect2):
         self.attrs['data-forward'] = json.dumps(self.forward)
 
     class Media:
-        css = {
-            # 'all': ('fancy.css',)
-        }
         js = ('js/widgets/autocomplete-light-custom.js',)
-        attrs = {'data-aaaaa': True}
