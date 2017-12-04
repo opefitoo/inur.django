@@ -102,7 +102,7 @@ class PrestationInline(admin.TabularInline):
     extra = 0
     model = Prestation
     form = PrestationForm
-    fields = ('carecode', 'date', 'employee', 'at_home')
+    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee')
     search_fields = ['carecode', 'date', 'employee']
 
     def get_formset(self, request, obj=None, **kwargs):
