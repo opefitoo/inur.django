@@ -1,7 +1,7 @@
 from dal import autocomplete
 from django.db.models import Q
 
-from invoices.models import CareCode, Prestation
+from invoices.models import CareCode, Prestation, Patient
 
 
 class CareCodeAutocomplete(autocomplete.Select2QuerySetView):
@@ -16,5 +16,21 @@ class CareCodeAutocomplete(autocomplete.Select2QuerySetView):
 
         if self.q:
             qs = qs.filter(Q(name__contains=self.q) | Q(code__contains=self.q))
+
+        return qs
+
+
+class PatientAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        if not self.request.user.is_authenticated():
+            return Patient.objects.none()
+
+        qs = Patient.objects.all()
+        is_private = self.forwarded.get('is_private', False)
+        if is_private:
+            qs = qs.filter(is_private=is_private)
+
+        if self.q:
+            qs = qs.filter(Q(name__contains=self.q) | Q(first_name__contains=self.q))
 
         return qs

@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.functional import curry
 
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
-from forms import ValidityDateFormSet, PrestationForm
+from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm
 from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
@@ -129,6 +129,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     from invaction import previous_months_invoices_april, previous_months_invoices_july_2017
     from generate_pacifico_invoices import niedercorn_avril_mai_2017
     from invaction import syncro_clients
+    form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']

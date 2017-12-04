@@ -16,16 +16,20 @@ Including another URLconf
 
 from django.conf.urls import include, url
 from django.contrib import admin
-from ajax_select import urls as ajax_select_urls
 from rest_framework.authtoken import views as authtoken_views
 
-from invoices.views import CareCodeAutocomplete
+from invoices.views import CareCodeAutocomplete, PatientAutocomplete
 
 urlpatterns = [
     url(
         r'^carecode-autocomplete/$',
-        CareCodeAutocomplete.as_view(create_field='name'),
+        CareCodeAutocomplete.as_view(),
         name='carecode-autocomplete',
+    ),
+    url(
+        r'^patient-autocomplete/$',
+        PatientAutocomplete.as_view(),
+        name='patient-autocomplete',
     ),
     url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),

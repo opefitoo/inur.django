@@ -1,6 +1,6 @@
 from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, ModelForm
 
-from invoices.models import Prestation, CareCode
+from invoices.models import Prestation, CareCode, InvoiceItem, Patient
 from invoices.timesheet import Employee
 from invoices.widgets import AutocompleteModelSelect2CustomWidget
 
@@ -41,4 +41,19 @@ class PrestationForm(ModelForm):
 
     class Meta:
         model = Prestation
+        fields = '__all__'
+
+
+class InvoiceItemForm(ModelForm):
+    patient = ModelChoiceField(
+        queryset=Patient.objects.all(),
+        widget=AutocompleteModelSelect2CustomWidget(url='patient-autocomplete', forward=['is_private'])
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(InvoiceItemForm, self).__init__(*args, **kwargs)
+        self.fields['patient'].autocomplete = False
+
+    class Meta:
+        model = InvoiceItem
         fields = '__all__'
