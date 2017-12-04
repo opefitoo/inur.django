@@ -101,7 +101,8 @@ admin.site.register(Physician, PhysicianAdmin)
 class PrestationInline(admin.TabularInline):
     extra = 0
     model = Prestation
-    fields = ('carecode', 'date', 'employee')
+    form = PrestationForm
+    fields = ('carecode', 'date', 'employee', 'at_home')
     search_fields = ['carecode', 'date', 'employee']
 
     def get_formset(self, request, obj=None, **kwargs):
