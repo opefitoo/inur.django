@@ -182,21 +182,35 @@ class Prestation(models.Model):
 
     def clean(self):
         super(Prestation, self).clean()
-        is_valid = self.is_carecode_valid(self.id, self.carecode, self.invoice_item, self.date)
+        prestations_list = self.get_conflicting_prestations(self.id, self.carecode, self.invoice_item, self.date)
+        is_valid = self.is_carecode_valid(prestations_list=prestations_list)
         if not is_valid:
-            raise ValidationError({'carecode': 'Another Prestation with exclusive CareCode already exists.'})
+            conflicting_codes = ", ".join([prestation.carecode.code for prestation in prestations_list])
+            msg = "CareCode %s cannot be applied because CareCode(s) %s has been applied already" % (
+            self.carecode.code, conflicting_codes)
+
+            raise ValidationError({'carecode': msg})
 
         if not self.is_at_home_carecode_valid(self.at_home, self.carecode.code):
             raise ValidationError({'carecode': "At home Prestation's CareCode should be 'NF01'."})
 
     @staticmethod
-    def is_carecode_valid(prestation_id, carecode, invoice_item, date):
+    def get_conflicting_prestations(prestation_id, carecode, invoice_item, date):
         exclusive_care_codes = carecode.exclusive_care_codes.all()
         prestations_queryset = Prestation.objects.filter(
             (Q(carecode__in=exclusive_care_codes) | Q(carecode=carecode.id)) & Q(date=date) & Q(
                 invoice_item=invoice_item)).exclude(pk=prestation_id)
+        prestations_list = prestations_queryset[::1]
 
-        is_valid = 0 == prestations_queryset.count()
+        return prestations_list
+
+
+    @staticmethod
+    def is_carecode_valid(prestation_id=None, carecode=None, invoice_item=None, date=None, prestations_list=None):
+        if prestations_list is None:
+            prestations_list = Prestation.get_conflicting_prestations(prestation_id, carecode, invoice_item, date)
+
+        is_valid = 0 == len(prestations_list)
 
         return is_valid
 
