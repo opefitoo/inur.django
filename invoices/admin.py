@@ -86,6 +86,17 @@ class PrestationAdmin(admin.ModelAdmin):
     actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
     form = PrestationForm
 
+    def get_changeform_initial_data(self, request):
+        initial = {}
+        user = request.user
+        try:
+            employee = user.employee
+            initial['employee'] = employee.id
+        except ObjectDoesNotExist:
+            pass
+
+        return initial
+
 
 admin.site.register(Prestation, PrestationAdmin)
 
@@ -107,18 +118,20 @@ class PrestationInline(admin.TabularInline):
 
     def get_formset(self, request, obj=None, **kwargs):
         initial = []
+        formset = super(PrestationInline, self).get_formset(request, obj, **kwargs)
         user = request.user
         try:
             employee = user.employee
             if request.method == "GET":
+                formset.form.base_fields['employee'].initial = employee.id
                 initial.append({
                     'employee': employee.id,
                 })
         except ObjectDoesNotExist:
             pass
 
-        formset = super(PrestationInline, self).get_formset(request, obj, **kwargs)
         formset.__init__ = curry(formset.__init__, initial=initial)
+
         return formset
 
 
