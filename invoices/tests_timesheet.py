@@ -19,7 +19,8 @@ class EmployeeTestCase(TestCase):
         self.assertEqual(str(employee), '%s' % (employee.user.username.strip()))
 
     def test_autocomplete(self):
-        self.assertEqual(Employee.autocomplete_search_fields(), ('occupation', 'user__first_name', 'user__last_name'))
+        self.assertEqual(Employee.autocomplete_search_fields(),
+                         ('occupation__name', 'user__first_name', 'user__last_name', 'user__username'))
 
 
 class TimesheetTaskTestCase(TestCase):

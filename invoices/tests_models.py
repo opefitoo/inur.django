@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 
 from invoices.models import CareCode, Patient, Physician, Prestation, InvoiceItem, get_default_invoice_number, \
-    ValidityDate
+    ValidityDate, MedicalPrescription
 from invoices.timesheet import Employee, JobPosition
 
 
@@ -88,6 +88,23 @@ class PhysicianTestCase(TestCase):
 
     def test_autocomplete(self):
         self.assertEqual(Physician.autocomplete_search_fields(), ('name', 'first_name'))
+
+
+class MedicalPrescriptionTestCase(TestCase):
+    def test_string_representation(self):
+        date = timezone.now()
+        physician = Physician(first_name='first name',
+                              name='name')
+
+        prescription = MedicalPrescription(prescriptor=physician,
+                                           date=date)
+
+        self.assertEqual(str(prescription),
+                         '%s %s' % (prescription.prescriptor.name.strip(), prescription.prescriptor.first_name.strip()))
+
+    def test_autocomplete(self):
+        self.assertEqual(MedicalPrescription.autocomplete_search_fields(),
+                         ('date', 'prescriptor__name', 'prescriptor__first_name'))
 
 
 class PrestationTestCase(TestCase):
@@ -196,7 +213,7 @@ class InvoiceItemTestCase(TestCase):
                          'invocie no.: %s - nom patient: %s' % (invoice_item.invoice_number, invoice_item.patient))
 
     def test_autocomplete(self):
-        self.assertEqual(InvoiceItem.autocomplete_search_fields(), 'invoice_number')
+        self.assertEqual(InvoiceItem.autocomplete_search_fields(), ('invoice_number',))
 
     def test_invoice_month(self):
         date = datetime.now()

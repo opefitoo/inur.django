@@ -16,6 +16,8 @@ Including another URLconf
 
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.views.static import serve
+from invoices import settings
 from rest_framework.authtoken import views as authtoken_views
 
 from invoices.views import CareCodeAutocomplete, PatientAutocomplete, EmployeeAutocomplete
@@ -42,4 +44,10 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api-token-auth/', authtoken_views.obtain_auth_token),
     url(r'^api/v1/', include('api.urls', namespace='api'))
+]
+
+urlpatterns += [
+    url(r'^media/(?P<path>.*)$', serve, {
+        'document_root': settings.MEDIA_ROOT,
+    }),
 ]

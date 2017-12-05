@@ -1,13 +1,18 @@
 import logging
+import os
+import uuid
 import re
 
 from django.core.exceptions import ValidationError
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
 from django_countries.fields import CountryField
+from invoices import settings
 
 logger = logging.getLogger(__name__)
+fs = FileSystemStorage(location=settings.MEDIA_ROOT)
 
 
 class CareCode(models.Model):
@@ -115,6 +120,28 @@ class Physician(models.Model):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
 
+def update_medical_prescription_filename(instance, filename):
+    file_extension = filename.split('.')[-1]
+    path = 'files/medical-prescription'
+    filename = str(uuid.uuid4()) + '.' + file_extension
+
+    return os.path.join(path, filename)
+
+
+class MedicalPrescription(models.Model):
+    prescriptor = models.ForeignKey(Physician, related_name='medical_prescription',
+                                    help_text='Please chose the Physician who is giving the medical prescription')
+    date = models.DateField()
+    file = models.ImageField(storage=fs, blank=True, upload_to=update_medical_prescription_filename)
+
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'date', 'prescriptor__name', 'prescriptor__first_name'
+
+    def __unicode__(self):  # Python 3: def __str__(self):
+        return '%s %s' % (self.prescriptor.name.strip(), self.prescriptor.first_name.strip())
+
+
 def get_default_invoice_number():
     default_invoice_number = 0
     max_invoice_number = InvoiceItem.objects.filter(Q(invoice_number__iregex=r'^\d+$')).annotate(
@@ -187,7 +214,7 @@ class Prestation(models.Model):
         if not is_valid:
             conflicting_codes = ", ".join([prestation.carecode.code for prestation in prestations_list])
             msg = "CareCode %s cannot be applied because CareCode(s) %s has been applied already" % (
-            self.carecode.code, conflicting_codes)
+                self.carecode.code, conflicting_codes)
 
             raise ValidationError({'carecode': msg})
 
@@ -203,7 +230,6 @@ class Prestation(models.Model):
         prestations_list = prestations_queryset[::1]
 
         return prestations_list
-
 
     @staticmethod
     def is_carecode_valid(prestation_id=None, carecode=None, invoice_item=None, date=None, prestations_list=None):

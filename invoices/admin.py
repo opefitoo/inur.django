@@ -6,7 +6,7 @@ from django.utils.functional import curry
 
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
 from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm
-from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate
+from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
 
@@ -107,6 +107,14 @@ class PhysicianAdmin(admin.ModelAdmin):
     search_fields = ['name', 'first_name', 'code_sn']
 
 admin.site.register(Physician, PhysicianAdmin)
+
+
+class MedicalPrescriptionAdmin(admin.ModelAdmin):
+    list_filter = ('date',)
+    list_display = ('date', 'prescriptor', 'file')
+    search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name']
+
+admin.site.register(MedicalPrescription, MedicalPrescriptionAdmin)
 
 
 class PrestationInline(admin.TabularInline):
