@@ -18,7 +18,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from rest_framework.authtoken import views as authtoken_views
 
-from invoices.views import CareCodeAutocomplete, PatientAutocomplete
+from invoices.views import CareCodeAutocomplete, PatientAutocomplete, EmployeeAutocomplete
 
 urlpatterns = [
     url(
@@ -30,6 +30,11 @@ urlpatterns = [
         r'^patient-autocomplete/$',
         PatientAutocomplete.as_view(),
         name='patient-autocomplete',
+    ),
+    url(
+        r'^employee-autocomplete/$',
+        EmployeeAutocomplete.as_view(),
+        name='employee-autocomplete',
     ),
     url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),

@@ -21,9 +21,9 @@ class Employee(models.Model):
 
     @staticmethod
     def autocomplete_search_fields():
-        return 'occupation', 'user__first_name', 'user__last_name'
+        return 'occupation__name', 'user__first_name', 'user__last_name', 'user__username'
 
-    def __str__(self):  # Python 3: def __str__(self):
+    def __unicode__(self):  # Python 3: def __str__(self):
         return '%s' % (self.user.username.strip())
 
 

@@ -34,10 +34,16 @@ class PrestationForm(ModelForm):
         queryset=CareCode.objects.all(),
         widget=AutocompleteModelSelect2CustomWidget(url='carecode-autocomplete', forward=['at_home'])
     )
+    employee = ModelChoiceField(
+        queryset=Employee.objects.all(),
+        required=False,
+        widget=AutocompleteModelSelect2CustomWidget(url='employee-autocomplete')
+    )
 
     def __init__(self, *args, **kwargs):
         super(PrestationForm, self).__init__(*args, **kwargs)
         self.fields['carecode'].autocomplete = False
+        self.fields['employee'].autocomplete = False
 
     class Meta:
         model = Prestation

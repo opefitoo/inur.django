@@ -166,14 +166,14 @@ class InvoiceItem(models.Model):
 
     @staticmethod
     def autocomplete_search_fields():
-        return 'invoice_number'
+        return 'invoice_number',
 
 
 class Prestation(models.Model):
     AT_HOME_CARE_CODE = 'NF01'
 
     invoice_item = models.ForeignKey(InvoiceItem, related_name='prestations')
-    employee = models.ForeignKey('invoices.Employee', related_name='prestations', null=True, default=None)
+    employee = models.ForeignKey('invoices.Employee', related_name='prestations', blank=True, null=True, default=None)
     carecode = models.ForeignKey(CareCode, related_name='prestations')
     quantity = IntegerField(default=1)
     date = models.DateTimeField('date')
