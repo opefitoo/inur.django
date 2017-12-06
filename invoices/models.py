@@ -2,12 +2,15 @@ import logging
 import os
 import uuid
 import re
+from copy import deepcopy
 
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django_countries.fields import CountryField
 from invoices import settings
 
@@ -197,17 +200,25 @@ class InvoiceItem(models.Model):
 
 
 class Prestation(models.Model):
-    AT_HOME_CARE_CODE = 'NF01'
-
     invoice_item = models.ForeignKey(InvoiceItem, related_name='prestations')
     employee = models.ForeignKey('invoices.Employee', related_name='prestations', blank=True, null=True, default=None)
     carecode = models.ForeignKey(CareCode, related_name='prestations')
     quantity = IntegerField(default=1)
     date = models.DateTimeField('date')
     at_home = models.BooleanField(default=False)
+    at_home_paired = models.OneToOneField('self', related_name='paired_at_home', null=True)
     date.editable = True
 
+    @property
+    def paired_at_home_name(self):
+        return str(self.paired_at_home)
+
+    @property
+    def at_home_paired_name(self):
+        return str(self.at_home_paired)
+
     def clean(self):
+        # TODO: do not allow to change carecode for paired at_home prestation
         super(Prestation, self).clean()
         prestations_list = self.get_conflicting_prestations(self.id, self.carecode, self.invoice_item, self.date)
         is_valid = self.is_carecode_valid(prestations_list=prestations_list)
@@ -217,9 +228,6 @@ class Prestation(models.Model):
                 self.carecode.code, conflicting_codes)
 
             raise ValidationError({'carecode': msg})
-
-        if not self.is_at_home_carecode_valid(self.at_home, self.carecode.code):
-            raise ValidationError({'carecode': "At home Prestation's CareCode should be 'NF01'."})
 
     @staticmethod
     def get_conflicting_prestations(prestation_id, carecode, invoice_item, date):
@@ -237,14 +245,6 @@ class Prestation(models.Model):
             prestations_list = Prestation.get_conflicting_prestations(prestation_id, carecode, invoice_item, date)
 
         is_valid = 0 == len(prestations_list)
-
-        return is_valid
-
-    @staticmethod
-    def is_at_home_carecode_valid(at_home, code):
-        is_valid = True
-        if at_home:
-            is_valid = code == Prestation.AT_HOME_CARE_CODE
 
         return is_valid
 
@@ -276,3 +276,15 @@ class Prestation(models.Model):
     @staticmethod
     def autocomplete_search_fields():
         return 'patient__name', 'patient__first_name'
+
+
+@receiver(post_save, sender=Prestation, dispatch_uid="create_at_home_prestation")
+def create_prestation_at_home_pair(sender, instance, **kwargs):
+    if instance.at_home and instance.at_home_paired is None and not hasattr(instance, 'paired_at_home'):
+        pair = deepcopy(instance)
+        # TODO: get NF01 CareCode from settings
+        pair.pk = None
+        pair.carecode = CareCode.objects.get(code=Prestation.AT_HOME_CARE_CODE)
+        pair.at_home = False
+        pair.at_home_paired = instance
+        pair.save()
