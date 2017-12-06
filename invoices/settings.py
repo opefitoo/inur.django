@@ -26,8 +26,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-# Application definition
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
+# Application definition
 INSTALLED_APPS = (
     'dal',
     'dal_select2',
@@ -41,6 +42,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'constance',
+    'constance.backends.database',
     'invoices',
     'api'
 )
@@ -175,5 +178,10 @@ JET_THEMES = [
     }
 ]
 
-COUNTRIES_FIRST = ['LU','FR','BE','DE']
+COUNTRIES_FIRST = ['LU', 'FR', 'BE', 'DE']
 COUNTRIES_FIRST_BREAK = '...'
+
+CONSTANCE_CONFIG = {
+    'AT_HOME_CARE_CODE': (
+        'NF01', "CareCode that is set to Prestation's copy which is created if at_home is checked", str),
+}

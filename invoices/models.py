@@ -13,6 +13,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_countries.fields import CountryField
 from invoices import settings
+from constance import config
 
 logger = logging.getLogger(__name__)
 fs = FileSystemStorage(location=settings.MEDIA_ROOT)
@@ -218,8 +219,10 @@ class Prestation(models.Model):
         return str(self.at_home_paired)
 
     def clean(self):
-        # TODO: do not allow to change carecode for paired at_home prestation
         super(Prestation, self).clean()
+        if self.at_home and not self.check_default_at_home_carecode_exists():
+            raise ValidationError(self.at_home_carecode_does_not_exist_msg())
+
         prestations_list = self.get_conflicting_prestations(self.id, self.carecode, self.invoice_item, self.date)
         is_valid = self.is_carecode_valid(prestations_list=prestations_list)
         if not is_valid:
@@ -228,6 +231,15 @@ class Prestation(models.Model):
                 self.carecode.code, conflicting_codes)
 
             raise ValidationError({'carecode': msg})
+
+    @staticmethod
+    def check_default_at_home_carecode_exists():
+        return CareCode.objects.filter(code=config.AT_HOME_CARE_CODE).exists()
+
+    @staticmethod
+    def at_home_carecode_does_not_exist_msg():
+        return "CareCode %s does not exist. Please create a CareCode with the Code %s" % (
+            config.AT_HOME_CARE_CODE, config.AT_HOME_CARE_CODE)
 
     @staticmethod
     def get_conflicting_prestations(prestation_id, carecode, invoice_item, date):
@@ -282,9 +294,8 @@ class Prestation(models.Model):
 def create_prestation_at_home_pair(sender, instance, **kwargs):
     if instance.at_home and instance.at_home_paired is None and not hasattr(instance, 'paired_at_home'):
         pair = deepcopy(instance)
-        # TODO: get NF01 CareCode from settings
         pair.pk = None
-        pair.carecode = CareCode.objects.get(code=Prestation.AT_HOME_CARE_CODE)
+        pair.carecode = CareCode.objects.get(code=config.AT_HOME_CARE_CODE)
         pair.at_home = False
         pair.at_home_paired = instance
         pair.save()

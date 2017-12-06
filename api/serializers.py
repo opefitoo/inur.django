@@ -47,9 +47,15 @@ class PhysicianSerializer(serializers.ModelSerializer):
 
 
 class PrestationSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        if 'at_home' in data and data['at_home'] and not Prestation.check_default_at_home_carecode_exists():
+            raise serializers.ValidationError(Prestation.at_home_carecode_does_not_exist_msg())
+
+        return data
+
     class Meta:
         model = Prestation
-        fields = ('id', 'invoice_item', 'carecode', 'date', 'employee')
+        fields = ('id', 'invoice_item', 'carecode', 'date', 'employee', 'quantity', 'at_home')
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):

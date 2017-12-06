@@ -7,6 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase, APIRequestFactory, APIClient
+from constance import config
 
 from api.serializers import CareCodeSerializer, PatientSerializer, PhysicianSerializer, InvoiceItemSerializer, \
     PrestationSerializer, JobPositionSerializer, TimesheetTaskSerializer, TimesheetSerializer
@@ -311,6 +312,10 @@ class PrestationTestCase(BaseTestCase, APITestCase):
         self.serializer = PrestationSerializer
 
         date = timezone.now()
+        carecode = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
+                                           name='Some name1',
+                                           description='Description',
+                                           reimbursed=False)
         patient = Patient.objects.create(code_sn='code_sn0',
                                          first_name='first name 0',
                                          name='name 0',
