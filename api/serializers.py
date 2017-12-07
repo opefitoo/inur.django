@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
+from django_countries.serializers import CountryFieldMixin
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
@@ -19,10 +20,10 @@ class GroupSerializer(serializers.ModelSerializer):
 class CareCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CareCode
-        fields = ('id', 'code', 'name', 'description', 'reimbursed')
+        fields = ('id', 'code', 'name', 'description', 'reimbursed', 'exclusive_care_codes')
 
 
-class PatientSerializer(serializers.ModelSerializer):
+class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
     def validate(self, data):
         is_private = False
         if 'is_private' in data:
@@ -35,15 +36,17 @@ class PatientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Patient
-        fields = ('id', 'code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'phone_number', 'email_address',
-                  'participation_statutaire', 'is_private')
+        fields = (
+            'id', 'code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'country', 'phone_number',
+            'email_address', 'participation_statutaire', 'is_private')
 
 
-class PhysicianSerializer(serializers.ModelSerializer):
+class PhysicianSerializer(CountryFieldMixin, serializers.ModelSerializer):
     class Meta:
         model = Physician
         fields = (
-            'id', 'provider_code', 'first_name', 'name', 'address', 'zipcode', 'city', 'phone_number', 'email_address')
+            'id', 'provider_code', 'first_name', 'name', 'address', 'zipcode', 'city', 'country', 'phone_number',
+            'fax_number', 'email_address')
 
 
 class PrestationSerializer(serializers.ModelSerializer):
