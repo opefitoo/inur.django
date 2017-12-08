@@ -14,6 +14,10 @@ from django.dispatch import receiver
 from django_countries.fields import CountryField
 from invoices import settings
 from constance import config
+from gdstorage.storage import GoogleDriveStorage
+
+# Define Google Drive Storage
+gd_storage = GoogleDriveStorage()
 
 logger = logging.getLogger(__name__)
 fs = FileSystemStorage(location=settings.MEDIA_ROOT)
@@ -135,8 +139,8 @@ def update_medical_prescription_filename(instance, filename):
 class MedicalPrescription(models.Model):
     prescriptor = models.ForeignKey(Physician, related_name='medical_prescription',
                                     help_text='Please chose the Physician who is giving the medical prescription')
-    date = models.DateField()
-    file = models.ImageField(storage=fs, blank=True, upload_to=update_medical_prescription_filename)
+    date = models.DateField('Date ordonnance', null=True, blank=True)
+    file = models.ImageField(storage=gd_storage, blank=True, upload_to=update_medical_prescription_filename)
 
     @staticmethod
     def autocomplete_search_fields():

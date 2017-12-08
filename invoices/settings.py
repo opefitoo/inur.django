@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'gdstorage',
     'rest_framework',
     'rest_framework.authtoken',
     'constance',
@@ -185,3 +186,5 @@ CONSTANCE_CONFIG = {
     'AT_HOME_CARE_CODE': (
         'NF01', "CareCode that is set to Prestation's copy which is created if at_home is checked", str),
 }
+
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
