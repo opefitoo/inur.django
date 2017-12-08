@@ -56,12 +56,14 @@ class CareCoreAdmin(admin.ModelAdmin):
     actions = [apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private]
     inlines = [ValidityDateInline]
 
+
 admin.site.register(CareCode, CareCoreAdmin)
 
 
 class EmployeeAdmin(admin.ModelAdmin):
     list_display = ('user', 'start_contract', 'end_contract', 'occupation')
     search_fields = ['user', 'occupation']
+
 
 admin.site.register(Employee, EmployeeAdmin)
 
@@ -106,6 +108,7 @@ class PhysicianAdmin(admin.ModelAdmin):
     list_display = ('name', 'first_name', 'phone_number', 'provider_code')
     search_fields = ['name', 'first_name', 'code_sn']
 
+
 admin.site.register(Physician, PhysicianAdmin)
 
 
@@ -114,6 +117,7 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_display = ('date', 'prescriptor', 'file')
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name']
 
+
 admin.site.register(MedicalPrescription, MedicalPrescriptionAdmin)
 
 
@@ -121,8 +125,17 @@ class PrestationInline(admin.TabularInline):
     extra = 0
     model = Prestation
     form = PrestationForm
-    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee')
+    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee', 'copy')
+    readonly_fields = ("copy",)
     search_fields = ['carecode', 'date', 'employee']
+
+    class Media:
+        js = ["js/inline-copy.js",]
+
+    def copy(self, obj):
+        return "<a href='#' class='copy_inline'>Copy</a>"
+
+    copy.allow_tags = True
 
     def get_formset(self, request, obj=None, **kwargs):
         initial = []
