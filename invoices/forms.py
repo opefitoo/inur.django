@@ -2,7 +2,7 @@ from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, M
 from django import forms
 from invoices.models import Prestation, CareCode, InvoiceItem, Patient
 from invoices.timesheet import Employee
-from invoices.widgets import AutocompleteModelSelect2CustomWidget
+from invoices.widgets import AutocompleteModelSelect2CustomWidget, CustomAdminSplitDateTime
 
 
 class ValidityDateFormSet(BaseInlineFormSet):
@@ -44,6 +44,7 @@ class PrestationForm(ModelForm):
         required=False,
         widget=forms.HiddenInput()
     )
+    
     at_home_paired_name = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}), disabled=True,
                                           required=False)
     paired_at_home_name = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}), disabled=True,
@@ -53,6 +54,7 @@ class PrestationForm(ModelForm):
         super(PrestationForm, self).__init__(*args, **kwargs)
         self.fields['carecode'].autocomplete = False
         self.fields['employee'].autocomplete = False
+        self.fields['date'].widget = CustomAdminSplitDateTime()
 
         if self.instance.at_home_paired is not None:
             self.fields['carecode'].disabled = True
