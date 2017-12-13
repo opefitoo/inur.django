@@ -188,5 +188,5 @@ CONSTANCE_CONFIG = {
 }
 MYDIR = os.path.dirname(__file__)
 
-GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(MYDIR, 'keys/gdrive_storage_key.json')
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(MYDIR, 'gdrive_storage_keyh.json')
 #GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
