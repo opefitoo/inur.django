@@ -9,15 +9,16 @@ from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
+from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from invoices import settings
 from constance import config
-from gdstorage.storage import GoogleDriveStorage
+from storages import CustomizedGoogleDriveStorage
 
 # Define Google Drive Storage
-gd_storage = GoogleDriveStorage()
+gd_storage = CustomizedGoogleDriveStorage()
 
 logger = logging.getLogger(__name__)
 fs = FileSystemStorage(location=settings.MEDIA_ROOT)
@@ -129,9 +130,7 @@ class Physician(models.Model):
 
 
 def update_medical_prescription_filename(instance, filename):
-    file_extension = filename.split('.')[-1]
-    path = 'files/medical-prescription'
-    filename = str(uuid.uuid4()) + '.' + file_extension
+    path = 'medical-prescription'
 
     return os.path.join(path, filename)
 
@@ -141,6 +140,22 @@ class MedicalPrescription(models.Model):
                                     help_text='Please chose the Physician who is giving the medical prescription')
     date = models.DateField('Date ordonnance', null=True, blank=True)
     file = models.ImageField(storage=gd_storage, blank=True, upload_to=update_medical_prescription_filename)
+    _original_file = None
+
+    def __init__(self, *args, **kwargs):
+        super(MedicalPrescription, self).__init__(*args, **kwargs)
+        self._original_file = self.file
+
+    def image_preview(self):
+        # used in the admin site model as a "thumbnail"
+        link = self.file.storage.get_thumbnail_link(self.file.name)
+        styles = "max-width: 800px; max-height: 800px;"
+        tag = '<img src="{}" style="{}"/>'.format(link, styles)
+
+        return mark_safe(tag)
+
+    def get_original_file(self):
+        return self._original_file
 
     @staticmethod
     def autocomplete_search_fields():
@@ -148,6 +163,19 @@ class MedicalPrescription(models.Model):
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s %s' % (self.prescriptor.name.strip(), self.prescriptor.first_name.strip())
+
+
+@receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
+def medical_prescription_clean_gdrive_pre_save(sender, instance, **kwargs):
+    origin_file = instance.get_original_file()
+    if origin_file.name and origin_file != instance.file:
+        gd_storage.delete(origin_file.name)
+
+
+@receiver(post_delete, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_delete")
+def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
+    if instance.file.name:
+        gd_storage.delete(instance.file.name)
 
 
 def get_default_invoice_number():
