@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import json
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -188,5 +189,8 @@ CONSTANCE_CONFIG = {
 }
 MYDIR = os.path.dirname(__file__)
 
-GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../gdrive_storage_keyh.json')
-#GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
+if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE):
+    credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
+    with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
+        json.dump(json.loads(credentials), outfile)
