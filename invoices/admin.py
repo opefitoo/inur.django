@@ -6,7 +6,8 @@ from django.utils.functional import curry
 
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
 from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm
-from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription
+from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
+    Hospitalization
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
 
@@ -67,6 +68,10 @@ class EmployeeAdmin(admin.ModelAdmin):
 
 admin.site.register(Employee, EmployeeAdmin)
 
+class HospitalizationInline(admin.TabularInline):
+    extra = 0
+    model = Hospitalization
+    fields = ('start_date','end_date','description')
 
 class PatientAdmin(admin.ModelAdmin):
     from generate_pacifico_invoices import generate_pacifico
@@ -74,6 +79,7 @@ class PatientAdmin(admin.ModelAdmin):
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     search_fields = ['name', 'first_name', 'code_sn']
     actions = [generate_pacifico]
+    inlines = [HospitalizationInline]
 
 
 admin.site.register(Patient, PatientAdmin)
