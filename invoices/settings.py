@@ -186,6 +186,7 @@ CONSTANCE_CONFIG = {
     'AT_HOME_CARE_CODE': (
         'NF01', "CareCode that is set to Prestation's copy which is created if at_home is checked", str),
 }
+MYDIR = os.path.dirname(__file__)
 
-GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, 'keys/gdrive_storage_key.json')
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(MYDIR, 'keys/gdrive_storage_key.json')
 #GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
