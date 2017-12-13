@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 from django_countries.serializers import CountryFieldMixin
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
@@ -61,6 +61,12 @@ class PrestationSerializer(serializers.ModelSerializer):
         fields = ('id', 'invoice_item', 'carecode', 'date', 'employee', 'quantity', 'at_home')
 
 
+class MedicalPrescriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MedicalPrescription
+        fields = ('id', 'prescriptor', 'date', 'file')
+
+
 class InvoiceItemSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['is_private'] != data['patient'].is_private:
@@ -71,8 +77,8 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoiceItem
         fields = ('id', 'invoice_number', 'accident_id', 'accident_date', 'invoice_date', 'patient_invoice_date',
-                  'invoice_send_date', 'invoice_sent', 'invoice_paid', 'medical_prescription_date', 'physician',
-                  'patient', 'prestations', 'is_private')
+                  'invoice_send_date', 'invoice_sent', 'invoice_paid', 'medical_prescription', 'patient', 'prestations',
+                  'is_private')
 
 
 class JobPositionSerializer(serializers.ModelSerializer):

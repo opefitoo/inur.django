@@ -178,14 +178,9 @@ class InvoiceItem(models.Model):
     invoice_send_date = models.DateField('Date envoi facture', null=True, blank=True)
     invoice_sent = models.BooleanField(default=False)
     invoice_paid = models.BooleanField(default=False)
-    medical_prescription_date = models.DateField('Date ordonnance', null=True, blank=True)
 
-    # TODO: I would like to store the file Field in Google drive
-    # maybe this can be helpful https://github.com/torre76/django-googledrive-storage
-    # upload_scan_medical_prescription = models.FileField()
-
-    physician = models.ForeignKey(Physician, related_name='invoice_items', null=True, blank=True,
-                                  help_text='Please chose the physican who is givng the medical prescription')
+    medical_prescription = models.ForeignKey(MedicalPrescription, related_name='invoice_items', null=True, blank=True,
+                                             help_text='Please chose a Medical Prescription')
 
     def clean(self, *args, **kwargs):
         super(InvoiceItem, self).clean()

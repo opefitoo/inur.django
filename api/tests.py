@@ -10,8 +10,9 @@ from rest_framework.test import APITestCase, APIRequestFactory, APIClient
 from constance import config
 
 from api.serializers import CareCodeSerializer, PatientSerializer, PhysicianSerializer, InvoiceItemSerializer, \
-    PrestationSerializer, JobPositionSerializer, TimesheetTaskSerializer, TimesheetSerializer
-from invoices.models import CareCode, Patient, Physician, InvoiceItem, Prestation
+    PrestationSerializer, JobPositionSerializer, TimesheetTaskSerializer, TimesheetSerializer, \
+    MedicalPrescriptionSerializer
+from invoices.models import CareCode, Patient, Physician, InvoiceItem, Prestation, MedicalPrescription
 from invoices.timesheet import JobPosition, TimesheetTask, Timesheet, Employee
 
 
@@ -433,4 +434,38 @@ class TimesheetTestCase(BaseTestCase, APITestCase):
         self.invalid_payload = {
             'employee': '',
             'start_date': date.strftime('%Y-%m-%d')
+        }
+
+
+class MedicalPrescriptionTestCase(BaseTestCase, APITestCase):
+    def setUp(self):
+        super(MedicalPrescriptionTestCase, self).setUp()
+        date = datetime.now()
+        physician = Physician.objects.create(provider_code='provider_code0',
+                                             first_name='first name 0',
+                                             name='name 0',
+                                             address='address 0',
+                                             zipcode='zipcode 0',
+                                             city='city 0',
+                                             phone_number='000')
+
+        self.model_name = 'medicalprescription'
+        self.model = MedicalPrescription
+        self.serializer = MedicalPrescriptionSerializer
+        self.items = [self.model.objects.create(prescriptor=physician,
+                                                date=date.strftime('%Y-%m-%d')),
+                      self.model.objects.create(prescriptor=physician,
+                                                date=date.strftime('%Y-%m-%d')),
+                      self.model.objects.create(prescriptor=physician,
+                                                date=date.strftime('%Y-%m-%d')),
+                      self.model.objects.create(prescriptor=physician,
+                                                date=date.strftime('%Y-%m-%d'))]
+
+        self.valid_payload = {
+            'prescriptor': physician.id,
+            'date': date.strftime('%Y-%m-%d')
+        }
+
+        self.invalid_payload = {
+            'date': date.strftime('%Y-%m-%d')
         }
