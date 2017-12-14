@@ -130,7 +130,7 @@ class Physician(models.Model):
 
 
 def update_medical_prescription_filename(instance, filename):
-    path = 'medical-prescription'
+    path = os.path.join(CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER, str(instance.date.year))
 
     return os.path.join(path, filename)
 
@@ -148,7 +148,7 @@ class MedicalPrescription(models.Model):
 
     def image_preview(self):
         # used in the admin site model as a "thumbnail"
-        link = self.file.storage.get_thumbnail_link(self.file.name)
+        link = self.file.storage.get_thumbnail_link(getattr(self.file, 'name', None))
         styles = "max-width: 800px; max-height: 800px;"
         tag = '<img src="{}" style="{}"/>'.format(link, styles)
 
