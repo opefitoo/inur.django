@@ -63,7 +63,7 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
         return file_data.get(u'originalFilename', file_data.get(u'title'))
 
     def update_folder_permissions(self, path, email, has_access):
-        folder_data = self._check_file_exists(path)
+        folder_data = self._get_or_create_folder(path)
         folder_permissions = self._drive_service.permissions().list(fileId=folder_data["id"]).execute()
         user_permissions = [d for d in folder_permissions['items'] if d.get('emailAddress', '') == email]
         permissions_granted = len(user_permissions)
