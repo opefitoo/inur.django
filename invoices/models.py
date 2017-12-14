@@ -148,7 +148,10 @@ def update_medical_prescription_filename(instance, filename):
 class MedicalPrescription(models.Model):
     prescriptor = models.ForeignKey(Physician, related_name='medical_prescription',
                                     help_text='Please chose the Physician who is giving the medical prescription')
+    patient = models.ForeignKey(Patient, default=None, related_name='medical_prescription_patient',
+                                help_text='Please chose the Patient who is receiving the medical prescription')
     date = models.DateField('Date ordonnance', null=True, blank=True)
+    end_date = models.DateField('Date fin des soins', null=True, blank=True)
     file = models.ImageField(storage=gd_storage, blank=True, upload_to=update_medical_prescription_filename)
     _original_file = None
 

@@ -120,8 +120,8 @@ admin.site.register(Physician, PhysicianAdmin)
 
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
-    list_display = ('date', 'prescriptor', 'file')
-    search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name']
+    list_display = ('date', 'prescriptor','patient','file')
+    search_fields = ['date', 'prescriptor__name', 'prescriptor__firstname', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
 
 
