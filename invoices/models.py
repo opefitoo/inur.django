@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import os
 import uuid
@@ -77,6 +78,7 @@ class Patient(models.Model):
     email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
+    date_of_death = models.DateField(u"Date de décès",default=None, blank=True, null=True)
 
     @staticmethod
     def autocomplete_search_fields():
@@ -105,6 +107,14 @@ class Patient(models.Model):
                 is_valid = False
 
         return is_valid, message
+
+
+class Hospitalization(models.Model):
+    start_date = models.DateField(u"Début d'hospitlisation")
+    end_date = models.DateField(u"Date de fin")
+    description = models.TextField(max_length=50, default=None, blank=True, null=True, )
+    hospitalizations_periods = models.ForeignKey(Patient, related_name='patient_hospitalization',
+                                                 help_text='Please enter hospitalization dates of the patient')
 
 
 # TODO: 1. can maybe be extending common class with Patient ?

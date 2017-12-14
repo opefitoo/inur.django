@@ -11,7 +11,7 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
 
     def _set_permissions(self):
         from invoices.timesheet import Employee
-        
+
         if not self._permissions:
             employees = Employee.objects.filter(has_gdrive_access=True)
             for employee in employees:
