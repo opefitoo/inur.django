@@ -132,6 +132,7 @@ class Hospitalization(models.Model):
         result = {}
         result.update(Hospitalization.validate_dates(data))
         result.update(Hospitalization.validate_prestation(data))
+        result.update(Hospitalization.validate_patient_alive(data))
 
         return result
 
@@ -177,6 +178,23 @@ class Hospitalization(models.Model):
             pk=instance_id).count()
         if 0 < conflicts_cnt:
             messages = {'start_date': 'Intersection with other Hospitalizations'}
+
+        return messages
+
+    @staticmethod
+    def validate_patient_alive(data):
+        messages = {}
+        patient = None
+        if 'patient' in data:
+            patient = data['patient']
+        elif 'patient_id' in data:
+            patient = Patient.objects.filter(pk=data['patient_id']).get()
+        else:
+            messages = {'patient': 'Please fill Patient field'}
+
+        date_of_death = patient.date_of_death
+        if date_of_death is not None and data['end_date'] >= date_of_death:
+            messages = {'end_date': "Hospitalization cannot be later than or include Patient's death date"}
 
         return messages
 

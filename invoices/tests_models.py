@@ -228,13 +228,15 @@ class PrestationTestCase(TestCase):
     def test_validate_patient_alive(self):
         error_msg = {'date': "Prestation date cannot be later than or equal to Patient's death date"}
         date_of_death = timezone.now().replace(month=6, day=10)
-        self.patient.date_of_death = date_of_death.date()
-        self.patient.save()
-
         data = {
             'invoice_item': self.invoice_item,
             'date': date_of_death
         }
+
+        self.assertEqual(Prestation.validate_patient_alive(data), {})
+
+        self.patient.date_of_death = date_of_death.date()
+        self.patient.save()
 
         self.assertEqual(Prestation.validate_patient_alive(data), error_msg)
 
@@ -412,3 +414,24 @@ class HospitalizationTestCase(TestCase):
         data['start_date'] = data['start_date'].replace(month=7)
         data['end_date'] = data['end_date'].replace(month=8)
         self.assertEqual(Hospitalization.validate_date_range(None, data), {})
+
+    def test_validate_patient_alive(self):
+        error_msg = {'end_date': "Hospitalization cannot be later than or include Patient's death date"}
+        date_of_death = timezone.now().replace(month=6, day=10).date()
+        data = {
+            'patient': self.patient,
+            'end_date': date_of_death
+        }
+
+        self.assertEqual(Hospitalization.validate_patient_alive(data), {})
+
+        self.patient.date_of_death = date_of_death
+        self.patient.save()
+
+        self.assertEqual(Hospitalization.validate_patient_alive(data), error_msg)
+
+        data['end_date'] = data['end_date'].replace(month=8)
+        self.assertEqual(Hospitalization.validate_patient_alive(data), error_msg)
+
+        data['end_date'] = data['end_date'].replace(month=5)
+        self.assertEqual(Hospitalization.validate_patient_alive(data), {})
