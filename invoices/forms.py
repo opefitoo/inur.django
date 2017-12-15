@@ -5,28 +5,32 @@ from invoices.timesheet import Employee
 from invoices.widgets import AutocompleteModelSelect2CustomWidget, CustomAdminSplitDateTime
 
 
+def check_for_periods_intersection(cleaned_data):
+    for row_index, row_data in enumerate(cleaned_data):
+        is_valid = True
+        for index, data in enumerate(cleaned_data):
+            if index == row_index:
+                continue
+
+            if row_data['start_date'] >= data['start_date'] and data['end_date'] is None:
+                is_valid = False
+            elif data['end_date'] is not None:
+                if data['start_date'] <= row_data['start_date'] <= data['end_date']:
+                    is_valid = False
+                if row_data['end_date'] is not None:
+                    if data['start_date'] <= row_data['end_date'] <= data['end_date']:
+                        is_valid = False
+
+        if not is_valid:
+            raise ValidationError('Dates periods should not intersect')
+
+
 class ValidityDateFormSet(BaseInlineFormSet):
     def clean(self):
         super(ValidityDateFormSet, self).clean()
 
         if hasattr(self, 'cleaned_data'):
-            for row_index, row_data in enumerate(self.cleaned_data):
-                is_valid = True
-                for index, data in enumerate(self.cleaned_data):
-                    if index == row_index:
-                        continue
-
-                    if row_data['start_date'] >= data['start_date'] and data['end_date'] is None:
-                        is_valid = False
-                    elif data['end_date'] is not None:
-                        if data['start_date'] <= row_data['start_date'] <= data['end_date']:
-                            is_valid = False
-                        if row_data['end_date'] is not None:
-                            if data['start_date'] <= row_data['end_date'] <= data['end_date']:
-                                is_valid = False
-
-                if not is_valid:
-                    raise ValidationError('Validity Dates periods should not intersect')
+            check_for_periods_intersection(self.cleaned_data)
 
 
 class PrestationForm(ModelForm):
@@ -89,3 +93,11 @@ class InvoiceItemForm(ModelForm):
     class Meta:
         model = InvoiceItem
         fields = '__all__'
+
+
+class HospitalizationFormSet(BaseInlineFormSet):
+    def clean(self):
+        super(HospitalizationFormSet, self).clean()
+
+        if hasattr(self, 'cleaned_data'):
+            check_for_periods_intersection(self.cleaned_data)
