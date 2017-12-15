@@ -330,6 +330,7 @@ class Prestation(models.Model):
         result.update(Prestation.validate_patient_hospitalization(data))
         result.update(Prestation.validate_at_home_default_config(data))
         result.update(Prestation.validate_carecode(instance_id, data))
+        result.update(Prestation.validate_patient_alive(data))
 
         return result
 
@@ -353,7 +354,7 @@ class Prestation(models.Model):
         elif 'invoice_item_id' in data:
             invoice_item_id = data['invoice_item_id']
         else:
-            messages = {'invoice_item': 'Please fill InvoiceItem field'}
+            messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
 
         patient = Patient.objects.filter(invoice_items__in=[invoice_item_id]).get()
         hospitalizations_cnt = Hospitalization.objects.filter(patient=patient,
@@ -367,12 +368,26 @@ class Prestation(models.Model):
     @staticmethod
     def validate_carecode(instance_id, data):
         messages = {}
+        carecode = None
+        if 'carecode' in data:
+            carecode = data['carecode']
+        elif 'carecode_id' in data:
+            carecode = CareCode.objects.filter(pk=data['carecode_id']).get()
+        else:
+            messages = {'carecode_id': 'Please fill CareCode field'}
 
-        carecode = data['carecode']
+        invoice_item_id = None
+        if 'invoice_item' in data:
+            invoice_item_id = data['invoice_item'].id
+        elif 'invoice_item_id' in data:
+            invoice_item_id = data['invoice_item_id']
+        else:
+            messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
+
         exclusive_care_codes = carecode.exclusive_care_codes.all()
         prestations_queryset = Prestation.objects.filter(
             (Q(carecode__in=exclusive_care_codes) | Q(carecode=carecode.id)) & Q(date=data['date']) & Q(
-                invoice_item=data['invoice_item'])).exclude(pk=instance_id)
+                invoice_item_id=invoice_item_id)).exclude(pk=instance_id)
         prestations_list = prestations_queryset[::1]
 
         if 0 != len(prestations_list):
@@ -381,6 +396,23 @@ class Prestation(models.Model):
                 data['carecode'].code, conflicting_codes)
 
             messages = {'carecode': msg}
+
+        return messages
+
+    @staticmethod
+    def validate_patient_alive(data):
+        messages = {}
+        invoice_item = None
+        if 'invoice_item' in data:
+            invoice_item = data['invoice_item']
+        elif 'invoice_item_id' in data:
+            invoice_item = InvoiceItem.objects.filter(pk=data['invoice_item_id']).get()
+        else:
+            messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
+
+        date_of_death = invoice_item.patient.date_of_death
+        if date_of_death is not None and data['date'].date() >= date_of_death:
+            messages = {'date': "Prestation date cannot be later than or equal to Patient's death date"}
 
         return messages
 

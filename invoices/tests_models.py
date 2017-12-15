@@ -118,12 +118,12 @@ class PrestationTestCase(TestCase):
                                                 start_contract=self.date,
                                                 occupation=jobposition)
 
-        patient = Patient.objects.create(first_name='first name',
-                                         name='name')
+        self.patient = Patient.objects.create(first_name='first name',
+                                              name='name')
 
         self.invoice_item = InvoiceItem.objects.create(invoice_number='936 some invoice_number',
                                                        invoice_date=self.date,
-                                                       patient=patient)
+                                                       patient=self.patient)
 
         self.care_code_first = CareCode.objects.create(code='code0',
                                                        name='some name',
@@ -150,7 +150,7 @@ class PrestationTestCase(TestCase):
         end_date = timezone.now().replace(month=8, day=10)
         self.hospitalization = Hospitalization.objects.create(start_date=start_date,
                                                               end_date=end_date,
-                                                              patient=patient)
+                                                              patient=self.patient)
 
     def test_validate_carecode(self):
         data = {
@@ -224,6 +224,25 @@ class PrestationTestCase(TestCase):
 
         data['date'] = data['date'].replace(day=11)
         self.assertEqual(Prestation.validate_patient_hospitalization(data), {})
+
+    def test_validate_patient_alive(self):
+        error_msg = {'date': "Prestation date cannot be later than or equal to Patient's death date"}
+        date_of_death = timezone.now().replace(month=6, day=10)
+        self.patient.date_of_death = date_of_death.date()
+        self.patient.save()
+
+        data = {
+            'invoice_item': self.invoice_item,
+            'date': date_of_death
+        }
+
+        self.assertEqual(Prestation.validate_patient_alive(data), error_msg)
+
+        data['date'] = data['date'].replace(month=4)
+        self.assertEqual(Prestation.validate_patient_alive(data), {})
+
+        data['date'] = data['date'].replace(month=7)
+        self.assertEqual(Prestation.validate_patient_alive(data), error_msg)
 
 
 class InvoiceItemTestCase(TestCase):
