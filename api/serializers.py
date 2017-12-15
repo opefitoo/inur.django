@@ -54,8 +54,12 @@ class PhysicianSerializer(CountryFieldMixin, serializers.ModelSerializer):
 
 class PrestationSerializer(serializers.ModelSerializer):
     def validate(self, data):
-        if 'at_home' in data and data['at_home'] and not Prestation.check_default_at_home_carecode_exists():
-            raise serializers.ValidationError(Prestation.at_home_carecode_does_not_exist_msg())
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        messages = Prestation.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
 
         return data
 

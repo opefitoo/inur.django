@@ -320,18 +320,6 @@ class Prestation(models.Model):
 
     def clean(self):
         super(Prestation, self).clean()
-        if self.at_home and not self.check_default_at_home_carecode_exists():
-            raise ValidationError(self.at_home_carecode_does_not_exist_msg())
-
-        prestations_list = self.get_conflicting_prestations(self.id, self.carecode, self.invoice_item, self.date)
-        is_valid = self.is_carecode_valid(prestations_list=prestations_list)
-        if not is_valid:
-            conflicting_codes = ", ".join([prestation.carecode.code for prestation in prestations_list])
-            msg = "CareCode %s cannot be applied because CareCode(s) %s has been applied already" % (
-                self.carecode.code, conflicting_codes)
-
-            raise ValidationError({'carecode': msg})
-
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
@@ -340,13 +328,34 @@ class Prestation(models.Model):
     def validate(instance_id, data):
         result = {}
         result.update(Prestation.validate_patient_hospitalization(data))
+        result.update(Prestation.validate_at_home_default_config(data))
+        result.update(Prestation.validate_carecode(instance_id, data))
 
         return result
 
     @staticmethod
+    def validate_at_home_default_config(data):
+        messages = {}
+        at_home = 'at_home' in data and data['at_home']
+        if at_home and not CareCode.objects.filter(code=config.AT_HOME_CARE_CODE).exists():
+            msg = "CareCode %s does not exist. Please create a CareCode with the Code %s" % (
+                config.AT_HOME_CARE_CODE, config.AT_HOME_CARE_CODE)
+            messages = {'at_home': msg}
+
+        return messages
+
+    @staticmethod
     def validate_patient_hospitalization(data):
         messages = {}
-        patient = Patient.objects.filter(invoice_items__in=[data['invoice_item_id']]).get()
+        invoice_item_id = None
+        if 'invoice_item' in data:
+            invoice_item_id = data['invoice_item'].id
+        elif 'invoice_item_id' in data:
+            invoice_item_id = data['invoice_item_id']
+        else:
+            messages = {'invoice_item': 'Please fill InvoiceItem field'}
+
+        patient = Patient.objects.filter(invoice_items__in=[invoice_item_id]).get()
         hospitalizations_cnt = Hospitalization.objects.filter(patient=patient,
                                                               start_date__lte=data['date'],
                                                               end_date__gte=data['date']).count()
@@ -356,54 +365,24 @@ class Prestation(models.Model):
         return messages
 
     @staticmethod
-    def check_default_at_home_carecode_exists():
-        return CareCode.objects.filter(code=config.AT_HOME_CARE_CODE).exists()
+    def validate_carecode(instance_id, data):
+        messages = {}
 
-    @staticmethod
-    def at_home_carecode_does_not_exist_msg():
-        return "CareCode %s does not exist. Please create a CareCode with the Code %s" % (
-            config.AT_HOME_CARE_CODE, config.AT_HOME_CARE_CODE)
-
-    @staticmethod
-    def get_conflicting_prestations(prestation_id, carecode, invoice_item, date):
+        carecode = data['carecode']
         exclusive_care_codes = carecode.exclusive_care_codes.all()
         prestations_queryset = Prestation.objects.filter(
-            (Q(carecode__in=exclusive_care_codes) | Q(carecode=carecode.id)) & Q(date=date) & Q(
-                invoice_item=invoice_item)).exclude(pk=prestation_id)
+            (Q(carecode__in=exclusive_care_codes) | Q(carecode=carecode.id)) & Q(date=data['date']) & Q(
+                invoice_item=data['invoice_item'])).exclude(pk=instance_id)
         prestations_list = prestations_queryset[::1]
 
-        return prestations_list
+        if 0 != len(prestations_list):
+            conflicting_codes = ", ".join([prestation.carecode.code for prestation in prestations_list])
+            msg = "CareCode %s cannot be applied because CareCode(s) %s has been applied already" % (
+                data['carecode'].code, conflicting_codes)
 
-    @staticmethod
-    def is_carecode_valid(prestation_id=None, carecode=None, invoice_item=None, date=None, prestations_list=None):
-        if prestations_list is None:
-            prestations_list = Prestation.get_conflicting_prestations(prestation_id, carecode, invoice_item, date)
+            messages = {'carecode': msg}
 
-        is_valid = 0 == len(prestations_list)
-
-        return is_valid
-
-    # TODO retrieve is_private from Patient or compute it in a different way
-    @property
-    def net_amount(self):
-        if not self.patient.is_private:
-            if self.carecode.reimbursed:
-                return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
-            else:
-                return 0
-        else:
-            return 0
-
-    # TODO retrieve partificaption statutaire from Patient or compute it in a different way
-    @property
-    def fin_part(self):
-        "Returns the financial participation of the client"
-        if self.patient.participation_statutaire:
-            return 0
-        # round to only two decimals
-        # if self.date > normalized_price_switch_date:
-        #    return round(((self.carecode.gross_amount * 12) / 100), 2)
-        return round(((self.carecode.gross_amount * 12) / 100), 2)
+        return messages
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s - %s' % (self.carecode.code, self.carecode.name)

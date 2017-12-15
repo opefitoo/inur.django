@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.test import TestCase
 from django.contrib.auth.models import User
 
+from constance import config
 from invoices.models import CareCode, Patient, Physician, Prestation, InvoiceItem, get_default_invoice_number, \
     ValidityDate, MedicalPrescription, Hospitalization
 from invoices.timesheet import Employee, JobPosition
@@ -151,16 +152,26 @@ class PrestationTestCase(TestCase):
                                                               end_date=end_date,
                                                               patient=patient)
 
-    def test_is_carecode_valid(self):
-        self.assertFalse(Prestation.is_carecode_valid(None, self.care_code_first, self.invoice_item, self.date))
-        self.assertFalse(Prestation.is_carecode_valid(None, self.care_code_second, self.invoice_item, self.date))
-        self.assertFalse(Prestation.is_carecode_valid(None, self.care_code_third, self.invoice_item, self.date))
-        self.assertTrue(
-            Prestation.is_carecode_valid(self.existing_prestation.id, self.care_code_second, self.invoice_item,
-                                         self.date))
+    def test_validate_carecode(self):
+        data = {
+            'carecode': self.care_code_first,
+            'invoice_item': self.invoice_item,
+            'date': self.date
+        }
+        self.assertNotEqual(Prestation.validate_carecode(None, data), {})
 
-        self.assertTrue(Prestation.is_carecode_valid(None, self.care_code_third, self.invoice_item,
-                                                     self.date.replace(month=5, day=1)))
+        data['carecode'] = self.care_code_second
+        self.assertNotEqual(Prestation.validate_carecode(None, data), {})
+
+        data['carecode'] = self.care_code_third
+        self.assertNotEqual(Prestation.validate_carecode(None, data), {})
+
+        data['carecode'] = self.care_code_second
+        self.assertEqual(Prestation.validate_carecode(self.existing_prestation.id, data), {})
+
+        data['carecode'] = self.care_code_third
+        data['date'] = data['date'].replace(month=5, day=1)
+        self.assertEqual(Prestation.validate_carecode(None, data), {})
 
     def test_string_representation(self):
         carecode = CareCode(code='code',
@@ -175,7 +186,25 @@ class PrestationTestCase(TestCase):
     def test_autocomplete(self):
         self.assertEqual(Prestation.autocomplete_search_fields(), ('patient__name', 'patient__first_name'))
 
-    def test_is_patient_hospitalized(self):
+    def test_validate_at_home_default_config(self):
+        msg = "CareCode %s does not exist. Please create a CareCode with the Code %s" % (
+            config.AT_HOME_CARE_CODE, config.AT_HOME_CARE_CODE)
+        error_msg = {'at_home': msg}
+        data = {
+            'at_home': False
+        }
+        self.assertEqual(Prestation.validate_at_home_default_config(data), {})
+
+        data['at_home'] = True
+        self.assertEqual(Prestation.validate_at_home_default_config(data), error_msg)
+
+        self.care_code_first = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
+                                                       name='some name',
+                                                       description='description',
+                                                       reimbursed=False)
+        self.assertEqual(Prestation.validate_at_home_default_config(data), {})
+
+    def test_validate_patient_hospitalization(self):
         error_msg = {'date': 'Patient has hospitalization records for the chosen date'}
         data = {
             'date': self.hospitalization.start_date.replace(day=9),
