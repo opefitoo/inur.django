@@ -106,7 +106,7 @@ class PrestationAdmin(admin.ModelAdmin):
         return initial
 
 
-admin.site.register(Prestation, PrestationAdmin)
+#admin.site.register(Prestation, PrestationAdmin)
 
 
 class PhysicianAdmin(admin.ModelAdmin):
