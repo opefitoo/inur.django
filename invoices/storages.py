@@ -62,6 +62,12 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
 
         return file_data.get(u'originalFilename', file_data.get(u'title'))
 
+    def update_file_description(self, path, description):
+        body = {'description': description}
+        file_data = self._check_file_exists(path)
+        if file_data is not None:
+            self._drive_service.files().update(fileId=file_data["id"], body=body).execute()
+
     def update_folder_permissions(self, path, email, has_access):
         folder_data = self._get_or_create_folder(path)
         folder_permissions = self._drive_service.permissions().list(fileId=folder_data["id"]).execute()

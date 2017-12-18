@@ -144,3 +144,31 @@ class PrestationTestCase(TestCase):
 
         data['date'] = data['date'].replace(month=7)
         self.assertEqual(Prestation.validate_patient_alive(data), error_msg)
+
+    def test_paired_at_home_name(self):
+        at_home_care_code = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
+                                                    name='some name',
+                                                    description='description',
+                                                    reimbursed=False)
+        at_home_prestation = Prestation.objects.create(invoice_item=self.invoice_item,
+                                                       employee=self.employee,
+                                                       carecode=self.care_code_third,
+                                                       date=self.date,
+                                                       at_home=True)
+
+        self.assertEqual(at_home_prestation.paired_at_home_name, str(at_home_prestation.paired_at_home))
+
+    def test_at_home_paired_name(self):
+        at_home_care_code = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
+                                                    name='some name',
+                                                    description='description',
+                                                    reimbursed=False)
+
+        at_home_prestation = Prestation.objects.create(invoice_item=self.invoice_item,
+                                                       employee=self.employee,
+                                                       carecode=self.care_code_third,
+                                                       date=self.date,
+                                                       at_home=True)
+        paired_at_home = at_home_prestation.paired_at_home
+
+        self.assertEqual(paired_at_home.at_home_paired_name, str(paired_at_home.at_home_paired))

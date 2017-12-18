@@ -239,7 +239,9 @@ class Physician(models.Model):
 
 
 def update_medical_prescription_filename(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
     path = os.path.join(CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER, str(instance.date.year))
+    filename = '%s_%s_%s%s' % (instance.patient.name, instance.patient.first_name, str(instance.date), file_extension)
 
     return os.path.join(path, filename)
 
@@ -253,6 +255,10 @@ class MedicalPrescription(models.Model):
     end_date = models.DateField('Date fin des soins', null=True, blank=True)
     file = models.ImageField(storage=gd_storage, blank=True, upload_to=update_medical_prescription_filename)
     _original_file = None
+
+    @property
+    def file_description(self):
+        return '%s %s %s' % (self.patient.name, self.patient.first_name, str(self.date))
 
     def __init__(self, *args, **kwargs):
         super(MedicalPrescription, self).__init__(*args, **kwargs)
@@ -301,6 +307,13 @@ def medical_prescription_clean_gdrive_pre_save(sender, instance, **kwargs):
     origin_file = instance.get_original_file()
     if origin_file.name and origin_file != instance.file:
         gd_storage.delete(origin_file.name)
+
+
+@receiver(post_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_save")
+def medical_prescription_clean_gdrive_post_save(sender, instance, **kwargs):
+    if instance.file.name:
+        path = instance.file.name
+        gd_storage.update_file_description(path, instance.file_description)
 
 
 @receiver(post_delete, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_delete")

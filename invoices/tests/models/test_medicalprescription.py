@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.test import TestCase
 
-from invoices.models import Physician, MedicalPrescription
+from invoices.models import Physician, MedicalPrescription, Patient
 
 
 class MedicalPrescriptionTestCase(TestCase):
@@ -34,3 +34,12 @@ class MedicalPrescriptionTestCase(TestCase):
         data['date'] = data['date'].replace(month=6, day=11)
         self.assertEqual(MedicalPrescription.validate_dates(data),
                          {'end_date': 'End date must be bigger than Start date'})
+
+    def test_file_description(self):
+        date = timezone.now()
+        patient = Patient(first_name='first name',
+                          name='name')
+        prescription = MedicalPrescription(date=date,
+                                           patient=patient)
+        self.assertEqual(prescription.file_description, '%s %s %s' % (
+        prescription.patient.name, prescription.patient.first_name, str(prescription.date)))
