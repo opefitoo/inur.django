@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.functional import curry
 
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
-from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm
+from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet
 from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
@@ -68,10 +68,13 @@ class EmployeeAdmin(admin.ModelAdmin):
 
 admin.site.register(Employee, EmployeeAdmin)
 
+
 class HospitalizationInline(admin.TabularInline):
     extra = 0
     model = Hospitalization
-    fields = ('start_date','end_date','description')
+    formset = HospitalizationFormSet
+    fields = ('start_date', 'end_date', 'description')
+
 
 class PatientAdmin(admin.ModelAdmin):
     from generate_pacifico_invoices import generate_pacifico
@@ -88,6 +91,7 @@ admin.site.register(Patient, PatientAdmin)
 class PrestationAdmin(admin.ModelAdmin):
     from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
 
+    list_filter = ('invoice_item__patient', 'invoice_item', 'carecode')
     date_hierarchy = 'date'
     list_display = ('carecode', 'date')
     search_fields = ['carecode__code', 'carecode__name']

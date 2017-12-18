@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
+import pytz
 import os
 import uuid
 import re
 from copy import deepcopy
+from datetime import datetime
 
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
@@ -78,7 +80,7 @@ class Patient(models.Model):
     email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
-    date_of_death = models.DateField(u"Date de décès",default=None, blank=True, null=True)
+    date_of_death = models.DateField(u"Date de décès", default=None, blank=True, null=True)
 
     @staticmethod
     def autocomplete_search_fields():
@@ -89,32 +91,129 @@ class Patient(models.Model):
 
     def clean(self, *args, **kwargs):
         super(Patient, self).clean()
-        is_code_sn_valid, message = self.is_code_sn_valid(self.is_private, self.code_sn)
-        if not is_code_sn_valid:
-            raise ValidationError({'code_sn': message})
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
 
     @staticmethod
-    def is_code_sn_valid(is_private, code_sn):
-        is_valid = True
-        message = ''
-        if not is_private:
-            pattern = re.compile('^([1-9]{1}[0-9]{12})$')
-            if pattern.match(code_sn) is None:
-                message = 'Code SN should start with non zero digit and be followed by 12 digits'
-                is_valid = False
-            elif Patient.objects.filter(code_sn=code_sn).count() > 0:
-                message = 'Code SN must be unique'
-                is_valid = False
+    def validate(instance_id, data):
+        result = {}
+        result.update(Patient.validate_code_sn(instance_id, data))
+        result.update(Patient.validate_date_of_death(instance_id, data))
 
-        return is_valid, message
+        return result
+
+    @staticmethod
+    def validate_date_of_death(instance_id, data):
+        messages = {}
+        if 'date_of_death' in data and data['date_of_death'] is not None:
+            if Prestation.objects.filter(date__gte=data['date_of_death'], invoice_item__patient_id=instance_id).count():
+                messages = {'date_of_death': 'Prestation for a later date exists'}
+
+            if Hospitalization.objects.filter(end_date__gte=data['date_of_death']).count():
+                messages = {'date_of_death': 'Hospitalization that ends later exists'}
+
+        return messages
+
+    @staticmethod
+    def validate_code_sn(instance_id, data):
+        messages = {}
+        if 'is_private' in data and not data['is_private']:
+            pattern = re.compile('^([1-9]{1}[0-9]{12})$')
+            if pattern.match(data['code_sn']) is None:
+                messages = {'code_sn': 'Code SN should start with non zero digit and be followed by 12 digits'}
+            elif Patient.objects.filter(code_sn=data['code_sn']).exclude(pk=instance_id).count() > 0:
+                messages = {'code_sn': 'Code SN must be unique'}
+
+        return messages
 
 
 class Hospitalization(models.Model):
     start_date = models.DateField(u"Début d'hospitlisation")
     end_date = models.DateField(u"Date de fin")
-    description = models.TextField(max_length=50, default=None, blank=True, null=True, )
-    hospitalizations_periods = models.ForeignKey(Patient, related_name='patient_hospitalization',
-                                                 help_text='Please enter hospitalization dates of the patient')
+    description = models.TextField(max_length=50, default=None, blank=True, null=True)
+    patient = models.ForeignKey(Patient, related_name='hospitalizations',
+                                help_text='Please enter hospitalization dates of the patient')
+
+    def __unicode__(self):  # Python 3: def __str__(self):
+        return 'From %s to %s for %s' % (self.start_date, self.end_date, self.patient)
+
+    def clean(self):
+        super(Hospitalization, self).clean()
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance_id, data):
+        result = {}
+        result.update(Hospitalization.validate_dates(data))
+        result.update(Hospitalization.validate_prestation(data))
+        result.update(Hospitalization.validate_patient_alive(data))
+
+        return result
+
+    @staticmethod
+    def validate_dates(data):
+        messages = {}
+        is_valid = data['end_date'] is None or data['start_date'] <= data['end_date']
+        if not is_valid:
+            messages = {'end_date': 'End date must be bigger than Start date'}
+
+        return messages
+
+    @staticmethod
+    def validate_prestation(data):
+        messages = {}
+        patient_id = None
+        if 'patient' in data:
+            patient_id = data['patient'].id
+        elif 'patient_id' in data:
+            patient_id = data['patient_id']
+        else:
+            messages = {'patient': 'Please fill Patient field'}
+
+        start_date = datetime.combine(data['start_date'], datetime.min.time()).replace(tzinfo=pytz.utc)
+        end_date = datetime.combine(data['end_date'], datetime.max.time()).replace(tzinfo=pytz.utc)
+        conflicts_cnt = Prestation.objects.filter(Q(date__range=(start_date, end_date))).filter(
+            invoice_item__patient_id=patient_id).count()
+        if 0 < conflicts_cnt:
+            messages = {'start_date': 'Prestation(s) exist in selected dates range for this Patient'}
+
+        return messages
+
+    @staticmethod
+    def validate_date_range(instance_id, data):
+        messages = {}
+        conflicts_cnt = Hospitalization.objects.filter(
+            Q(start_date__range=(data['start_date'], data['end_date'])) |
+            Q(end_date__range=(data['start_date'], data['end_date'])) |
+            Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
+            Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
+        ).filter(
+            patient_id=data['patient'].id).exclude(
+            pk=instance_id).count()
+        if 0 < conflicts_cnt:
+            messages = {'start_date': 'Intersection with other Hospitalizations'}
+
+        return messages
+
+    @staticmethod
+    def validate_patient_alive(data):
+        messages = {}
+        patient = None
+        if 'patient' in data:
+            patient = data['patient']
+        elif 'patient_id' in data:
+            patient = Patient.objects.filter(pk=data['patient_id']).get()
+        else:
+            messages = {'patient': 'Please fill Patient field'}
+
+        date_of_death = patient.date_of_death
+        if date_of_death is not None and data['end_date'] >= date_of_death:
+            messages = {'end_date': "Hospitalization cannot be later than or include Patient's death date"}
+
+        return messages
 
 
 # TODO: 1. can maybe be extending common class with Patient ?
@@ -206,7 +305,6 @@ def get_default_invoice_number():
 
 class InvoiceItem(models.Model):
     invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)
-    # TODO: when checked only patient which is_private = true must be looked up via the ajax search lookup
     is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
                                      help_text='Seuls les patients qui ne disposent pas de la prise en charge CNS seront recherches dans le champ Patient (prive)',
                                      default=False)
@@ -260,67 +358,101 @@ class Prestation(models.Model):
 
     def clean(self):
         super(Prestation, self).clean()
-        if self.at_home and not self.check_default_at_home_carecode_exists():
-            raise ValidationError(self.at_home_carecode_does_not_exist_msg())
-
-        prestations_list = self.get_conflicting_prestations(self.id, self.carecode, self.invoice_item, self.date)
-        is_valid = self.is_carecode_valid(prestations_list=prestations_list)
-        if not is_valid:
-            conflicting_codes = ", ".join([prestation.carecode.code for prestation in prestations_list])
-            msg = "CareCode %s cannot be applied because CareCode(s) %s has been applied already" % (
-                self.carecode.code, conflicting_codes)
-
-            raise ValidationError({'carecode': msg})
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
 
     @staticmethod
-    def check_default_at_home_carecode_exists():
-        return CareCode.objects.filter(code=config.AT_HOME_CARE_CODE).exists()
+    def validate(instance_id, data):
+        result = {}
+        result.update(Prestation.validate_patient_hospitalization(data))
+        result.update(Prestation.validate_at_home_default_config(data))
+        result.update(Prestation.validate_carecode(instance_id, data))
+        result.update(Prestation.validate_patient_alive(data))
+
+        return result
 
     @staticmethod
-    def at_home_carecode_does_not_exist_msg():
-        return "CareCode %s does not exist. Please create a CareCode with the Code %s" % (
-            config.AT_HOME_CARE_CODE, config.AT_HOME_CARE_CODE)
+    def validate_at_home_default_config(data):
+        messages = {}
+        at_home = 'at_home' in data and data['at_home']
+        if at_home and not CareCode.objects.filter(code=config.AT_HOME_CARE_CODE).exists():
+            msg = "CareCode %s does not exist. Please create a CareCode with the Code %s" % (
+                config.AT_HOME_CARE_CODE, config.AT_HOME_CARE_CODE)
+            messages = {'at_home': msg}
+
+        return messages
 
     @staticmethod
-    def get_conflicting_prestations(prestation_id, carecode, invoice_item, date):
+    def validate_patient_hospitalization(data):
+        messages = {}
+        invoice_item_id = None
+        if 'invoice_item' in data:
+            invoice_item_id = data['invoice_item'].id
+        elif 'invoice_item_id' in data:
+            invoice_item_id = data['invoice_item_id']
+        else:
+            messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
+
+        patient = Patient.objects.filter(invoice_items__in=[invoice_item_id]).get()
+        hospitalizations_cnt = Hospitalization.objects.filter(patient=patient,
+                                                              start_date__lte=data['date'],
+                                                              end_date__gte=data['date']).count()
+        if 0 < hospitalizations_cnt:
+            messages = {'date': 'Patient has hospitalization records for the chosen date'}
+
+        return messages
+
+    @staticmethod
+    def validate_carecode(instance_id, data):
+        messages = {}
+        carecode = None
+        if 'carecode' in data:
+            carecode = data['carecode']
+        elif 'carecode_id' in data:
+            carecode = CareCode.objects.filter(pk=data['carecode_id']).get()
+        else:
+            messages = {'carecode_id': 'Please fill CareCode field'}
+
+        invoice_item_id = None
+        if 'invoice_item' in data:
+            invoice_item_id = data['invoice_item'].id
+        elif 'invoice_item_id' in data:
+            invoice_item_id = data['invoice_item_id']
+        else:
+            messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
+
         exclusive_care_codes = carecode.exclusive_care_codes.all()
         prestations_queryset = Prestation.objects.filter(
-            (Q(carecode__in=exclusive_care_codes) | Q(carecode=carecode.id)) & Q(date=date) & Q(
-                invoice_item=invoice_item)).exclude(pk=prestation_id)
+            (Q(carecode__in=exclusive_care_codes) | Q(carecode=carecode.id)) & Q(date=data['date']) & Q(
+                invoice_item_id=invoice_item_id)).exclude(pk=instance_id)
         prestations_list = prestations_queryset[::1]
 
-        return prestations_list
+        if 0 != len(prestations_list):
+            conflicting_codes = ", ".join([prestation.carecode.code for prestation in prestations_list])
+            msg = "CareCode %s cannot be applied because CareCode(s) %s has been applied already" % (
+                data['carecode'].code, conflicting_codes)
+
+            messages = {'carecode': msg}
+
+        return messages
 
     @staticmethod
-    def is_carecode_valid(prestation_id=None, carecode=None, invoice_item=None, date=None, prestations_list=None):
-        if prestations_list is None:
-            prestations_list = Prestation.get_conflicting_prestations(prestation_id, carecode, invoice_item, date)
-
-        is_valid = 0 == len(prestations_list)
-
-        return is_valid
-
-    # TODO retrieve is_private from Patient or compute it in a different way
-    @property
-    def net_amount(self):
-        if not self.patient.is_private:
-            if self.carecode.reimbursed:
-                return round(((self.carecode.gross_amount * 88) / 100), 2) + self.fin_part
-            else:
-                return 0
+    def validate_patient_alive(data):
+        messages = {}
+        invoice_item = None
+        if 'invoice_item' in data:
+            invoice_item = data['invoice_item']
+        elif 'invoice_item_id' in data:
+            invoice_item = InvoiceItem.objects.filter(pk=data['invoice_item_id']).get()
         else:
-            return 0
+            messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
 
-    # TODO retrieve partificaption statutaire from Patient or compute it in a different way
-    @property
-    def fin_part(self):
-        "Returns the financial participation of the client"
-        if self.patient.participation_statutaire:
-            return 0
-        # round to only two decimals
-        # if self.date > normalized_price_switch_date:
-        #    return round(((self.carecode.gross_amount * 12) / 100), 2)
-        return round(((self.carecode.gross_amount * 12) / 100), 2)
+        date_of_death = invoice_item.patient.date_of_death
+        if date_of_death is not None and data['date'].date() >= date_of_death:
+            messages = {'date': "Prestation date cannot be later than or equal to Patient's death date"}
+
+        return messages
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s - %s' % (self.carecode.code, self.carecode.name)

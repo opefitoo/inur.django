@@ -2,8 +2,8 @@ from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
-    TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription
+    TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
@@ -93,3 +93,11 @@ class MedicalPrescriptionViewSet(viewsets.ModelViewSet):
     """
     queryset = MedicalPrescription.objects.all()
     serializer_class = MedicalPrescriptionSerializer
+
+
+class HospitalizationViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows Hospitalizations to be viewed.
+    """
+    queryset = Hospitalization.objects.all()
+    serializer_class = HospitalizationSerializer

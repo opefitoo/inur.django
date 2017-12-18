@@ -3,8 +3,9 @@ from django.utils import timezone
 from django.test import TestCase
 from django.contrib.auth.models import User
 
+from constance import config
 from invoices.models import CareCode, Patient, Physician, Prestation, InvoiceItem, get_default_invoice_number, \
-    ValidityDate, MedicalPrescription
+    ValidityDate, MedicalPrescription, Hospitalization
 from invoices.timesheet import Employee, JobPosition
 
 
@@ -63,20 +64,30 @@ class PatientTestCase(TestCase):
         self.assertEqual(Patient.autocomplete_search_fields(), ('name', 'first_name'))
 
     def test_code_sn(self):
-        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private=True, code_sn='0123')
-        self.assertEqual(is_code_sn_valid, True)
+        instance_id = None
+        error_messages = {
+            'format': {'code_sn': 'Code SN should start with non zero digit and be followed by 12 digits'},
+            'unique': {'code_sn': 'Code SN must be unique'}
+        }
+        data = {
+            'code_sn': '0123',
+        }
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
 
-        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private=False, code_sn='0123')
-        self.assertEqual(is_code_sn_valid, False)
+        data['is_private'] = True
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
 
-        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private=False, code_sn='0245789764822')
-        self.assertEqual(is_code_sn_valid, False)
+        data['is_private'] = False
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['format'])
 
-        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private=False, code_sn='1245789764822')
-        self.assertEqual(is_code_sn_valid, False)
+        data['code_sn'] = '0245789764822'
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['format'])
 
-        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private=False, code_sn='2245789764822')
-        self.assertEqual(is_code_sn_valid, True)
+        data['code_sn'] = '1245789764822'
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['unique'])
+
+        data['code_sn'] = '2245789764822'
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
 
 
 class PhysicianTestCase(TestCase):
@@ -117,12 +128,12 @@ class PrestationTestCase(TestCase):
                                                 start_contract=self.date,
                                                 occupation=jobposition)
 
-        patient = Patient.objects.create(first_name='first name',
-                                         name='name')
+        self.patient = Patient.objects.create(first_name='first name',
+                                              name='name')
 
         self.invoice_item = InvoiceItem.objects.create(invoice_number='936 some invoice_number',
                                                        invoice_date=self.date,
-                                                       patient=patient)
+                                                       patient=self.patient)
 
         self.care_code_first = CareCode.objects.create(code='code0',
                                                        name='some name',
@@ -145,16 +156,32 @@ class PrestationTestCase(TestCase):
                                                              carecode=self.care_code_third,
                                                              date=self.date)
 
-    def test_is_carecode_valid(self):
-        self.assertFalse(Prestation.is_carecode_valid(None, self.care_code_first, self.invoice_item, self.date))
-        self.assertFalse(Prestation.is_carecode_valid(None, self.care_code_second, self.invoice_item, self.date))
-        self.assertFalse(Prestation.is_carecode_valid(None, self.care_code_third, self.invoice_item, self.date))
-        self.assertTrue(
-            Prestation.is_carecode_valid(self.existing_prestation.id, self.care_code_second, self.invoice_item,
-                                         self.date))
+        start_date = timezone.now().replace(month=7, day=10)
+        end_date = timezone.now().replace(month=8, day=10)
+        self.hospitalization = Hospitalization.objects.create(start_date=start_date,
+                                                              end_date=end_date,
+                                                              patient=self.patient)
 
-        self.assertTrue(Prestation.is_carecode_valid(None, self.care_code_third, self.invoice_item,
-                                                     self.date.replace(month=5, day=1)))
+    def test_validate_carecode(self):
+        data = {
+            'carecode': self.care_code_first,
+            'invoice_item': self.invoice_item,
+            'date': self.date
+        }
+        self.assertNotEqual(Prestation.validate_carecode(None, data), {})
+
+        data['carecode'] = self.care_code_second
+        self.assertNotEqual(Prestation.validate_carecode(None, data), {})
+
+        data['carecode'] = self.care_code_third
+        self.assertNotEqual(Prestation.validate_carecode(None, data), {})
+
+        data['carecode'] = self.care_code_second
+        self.assertEqual(Prestation.validate_carecode(self.existing_prestation.id, data), {})
+
+        data['carecode'] = self.care_code_third
+        data['date'] = data['date'].replace(month=5, day=1)
+        self.assertEqual(Prestation.validate_carecode(None, data), {})
 
     def test_string_representation(self):
         carecode = CareCode(code='code',
@@ -168,6 +195,66 @@ class PrestationTestCase(TestCase):
 
     def test_autocomplete(self):
         self.assertEqual(Prestation.autocomplete_search_fields(), ('patient__name', 'patient__first_name'))
+
+    def test_validate_at_home_default_config(self):
+        msg = "CareCode %s does not exist. Please create a CareCode with the Code %s" % (
+            config.AT_HOME_CARE_CODE, config.AT_HOME_CARE_CODE)
+        error_msg = {'at_home': msg}
+        data = {
+            'at_home': False
+        }
+        self.assertEqual(Prestation.validate_at_home_default_config(data), {})
+
+        data['at_home'] = True
+        self.assertEqual(Prestation.validate_at_home_default_config(data), error_msg)
+
+        self.care_code_first = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
+                                                       name='some name',
+                                                       description='description',
+                                                       reimbursed=False)
+        self.assertEqual(Prestation.validate_at_home_default_config(data), {})
+
+    def test_validate_patient_hospitalization(self):
+        error_msg = {'date': 'Patient has hospitalization records for the chosen date'}
+        data = {
+            'date': self.hospitalization.start_date.replace(day=9),
+            'invoice_item_id': self.invoice_item.id
+        }
+
+        self.assertEqual(Prestation.validate_patient_hospitalization(data), {})
+
+        data['date'] = self.hospitalization.start_date
+        self.assertEqual(Prestation.validate_patient_hospitalization(data), error_msg)
+
+        data['date'] = data['date'].replace(month=7, day=20)
+        self.assertEqual(Prestation.validate_patient_hospitalization(data), error_msg)
+
+        data['date'] = self.hospitalization.end_date
+        self.assertEqual(Prestation.validate_patient_hospitalization(data), error_msg)
+
+        data['date'] = data['date'].replace(day=11)
+        self.assertEqual(Prestation.validate_patient_hospitalization(data), {})
+
+    def test_validate_patient_alive(self):
+        error_msg = {'date': "Prestation date cannot be later than or equal to Patient's death date"}
+        date_of_death = timezone.now().replace(month=6, day=10)
+        data = {
+            'invoice_item': self.invoice_item,
+            'date': date_of_death
+        }
+
+        self.assertEqual(Prestation.validate_patient_alive(data), {})
+
+        self.patient.date_of_death = date_of_death.date()
+        self.patient.save()
+
+        self.assertEqual(Prestation.validate_patient_alive(data), error_msg)
+
+        data['date'] = data['date'].replace(month=4)
+        self.assertEqual(Prestation.validate_patient_alive(data), {})
+
+        data['date'] = data['date'].replace(month=7)
+        self.assertEqual(Prestation.validate_patient_alive(data), error_msg)
 
 
 class InvoiceItemTestCase(TestCase):
@@ -216,3 +303,145 @@ class InvoiceItemTestCase(TestCase):
 
     def test_default_invoice_number(self):
         self.assertEqual(get_default_invoice_number(), 927)
+
+
+class HospitalizationTestCase(TestCase):
+    def setUp(self):
+        self.start_date = timezone.now().replace(month=1, day=10)
+        self.end_date = timezone.now().replace(month=6, day=10)
+
+        user = User.objects.create_user('testuser', email='testuser@test.com', password='testing')
+        user.save()
+        jobposition = JobPosition.objects.create(name='name 0')
+        self.employee = Employee.objects.create(user=user,
+                                                start_contract=self.start_date,
+                                                occupation=jobposition)
+
+        self.patient = Patient.objects.create(code_sn='1245789764822',
+                                              first_name='first name 0',
+                                              name='name 0',
+                                              address='address 0',
+                                              zipcode='zipcode 0',
+                                              city='city 0',
+                                              phone_number='000')
+
+        self.invoice_item = InvoiceItem.objects.create(invoice_number='936 some invoice_number',
+                                                       invoice_date=self.start_date,
+                                                       patient=self.patient)
+
+        self.care_code = CareCode.objects.create(code='code0',
+                                                 name='some name',
+                                                 description='description',
+                                                 reimbursed=False)
+
+        self.prestation = Prestation.objects.create(invoice_item=self.invoice_item,
+                                                    employee=self.employee,
+                                                    carecode=self.care_code,
+                                                    date=self.start_date)
+
+        self.hospitalization = Hospitalization.objects.create(start_date=self.start_date,
+                                                              end_date=self.end_date,
+                                                              patient=self.patient)
+
+    def test_string_representation(self):
+        hospitalization = Hospitalization(start_date=self.start_date,
+                                          end_date=self.end_date,
+                                          patient=self.patient)
+
+        self.assertEqual(str(hospitalization), 'From %s to %s for %s' % (
+            hospitalization.start_date, hospitalization.end_date, hospitalization.patient))
+
+    def test_validate_dates(self):
+        data = {
+            'start_date': timezone.now().replace(month=1, day=10),
+            'end_date': timezone.now().replace(month=6, day=10)
+        }
+
+        self.assertEqual(Hospitalization.validate_dates(data), {})
+
+        data['start_date'] = data['start_date'].replace(month=6, day=10)
+        self.assertEqual(Hospitalization.validate_dates(data), {})
+
+        data['start_date'] = data['start_date'].replace(month=6, day=11)
+        self.assertEqual(Hospitalization.validate_dates(data), {'end_date': 'End date must be bigger than Start date'})
+
+    def test_validate_prestation(self):
+        data = {
+            'start_date': self.start_date,
+            'end_date': self.end_date,
+            'patient': self.patient
+        }
+        error_msg = {'start_date': 'Prestation(s) exist in selected dates range for this Patient'}
+        self.assertEqual(Hospitalization.validate_prestation(data), error_msg)
+
+        data['start_date'] = data['start_date'].replace(month=1, day=11)
+        self.assertEqual(Hospitalization.validate_prestation(data), {})
+
+        data['start_date'] = data['start_date'].replace(month=1, day=5)
+        self.assertEqual(Hospitalization.validate_prestation(data), error_msg)
+
+        data['patient'] = Patient.objects.create(code_sn='1245789764822',
+                                                 first_name='first name 0',
+                                                 name='name 0',
+                                                 address='address 0',
+                                                 zipcode='zipcode 0',
+                                                 city='city 0',
+                                                 phone_number='000')
+
+        self.assertEqual(Hospitalization.validate_prestation(data), {})
+
+    def test_validate_date_range(self):
+        data = {
+            'start_date': self.start_date,
+            'end_date': self.end_date,
+            'patient': self.patient
+        }
+        error_msg = {'start_date': 'Intersection with other Hospitalizations'}
+
+        self.assertEqual(Hospitalization.validate_date_range(self.hospitalization.id, data), {})
+        self.assertEqual(Hospitalization.validate_date_range(None, data), error_msg)
+
+        data['start_date'] = data['start_date'].replace(month=1, day=1)
+        data['end_date'] = data['end_date'].replace(month=1, day=4)
+        self.assertEqual(Hospitalization.validate_date_range(None, data), {})
+
+        data['end_date'] = data['end_date'].replace(month=1, day=10)
+        self.assertEqual(Hospitalization.validate_date_range(None, data), error_msg)
+
+        data['end_date'] = data['end_date'].replace(month=4)
+        self.assertEqual(Hospitalization.validate_date_range(None, data), error_msg)
+
+        data['start_date'] = data['start_date'].replace(month=3)
+        data['end_date'] = data['end_date'].replace(month=5)
+        self.assertEqual(Hospitalization.validate_date_range(None, data), error_msg)
+
+        data['end_date'] = data['end_date'].replace(month=7)
+        self.assertEqual(Hospitalization.validate_date_range(None, data), error_msg)
+
+        data['start_date'] = data['start_date'].replace(month=6, day=10)
+        self.assertEqual(Hospitalization.validate_date_range(None, data), error_msg)
+
+        data['start_date'] = data['start_date'].replace(month=7)
+        data['end_date'] = data['end_date'].replace(month=8)
+        self.assertEqual(Hospitalization.validate_date_range(None, data), {})
+
+    def test_validate_patient_alive(self):
+        error_msg = {'end_date': "Hospitalization cannot be later than or include Patient's death date"}
+        date_of_death = timezone.now().replace(month=6, day=10).date()
+        data = {
+            'patient': self.patient,
+            'end_date': date_of_death
+        }
+
+        self.assertEqual(Hospitalization.validate_patient_alive(data), {})
+
+        self.patient.date_of_death = date_of_death
+        self.patient.save()
+
+        self.assertEqual(Hospitalization.validate_patient_alive(data), error_msg)
+
+        data['end_date'] = data['end_date'].replace(month=8)
+        self.assertEqual(Hospitalization.validate_patient_alive(data), error_msg)
+
+        data['end_date'] = data['end_date'].replace(month=5)
+        self.assertEqual(Hospitalization.validate_patient_alive(data), {})
