@@ -176,10 +176,15 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient__name', 'patient__first_name']
+    readonly_fields = ('medical_prescription_preview',)
     actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, syncro_clients,
                previous_months_invoices_april, previous_months_invoices_july_2017, niedercorn_avril_mai_2017]
     inlines = [PrestationInline]
 
+    def medical_prescription_preview(self, obj):
+        return obj.medical_prescription.image_preview()
+
+    medical_prescription_preview.allow_tags = True
 
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
 
