@@ -64,20 +64,30 @@ class PatientTestCase(TestCase):
         self.assertEqual(Patient.autocomplete_search_fields(), ('name', 'first_name'))
 
     def test_code_sn(self):
-        is_code_sn_valid, message = Patient.is_code_sn_valid(None, is_private=True, code_sn='0123')
-        self.assertEqual(is_code_sn_valid, True)
+        instance_id = None
+        error_messages = {
+            'format': {'code_sn': 'Code SN should start with non zero digit and be followed by 12 digits'},
+            'unique': {'code_sn': 'Code SN must be unique'}
+        }
+        data = {
+            'code_sn': '0123',
+        }
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
 
-        is_code_sn_valid, message = Patient.is_code_sn_valid(None, is_private=False, code_sn='0123')
-        self.assertEqual(is_code_sn_valid, False)
+        data['is_private'] = True
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
 
-        is_code_sn_valid, message = Patient.is_code_sn_valid(None, is_private=False, code_sn='0245789764822')
-        self.assertEqual(is_code_sn_valid, False)
+        data['is_private'] = False
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['format'])
 
-        is_code_sn_valid, message = Patient.is_code_sn_valid(None, is_private=False, code_sn='1245789764822')
-        self.assertEqual(is_code_sn_valid, False)
+        data['code_sn'] = '0245789764822'
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['format'])
 
-        is_code_sn_valid, message = Patient.is_code_sn_valid(None, is_private=False, code_sn='2245789764822')
-        self.assertEqual(is_code_sn_valid, True)
+        data['code_sn'] = '1245789764822'
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['unique'])
+
+        data['code_sn'] = '2245789764822'
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
 
 
 class PhysicianTestCase(TestCase):

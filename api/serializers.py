@@ -25,15 +25,13 @@ class CareCodeSerializer(serializers.ModelSerializer):
 
 class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
     def validate(self, data):
-        is_private = False
         instance_id = None
         if self.instance is not None:
             instance_id = self.instance.id
-        if 'is_private' in data:
-            is_private = data['is_private']
-        is_code_sn_valid, message = Patient.is_code_sn_valid(instance_id, is_private, data['code_sn'])
-        if not is_code_sn_valid:
-            raise serializers.ValidationError(message)
+        
+        messages = Patient.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
 
         return data
 

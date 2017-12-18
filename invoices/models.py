@@ -91,24 +91,37 @@ class Patient(models.Model):
 
     def clean(self, *args, **kwargs):
         super(Patient, self).clean()
-        is_code_sn_valid, message = self.is_code_sn_valid(self.id, self.is_private, self.code_sn)
-        if not is_code_sn_valid:
-            raise ValidationError({'code_sn': message})
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
 
     @staticmethod
-    def is_code_sn_valid(instance_id, is_private, code_sn):
-        is_valid = True
-        message = ''
-        if not is_private:
-            pattern = re.compile('^([1-9]{1}[0-9]{12})$')
-            if pattern.match(code_sn) is None:
-                message = 'Code SN should start with non zero digit and be followed by 12 digits'
-                is_valid = False
-            elif Patient.objects.filter(code_sn=code_sn).exclude(pk=instance_id).count() > 0:
-                message = 'Code SN must be unique'
-                is_valid = False
+    def validate(instance_id, data):
+        result = {}
+        result.update(Patient.validate_code_sn(instance_id, data))
 
-        return is_valid, message
+        return result
+
+    @staticmethod
+    def validate_code_sn(instance_id, data):
+        messages = {}
+        if 'date_of_death' in data and data['date_of_death'] is not None:
+            messages = {'date_of_death': 'Hospitalization that ends later exists'}
+            messages = {'date_of_death': 'Prestation for a later date exists'}
+
+        return messages
+
+    @staticmethod
+    def validate_code_sn(instance_id, data):
+        messages = {}
+        if 'is_private' in data and not data['is_private']:
+            pattern = re.compile('^([1-9]{1}[0-9]{12})$')
+            if pattern.match(data['code_sn']) is None:
+                messages = {'code_sn': 'Code SN should start with non zero digit and be followed by 12 digits'}
+            elif Patient.objects.filter(code_sn=data['code_sn']).exclude(pk=instance_id).count() > 0:
+                messages = {'code_sn': 'Code SN must be unique'}
+
+        return messages
 
 
 class Hospitalization(models.Model):
