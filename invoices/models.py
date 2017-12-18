@@ -500,7 +500,7 @@ class Prestation(models.Model):
         if 0 != len(prestations_list):
             conflicting_codes = ", ".join([prestation.carecode.code for prestation in prestations_list])
             msg = "CareCode %s cannot be applied because CareCode(s) %s has been applied already" % (
-                data['carecode'].code, conflicting_codes)
+                carecode.code, conflicting_codes)
 
             messages = {'carecode': msg}
 
@@ -534,9 +534,13 @@ class Prestation(models.Model):
 @receiver(post_save, sender=Prestation, dispatch_uid="create_at_home_prestation")
 def create_prestation_at_home_pair(sender, instance, **kwargs):
     if instance.at_home and instance.at_home_paired is None and not hasattr(instance, 'paired_at_home'):
-        pair = deepcopy(instance)
-        pair.pk = None
-        pair.carecode = CareCode.objects.get(code=config.AT_HOME_CARE_CODE)
-        pair.at_home = False
-        pair.at_home_paired = instance
-        pair.save()
+        at_home_carecode = CareCode.objects.get(code=config.AT_HOME_CARE_CODE)
+        at_home_pair_exists = Prestation.objects.filter(invoice_item=instance.invoice_item, date=instance.date,
+                                                        carecode=at_home_carecode).exists()
+        if not at_home_pair_exists:
+            pair = deepcopy(instance)
+            pair.pk = None
+            pair.carecode = at_home_carecode
+            pair.at_home = False
+            pair.at_home_paired = instance
+            pair.save()
