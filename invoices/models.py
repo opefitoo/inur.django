@@ -350,6 +350,7 @@ class InvoiceItem(models.Model):
     def validate(instance_id, data):
         result = {}
         result.update(InvoiceItem.validate_is_private(data))
+        result.update(InvoiceItem.validate_patient(data))
 
         return result
 
@@ -367,6 +368,30 @@ class InvoiceItem(models.Model):
 
             if patient is not None and data['is_private'] != patient.is_private:
                 messages = {'patient': 'Only private Patients allowed in private Invoice Item.'}
+
+        return messages
+
+    @staticmethod
+    def validate_patient(data):
+        messages = {}
+        if 'medical_prescription_id' in data or 'medical_prescription' in data:
+            medical_prescription = None
+            if 'medical_prescription' in data:
+                medical_prescription = data['patient']
+            elif 'medical_prescription_id' in data:
+                medical_prescription = MedicalPrescription.objects.filter(pk=data['medical_prescription_id']).get()
+
+            patient = None
+            if 'patient' in data:
+                patient = data['patient']
+            elif 'patient_id' in data:
+                patient = Patient.objects.filter(pk=data['patient_id']).get()
+            else:
+                messages = {'patient': 'Please fill Patient field'}
+
+            if patient != medical_prescription.patient:
+                messages = {
+                    'medical_prescription': "MedicalPrescription's Patient must be equal to InvoiceItem's Patient"}
 
         return messages
 

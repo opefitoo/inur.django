@@ -274,13 +274,20 @@ class PrestationTestCase(TestCase):
 
 class InvoiceItemTestCase(TestCase):
     def setUp(self):
+        date = datetime.now()
         self.patient = Patient.objects.create(first_name='first name',
                                               name='name')
         self.private_patient = Patient.objects.create(first_name='first name',
                                                       name='name',
                                                       is_private=True)
 
-        date = datetime.now()
+        physician = Physician.objects.create(first_name='first name',
+                                             name='name')
+
+        self.medical_prescription = MedicalPrescription.objects.create(prescriptor=physician,
+                                                                       date=date,
+                                                                       patient=self.patient)
+
         InvoiceItem.objects.create(invoice_number='936 some invoice_number',
                                    invoice_date=date,
                                    patient=self.patient)
@@ -339,6 +346,21 @@ class InvoiceItemTestCase(TestCase):
 
         data['is_private'] = False
         self.assertEqual(InvoiceItem.validate_is_private(data), {})
+
+    def test_validate_patient(self):
+        error_message = {'medical_prescription': "MedicalPrescription's Patient must be equal to InvoiceItem's Patient"}
+
+        data = {
+            'patient_id': self.patient.id
+        }
+
+        self.assertEqual(InvoiceItem.validate_patient(data), {})
+
+        data['medical_prescription_id'] = self.medical_prescription.id
+        self.assertEqual(InvoiceItem.validate_patient(data), {})
+
+        data['patient_id'] = self.private_patient.id
+        self.assertEqual(InvoiceItem.validate_patient(data), error_message)
 
 
 class HospitalizationTestCase(TestCase):
