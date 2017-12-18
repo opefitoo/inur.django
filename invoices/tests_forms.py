@@ -2,7 +2,7 @@ from django.utils import timezone
 from django.forms import inlineformset_factory, ValidationError
 from django.test import TestCase
 
-from invoices.forms import ValidityDateFormSet, check_for_periods_intersection
+from invoices.forms import ValidityDateFormSet, check_for_periods_intersection, HospitalizationFormSet
 from invoices.models import CareCode, ValidityDate
 
 
@@ -168,3 +168,32 @@ class ValidityDateFormSetTestCase(TestCase):
 
         self.formset = self.formset(data, prefix='validity_dates', instance=self.care_code)
         self.assertFalse(self.formset.is_valid())
+
+
+class HospitalizationFormSetTestCase(TestCase):
+    def setUp(self):
+        date = timezone.now()
+        self.date_of_death = date.replace(month=5, day=1)
+        self.end_date = date.replace(month=6, day=1)
+        self.periods = [
+            {
+                'end_date': self.end_date
+            },
+            {
+                'end_date': self.end_date.replace(month=9, day=1)
+            }
+        ]
+
+    def test_before(self):
+        self.date_of_death = self.date_of_death.replace(month=5, day=1)
+        self.assertRaises(ValidationError, HospitalizationFormSet.validate_with_patient_date_of_death, self.periods,
+                          self.date_of_death)
+
+    def test_start_equal_to_end(self):
+        self.date_of_death = self.date_of_death.replace(month=9, day=1)
+        self.assertRaises(ValidationError, HospitalizationFormSet.validate_with_patient_date_of_death, self.periods,
+                          self.date_of_death)
+
+    def test_after(self):
+        self.date_of_death = self.date_of_death.replace(month=11, day=1)
+        self.assertIsNone(HospitalizationFormSet.validate_with_patient_date_of_death(self.periods, self.date_of_death))

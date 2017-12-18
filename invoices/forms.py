@@ -1,5 +1,7 @@
 from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, ModelForm
 from django import forms
+from datetime import datetime
+
 from invoices.models import Prestation, CareCode, InvoiceItem, Patient
 from invoices.timesheet import Employee
 from invoices.widgets import AutocompleteModelSelect2CustomWidget, CustomAdminSplitDateTime
@@ -101,3 +103,12 @@ class HospitalizationFormSet(BaseInlineFormSet):
 
         if hasattr(self, 'cleaned_data'):
             check_for_periods_intersection(self.cleaned_data)
+            if 'date_of_death' in self.data and self.data['date_of_death']:
+                date_of_death = datetime.strptime(self.data['date_of_death'], "%Y-%m-%d").date()
+                self.validate_with_patient_date_of_death(self.cleaned_data, date_of_death)
+
+    @staticmethod
+    def validate_with_patient_date_of_death(cleaned_data, date_of_death):
+        for row_data in cleaned_data:
+            if row_data['end_date'] >= date_of_death:
+                raise ValidationError("Hospitalization cannot be later than or include Patient's death date")

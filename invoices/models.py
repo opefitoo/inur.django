@@ -99,15 +99,19 @@ class Patient(models.Model):
     def validate(instance_id, data):
         result = {}
         result.update(Patient.validate_code_sn(instance_id, data))
+        result.update(Patient.validate_date_of_death(instance_id, data))
 
         return result
 
     @staticmethod
-    def validate_code_sn(instance_id, data):
+    def validate_date_of_death(instance_id, data):
         messages = {}
         if 'date_of_death' in data and data['date_of_death'] is not None:
-            messages = {'date_of_death': 'Hospitalization that ends later exists'}
-            messages = {'date_of_death': 'Prestation for a later date exists'}
+            if Prestation.objects.filter(date__gte=data['date_of_death'], invoice_item__patient_id=instance_id).count():
+                messages = {'date_of_death': 'Prestation for a later date exists'}
+
+            if Hospitalization.objects.filter(end_date__gte=data['date_of_death']).count():
+                messages = {'date_of_death': 'Hospitalization that ends later exists'}
 
         return messages
 

@@ -91,6 +91,7 @@ admin.site.register(Patient, PatientAdmin)
 class PrestationAdmin(admin.ModelAdmin):
     from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
 
+    list_filter = ('invoice_item__patient', 'invoice_item', 'carecode')
     date_hierarchy = 'date'
     list_display = ('carecode', 'date')
     search_fields = ['carecode__code', 'carecode__name']
