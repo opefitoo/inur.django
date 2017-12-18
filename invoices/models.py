@@ -19,6 +19,7 @@ from django_countries.fields import CountryField
 from invoices import settings
 from constance import config
 from storages import CustomizedGoogleDriveStorage
+from django.utils.timezone import now
 
 # Define Google Drive Storage
 gd_storage = CustomizedGoogleDriveStorage()
@@ -240,7 +241,11 @@ class Physician(models.Model):
 
 def update_medical_prescription_filename(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
-    path = os.path.join(CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER, str(instance.date.year))
+    if instance.date is None:
+        _current_yr_or_prscr_yr = now().date().strftime('%Y')
+    else:
+        _current_yr_or_prscr_yr = str(instance.date.year)
+    path = os.path.join(CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER, _current_yr_or_prscr_yr)
     filename = '%s_%s_%s%s' % (instance.patient.name, instance.patient.first_name, str(instance.date), file_extension)
 
     return os.path.join(path, filename)
@@ -251,7 +256,7 @@ class MedicalPrescription(models.Model):
                                     help_text='Please chose the Physician who is giving the medical prescription')
     patient = models.ForeignKey(Patient, default=None, related_name='medical_prescription_patient',
                                 help_text='Please chose the Patient who is receiving the medical prescription')
-    date = models.DateField('Date ordonnance', null=True, blank=True)
+    date = models.DateField('Date ordonnance')
     end_date = models.DateField('Date fin des soins', null=True, blank=True)
     file = models.ImageField(storage=gd_storage, blank=True, upload_to=update_medical_prescription_filename)
     _original_file = None
@@ -299,7 +304,7 @@ class MedicalPrescription(models.Model):
         return 'date', 'prescriptor__name', 'prescriptor__first_name'
 
     def __unicode__(self):  # Python 3: def __str__(self):
-        return '%s %s' % (self.prescriptor.name.strip(), self.prescriptor.first_name.strip())
+        return '%s %s (%s)' % (self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
 
 
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
