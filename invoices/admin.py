@@ -110,9 +110,6 @@ class PrestationAdmin(admin.ModelAdmin):
         return initial
 
 
-#admin.site.register(Prestation, PrestationAdmin)
-
-
 class PhysicianAdmin(admin.ModelAdmin):
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'provider_code')

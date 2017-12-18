@@ -117,6 +117,21 @@ class MedicalPrescriptionTestCase(TestCase):
         self.assertEqual(MedicalPrescription.autocomplete_search_fields(),
                          ('date', 'prescriptor__name', 'prescriptor__first_name'))
 
+    def test_validate_dates(self):
+        data = {
+            'start_date': timezone.now().replace(month=1, day=10),
+            'end_date': timezone.now().replace(month=6, day=10)
+        }
+
+        self.assertEqual(MedicalPrescription.validate_dates(data), {})
+
+        data['start_date'] = data['start_date'].replace(month=6, day=10)
+        self.assertEqual(MedicalPrescription.validate_dates(data), {})
+
+        data['start_date'] = data['start_date'].replace(month=6, day=11)
+        self.assertEqual(MedicalPrescription.validate_dates(data),
+                         {'end_date': 'End date must be bigger than Start date'})
+
 
 class PrestationTestCase(TestCase):
     def setUp(self):

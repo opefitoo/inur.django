@@ -67,6 +67,16 @@ class PrestationSerializer(serializers.ModelSerializer):
 
 
 class MedicalPrescriptionSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        messages = MedicalPrescription.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
+
+        return data
+
     class Meta:
         model = MedicalPrescription
         fields = ('id', 'prescriptor', 'patient', 'date', 'file')

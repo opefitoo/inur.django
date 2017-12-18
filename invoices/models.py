@@ -257,6 +257,25 @@ class MedicalPrescription(models.Model):
     def __init__(self, *args, **kwargs):
         super(MedicalPrescription, self).__init__(*args, **kwargs)
         self._original_file = self.file
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance_id, data):
+        result = {}
+        result.update(MedicalPrescription.validate_dates(data))
+
+        return result
+
+    @staticmethod
+    def validate_dates(data):
+        messages = {}
+        is_valid = data['end_date'] is None or data['date'] <= data['end_date']
+        if not is_valid:
+            messages = {'end_date': 'End date must be bigger than Start date'}
+
+        return messages
 
     def image_preview(self):
         # used in the admin site model as a "thumbnail"
