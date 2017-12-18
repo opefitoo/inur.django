@@ -2,7 +2,7 @@ from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, M
 from django import forms
 from datetime import datetime
 
-from invoices.models import Prestation, CareCode, InvoiceItem, Patient
+from invoices.models import Prestation, CareCode, InvoiceItem, Patient, MedicalPrescription
 from invoices.timesheet import Employee
 from invoices.widgets import AutocompleteModelSelect2CustomWidget, CustomAdminSplitDateTime
 
@@ -88,9 +88,15 @@ class InvoiceItemForm(ModelForm):
         widget=AutocompleteModelSelect2CustomWidget(url='patient-autocomplete', forward=['is_private'])
     )
 
+    medical_prescription = ModelChoiceField(
+        queryset=MedicalPrescription.objects.all(),
+        widget=AutocompleteModelSelect2CustomWidget(url='medical-prescription-autocomplete', forward=['patient'])
+    )
+
     def __init__(self, *args, **kwargs):
         super(InvoiceItemForm, self).__init__(*args, **kwargs)
         self.fields['patient'].autocomplete = False
+        self.fields['medical_prescription'].autocomplete = False
 
     class Meta:
         model = InvoiceItem

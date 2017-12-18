@@ -1,7 +1,7 @@
 from dal import autocomplete
 from django.db.models import Q
 
-from invoices.models import CareCode, Prestation, Patient
+from invoices.models import CareCode, Prestation, Patient, MedicalPrescription
 from invoices.timesheet import Employee
 
 
@@ -43,6 +43,23 @@ class PatientAutocomplete(autocomplete.Select2QuerySetView):
 
         if self.q:
             filter_qs = get_queryset_filter(self.q, Patient.autocomplete_search_fields())
+            qs = qs.filter(filter_qs)
+
+        return qs
+
+
+class MedicalPrescriptionAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        if not self.request.user.is_authenticated():
+            return MedicalPrescription.objects.none()
+
+        qs = MedicalPrescription.objects.all()
+        patient = self.forwarded.get('patient', False)
+        if patient:
+            qs = qs.filter(patient=patient)
+
+        if self.q:
+            filter_qs = get_queryset_filter(self.q, MedicalPrescription.autocomplete_search_fields())
             qs = qs.filter(filter_qs)
 
         return qs

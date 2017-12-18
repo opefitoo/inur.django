@@ -20,7 +20,8 @@ from django.views.static import serve
 from invoices import settings
 from rest_framework.authtoken import views as authtoken_views
 
-from invoices.views import CareCodeAutocomplete, PatientAutocomplete, EmployeeAutocomplete
+from invoices.views import CareCodeAutocomplete, PatientAutocomplete, EmployeeAutocomplete, \
+    MedicalPrescriptionAutocomplete
 
 urlpatterns = [
     url(
@@ -32,6 +33,11 @@ urlpatterns = [
         r'^patient-autocomplete/$',
         PatientAutocomplete.as_view(),
         name='patient-autocomplete',
+    ),
+    url(
+        r'^medical-prescription-autocomplete/$',
+        MedicalPrescriptionAutocomplete.as_view(),
+        name='medical-prescription-autocomplete',
     ),
     url(
         r'^employee-autocomplete/$',
