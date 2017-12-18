@@ -440,7 +440,8 @@ class TimesheetTestCase(BaseTestCase, APITestCase):
 class MedicalPrescriptionTestCase(BaseTestCase, APITestCase):
     def setUp(self):
         super(MedicalPrescriptionTestCase, self).setUp()
-        date = datetime.now()
+        date = datetime.now().replace(month=2, day=1)
+        end_date = datetime.now().replace(month=3, day=1)
 
         patient = Patient.objects.create(code_sn='code_sn0',
                                          first_name='first name 0',
@@ -463,21 +464,26 @@ class MedicalPrescriptionTestCase(BaseTestCase, APITestCase):
         self.serializer = MedicalPrescriptionSerializer
         self.items = [self.model.objects.create(prescriptor=physician,
                                                 patient=patient,
-                                                date=date.strftime('%Y-%m-%d')),
+                                                date=date.strftime('%Y-%m-%d'),
+                                                end_date=end_date.strftime('%Y-%m-%d')),
                       self.model.objects.create(prescriptor=physician,
                                                 patient=patient,
-                                                date=date.strftime('%Y-%m-%d')),
+                                                date=date.strftime('%Y-%m-%d'),
+                                                end_date=end_date.strftime('%Y-%m-%d')),
                       self.model.objects.create(prescriptor=physician,
                                                 patient=patient,
-                                                date=date.strftime('%Y-%m-%d')),
+                                                date=date.strftime('%Y-%m-%d'),
+                                                end_date=end_date.strftime('%Y-%m-%d')),
                       self.model.objects.create(prescriptor=physician,
                                                 patient=patient,
-                                                date=date.strftime('%Y-%m-%d'))]
+                                                date=date.strftime('%Y-%m-%d'),
+                                                end_date=end_date.strftime('%Y-%m-%d'))]
 
         self.valid_payload = {
             'prescriptor': physician.id,
             'patient': patient.id,
-            'date': date.strftime('%Y-%m-%d')
+            'date': date.strftime('%Y-%m-%d'),
+            'end_date': end_date.strftime('%Y-%m-%d'),
         }
 
         self.invalid_payload = {

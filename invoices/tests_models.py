@@ -119,16 +119,16 @@ class MedicalPrescriptionTestCase(TestCase):
 
     def test_validate_dates(self):
         data = {
-            'start_date': timezone.now().replace(month=1, day=10),
+            'date': timezone.now().replace(month=1, day=10),
             'end_date': timezone.now().replace(month=6, day=10)
         }
 
         self.assertEqual(MedicalPrescription.validate_dates(data), {})
 
-        data['start_date'] = data['start_date'].replace(month=6, day=10)
+        data['date'] = data['date'].replace(month=6, day=10)
         self.assertEqual(MedicalPrescription.validate_dates(data), {})
 
-        data['start_date'] = data['start_date'].replace(month=6, day=11)
+        data['date'] = data['date'].replace(month=6, day=11)
         self.assertEqual(MedicalPrescription.validate_dates(data),
                          {'end_date': 'End date must be bigger than Start date'})
 
@@ -274,28 +274,31 @@ class PrestationTestCase(TestCase):
 
 class InvoiceItemTestCase(TestCase):
     def setUp(self):
-        patient = Patient.objects.create(first_name='first name',
-                                         name='name')
+        self.patient = Patient.objects.create(first_name='first name',
+                                              name='name')
+        self.private_patient = Patient.objects.create(first_name='first name',
+                                                      name='name',
+                                                      is_private=True)
 
         date = datetime.now()
         InvoiceItem.objects.create(invoice_number='936 some invoice_number',
                                    invoice_date=date,
-                                   patient=patient)
+                                   patient=self.patient)
         InvoiceItem.objects.create(invoice_number='10',
                                    invoice_date=date,
-                                   patient=patient)
+                                   patient=self.patient)
         InvoiceItem.objects.create(invoice_number='058',
                                    invoice_date=date,
-                                   patient=patient)
+                                   patient=self.patient)
         InvoiceItem.objects.create(invoice_number='147',
                                    invoice_date=date,
-                                   patient=patient)
+                                   patient=self.patient)
         InvoiceItem.objects.create(invoice_number='259',
                                    invoice_date=date,
-                                   patient=patient)
+                                   patient=self.patient)
         InvoiceItem.objects.create(invoice_number='926',
                                    invoice_date=date,
-                                   patient=patient)
+                                   patient=self.patient)
 
     def test_string_representation(self):
         patient = Patient(first_name='first name',
@@ -318,6 +321,24 @@ class InvoiceItemTestCase(TestCase):
 
     def test_default_invoice_number(self):
         self.assertEqual(get_default_invoice_number(), 927)
+
+    def test_validate_is_private(self):
+        error_message = {'patient': 'Only private Patients allowed in private Invoice Item.'}
+        data = {
+            'patient_id': self.patient.id,
+            'is_private': False
+        }
+
+        self.assertEqual(InvoiceItem.validate_is_private(data), {})
+
+        data['is_private'] = True
+        self.assertEqual(InvoiceItem.validate_is_private(data), error_message)
+
+        data['patient_id'] = self.private_patient.id
+        self.assertEqual(InvoiceItem.validate_is_private(data), {})
+
+        data['is_private'] = False
+        self.assertEqual(InvoiceItem.validate_is_private(data), {})
 
 
 class HospitalizationTestCase(TestCase):

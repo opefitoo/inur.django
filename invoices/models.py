@@ -342,8 +342,33 @@ class InvoiceItem(models.Model):
 
     def clean(self, *args, **kwargs):
         super(InvoiceItem, self).clean()
-        if self.patient_id is not None and self.is_private != self.patient.is_private:
-            raise ValidationError({'patient': 'Only private Patients allowed in private Invoice Item.'})
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance_id, data):
+        result = {}
+        result.update(InvoiceItem.validate_is_private(data))
+
+        return result
+
+    @staticmethod
+    def validate_is_private(data):
+        messages = {}
+        if data['is_private']:
+            patient = None
+            if 'patient' in data:
+                patient = data['patient']
+            elif 'patient_id' in data:
+                patient = Patient.objects.filter(pk=data['patient_id']).get()
+            else:
+                messages = {'patient': 'Please fill Patient field'}
+
+            if patient is not None and data['is_private'] != patient.is_private:
+                messages = {'patient': 'Only private Patients allowed in private Invoice Item.'}
+
+        return messages
 
     @property
     def invoice_month(self):

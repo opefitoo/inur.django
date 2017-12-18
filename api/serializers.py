@@ -79,13 +79,17 @@ class MedicalPrescriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MedicalPrescription
-        fields = ('id', 'prescriptor', 'patient', 'date', 'file')
+        fields = ('id', 'prescriptor', 'patient', 'date', 'end_date', 'file')
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
     def validate(self, data):
-        if data['is_private'] != data['patient'].is_private:
-            raise serializers.ValidationError("Only private Patients allowed in private Invoice Item.")
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        messages = InvoiceItem.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
 
         return data
 
