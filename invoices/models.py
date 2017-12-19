@@ -35,6 +35,31 @@ class CareCode(models.Model):
     reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
     exclusive_care_codes = models.ManyToManyField("self", blank=True)
 
+    def gross_amount(self, date):
+        for v in self.validity_dates.all():
+            if date.date() >= v.start_date:
+                if v.end_date is None:
+                    return v.gross_amount
+                elif date.date() <= v.end_date:
+                    return v.gross_amount
+        return 0
+
+    def net_amount(self, date, private_patient, participation_statutaire):
+        if not private_patient:
+            if self.reimbursed:
+                return round(((self.gross_amount(date) * 88) / 100), 2) + self._fin_part(date, participation_statutaire)
+            else:
+                return 0
+        else:
+            return 0
+
+    def _fin_part(self, date, participation_statutaire):
+        "Returns the financial participation of the client"
+        if participation_statutaire:
+            return 0
+        # round to only two decimals
+        return round(((self.carecode.gross_amount(date) * 12) / 100), 2)
+
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s: %s' % (self.code, self.name)
 
