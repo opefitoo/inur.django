@@ -422,7 +422,10 @@ class InvoiceItem(models.Model):
             if 'medical_prescription' in data:
                 medical_prescription = data['patient']
             elif 'medical_prescription_id' in data:
-                medical_prescription = MedicalPrescription.objects.filter(pk=data['medical_prescription_id']).get()
+                try:
+                    medical_prescription = MedicalPrescription.objects.filter(pk=data['medical_prescription_id']).get()
+                except MedicalPrescription.DoesNotExist:
+                    medical_prescription = None
 
             patient = None
             if 'patient' in data:
@@ -432,7 +435,7 @@ class InvoiceItem(models.Model):
             else:
                 messages = {'patient': 'Please fill Patient field'}
 
-            if patient != medical_prescription.patient:
+            if medical_prescription is not None and patient != medical_prescription.patient:
                 messages = {
                     'medical_prescription': "MedicalPrescription's Patient must be equal to InvoiceItem's Patient"}
 
