@@ -80,7 +80,7 @@ class ValidityDate(models.Model):
         return 'from %s to %s' % (self.start_date, self.end_date)
 
     def clean(self, *args, **kwargs):
-        super(ValidityDate, self).clean()
+        super(ValidityDate, self).clean_fields()
         is_valid = self.check_dates(self.start_date, self.end_date)
 
         if not is_valid:
@@ -116,7 +116,7 @@ class Patient(models.Model):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
     def clean(self, *args, **kwargs):
-        super(Patient, self).clean()
+        super(Patient, self).clean_fields()
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
@@ -165,7 +165,7 @@ class Hospitalization(models.Model):
         return 'From %s to %s for %s' % (self.start_date, self.end_date, self.patient)
 
     def clean(self):
-        super(Hospitalization, self).clean()
+        super(Hospitalization, self).clean_fields()
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
@@ -384,7 +384,7 @@ class InvoiceItem(models.Model):
                                              help_text='Please chose a Medical Prescription')
 
     def clean(self, *args, **kwargs):
-        super(InvoiceItem, self).clean()
+        super(InvoiceItem, self).clean_fields()
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
@@ -472,7 +472,7 @@ class Prestation(models.Model):
         return str(self.at_home_paired)
 
     def clean(self):
-        super(Prestation, self).clean()
+        super(Prestation, self).clean_fields()
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)

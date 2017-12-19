@@ -17,7 +17,9 @@ class MedicalPrescriptionTestCase(TestCase):
                                            date=date)
 
         self.assertEqual(str(prescription),
-                         '%s %s' % (prescription.prescriptor.name.strip(), prescription.prescriptor.first_name.strip()))
+                         '%s %s (%s)' % (
+                         prescription.prescriptor.name.strip(), prescription.prescriptor.first_name.strip(),
+                         prescription.date))
 
     def test_autocomplete(self):
         self.assertEqual(MedicalPrescription.autocomplete_search_fields(),
