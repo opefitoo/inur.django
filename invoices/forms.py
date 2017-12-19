@@ -90,7 +90,8 @@ class InvoiceItemForm(ModelForm):
 
     medical_prescription = ModelChoiceField(
         queryset=MedicalPrescription.objects.all(),
-        widget=AutocompleteModelSelect2CustomWidget(url='medical-prescription-autocomplete', forward=['patient'])
+        widget=AutocompleteModelSelect2CustomWidget(url='medical-prescription-autocomplete', forward=['patient']),
+        required=False
     )
 
     def __init__(self, *args, **kwargs):
