@@ -381,7 +381,7 @@ class InvoiceItem(models.Model):
     invoice_paid = models.BooleanField(default=False)
 
     medical_prescription = models.ForeignKey(MedicalPrescription, related_name='invoice_items', null=True, blank=True,
-                                             help_text='Please chose a Medical Prescription')
+                                             help_text='Please chose a Medical Prescription', on_delete=models.SET_NULL)
 
     def clean(self, *args, **kwargs):
         super(InvoiceItem, self).clean_fields()
