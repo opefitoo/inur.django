@@ -460,7 +460,7 @@ class Prestation(models.Model):
     quantity = IntegerField(default=1)
     date = models.DateTimeField('date')
     at_home = models.BooleanField(default=False)
-    at_home_paired = models.OneToOneField('self', related_name='paired_at_home', null=True)
+    at_home_paired = models.OneToOneField('self', related_name='paired_at_home', blank=True, null=True, default=None)
     date.editable = True
 
     @property
@@ -471,9 +471,20 @@ class Prestation(models.Model):
     def at_home_paired_name(self):
         return str(self.at_home_paired)
 
+    def to_dict(self):
+        result = self.__dict__
+        if self.invoice_item and self.invoice_item.patient is not None:
+            result['patient'] = self.invoice_item.patient
+
+        return result
+
     def clean(self):
-        super(Prestation, self).clean_fields()
-        messages = self.validate(self.id, self.__dict__)
+        exclude = []
+        if self.invoice_item is not None and self.invoice_item.id is None:
+            exclude = ['invoice_item']
+
+        super(Prestation, self).clean_fields(exclude)
+        messages = self.validate(self.id, self.to_dict())
         if messages:
             raise ValidationError(messages)
 
@@ -502,14 +513,18 @@ class Prestation(models.Model):
     def validate_patient_hospitalization(data):
         messages = {}
         invoice_item_id = None
-        if 'invoice_item' in data:
-            invoice_item_id = data['invoice_item'].id
-        elif 'invoice_item_id' in data:
-            invoice_item_id = data['invoice_item_id']
+        if 'patient' in data:
+            patient = data['patient']
         else:
-            messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
+            if 'invoice_item' in data:
+                invoice_item_id = data['invoice_item'].id
+            elif 'invoice_item_id' in data:
+                invoice_item_id = data['invoice_item_id']
+            else:
+                messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
 
-        patient = Patient.objects.filter(invoice_items__in=[invoice_item_id]).get()
+            patient = Patient.objects.filter(invoice_items__in=[invoice_item_id]).get()
+
         hospitalizations_cnt = Hospitalization.objects.filter(patient=patient,
                                                               start_date__lte=data['date'],
                                                               end_date__gte=data['date']).count()
@@ -556,14 +571,19 @@ class Prestation(models.Model):
     def validate_patient_alive(data):
         messages = {}
         invoice_item = None
-        if 'invoice_item' in data:
-            invoice_item = data['invoice_item']
-        elif 'invoice_item_id' in data:
-            invoice_item = InvoiceItem.objects.filter(pk=data['invoice_item_id']).get()
+        if 'patient' in data:
+            patient = data['patient']
         else:
-            messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
+            if 'invoice_item' in data:
+                invoice_item = data['invoice_item']
+            elif 'invoice_item_id' in data:
+                invoice_item = InvoiceItem.objects.filter(pk=data['invoice_item_id']).get()
+            else:
+                messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
 
-        date_of_death = invoice_item.patient.date_of_death
+            patient = invoice_item.patient
+
+        date_of_death = patient.date_of_death
         if date_of_death is not None and data['date'].date() >= date_of_death:
             messages = {'date': "Prestation date cannot be later than or equal to Patient's death date"}
 
