@@ -177,9 +177,20 @@ class Hospitalization(models.Model):
     def __unicode__(self):  # Python 3: def __str__(self):
         return 'From %s to %s for %s' % (self.start_date, self.end_date, self.patient)
 
+    def as_dict(self):
+        result = self.__dict__
+        if self.patient and self.patient is not None:
+            result['patient'] = self.patient
+
+        return result
+
     def clean(self):
-        super(Hospitalization, self).clean_fields()
-        messages = self.validate(self.id, self.__dict__)
+        exclude = []
+        if self.patient is not None and self.patient.id is None:
+            exclude = ['patient']
+
+        super(Hospitalization, self).clean_fields(exclude)
+        messages = self.validate(self.id, self.as_dict())
         if messages:
             raise ValidationError(messages)
 
@@ -214,6 +225,7 @@ class Hospitalization(models.Model):
 
         start_date = datetime.combine(data['start_date'], datetime.min.time()).replace(tzinfo=pytz.utc)
         end_date = datetime.combine(data['end_date'], datetime.max.time()).replace(tzinfo=pytz.utc)
+
         conflicts_cnt = Prestation.objects.filter(Q(date__range=(start_date, end_date))).filter(
             invoice_item__patient_id=patient_id).count()
         if 0 < conflicts_cnt:
