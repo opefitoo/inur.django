@@ -190,7 +190,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
 
     if invoice_send_date is not None:
         from utils import setlocale
-        with setlocale('fr_FR.utf8'):
+        with setlocale('en_GB.utf8'):
             elements.append(Table([["Date envoi de la pr" + u"é" + "sente facture: %s " % invoice_send_date.strftime('%d %B %Y').decode("utf-8")]], [10*cm], 1*[0.5*cm], hAlign='LEFT'))
         elements.append(Spacer(1, 10))
 
