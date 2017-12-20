@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 from django_countries.serializers import CountryFieldMixin
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
+    ValidityDate
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
@@ -133,3 +134,19 @@ class HospitalizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hospitalization
         fields = ('id', 'start_date', 'end_date', 'description', 'patient')
+
+
+class ValidityDateSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        messages = ValidityDate.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
+
+        return data
+
+    class Meta:
+        model = ValidityDate
+        fields = ('id', 'start_date', 'end_date', 'gross_amount', 'care_code')

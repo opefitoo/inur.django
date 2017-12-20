@@ -2,8 +2,10 @@ from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
-    TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization
+    TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
+    ValidityDateSerializer
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
+    ValidityDate
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
@@ -101,3 +103,11 @@ class HospitalizationViewSet(viewsets.ModelViewSet):
     """
     queryset = Hospitalization.objects.all()
     serializer_class = HospitalizationSerializer
+
+
+class ValidityDateViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows ValidityDates to be viewed.
+    """
+    queryset = ValidityDate.objects.all()
+    serializer_class = ValidityDateSerializer
