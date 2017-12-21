@@ -338,10 +338,14 @@ class MedicalPrescription(models.Model):
 
         return messages
 
-    def image_preview(self):
+    def image_preview(self, max_width=None, max_height=None):
+        if max_width is None:
+            max_width = '800'
+        if max_height is None:
+            max_height = '800'
         # used in the admin site model as a "thumbnail"
         link = self.file.storage.get_thumbnail_link(getattr(self.file, 'name', None))
-        styles = "max-width: 800px; max-height: 800px;"
+        styles = "max-width: %spx; max-height: %spx;" % (max_width, max_height)
         tag = '<img src="{}" style="{}"/>'.format(link, styles)
 
         return mark_safe(tag)

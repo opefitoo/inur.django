@@ -76,13 +76,24 @@ class HospitalizationInline(admin.TabularInline):
     fields = ('start_date', 'end_date', 'description')
 
 
+class MedicalPrescriptionInlineAdmin(admin.TabularInline):
+    extra = 0
+    model = MedicalPrescription
+    readonly_fields = ('scan_preview', )
+
+    def scan_preview(self, obj):
+        return obj.image_preview(300, 300)
+
+    scan_preview.allow_tags = True
+
+
 class PatientAdmin(admin.ModelAdmin):
     from generate_pacifico_invoices import generate_pacifico
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     search_fields = ['name', 'first_name', 'code_sn']
     actions = [generate_pacifico]
-    inlines = [HospitalizationInline]
+    inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
 
 
 admin.site.register(Patient, PatientAdmin)
@@ -96,6 +107,7 @@ class PrestationAdmin(admin.ModelAdmin):
     list_display = ('carecode', 'date')
     search_fields = ['carecode__code', 'carecode__name']
     actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
+
     form = PrestationForm
 
     def get_changeform_initial_data(self, request):
