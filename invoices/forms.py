@@ -35,6 +35,30 @@ class ValidityDateFormSet(BaseInlineFormSet):
             check_for_periods_intersection(self.cleaned_data)
 
 
+class PrestationInlineFormSet(BaseInlineFormSet):
+    def clean(self):
+        super(PrestationInlineFormSet, self).clean()
+        if hasattr(self, 'cleaned_data'):
+            self.validate_max_limit(self.cleaned_data)
+
+    @staticmethod
+    def validate_max_limit(cleaned_data):
+        expected_count = 0
+        at_home_added = False
+        for row_data in cleaned_data:
+            if 'DELETE' in row_data and row_data['DELETE']:
+                expected_count -= 1
+            else:
+                expected_count += 1
+                if not at_home_added and 'at_home' in row_data and row_data['at_home']:
+                    at_home_added = True
+                    expected_count += 1
+
+        if expected_count > InvoiceItem.PRESTATION_LIMIT_MAX:
+            message = "Max number of Prestations for one InvoiceItem is %s" % (str(InvoiceItem.PRESTATION_LIMIT_MAX))
+            raise ValidationError(message)
+
+
 class PrestationForm(ModelForm):
     carecode = ModelChoiceField(
         queryset=CareCode.objects.all(),

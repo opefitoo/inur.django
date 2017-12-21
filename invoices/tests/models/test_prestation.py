@@ -172,3 +172,50 @@ class PrestationTestCase(TestCase):
         paired_at_home = at_home_prestation.paired_at_home
 
         self.assertEqual(paired_at_home.at_home_paired_name, str(paired_at_home.at_home_paired))
+
+    def test_validate_max_limit(self):
+        max = InvoiceItem.PRESTATION_LIMIT_MAX
+        error_message = {'date': "Max number of Prestations for one InvoiceItem is %s" % (str(max))}
+
+        for index in range(1, max-2):
+            Prestation.objects.create(invoice_item=self.invoice_item,
+                                      employee=self.employee,
+                                      carecode=self.care_code_third,
+                                      date=self.date)
+        lst_but_one_prestation = Prestation.objects.create(invoice_item=self.invoice_item,
+                                                           employee=self.employee,
+                                                           carecode=self.care_code_third,
+                                                           date=self.date)
+        at_home_care_code = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
+                                                    name='some name',
+                                                    description='description',
+                                                    reimbursed=False)
+
+        prestation = Prestation(invoice_item=self.invoice_item,
+                                employee=self.employee,
+                                carecode=self.care_code_third,
+                                date=self.date,
+                                at_home=False)
+
+        data = prestation.as_dict()
+        self.assertEqual(Prestation.validate_max_limit(data), {})
+
+        at_home_prestation = Prestation(invoice_item=self.invoice_item,
+                                        employee=self.employee,
+                                        carecode=self.care_code_third,
+                                        date=self.date,
+                                        at_home=True)
+        at_home_data = at_home_prestation.as_dict()
+        self.assertEqual(Prestation.validate_max_limit(at_home_data), error_message)
+
+        lst_but_one_prestation.at_home = True
+        lst_but_one_prestation.save()
+        self.assertEqual(Prestation.validate_max_limit(at_home_data), error_message)
+
+        Prestation.objects.create(invoice_item=self.invoice_item,
+                                  employee=self.employee,
+                                  carecode=self.care_code_third,
+                                  date=self.date)
+
+        self.assertEqual(Prestation.validate_max_limit(data), error_message)
+        self.assertEqual(Prestation.validate_max_limit(at_home_data), error_message)

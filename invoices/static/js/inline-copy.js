@@ -2,7 +2,12 @@ $(function() {
     $('.inline-group').on('click', '.copy_inline', function(e) {
         e.preventDefault();
         var inline_group = $(this).closest('.inline-group');
-        inline_group.find('.add-row a').trigger('click');
+        var add_link = inline_group.find('.add-row a');
+        if (!add_link.is(':visible')) {
+            return false;
+        }
+
+        add_link.trigger('click');
         var new_row = inline_group.find('.form-row:not(.empty-form):last');
         var source_row = $(this).closest('.form-row');
 

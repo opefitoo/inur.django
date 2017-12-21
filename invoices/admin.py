@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.functional import curry
 
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
-from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet
+from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, PrestationInlineFormSet
 from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
@@ -131,7 +131,9 @@ admin.site.register(MedicalPrescription, MedicalPrescriptionAdmin)
 
 class PrestationInline(admin.TabularInline):
     extra = 0
+    max_num = InvoiceItem.PRESTATION_LIMIT_MAX
     model = Prestation
+    formset = PrestationInlineFormSet
     form = PrestationForm
     fields = ('carecode', 'date', 'quantity', 'at_home', 'employee', 'copy')
     readonly_fields = ("copy",)

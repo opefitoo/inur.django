@@ -1,9 +1,11 @@
 from django.utils import timezone
 from django.forms import inlineformset_factory, ValidationError
 from django.test import TestCase
+from copy import deepcopy
 
-from invoices.forms import ValidityDateFormSet, check_for_periods_intersection, HospitalizationFormSet
-from invoices.models import CareCode, ValidityDate
+from invoices.forms import ValidityDateFormSet, check_for_periods_intersection, HospitalizationFormSet, \
+    PrestationInlineFormSet
+from invoices.models import CareCode, ValidityDate, InvoiceItem
 
 
 class CheckForPeriodsIntersectionTestCase(TestCase):
@@ -197,3 +199,65 @@ class HospitalizationFormSetTestCase(TestCase):
     def test_after(self):
         self.date_of_death = self.date_of_death.replace(month=11, day=1)
         self.assertIsNone(HospitalizationFormSet.validate_with_patient_date_of_death(self.periods, self.date_of_death))
+
+
+class PrestationInlineFormSetMaxLimitTestCase(TestCase):
+    def setUp(self):
+        date = timezone.now()
+        self.cleaned_data = []
+        self.row_data = {
+            'date': date
+        }
+        max = InvoiceItem.PRESTATION_LIMIT_MAX
+
+        for index in range(1, max - 2):
+            self.cleaned_data.append(self.row_data)
+
+    def test_lower_than_max(self):
+        self.assertIsNone(PrestationInlineFormSet.validate_max_limit(self.cleaned_data))
+
+    def test_equal_to_max_with_at_home(self):
+        cleaned_data = self.cleaned_data
+        row_data = deepcopy(self.row_data)
+        row_data['at_home'] = True
+        cleaned_data.append(row_data)
+        self.assertIsNone(PrestationInlineFormSet.validate_max_limit(cleaned_data))
+
+    def test_equal_to_max(self):
+        cleaned_data = self.cleaned_data
+        cleaned_data.append(self.row_data)
+        cleaned_data.append(self.row_data)
+        self.assertIsNone(PrestationInlineFormSet.validate_max_limit(cleaned_data))
+
+    def test_equal_to_max_with_multiple_at_home(self):
+        cleaned_data = self.cleaned_data
+        self.row_data['at_home'] = True
+        cleaned_data.append(self.row_data)
+        self.assertIsNone(PrestationInlineFormSet.validate_max_limit(cleaned_data))
+        self.row_data['at_home'] = False
+
+    def test_equal_to_max_with_delete(self):
+        cleaned_data = self.cleaned_data
+        row_data = deepcopy(self.row_data)
+        row_data['at_home'] = True
+        cleaned_data.append(row_data)
+        row_data = deepcopy(self.row_data)
+        row_data['DELETE'] = True
+        cleaned_data.append(row_data)
+        self.assertIsNone(PrestationInlineFormSet.validate_max_limit(cleaned_data))
+
+    def test_bigger_than_max_with_at_home(self):
+        cleaned_data = self.cleaned_data
+        row_data = deepcopy(self.row_data)
+        row_data['at_home'] = True
+        cleaned_data.append(row_data)
+        cleaned_data.append(row_data)
+        self.assertRaises(PrestationInlineFormSet.validate_max_limit(cleaned_data))
+
+    def test_bigger_than_max(self):
+        cleaned_data = self.cleaned_data
+        row_data = deepcopy(self.row_data)
+        cleaned_data.append(row_data)
+        row_data['at_home'] = True
+        cleaned_data.append(row_data)
+        self.assertRaises(PrestationInlineFormSet.validate_max_limit(cleaned_data))

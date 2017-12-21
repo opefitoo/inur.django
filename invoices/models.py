@@ -391,6 +391,8 @@ def get_default_invoice_number():
 
 
 class InvoiceItem(models.Model):
+    PRESTATION_LIMIT_MAX = 20
+
     invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)
     is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
                                      help_text='Seuls les patients qui ne disposent pas de la prise en charge CNS seront recherches dans le champ Patient (prive)',
@@ -445,7 +447,7 @@ class InvoiceItem(models.Model):
         if 'medical_prescription_id' in data or 'medical_prescription' in data:
             medical_prescription = None
             if 'medical_prescription' in data:
-                medical_prescription = data['patient']
+                medical_prescription = data['medical_prescription']
             elif 'medical_prescription_id' in data:
                 try:
                     medical_prescription = MedicalPrescription.objects.filter(pk=data['medical_prescription_id']).get()
@@ -500,6 +502,7 @@ class Prestation(models.Model):
         result = self.__dict__
         if self.invoice_item and self.invoice_item.patient is not None:
             result['patient'] = self.invoice_item.patient
+            result['invoice_item'] = self.invoice_item
 
         return result
 
@@ -520,6 +523,7 @@ class Prestation(models.Model):
         result.update(Prestation.validate_at_home_default_config(data))
         result.update(Prestation.validate_carecode(instance_id, data))
         result.update(Prestation.validate_patient_alive(data))
+        result.update(Prestation.validate_max_limit(data))
 
         return result
 
@@ -611,6 +615,37 @@ class Prestation(models.Model):
         date_of_death = patient.date_of_death
         if date_of_death is not None and data['date'].date() >= date_of_death:
             messages = {'date': "Prestation date cannot be later than or equal to Patient's death date"}
+
+        return messages
+
+    @staticmethod
+    def validate_max_limit(data):
+        messages = {}
+        invoice_item = None
+        if 'invoice_item' in data:
+            invoice_item = data['invoice_item']
+        elif 'invoice_item_id' in data:
+            invoice_item = InvoiceItem.objects.filter(pk=data['invoice_item_id']).get()
+        else:
+            messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
+
+        max_limit = InvoiceItem.PRESTATION_LIMIT_MAX
+        existing_prestations = invoice_item.prestations
+        existing_count = existing_prestations.count()
+        expected_count = existing_count
+        adds_new = False
+        if 'at_home' in data and data['at_home']:
+            at_home_prestation_exists = existing_prestations.filter(carecode__code=config.AT_HOME_CARE_CODE).exists()
+            if not at_home_prestation_exists:
+                expected_count += 1
+                adds_new = True
+        if 'id' not in data or data['id'] is None:
+            expected_count += 1
+            adds_new = True
+
+        if adds_new and expected_count > max_limit:
+            messages = {
+                'date': "Max number of Prestations for one InvoiceItem is %s" % (str(InvoiceItem.PRESTATION_LIMIT_MAX))}
 
         return messages
 
