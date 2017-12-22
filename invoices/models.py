@@ -129,10 +129,18 @@ class Patient(models.Model):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
     def clean(self, *args, **kwargs):
+        self.code_sn = self.format_code_sn(self.code_sn, self.is_private)
         super(Patient, self).clean_fields()
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
+
+    @staticmethod
+    def format_code_sn(code_sn, is_private):
+        if is_private:
+            code_sn = code_sn.replace(" ", "")
+
+        return code_sn
 
     @staticmethod
     def validate(instance_id, data):
@@ -158,10 +166,11 @@ class Patient(models.Model):
     def validate_code_sn(instance_id, data):
         messages = {}
         if 'is_private' in data and not data['is_private']:
+            code_sn = data['code_sn'].replace(" ", "")
             pattern = re.compile('^([1-9]{1}[0-9]{12})$')
-            if pattern.match(data['code_sn']) is None:
+            if pattern.match(code_sn) is None:
                 messages = {'code_sn': 'Code SN should start with non zero digit and be followed by 12 digits'}
-            elif Patient.objects.filter(code_sn=data['code_sn']).exclude(pk=instance_id).count() > 0:
+            elif Patient.objects.filter(code_sn=code_sn).exclude(pk=instance_id).count() > 0:
                 messages = {'code_sn': 'Code SN must be unique'}
 
         return messages

@@ -1,6 +1,6 @@
 import json
 from dal import autocomplete
-from django.contrib.admin.widgets import AdminSplitDateTime
+from django.contrib.admin.widgets import AdminSplitDateTime, AdminTextInputWidget
 
 
 class AutocompleteModelSelect2CustomWidget(autocomplete.ModelSelect2):
@@ -22,3 +22,9 @@ class CustomAdminSplitDateTime(AdminSplitDateTime):
 
     class Media:
         js = ('js/widgets/split-datetime-default.js',)
+
+
+class CodeSnWidget(AdminTextInputWidget):
+    class Media:
+        js = ('js/jquery.maskedinput.min.js',
+              'js/widgets/code-sn-mask.js',)

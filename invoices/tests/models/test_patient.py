@@ -47,3 +47,16 @@ class PatientTestCase(TestCase):
 
         data['code_sn'] = '2245789764822'
         self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
+
+    def test_format_code_sn(self):
+        code_sn = ' 0 2 4 5 7 8 9 7 6 4 8 2 2 '
+        self.assertEqual(Patient.format_code_sn(code_sn, True), code_sn.replace(" ", ""))
+        self.assertEqual(Patient.format_code_sn(code_sn, False), code_sn)
+
+        code_sn = '1245 78 97 648 22'
+        self.assertEqual(Patient.format_code_sn(code_sn, True), code_sn.replace(" ", ""))
+        self.assertEqual(Patient.format_code_sn(code_sn, False), code_sn)
+
+        code_sn = 'weq 22 45s 78976 4 822 as'
+        self.assertEqual(Patient.format_code_sn(code_sn, True), code_sn.replace(" ", ""))
+        self.assertEqual(Patient.format_code_sn(code_sn, False), code_sn)

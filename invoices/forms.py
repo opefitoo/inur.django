@@ -4,7 +4,7 @@ from datetime import datetime
 
 from invoices.models import Prestation, CareCode, InvoiceItem, Patient, MedicalPrescription
 from invoices.timesheet import Employee
-from invoices.widgets import AutocompleteModelSelect2CustomWidget, CustomAdminSplitDateTime
+from invoices.widgets import AutocompleteModelSelect2CustomWidget, CustomAdminSplitDateTime, CodeSnWidget
 
 
 def check_for_periods_intersection(cleaned_data):
@@ -143,3 +143,10 @@ class HospitalizationFormSet(BaseInlineFormSet):
         for row_data in cleaned_data:
             if row_data['end_date'] >= date_of_death:
                 raise ValidationError("Hospitalization cannot be later than or include Patient's death date")
+
+
+class PatientForm(ModelForm):
+    code_sn = forms.CharField(widget=CodeSnWidget())
+
+    def __init__(self, *args, **kwargs):
+        super(PatientForm, self).__init__(*args, **kwargs)
