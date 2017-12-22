@@ -14,9 +14,6 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import os
 import json
 
-# Static asset configuration
-import os
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
