@@ -14,18 +14,32 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import os
 import json
 
+# Static asset configuration
+import os
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'pc_pf1h+5n4h(ayu2)j@2_c+qgumxfa5xeplar6*eq8x745lg!'
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+# Internationalization
+# https://docs.djangoproject.com/en/1.8/topics/i18n/
+
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'Europe/Luxembourg'
+
+USE_I18N = True
+
+USE_L10N = True
+
+USE_TZ = True
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'pc_pf1h+5n4h(ayu2)j@2_c+qgumxfa5xeplar6*eq8x745lg!'
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
@@ -49,6 +63,8 @@ INSTALLED_APPS = (
     'invoices',
     'api'
 )
+
+X_FRAME_OPTIONS = 'DENY'
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -81,11 +97,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'invoices.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-# Parse database configuration from $DATABASE_URL
-import dj_database_url
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -97,7 +108,6 @@ DATABASES = {
     }
 }
 if 'RDS_HOSTNAME' in os.environ:
-    DEBUG = os.environ['DEBUG']
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -109,9 +119,6 @@ if 'RDS_HOSTNAME' in os.environ:
         }
     }
 
-    ALLOWED_HOSTS.append(os.environ['ALLOWED_HOST'])
-
-
 # Enable Connection Pooling
 # DATABASES['default']['ENGINE'] = 'django_postgrespool'
 DATABASES['default']['AUTOCOMMIT'] = True
@@ -120,17 +127,13 @@ DATABASES['default']['AUTOCOMMIT'] = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Allow all host headers
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'nurse-prod-env.eu-central-1.elasticbeanstalk.com', ]
 
-# Static asset configuration
-import os
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles/')
+STATIC_ROOT = os.path.join(BASE_DIR, "www", "static")
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static/'),
 )
@@ -140,21 +143,8 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-MEDIA_ROOT = os.path.join(BASE_DIR, '../media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
-# Internationalization
-# https://docs.djangoproject.com/en/1.8/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'Europe/Luxembourg'
-
-USE_I18N = True
-
-USE_L10N = True
-
-USE_TZ = True
 
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
@@ -214,8 +204,17 @@ CONSTANCE_CONFIG = {
         'NF01', "CareCode that is set to Prestation's copy which is created if at_home is checked", str),
 }
 
-GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, 'keys/gdrive_storage_key.json')
 if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE):
     credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
         json.dump(json.loads(credentials), outfile)
+
+if not DEBUG:
+    if 'SECRET_KEY' in os.environ:
+        SECRET_KEY = os.environ['SECRET_KEY']
+
+try:
+    from local_settings import *
+except ImportError:
+    pass

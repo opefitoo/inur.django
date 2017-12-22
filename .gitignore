@@ -12,6 +12,10 @@ db.sqlite*
 __pycache__/
 *.py[cod]
 
+invoices/local_settings.py
+
+www/static*
+
 # C extensions
 *.so
 
