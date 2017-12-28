@@ -30,14 +30,15 @@ def export_to_pdf(modeladmin, request, queryset):
     recapitulatif_data = []
 
     for qs in queryset.order_by("invoice_number"):
-        dd = [qs.prestations.all().order_by("date", "carecode__gross_amount")[i:i+20] for i in range(0, len(qs.prestations.all()), 20)]
+        dd = [qs.prestations.all().order_by("date", "carecode__name")[i:i+20] for i in range(0, len(qs.prestations.all()), 20)]
         for _prestations in dd:
             _inv = qs.invoice_number + (("" + str(dd.index(_prestations) + 1) + qs.invoice_date.strftime('%m%Y')) if len(dd) > 1 else "")
             _result = _build_invoices(_prestations, 
                                       _inv, 
                                       qs.invoice_date, 
                                       qs.accident_id, 
-                                      qs.accident_date )
+                                      qs.accident_date,
+                                      qs.patient)
                                       
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
@@ -70,7 +71,7 @@ def _build_recap(recaps):
     elements.append(table)
     return elements
 
-def _build_invoices(prestations, invoice_number, invoice_date, accident_id, accident_date):
+def _build_invoices(prestations, invoice_number, invoice_date, accident_id, accident_date, patient):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
     #import pydevd; pydevd.settrace()
@@ -86,20 +87,20 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers','Executant'))
     pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
     for presta in prestations:
-        patientSocNumber = presta.patient.code_sn
-        patientNameAndFirstName = presta.patient
-        patientName = presta.patient.name
-        patientFirstName = presta.patient.first_name
-        patientAddress = presta.patient.address
-        patientZipCode = presta.patient.zipcode
-        patientCity = presta.patient.city
+        patientSocNumber = patient.code_sn
+        patientNameAndFirstName = patient
+        patientName = patient.name
+        patientFirstName = patient.first_name
+        patientAddress = patient.address
+        patientZipCode = patient.zipcode
+        patientCity = patient.city
         if presta.carecode.reimbursed:
             i+=1
             data.append((i, presta.carecode.code,
                          (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
                          '1',
-                         presta.carecode.gross_amount,
-                        presta.net_amount,
+                         presta.carecode.gross_amount(presta.date),
+                         presta.carecode.net_amount(presta.date, patient.is_private, patient.participation_statutaire),
                         (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
                         "",
                         "300744-44"))
