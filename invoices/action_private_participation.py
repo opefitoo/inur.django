@@ -38,7 +38,7 @@ def pdf_private_invoice_pp(modeladmin, request, queryset):
     recapitulatif_data = []
 
     for qs in queryset.order_by("invoice_number"):
-        dd = [qs.prestations.all().order_by("date", "carecode__gross_amount")[i:i + 20] for i in
+        dd = [qs.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
               range(0, len(qs.prestations.all()), 20)]
         for _prestations in dd:
             _inv = qs.invoice_number + (
@@ -46,10 +46,11 @@ def pdf_private_invoice_pp(modeladmin, request, queryset):
             _result = _build_invoices(_prestations,
                                       _inv,
                                       qs.invoice_date,
-                                      qs.medical_prescription_date,
+                                      qs.medical_prescription,
                                       qs.accident_id,
                                       qs.accident_date,
-                                      qs.patient_invoice_date)
+                                      qs.patient_invoice_date,
+                                      qs.patient)
 
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_pp"]))
@@ -61,7 +62,7 @@ def pdf_private_invoice_pp(modeladmin, request, queryset):
 
 
 def _build_invoices(prestations, invoice_number, invoice_date, prescription_date, accident_id, accident_date,
-                    patient_invoice_date):
+                    patient_invoice_date, patient):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
     elements = []
@@ -76,20 +77,20 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'CNS', 'Part. Client'))
     for presta in prestations:
         i += 1
-        patientSocNumber = presta.patient.code_sn
-        patientNameAndFirstName = presta.patient
-        patientName = presta.patient.name
-        patientFirstName = presta.patient.first_name
-        patientAddress = presta.patient.address
-        patientZipCode = presta.patient.zipcode
-        patientCity = presta.patient.city
+        patientSocNumber = patient.code_sn
+        patientNameAndFirstName = patient
+        patientName = patient.name
+        patientFirstName = patient.first_name
+        patientAddress = patient.address
+        patientZipCode = patient.zipcode
+        patientCity = patient.city
         data.append((i, presta.carecode.code,
                      (presta.date).strftime('%d/%m/%Y'),
                      '1',
-                     presta.carecode.gross_amount,
-                     presta.net_amount,
-                     "%10.2f" % (decimal.Decimal(presta.carecode.gross_amount) - decimal.Decimal(presta.net_amount))
-                     ))
+                     presta.carecode.gross_amount(presta.date),
+                     presta.carecode.net_amount(presta.date, patient.is_private, patient.participation_statutaire),
+                     "%10.2f" % (decimal.Decimal(presta.carecode.gross_amount(presta.date)) -
+                                                 decimal.Decimal(presta.carecode.net_amount(presta.date, patient.is_private, patient.participation_statutaire)))))
 
     for x in range(len(data), 22):
         data.append((x, '', '', '', '', '', ''))
@@ -171,7 +172,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
 
     if patient_invoice_date is not None:
         from utils import setlocale
-        with setlocale('fr_FR.utf8'):
+        with setlocale('en_GB.utf8'):
             if isinstance(patient_invoice_date, unicode):
                 elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
                     '%d %B %Y').encode('utf-8')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
