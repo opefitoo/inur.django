@@ -186,15 +186,15 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     from action_private_participation import pdf_private_invoice_pp
     from invaction import previous_months_invoices_april, previous_months_invoices_july_2017
     from generate_pacifico_invoices import niedercorn_avril_mai_2017
-    from invaction import syncro_clients
+    from generate_road_book import generate_road_book_2016
     form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient__name', 'patient__first_name']
     readonly_fields = ('medical_prescription_preview',)
-    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, syncro_clients,
-               previous_months_invoices_april, previous_months_invoices_july_2017, niedercorn_avril_mai_2017]
+    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice,
+               previous_months_invoices_april, previous_months_invoices_july_2017, generate_road_book_2016]
     inlines = [PrestationInline]
 
     def medical_prescription_preview(self, obj):
