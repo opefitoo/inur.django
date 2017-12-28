@@ -8,7 +8,7 @@ from invoices.invaction import apply_start_date_2017, apply_start_date_2015, app
 from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, PrestationInlineFormSet, \
     PatientForm
 from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
-    Hospitalization
+    Hospitalization, InvoiceItemBatch
 from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
 
@@ -203,6 +203,12 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     medical_prescription_preview.allow_tags = True
 
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
+
+
+class InvoiceItemBatchAdmin(admin.ModelAdmin):
+    pass
+
+admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
 
 
 class TimesheetDetailInline(admin.TabularInline):

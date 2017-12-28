@@ -407,6 +407,44 @@ def get_default_invoice_number():
     return default_invoice_number
 
 
+class InvoiceItemBatch(models.Model):
+    start_date = models.DateField('Invoice batch start date')
+    end_date = models.DateField('Invoice batch start date')
+    send_date = models.DateField(null=True, blank=True)
+    payment_date = models.DateField(null=True, blank=True)
+    # invoices to be corrected
+    # total_amount
+
+    def __unicode__(self):  # Python 3: def __str__(self):
+        return 'from %s to %s' % (self.start_date, self.end_date)
+
+    def clean(self):
+        exclude = []
+        super(InvoiceItemBatch, self).clean_fields(exclude)
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance_id, data):
+        result = {}
+        result.update(Hospitalization.validate_dates(data))
+
+        return result
+
+    @staticmethod
+    def validate_dates(data):
+        messages = {}
+        is_valid = data['end_date'] is None or data['start_date'] <= data['end_date']
+        if not is_valid:
+            messages = {'end_date': 'End date must be bigger than Start date'}
+
+        return messages
+
+
+
+
+
 class InvoiceItem(models.Model):
     PRESTATION_LIMIT_MAX = 20
 
@@ -423,6 +461,7 @@ class InvoiceItem(models.Model):
     invoice_send_date = models.DateField('Date envoi facture', null=True, blank=True)
     invoice_sent = models.BooleanField(default=False)
     invoice_paid = models.BooleanField(default=False)
+    batch = models.ForeignKey(InvoiceItemBatch, related_name='invoice_items', null=True, blank=True)
 
     medical_prescription = models.ForeignKey(MedicalPrescription, related_name='invoice_items', null=True, blank=True,
                                              help_text='Please chose a Medical Prescription', on_delete=models.SET_NULL)
