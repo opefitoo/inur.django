@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from invoices.storages import CustomizedGoogleDriveStorage
 from django.core.exceptions import ValidationError
@@ -22,6 +22,7 @@ class Employee(models.Model):
                                     null=True)
     occupation = models.ForeignKey(JobPosition)
     has_gdrive_access = models.BooleanField("Allow access to Medical Prescriptions' scans", default=False)
+    has_gcalendar_access = models.BooleanField("Allow access to Prestations' calendar", default=False)
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
@@ -47,6 +48,32 @@ class Employee(models.Model):
         return '%s' % (self.user.username.strip())
 
 
+@receiver(pre_save, sender=User, dispatch_uid="user_pre_save_gservices_permissions")
+def user_pre_save_gservices_permissions(sender, instance, **kwargs):
+    from invoices.models import prestation_gcalendar
+    from invoices.models import gd_storage
+    origin_user = User.objects.filter(pk=instance.id).get()
+    origin_email = origin_user.email
+    email = instance.email
+    if origin_email != email:
+        has_access = False
+        prestation_gcalendar.update_calendar_permissions(origin_email, has_access)
+        path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
+        gd_storage.update_folder_permissions(path, origin_email, has_access)
+
+
+@receiver(post_delete, sender=User, dispatch_uid="user_revoke_gservices_permissions")
+def user_revoke_gservices_permissions(sender, instance, **kwargs):
+    from invoices.models import prestation_gcalendar
+    from invoices.models import gd_storage
+    email = instance.email
+    if email:
+        has_access = False
+        prestation_gcalendar.update_calendar_permissions(email, has_access)
+        path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
+        gd_storage.update_folder_permissions(path, email, has_access)
+
+
 @receiver([post_save, post_delete], sender=Employee, dispatch_uid="employee_update_gdrive_permissions")
 def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
     from invoices.models import gd_storage
@@ -54,6 +81,27 @@ def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
     if email:
         path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
         has_access = instance.has_gdrive_access
+        gd_storage.update_folder_permissions(path, email, has_access)
+
+
+@receiver(post_save, sender=Employee, dispatch_uid="employee_update_gcalendar_permissions")
+def employee_update_gcalendar_permissions(sender, instance, **kwargs):
+    from invoices.models import prestation_gcalendar
+    email = instance.user.email
+    if email:
+        has_access = instance.has_gcalendar_access
+        prestation_gcalendar.update_calendar_permissions(email, has_access)
+
+
+@receiver(post_delete, sender=Employee, dispatch_uid="employee_revoke_gservices_permissions")
+def employee_revoke_gservices_permissions(sender, instance, **kwargs):
+    from invoices.models import prestation_gcalendar
+    from invoices.models import gd_storage
+    email = instance.user.email
+    if email:
+        has_access = False
+        prestation_gcalendar.update_calendar_permissions(email, has_access)
+        path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
         gd_storage.update_folder_permissions(path, email, has_access)
 
 
