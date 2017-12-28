@@ -18,8 +18,12 @@ from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from invoices import settings
 from constance import config
+from invoices.gcalendar import PrestationGoogleCalendar
 from storages import CustomizedGoogleDriveStorage
 from django.utils.timezone import now
+
+
+prestation_gcalendar = PrestationGoogleCalendar()
 
 # Define Google Drive Storage
 gd_storage = CustomizedGoogleDriveStorage()
@@ -111,7 +115,7 @@ class Patient(models.Model):
     code_sn = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
-    address = models.TextField(max_length=30)
+    address = models.TextField(max_length=255)
     zipcode = models.CharField(max_length=10)
     city = models.CharField(max_length=30)
     country = CountryField(blank_label='...', blank=True, null=True)
@@ -683,3 +687,13 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home = False
             pair.at_home_paired = instance
             pair.save()
+
+
+@receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
+def update_prestation_gcalendar_events(sender, instance, **kwargs):
+    prestation_gcalendar.update_event(instance)
+
+
+@receiver(post_delete, sender=Prestation, dispatch_uid="delete_prestation_gcalendar_events")
+def delete_prestation_gcalendar_events(sender, instance, **kwargs):
+    prestation_gcalendar.delete_event(instance.id)
