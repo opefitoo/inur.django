@@ -1,2 +1,2 @@
-web: gunicorn invoices.wsgi --log-file --timeout 60 -
+web: gunicorn invoices.wsgi --log-file -
 
