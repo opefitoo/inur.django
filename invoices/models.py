@@ -63,7 +63,7 @@ class CareCode(models.Model):
         if participation_statutaire:
             return 0
         # round to only two decimals
-        return round(((self.carecode.gross_amount(date) * 12) / 100), 2)
+        return round(((self.gross_amount(date) * 12) / 100), 2)
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return '%s: %s' % (self.code, self.name)
