@@ -19,6 +19,7 @@ from django_countries.fields import CountryField
 from invoices import settings
 from constance import config
 from invoices.gcalendar import PrestationGoogleCalendar
+from invoices.managers import InvoiceItemBatchManager
 from storages import CustomizedGoogleDriveStorage
 from django.utils.timezone import now
 
@@ -442,7 +443,9 @@ class InvoiceItemBatch(models.Model):
         return messages
 
 
-
+@receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_associate_invoice_items")
+def invoiceitembatch_associate_invoice_items(sender, instance, **kwargs):
+    InvoiceItemBatchManager.update_associated_invoiceitems(instance)
 
 
 class InvoiceItem(models.Model):
@@ -461,8 +464,10 @@ class InvoiceItem(models.Model):
     invoice_send_date = models.DateField('Date envoi facture', null=True, blank=True)
     invoice_sent = models.BooleanField(default=False)
     invoice_paid = models.BooleanField(default=False)
-    batch = models.ForeignKey(InvoiceItemBatch, related_name='invoice_items', null=True, blank=True)
-
+    batch = models.ForeignKey(InvoiceItemBatch, related_name='invoice_items', null=True, blank=True,
+                              on_delete=models.SET_NULL)
+    is_valid = models.BooleanField(default=True)
+    validation_comment = models.TextField(null=True, blank=True)
     medical_prescription = models.ForeignKey(MedicalPrescription, related_name='invoice_items', null=True, blank=True,
                                              help_text='Please chose a Medical Prescription', on_delete=models.SET_NULL)
 

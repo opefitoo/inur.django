@@ -205,8 +205,18 @@ class InvoiceItemAdmin(admin.ModelAdmin):
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
 
 
+class InvoiceItemInlineAdmin(admin.TabularInline):
+    show_change_link = True
+    max_num = 0
+    extra = 0
+    model = InvoiceItem
+    fields = ('invoice_date', 'is_valid', 'validation_comment')
+    readonly_fields = ('invoice_date',)
+    can_delete = False
+
+
 class InvoiceItemBatchAdmin(admin.ModelAdmin):
-    pass
+    inlines = [InvoiceItemInlineAdmin]
 
 admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
 

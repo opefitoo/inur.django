@@ -122,6 +122,8 @@ class InvoiceItemForm(ModelForm):
         super(InvoiceItemForm, self).__init__(*args, **kwargs)
         self.fields['patient'].autocomplete = False
         self.fields['medical_prescription'].autocomplete = False
+        self.fields['is_valid'].widget = forms.HiddenInput()
+        self.fields['validation_comment'].widget = forms.HiddenInput()
 
     class Meta:
         model = InvoiceItem
