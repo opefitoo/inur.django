@@ -52,14 +52,17 @@ class Employee(models.Model):
 def user_pre_save_gservices_permissions(sender, instance, **kwargs):
     from invoices.models import prestation_gcalendar
     from invoices.models import gd_storage
-    origin_user = User.objects.filter(pk=instance.id).get()
-    origin_email = origin_user.email
-    email = instance.email
-    if origin_email != email:
-        has_access = False
-        prestation_gcalendar.update_calendar_permissions(origin_email, has_access)
-        path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-        gd_storage.update_folder_permissions(path, origin_email, has_access)
+    try:
+        origin_user = User.objects.filter(pk=instance.id).get()
+        origin_email = origin_user.email
+        email = instance.email
+        if origin_email != email:
+            has_access = False
+            prestation_gcalendar.update_calendar_permissions(origin_email, has_access)
+            path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
+            gd_storage.update_folder_permissions(path, origin_email, has_access)
+    except User.DoesNotExist:
+        pass
 
 
 @receiver(post_delete, sender=User, dispatch_uid="user_revoke_gservices_permissions")
