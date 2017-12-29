@@ -155,6 +155,9 @@ class PrestationInline(admin.TabularInline):
 
     class Media:
         js = ["js/inline-copy.js",]
+        css = {
+            'all': ('css/inline-prestation.css',)
+        }
 
     def copy(self, obj):
         return "<a href='#' class='copy_inline'>Copy</a>"
