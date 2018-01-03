@@ -220,6 +220,7 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
 
 class InvoiceItemBatchAdmin(admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
+    readonly_fields = ('file',)
 
 admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
 

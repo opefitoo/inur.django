@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.utils import timezone
 from django.test import TestCase
+from django.test import override_settings
 from django.contrib.auth.models import User
 
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, InvoiceItemBatch
@@ -88,3 +89,7 @@ class InvoiceItemBatchTestCase(TestCase):
         batch_december.end_date = date.replace(month=12, day=25)
         batch_december.save()
         self.assertEqual(len(self.december_invoices)-1, batch_december.invoice_items.count())
+
+        batch_december.delete()
+        batch_october.delete()
+        batch_all.delete()
