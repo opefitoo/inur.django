@@ -21,7 +21,7 @@ from invoices import settings
 from rest_framework.authtoken import views as authtoken_views
 
 from invoices.views import CareCodeAutocomplete, PatientAutocomplete, EmployeeAutocomplete, \
-    MedicalPrescriptionAutocomplete
+    MedicalPrescriptionAutocomplete, delete_prestation
 
 urlpatterns = [
     url(
@@ -43,6 +43,11 @@ urlpatterns = [
         r'^employee-autocomplete/$',
         EmployeeAutocomplete.as_view(),
         name='employee-autocomplete',
+    ),
+    url(
+        r'^admin/delete-prestation/$',
+        delete_prestation,
+        name='delete-prestation',
     ),
     url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
