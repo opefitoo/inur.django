@@ -18,6 +18,7 @@ from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from invoices import settings
 from constance import config
+from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.managers import InvoiceItemBatchManager
 from storages import CustomizedGoogleDriveStorage
@@ -30,7 +31,6 @@ prestation_gcalendar = PrestationGoogleCalendar()
 gd_storage = CustomizedGoogleDriveStorage()
 
 logger = logging.getLogger(__name__)
-fs = FileSystemStorage(location=settings.MEDIA_ROOT)
 
 
 class CareCode(models.Model):
@@ -332,6 +332,13 @@ class MedicalPrescription(models.Model):
     def __init__(self, *args, **kwargs):
         super(MedicalPrescription, self).__init__(*args, **kwargs)
         self._original_file = self.file
+
+    def clean(self):
+        exclude = []
+        if self.patient is not None and self.patient.id is None:
+            exclude = ['patient']
+
+        super(MedicalPrescription, self).clean_fields(exclude)
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
@@ -408,16 +415,29 @@ def get_default_invoice_number():
     return default_invoice_number
 
 
+def invoiceitembatch_filename(instance, filename):
+    return InvoiceItemBatchPdf.get_path(instance)
+
+
 class InvoiceItemBatch(models.Model):
     start_date = models.DateField('Invoice batch start date')
     end_date = models.DateField('Invoice batch start date')
     send_date = models.DateField(null=True, blank=True)
     payment_date = models.DateField(null=True, blank=True)
+    file = models.FileField(storage=gd_storage, blank=True, upload_to=invoiceitembatch_filename)
+    _original_file = None
     # invoices to be corrected
     # total_amount
 
     def __unicode__(self):  # Python 3: def __str__(self):
         return 'from %s to %s' % (self.start_date, self.end_date)
+
+    def __init__(self, *args, **kwargs):
+        super(InvoiceItemBatch, self).__init__(*args, **kwargs)
+        self._original_file = self.file
+
+    def get_original_file(self):
+        return self._original_file
 
     def clean(self):
         exclude = []
@@ -443,9 +463,27 @@ class InvoiceItemBatch(models.Model):
         return messages
 
 
-@receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_associate_invoice_items")
-def invoiceitembatch_associate_invoice_items(sender, instance, **kwargs):
+@receiver(pre_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_pre_save")
+def invoiceitembatch_generate_pdf_name(sender, instance, **kwargs):
+    instance.file = InvoiceItemBatchPdf.get_filename(instance)
+    origin_file = instance.get_original_file()
+    if origin_file.name and origin_file != instance.file:
+        gd_storage.delete(origin_file.name)
+
+
+@receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_save")
+def invoiceitembatch_generate_pdf(sender, instance, **kwargs):
     InvoiceItemBatchManager.update_associated_invoiceitems(instance)
+    file_content = InvoiceItemBatchPdf.get_inmemory_pdf(instance)
+    path = InvoiceItemBatchPdf.get_path(instance)
+    instance._original_file = instance.file
+    gd_storage.save_file(path, file_content)
+
+
+@receiver(post_delete, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_delete")
+def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
+    if instance.file.name:
+        gd_storage.delete(instance.file.name)
 
 
 class InvoiceItem(models.Model):

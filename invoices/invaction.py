@@ -231,33 +231,6 @@ def previous_months_invoices_july_2017(modeladmin, request, queryset):
              invoice_counters += 1
 
 
-def syncro_clients(modeladmin, request, queryset):
-    import requests
-    import os
-
-    #client_id = os.environ['RSRC_GURU_CLIENT_SECRET']
-    #client_secret = 'RSRC_GURU_CLIENT_SECRET'
-    client_id = '5c124391a2412c2d2e8c54a5416167153a37667c7d2884fc9e36c43f92d96e5d'
-    client_secret = '33b20c509a69d32bf2fea63df5ecc72af46bb0ba9d4a4f76aab0e061648e3ac7'
-    redirect_uri = 'https://regine3.herokuapp.com/admin/'
-    authorize_url = "https://api.resourceguruapp.com/oauth/authorize?client_id=$client_id&redirect_uri=$redirect_uri&response_type=code"
-    token_url = 'https://api.resourceguruapp.com/oauth/token'
-
-    from oauthlib.oauth2 import BackendApplicationClient
-    from requests.auth import HTTPBasicAuth
-    from requests_oauthlib import OAuth2Session
-    auth = HTTPBasicAuth (client_id, client_secret)
-    client = BackendApplicationClient (client_id=client_id)
-    oauth = OAuth2Session (client=client)
-    token = oauth.fetch_token (token_url=token_url, auth=auth)
-
-    headers = {"Authorization": "Bearer " + token['access_token']}
-
-    resources = requests.get ("https://api.resourceguruapp.com/v1/example-account-subdomain/resources",
-                              headers=headers)
-    print resources
-
-
 
 
 

@@ -7,6 +7,7 @@ from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, Goo
 
 
 class CustomizedGoogleDriveStorage(GoogleDriveStorage):
+    INVOICEITEM_BATCH_FOLDER = 'Invoice Item Batch'
     MEDICAL_PRESCRIPTION_FOLDER = 'Medical Prescription'
 
     def _set_permissions(self):
@@ -31,6 +32,10 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
                 link = file_info['thumbnailLink'].replace(gdrive_size_suffix, '')
 
         return link
+
+    # save is overwritten as origin one sets filename equal to full path
+    def save_file(self, path, content):
+        self._save(path, content)
 
     # _save is overwritten as origin one sets filename equal to full path
     def _save(self, path, content):
@@ -88,7 +93,7 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
     @staticmethod
     def _get_permission(email):
         permission = GoogleDriveFilePermission(
-            GoogleDrivePermissionRole.READER,
+            GoogleDrivePermissionRole.WRITER,
             GoogleDrivePermissionType.USER,
             email
         )

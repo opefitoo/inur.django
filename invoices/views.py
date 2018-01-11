@@ -1,5 +1,6 @@
 from dal import autocomplete
 from django.db.models import Q
+from django.http import Http404, JsonResponse
 
 from invoices.models import CareCode, Prestation, Patient, MedicalPrescription
 from invoices.timesheet import Employee
@@ -77,3 +78,14 @@ class EmployeeAutocomplete(autocomplete.Select2QuerySetView):
             qs = qs.filter(filter_qs)
 
         return qs
+
+
+def delete_prestation(request):
+    prestation_id = request.POST.get('prestation_id', None)
+    if request.method != "POST" or prestation_id is None or not request.user.has_perm('invoices.delete_prestation'):
+        raise Http404
+
+    prestation = Prestation.objects.get(pk=prestation_id)
+    prestation.delete()
+
+    return JsonResponse({'status': 'Success'})

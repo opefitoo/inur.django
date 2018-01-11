@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.functional import curry
+from django.core.urlresolvers import reverse
 
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
 from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, PrestationInlineFormSet, \
@@ -149,17 +150,30 @@ class PrestationInline(admin.TabularInline):
     model = Prestation
     formset = PrestationInlineFormSet
     form = PrestationForm
-    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee', 'copy')
-    readonly_fields = ("copy",)
+    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee', 'copy', 'delete')
+    readonly_fields = ('copy', 'delete')
     search_fields = ['carecode', 'date', 'employee']
+    can_delete = False
 
     class Media:
-        js = ["js/inline-copy.js",]
+        js = [
+            "js/inline-copy.js",
+            "js/inline-delete.js",
+        ]
+        css = {
+            'all': ('css/inline-prestation.css',)
+        }
 
     def copy(self, obj):
         return "<a href='#' class='copy_inline'>Copy</a>"
 
+    def delete(self, obj):
+        url = reverse('delete-prestation')
+
+        return "<a href='%s' class='delete_inline' data-prestation_id='%s'>Delete</a>" % (url, obj.id)
+
     copy.allow_tags = True
+    delete.allow_tags = True
 
     def get_formset(self, request, obj=None, **kwargs):
         initial = []
@@ -217,6 +231,7 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
 
 class InvoiceItemBatchAdmin(admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
+    readonly_fields = ('file',)
 
 admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
 
