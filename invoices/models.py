@@ -66,7 +66,7 @@ class CareCode(models.Model):
         return round(((self.gross_amount(date) * 12) / 100), 2)
 
     def __unicode__(self):  # Python 3: def __str__(self):
-        return '%s: %s' % (self.code, self.name)
+        return self.code
 
     @staticmethod
     def autocomplete_search_fields():
