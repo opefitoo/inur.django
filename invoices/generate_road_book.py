@@ -43,10 +43,23 @@ def generate_road_book_2016(modeladmin, request, queryset):
 
     elements = []
     data = []
-    data.append(('Nom Patient', 'Adresse', 'Date', 'Distance'))
+    #data.append(('Nom Patient', 'Adresse', 'Date', 'Distance'))
+
+    import csv
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="roadbook2016.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Nom Patient', 'Adresse', 'Date', 'Distance'])
+
 
     sumdistance = 0
+    counter = 1
     for p in row:
+        counter = counter + 1
+        if counter == 5:
+            break
         _patient_address = u"%s %s, %s" % (p[5], p[6], p[7])
         if now != p[0]:
             _point_start = "1A rue fort wallis,Luxembourg"
@@ -93,10 +106,10 @@ def generate_road_book_2016(modeladmin, request, queryset):
                        'status'], "p.end:" + _point_end, "p.start:" + _point_start, r.json()['rows'][0]['elements'][0],
                    sep='--')
 
-        data.append((p[4] + ' ' + p[3],
+            writer.writerow([p[4] + ' ' + p[3],
                      _patient_address,
                      (p[0]).strftime('%d/%m/%Y %H:%M'),
-                     pdistance))
+                     pdistance])
 
         _point_start = _point_end
 
@@ -120,5 +133,6 @@ def generate_road_book_2016(modeladmin, request, queryset):
     doc = SimpleDocTemplate(response, pagesize=letter, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm,
                             bottomMargin=1 * cm)
 
-    doc.build(elements)
+    #doc.build(elements)
+
     return response

@@ -186,7 +186,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     from action_private_participation import pdf_private_invoice_pp
     from invaction import previous_months_invoices_april, previous_months_invoices_july_2017
     from generate_pacifico_invoices import niedercorn_avril_mai_2017
-    from generate_road_book import generate_road_book_2016
+    from road_book_csv import generate_road_book_2016
     form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
