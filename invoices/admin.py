@@ -207,8 +207,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient__name', 'patient__first_name']
     readonly_fields = ('medical_prescription_preview',)
-    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice,
-               previous_months_invoices_april, previous_months_invoices_july_2017, generate_road_book_2016]
+    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice]
     inlines = [PrestationInline]
 
     def medical_prescription_preview(self, obj):

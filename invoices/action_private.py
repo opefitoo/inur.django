@@ -79,13 +79,13 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         data.append((i, presta.carecode.code,
                      (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
                      (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
-                     '1', 
-                     presta.carecode.gross_amount(presta.date),
-                     presta.carecode.net_amount(presta.date, patient.is_private, patient.participation_statutaire),
-                     "%10.2f" % (decimal.Decimal(presta.carecode.gross_amount(presta.date)) - decimal.Decimal(presta.carecode.net_amount(presta.date,
+                     presta.quantity,
+                     presta.carecode.gross_amount(presta.date) * presta.quantity,
+                     presta.carecode.net_amount(presta.date, patient.is_private, patient.participation_statutaire) * presta.quantity,
+                     "%10.2f" % ((decimal.Decimal(presta.carecode.gross_amount(presta.date)) - decimal.Decimal(presta.carecode.net_amount(presta.date,
                                                                                                                                          patient.is_private,
-                                                                                                                                         patient.participation_statutaire))),
-                     "300744-44"))
+                                                                                                                                         patient.participation_statutaire))) * decimal.Decimal(presta.quantity)),
+                     presta.employee))
     
     for x in range(len(data)  , 22):
         data.append((x, '', '', '', '', '', '', '',''))
@@ -145,9 +145,9 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
     elements.append(Spacer(1, 18))
     if(prescription_date is not None):
-        elements.append(Paragraph("Memoire d'Honoraires Num. %s en date du : %s Ordonnance du %s " %( invoice_number, invoice_date, prescription_date), styles['Heading4']))
+        elements.append(Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s Ordonnance du %s " %( invoice_number, invoice_date, prescription_date), styles['Heading4']))
     else:
-        elements.append(Paragraph("Memoire d'Honoraires Num. %s en date du : %s " %( invoice_number, invoice_date), styles['Heading4']))
+        elements.append(Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s " %( invoice_number, invoice_date), styles['Heading4']))
     elements.append(Spacer(1, 18))
 
     elements.append(table)
