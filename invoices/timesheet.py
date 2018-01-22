@@ -119,9 +119,9 @@ class Timesheet(models.Model):
     end_date = models.DateField('Date fin')
     end_date.editable = True
     submitted_date = models.DateTimeField("Date d'envoi", blank=True,
-                                     null=True)
+                                          null=True)
     submitted_date.editable = True
-    other_details = models.TextField("Autres details",max_length=100, blank=True,
+    other_details = models.TextField("Autres details", max_length=100, blank=True,
                                      null=True)
     timesheet_validated = models.BooleanField("Valide", default=False)
 
@@ -145,7 +145,7 @@ class TimesheetDetail(models.Model):
     task_description = models.ManyToManyField(TimesheetTask, help_text="Entrez une ou plusieurs taches.")
     patient = models.ForeignKey('invoices.Patient')
     timesheet = models.ForeignKey(Timesheet)
-    other = models.CharField(max_length=50, blank=True,null=True)
+    other = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):  # Python 3: def __str__(self):
         return ''
