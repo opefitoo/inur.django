@@ -94,12 +94,13 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     for y in range(0, len(data) -1) :
         newData.append(data[y])
         if(y % 10 == 0 and y != 0):
+            _qty_sum = _compute_sum(data[y - 9:y + 1], 4)
             _gross_sum = _compute_sum(data[y-9:y+1], 5)
             _net_sum = _compute_sum(data[y-9:y+1], 6)
             _part_sum = _compute_sum(data[y - 9:y + 1], 7)
-            newData.append(('', '', '', 'Sous-Total', '', _gross_sum, _net_sum, _part_sum,''))
+            newData.append(('', '', '', 'Sous-Total', _qty_sum, _gross_sum, _net_sum, _part_sum,''))
     _total_facture = _compute_sum(data[1:], 7)
-    newData.append(('', '', '', 'Total', '', _compute_sum(data[1:], 5), _compute_sum(data[1:], 6), _compute_sum(data[1:], 7),''))
+    newData.append(('', '', '', 'Total', _compute_sum(data[1:], 4), _compute_sum(data[1:], 5), _compute_sum(data[1:], 6), _compute_sum(data[1:], 7),''))
             
             
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
