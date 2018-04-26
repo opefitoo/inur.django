@@ -154,6 +154,7 @@ class PrestationInline(admin.TabularInline):
     readonly_fields = ('copy', 'delete')
     search_fields = ['carecode', 'date', 'employee']
     can_delete = False
+    ordering = ['date']
 
     class Media:
         js = [
