@@ -1,0 +1,35 @@
+{
+  "name": "inur.django",
+  "scripts": {
+  },
+  "env": {
+    "DISABLE_COLLECTSTATIC": {
+      "required": true
+    },
+    "DJANGO_ALLOWED_HOSTS": {
+      "required": true
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "required": true
+    },
+    "HEROKU_POSTGRESQL_BRONZE_URL": {
+      "required": true
+    },
+    "LANG": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+    "heroku-postgresql"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
