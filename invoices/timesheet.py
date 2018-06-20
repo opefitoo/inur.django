@@ -140,8 +140,8 @@ class TimesheetTask(models.Model):
 
 
 class TimesheetDetail(models.Model):
-    start_date = models.DateTimeField('start date')
-    end_date = models.DateTimeField('end date')
+    start_date = models.DateTimeField('Date')
+    end_date = models.TimeField('Heure fin')
     task_description = models.ManyToManyField(TimesheetTask, help_text="Entrez une ou plusieurs taches.")
     patient = models.ForeignKey('invoices.Patient')
     timesheet = models.ForeignKey(Timesheet)

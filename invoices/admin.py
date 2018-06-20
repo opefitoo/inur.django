@@ -239,7 +239,7 @@ admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
 class TimesheetDetailInline(admin.TabularInline):
     extra = 2
     model = TimesheetDetail
-    fields = ('start_date', 'end_date', 'task_description', 'patient',)
+    fields = ('start_date', 'end_date','task_description', 'patient',)
     search_fields = ['patient']
 
 
