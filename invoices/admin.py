@@ -259,5 +259,10 @@ class TimesheetAdmin(admin.ModelAdmin):
     def timesheet_owner(self, instance):
         return instance.employee.user.username
 
+    def get_queryset(self, request):
+        qs = super(TimesheetAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(employee__user=request.user)
 
 admin.site.register(Timesheet, TimesheetAdmin)
