@@ -167,13 +167,13 @@ class TimesheetDetail(models.Model):
             raise ValidationError(messages)
 
     @staticmethod
-    def validate(data):
+    def validate(instance_id,data):
         result = {}
         result.update(TimesheetDetail.validate_dates(data))
         return result
 
     @staticmethod
-    def validate_dates(instance_id, data):
+    def validate_dates(data):
         messages = {}
         is_valid = data['end_date'] is None or data['start_date'].time() <= data['end_date']
         if not is_valid:
