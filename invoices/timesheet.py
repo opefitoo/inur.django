@@ -124,6 +124,8 @@ class Timesheet(models.Model):
     other_details = models.TextField("Autres details", max_length=100, blank=True,
                                      null=True)
     timesheet_validated = models.BooleanField("Valide", default=False)
+    def __str__(self):  # Python 3: def __str__(self):
+        return '%s - du %s au %s' % (self.employee, self.start_date, self.end_date)
 
 
 class TimesheetTask(models.Model):
@@ -142,7 +144,7 @@ class TimesheetTask(models.Model):
 class TimesheetDetail(models.Model):
     start_date = models.DateTimeField('Date')
     end_date = models.TimeField('Heure fin')
-    task_description = models.ManyToManyField(TimesheetTask, help_text="Entrez une ou plusieurs taches.")
+    task_description = models.ManyToManyField(TimesheetTask, verbose_name = 'Description(s) tache', help_text="Entrez une ou plusieurs taches.")
     patient = models.ForeignKey('invoices.Patient')
     timesheet = models.ForeignKey(Timesheet)
     other = models.CharField(max_length=50, blank=True, null=True)
