@@ -173,7 +173,7 @@ class TimesheetDetail(models.Model):
         return result
 
     @staticmethod
-    def validate_dates(data):
+    def validate_dates(instance_id, data):
         messages = {}
         is_valid = data['end_date'] is None or data['start_date'].time() <= data['end_date']
         if not is_valid:
