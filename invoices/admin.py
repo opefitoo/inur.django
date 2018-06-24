@@ -237,10 +237,11 @@ admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
 
 
 class TimesheetDetailInline(admin.TabularInline):
-    extra = 2
+    extra = 1
     model = TimesheetDetail
     fields = ('start_date', 'end_date','task_description', 'patient',)
     search_fields = ['patient']
+    ordering = ['start_date']
 
 
 class TimesheetAdmin(admin.ModelAdmin):
@@ -249,6 +250,7 @@ class TimesheetAdmin(admin.ModelAdmin):
     list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated')
     list_select_related = True
     readonly_fields = ('timesheet_validated',)
+    ordering = ['start_date']
 
     def save_model(self, request, obj, form, change):
         if not change:
