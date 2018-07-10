@@ -155,8 +155,8 @@ class TimesheetDetail(models.Model):
         exclude = []
         if self.patient is not None and self.patient.id is None:
             exclude = ['patient']
-        if self.task_description is not None:
-            exclude.append('task_description')
+        #if self.task_description is not None:
+        #    exclude.append('task_description')
         if self.timesheet is not None and self.timesheet.id is None:
             exclude.append('timesheet')
 
