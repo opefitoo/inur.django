@@ -1,5 +1,6 @@
 .env
 venv
+venv2
 *.pyc
 staticfiles
 .project
