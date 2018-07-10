@@ -47,7 +47,8 @@ INSTALLED_APPS = (
     'constance',
     'constance.backends.database',
     'invoices',
-    'api'
+    'api',
+    'debug_toolbar'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -59,6 +60,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 ROOT_URLCONF = 'invoices.urls'
@@ -193,3 +195,5 @@ if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_
     credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
         json.dump(json.loads(credentials), outfile)
+
+INTERNAL_IPS = {'127.0.0.1',}

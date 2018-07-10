@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.views.static import serve
 from invoices import settings
 from rest_framework.authtoken import views as authtoken_views
+from django.conf import settings
 
 from invoices.views import CareCodeAutocomplete, PatientAutocomplete, EmployeeAutocomplete, \
     MedicalPrescriptionAutocomplete, delete_prestation
@@ -62,3 +63,8 @@ urlpatterns += [
         'document_root': settings.MEDIA_ROOT,
     }),
 ]
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    ]
