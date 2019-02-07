@@ -26,4 +26,4 @@ def export_to_pdf(modeladmin, request, queryset):
     return response
 
 
-export_to_pdf.short_description = "Export results to PDF"
+export_to_pdf.short_description = "Facture CNS"
