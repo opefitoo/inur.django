@@ -154,6 +154,7 @@ class PrestationInline(admin.TabularInline):
     readonly_fields = ('copy', 'delete')
     search_fields = ['carecode', 'date', 'employee']
     can_delete = False
+    ordering = ['date']
 
     class Media:
         js = [
@@ -236,10 +237,11 @@ admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
 
 
 class TimesheetDetailInline(admin.TabularInline):
-    extra = 2
+    extra = 1
     model = TimesheetDetail
-    fields = ('start_date', 'end_date', 'task_description', 'patient',)
+    fields = ('start_date', 'end_date','task_description', 'patient',)
     search_fields = ['patient']
+    ordering = ['start_date']
 
 
 class TimesheetAdmin(admin.ModelAdmin):
@@ -248,6 +250,7 @@ class TimesheetAdmin(admin.ModelAdmin):
     list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated')
     list_select_related = True
     readonly_fields = ('timesheet_validated',)
+    ordering = ['start_date']
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -258,5 +261,10 @@ class TimesheetAdmin(admin.ModelAdmin):
     def timesheet_owner(self, instance):
         return instance.employee.user.username
 
+    def get_queryset(self, request):
+        qs = super(TimesheetAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(employee__user=request.user)
 
 admin.site.register(Timesheet, TimesheetAdmin)

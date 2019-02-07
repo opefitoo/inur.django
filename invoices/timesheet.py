@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_delete, post_save, pre_save
@@ -124,6 +125,8 @@ class Timesheet(models.Model):
     other_details = models.TextField("Autres details", max_length=100, blank=True,
                                      null=True)
     timesheet_validated = models.BooleanField("Valide", default=False)
+    def __str__(self):  # Python 3: def __str__(self):
+        return '%s - du %s au %s' % (self.employee, self.start_date, self.end_date)
 
 
 class TimesheetTask(models.Model):
@@ -140,12 +143,43 @@ class TimesheetTask(models.Model):
 
 
 class TimesheetDetail(models.Model):
-    start_date = models.DateTimeField('start date')
-    end_date = models.DateTimeField('end date')
-    task_description = models.ManyToManyField(TimesheetTask, help_text="Entrez une ou plusieurs taches.")
+    start_date = models.DateTimeField('Date')
+    end_date = models.TimeField('Heure fin')
+    task_description = models.ManyToManyField(TimesheetTask, verbose_name='Description(s) tache',
+                                              help_text="Entrez une ou plusieurs taches.")
     patient = models.ForeignKey('invoices.Patient')
     timesheet = models.ForeignKey(Timesheet)
     other = models.CharField(max_length=50, blank=True, null=True)
+
+    def clean(self):
+        exclude = []
+        if self.patient is not None and self.patient.id is None:
+            exclude = ['patient']
+        #if self.task_description is not None:
+        #    exclude.append('task_description')
+        if self.timesheet is not None and self.timesheet.id is None:
+            exclude.append('timesheet')
+
+        super(TimesheetDetail, self).clean_fields(exclude)
+
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance_id,data):
+        result = {}
+        result.update(TimesheetDetail.validate_dates(data))
+        return result
+
+    @staticmethod
+    def validate_dates(data):
+        messages = {}
+        is_valid = data['end_date'] is None or data['start_date'].time() <= data['end_date']
+        if not is_valid:
+            messages = {'end_date': u"Heure de fin être supérieure à l'heure de début"}
+
+        return messages
 
     def __str__(self):  # Python 3: def __str__(self):
         return ''

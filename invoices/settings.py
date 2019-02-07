@@ -25,7 +25,9 @@ SECRET_KEY = 'pc_pf1h+5n4h(ayu2)j@2_c+qgumxfa5xeplar6*eq8x745lg!'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Do not Allow all host headers
+#TODO: fix this hard coded value
+ALLOWED_HOSTS = ['.sur.lu','inurdjango-m-rest.herokuapp.com']
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
@@ -47,7 +49,8 @@ INSTALLED_APPS = (
     'constance',
     'constance.backends.database',
     'invoices',
-    'api'
+    'api',
+    #'debug_toolbar'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -59,6 +62,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 ROOT_URLCONF = 'invoices.urls'
@@ -95,8 +99,6 @@ DATABASES['default']['AUTOCOMMIT'] = True
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Allow all host headers
-ALLOWED_HOSTS = ['*']
 
 # Static asset configuration
 import os
@@ -193,3 +195,5 @@ if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_
     credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
         json.dump(json.loads(credentials), outfile)
+
+#INTERNAL_IPS = {'127.0.0.1',}
