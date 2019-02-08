@@ -10,9 +10,8 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-from django.utils.timezone import localtime, now
+from django.utils.timezone import now
 from django.utils.encoding import smart_unicode
-import datetime
 
 
 def pdf_private_invoice_pp(modeladmin, request, queryset):
@@ -68,11 +67,11 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     elements = []
     i = 0
     data = []
-    patientSocNumber = '';
-    patientNameAndFirstName = '';
+    patientSocNumber = ''
+    patientNameAndFirstName = ''
     patientName = '';
-    patientFirstName = '';
-    patientAddress = ''
+    patient_first_name = '';
+    patient_address = ''
 
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'CNS', 'Part. Client'))
     for presta in prestations:
@@ -80,8 +79,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         patientSocNumber = patient.code_sn
         patientNameAndFirstName = patient
         patientName = patient.name
-        patientFirstName = patient.first_name
-        patientAddress = patient.address
+        patient_first_name = patient.first_name
+        patient_address = patient.address
         patientZipCode = patient.zipcode
         patientCity = patient.city
         data.append((i, presta.carecode.code,
@@ -119,8 +118,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                   [u'Matricule patient: %s' % smart_unicode(patientSocNumber.strip()) + "\n"
                    + u'Nom et Pr' + smart_unicode("e") + u'nom du patient: %s' % smart_unicode(patientNameAndFirstName),
                    u'Nom: %s' % smart_unicode(patientName.strip()) + '\n'
-                   + u'Pr' + smart_unicode(u"é") + u'nom: %s' % smart_unicode(patientFirstName.strip()) + '\n'
-                   + u'Rue: %s' % patientAddress.strip() + '\n'
+                   + u'Pr' + smart_unicode(u"é") + u'nom: %s' % smart_unicode(patient_first_name.strip()) + '\n'
+                   + u'Rue: %s' % patient_address.strip() + '\n'
                    + u'Code postal: %s' % smart_unicode(patientZipCode.strip()) + '\n'
                    + u'Ville: %s' % smart_unicode(patientCity.strip())],
                   [u'Date accident: %s\n' % (accident_date if accident_date else "")
@@ -183,7 +182,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
 
     return {"elements": elements
         , "invoice_number": invoice_number
-        , "patient_name": patientName + " " + patientFirstName
+        , "patient_name": patientName + " " + patient_first_name
         , "invoice_amount": newData[23][5]
         , "invoice_pp": newData[23][6]}
 
