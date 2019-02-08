@@ -244,11 +244,12 @@ class TimesheetDetailInline(admin.TabularInline):
 
 class TimesheetAdmin(admin.ModelAdmin):
     fields = ('start_date', 'end_date', 'submitted_date', 'other_details', 'timesheet_validated')
+    date_hierarchy = 'end_date'
     inlines = [TimesheetDetailInline]
     list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated')
+    list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated',)
-    ordering = ['start_date']
 
     def save_model(self, request, obj, form, change):
         if not change:
