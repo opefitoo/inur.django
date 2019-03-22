@@ -82,6 +82,7 @@ def _build_recap(recaps, payment_ref):
 
     _infos_iban = Table([[u"Numéro compte IBAN: LU55 0019 4555 2516 1000 BCEELULL"]], [10 * cm],
                         1 * [0.5 * cm], hAlign='LEFT')
+    elements.append(_infos_iban)
 
     elements.append(Spacer(1, 18))
     _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence: %s " % payment_ref.upper()]],
