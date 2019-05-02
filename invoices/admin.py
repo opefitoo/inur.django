@@ -1,16 +1,18 @@
 from django.contrib import admin
+from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
 from django.utils.functional import curry
-from django.core.urlresolvers import reverse
+from django.utils.html import format_html
 
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
-from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, PrestationInlineFormSet, \
+from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, PrestationInlineFormSet, \
     PatientForm
-from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
+from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
-from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
+from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
 
 
 class JobPostionAdmin(admin.ModelAdmin):
@@ -90,12 +92,11 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
 
 
 class PatientAdmin(admin.ModelAdmin):
-    from generate_pacifico_invoices import generate_pacifico
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     search_fields = ['name', 'first_name', 'code_sn']
     form = PatientForm
-    actions = [generate_pacifico]
+    actions = []
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
 
 
@@ -103,7 +104,7 @@ admin.site.register(Patient, PatientAdmin)
 
 
 class PrestationAdmin(admin.ModelAdmin):
-    from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
+    from invoices.invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
 
     list_filter = ('invoice_item__patient', 'invoice_item', 'carecode')
     date_hierarchy = 'date'
@@ -144,7 +145,7 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
 admin.site.register(MedicalPrescription, MedicalPrescriptionAdmin)
 
 
-class PrestationInline(admin.TabularInline):
+class PrestationInline(TabularInline):
     extra = 0
     max_num = InvoiceItem.PRESTATION_LIMIT_MAX
     model = Prestation
@@ -166,12 +167,12 @@ class PrestationInline(admin.TabularInline):
         }
 
     def copy(self, obj):
-        return "<a href='#' class='copy_inline'>Copy</a>"
+        return format_html("<a href='#' class='copy_inline'>Copy</a>")
 
     def delete(self, obj):
         url = reverse('delete-prestation')
 
-        return "<a href='%s' class='delete_inline' data-prestation_id='%s'>Delete</a>" % (url, obj.id)
+        return format_html("<a href='%s' class='deletelink' data-prestation_id='%s'>Delete</a>" % (url, obj.id))
 
     copy.allow_tags = True
     delete.allow_tags = True
@@ -197,9 +198,9 @@ class PrestationInline(admin.TabularInline):
 
 class InvoiceItemAdmin(admin.ModelAdmin):
     from invoices.action import export_to_pdf
-    from action_private import pdf_private_invoice
-    from action_private_participation import pdf_private_invoice_pp
-    from action_depinsurance import export_to_pdf2
+    from invoices.action_private import pdf_private_invoice
+    from invoices.action_private_participation import pdf_private_invoice_pp
+    from invoices.action_depinsurance import export_to_pdf2
     form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
@@ -208,6 +209,15 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     readonly_fields = ('medical_prescription_preview',)
     actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, export_to_pdf2]
     inlines = [PrestationInline]
+    fieldsets = (
+        (None, {
+            'fields': ('invoice_number', 'is_private', 'patient', 'invoice_date')
+        }),
+        ('Advanced options', {
+            'classes': ('collapse',),
+            'fields': ('accident_id', 'accident_date', 'is_valid', 'validation_comment'),
+        }),
+    )
 
     def medical_prescription_preview(self, obj):
         return obj.medical_prescription.image_preview()

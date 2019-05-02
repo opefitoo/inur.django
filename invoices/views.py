@@ -1,6 +1,7 @@
 from dal import autocomplete
 from django.db.models import Q
 from django.http import Http404, JsonResponse
+from django.views.decorators.http import require_POST, require_GET
 
 from invoices.models import CareCode, Prestation, Patient, MedicalPrescription
 from invoices.timesheet import Employee
@@ -17,7 +18,7 @@ def get_queryset_filter(query_str, fields):
 
 class CareCodeAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        if not self.request.user.is_authenticated():
+        if not self.request.user.is_authenticated:
             return CareCode.objects.none()
 
         qs = CareCode.objects.all()
@@ -34,7 +35,7 @@ class CareCodeAutocomplete(autocomplete.Select2QuerySetView):
 
 class PatientAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        if not self.request.user.is_authenticated():
+        if not self.request.user.is_authenticated:
             return Patient.objects.none()
 
         qs = Patient.objects.all()
@@ -51,7 +52,7 @@ class PatientAutocomplete(autocomplete.Select2QuerySetView):
 
 class MedicalPrescriptionAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        if not self.request.user.is_authenticated():
+        if not self.request.user.is_authenticated:
             return MedicalPrescription.objects.none()
 
         qs = MedicalPrescription.objects.all()
@@ -68,7 +69,7 @@ class MedicalPrescriptionAutocomplete(autocomplete.Select2QuerySetView):
 
 class EmployeeAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        if not self.request.user.is_authenticated():
+        if not self.request.user.is_authenticated:
             return Employee.objects.none()
 
         qs = Employee.objects.all()
@@ -80,6 +81,7 @@ class EmployeeAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 
+@require_GET
 def delete_prestation(request):
     prestation_id = request.POST.get('prestation_id', None)
     if request.method != "POST" or prestation_id is None or not request.user.has_perm('invoices.delete_prestation'):

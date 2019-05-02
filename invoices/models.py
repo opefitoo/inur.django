@@ -21,9 +21,10 @@ from constance import config
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.managers import InvoiceItemBatchManager
-from storages import CustomizedGoogleDriveStorage
+
 from django.utils.timezone import now
 
+from invoices.storages import CustomizedGoogleDriveStorage
 
 prestation_gcalendar = PrestationGoogleCalendar()
 
@@ -65,7 +66,7 @@ class CareCode(models.Model):
         # round to only two decimals
         return round(((self.gross_amount(date) * 12) / 100), 2)
 
-    def __unicode__(self):  # Python 3: def __str__(self):
+    def __str__(self):  # Python 3: def __str__(self):
         return '%s:%s' % (self.code , self.name)
 
     @staticmethod
@@ -79,9 +80,11 @@ class ValidityDate(models.Model):
     start_date = models.DateField("date debut validite")
     end_date = models.DateField("date fin validite", blank=True, null=True)
     gross_amount = models.DecimalField("montant brut", max_digits=5, decimal_places=2)
-    care_code = models.ForeignKey(CareCode, related_name='validity_dates')
+    care_code = models.ForeignKey(CareCode
+                                  , related_name='validity_dates'
+                                  , on_delete=models.CASCADE)
 
-    def __unicode__(self):  # Python 3: def __str__(self):
+    def __str__(self):
         return 'from %s to %s' % (self.start_date, self.end_date)
 
     def clean(self, *args, **kwargs):
@@ -130,7 +133,7 @@ class Patient(models.Model):
     def autocomplete_search_fields():
         return 'name', 'first_name'
 
-    def __unicode__(self):  # Python 3: def __str__(self):,
+    def __str__(self):  # Python 3: def __str__(self):,
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
     def clean(self, *args, **kwargs):
@@ -186,9 +189,10 @@ class Hospitalization(models.Model):
     end_date = models.DateField(u"Date de fin")
     description = models.TextField(max_length=50, default=None, blank=True, null=True)
     patient = models.ForeignKey(Patient, related_name='hospitalizations',
-                                help_text='Please enter hospitalization dates of the patient')
+                                help_text='Please enter hospitalization dates of the patient',
+                                on_delete=models.CASCADE)
 
-    def __unicode__(self):  # Python 3: def __str__(self):
+    def __str__(self):  # Python 3: def __str__(self):
         return 'From %s to %s for %s' % (self.start_date, self.end_date, self.patient)
 
     def as_dict(self):
@@ -299,7 +303,7 @@ class Physician(models.Model):
     def autocomplete_search_fields():
         return 'name', 'first_name'
 
-    def __unicode__(self):  # Python 3: def __str__(self):
+    def __str__(self):  # Python 3: def __str__(self):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
 
@@ -317,9 +321,11 @@ def update_medical_prescription_filename(instance, filename):
 
 class MedicalPrescription(models.Model):
     prescriptor = models.ForeignKey(Physician, related_name='medical_prescription',
-                                    help_text='Please chose the Physician who is giving the medical prescription')
+                                    help_text='Please chose the Physician who is giving the medical prescription',
+                                    on_delete=models.CASCADE)
     patient = models.ForeignKey(Patient, default=None, related_name='medical_prescription_patient',
-                                help_text='Please chose the Patient who is receiving the medical prescription')
+                                help_text='Please chose the Patient who is receiving the medical prescription',
+                                on_delete=models.CASCADE)
     date = models.DateField('Date ordonnance')
     end_date = models.DateField('Date fin des soins', null=True, blank=True)
     file = models.ImageField(storage=gd_storage, blank=True, upload_to=update_medical_prescription_filename)
@@ -378,7 +384,7 @@ class MedicalPrescription(models.Model):
     def autocomplete_search_fields():
         return 'date', 'prescriptor__name', 'prescriptor__first_name'
 
-    def __unicode__(self):  # Python 3: def __str__(self):
+    def __str__(self):  # Python 3: def __str__(self):
         return '%s %s (%s)' % (self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
 
 
@@ -429,7 +435,7 @@ class InvoiceItemBatch(models.Model):
     # invoices to be corrected
     # total_amount
 
-    def __unicode__(self):  # Python 3: def __str__(self):
+    def __str__(self):  # Python 3: def __str__(self):
         return 'from %s to %s' % (self.start_date, self.end_date)
 
     def __init__(self, *args, **kwargs):
@@ -494,7 +500,8 @@ class InvoiceItem(models.Model):
                                      help_text='Seuls les patients qui ne disposent pas de la prise en charge CNS seront recherches dans le champ Patient (prive)',
                                      default=False)
     patient = models.ForeignKey(Patient, related_name='invoice_items',
-                                help_text=u"choisir parmi les patients en entrant quelques lettres de son nom ou prenom")
+                                help_text=u"choisir parmi les patients en entrant quelques lettres de son nom ou prenom",
+                                on_delete=models.CASCADE)
     accident_id = models.CharField(max_length=30, help_text=u"Numero d'accident est facultatif", null=True, blank=True)
     accident_date = models.DateField(help_text=u"Date d'accident est facultatif", null=True, blank=True)
     invoice_date = models.DateField('Invoice date')
@@ -571,7 +578,7 @@ class InvoiceItem(models.Model):
     def invoice_month(self):
         return self.invoice_date.strftime("%B %Y")
 
-    def __unicode__(self):  # Python 3: def __str__(self):
+    def __str__(self):  # Python 3: def __str__(self):
         return 'invocie no.: %s - nom patient: %s' % (self.invoice_number, self.patient)
 
     @staticmethod
@@ -580,13 +587,27 @@ class InvoiceItem(models.Model):
 
 
 class Prestation(models.Model):
-    invoice_item = models.ForeignKey(InvoiceItem, related_name='prestations')
-    employee = models.ForeignKey('invoices.Employee', related_name='prestations', blank=True, null=True, default=None)
-    carecode = models.ForeignKey(CareCode, related_name='prestations')
+    invoice_item = models.ForeignKey(InvoiceItem,
+                                     related_name='prestations',
+                                     on_delete=models.CASCADE)
+    employee = models.ForeignKey('invoices.Employee',
+                                 related_name='prestations',
+                                 blank=True,
+                                 null=True,
+                                 default=None,
+                                 on_delete=models.CASCADE)
+    carecode = models.ForeignKey(CareCode,
+                                 related_name='prestations',
+                                 on_delete=models.CASCADE)
     quantity = IntegerField(default=1)
     date = models.DateTimeField('date')
     at_home = models.BooleanField(default=False)
-    at_home_paired = models.OneToOneField('self', related_name='paired_at_home', blank=True, null=True, default=None)
+    at_home_paired = models.OneToOneField('self',
+                                          related_name='paired_at_home',
+                                          blank=True,
+                                          null=True,
+                                          default=None,
+                                          on_delete=models.CASCADE)
     date.editable = True
 
     @property
@@ -748,7 +769,7 @@ class Prestation(models.Model):
 
         return messages
 
-    def __unicode__(self):  # Python 3: def __str__(self):
+    def __str__(self):  # Python 3: def __str__(self):
         return '%s - %s' % (self.carecode.code, self.carecode.name)
 
     @staticmethod

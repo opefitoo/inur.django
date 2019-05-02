@@ -1,5 +1,7 @@
 from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, ModelForm
 from django import forms
+from django.contrib import admin
+from django.core import exceptions
 from datetime import datetime
 
 from invoices.models import Prestation, CareCode, InvoiceItem, Patient, MedicalPrescription
@@ -74,7 +76,7 @@ class PrestationForm(ModelForm):
         required=False,
         widget=forms.HiddenInput()
     )
-    
+
     at_home_paired_name = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}), disabled=True,
                                           required=False)
     paired_at_home_name = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}), disabled=True,
@@ -152,3 +154,43 @@ class PatientForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(PatientForm, self).__init__(*args, **kwargs)
+#
+#
+# class PrestationActionForm(forms.Form):
+#     comment = forms.CharField(
+#         required=False,
+#         widget=forms.Textarea,
+#     )
+#
+#     def form_action(self, prestation, user):
+#         raise NotImplementedError()
+#
+#     def save(self, prestation, user):
+#         try:
+#             prestation, action = self.form_action(prestation, user)
+#
+#         except exceptions as e:
+#             error_message = str(e)
+#             self.add_error(None, error_message)
+#             raise
+#         return prestation, action
+#
+#
+# class WithdrawForm(PrestationActionForm):
+#     prestation = forms.IntegerField(
+#         required=True,
+#         help_text='How much to withdraw?',
+#     )
+#     field_order = (
+#         'comment'
+#     )
+#
+#     def form_action(self, prestation, user):
+#         return Prestation.copy(
+#             id=prestation.pk,
+#             user=prestation.user,
+#             amount=self.cleaned_data['amount'],
+#             withdrawn_by=user,
+#             comment=self.cleaned_data['comment'],
+#             asof=timezone.now(),
+#         )

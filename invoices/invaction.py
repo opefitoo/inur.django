@@ -2,7 +2,7 @@
 
 import datetime
 
-from models import Patient, InvoiceItem, Prestation#, PrivateInvoiceItem
+from invoices.models import Patient, InvoiceItem, Prestation#, PrivateInvoiceItem
 from django.http import HttpResponseRedirect
 
 

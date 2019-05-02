@@ -21,7 +21,8 @@ class Employee(models.Model):
     start_contract = models.DateField('start date')
     end_contract = models.DateField('end date', blank=True,
                                     null=True)
-    occupation = models.ForeignKey(JobPosition)
+    occupation = models.ForeignKey(JobPosition,
+                                   on_delete=models.CASCADE)
     has_gdrive_access = models.BooleanField("Allow access to Google Drive files", default=False)
     has_gcalendar_access = models.BooleanField("Allow access to Prestations' calendar", default=False)
 
@@ -45,7 +46,7 @@ class Employee(models.Model):
     def autocomplete_search_fields():
         return 'occupation__name', 'user__first_name', 'user__last_name', 'user__username'
 
-    def __unicode__(self):  # Python 3: def __str__(self):
+    def __str__(self):  # Python 3: def __str__(self):
         return '%s' % (self.user.username.strip())
 
 
@@ -114,7 +115,8 @@ def employee_revoke_gservices_permissions(sender, instance, **kwargs):
 
 
 class Timesheet(models.Model):
-    employee = models.ForeignKey(Employee)
+    employee = models.ForeignKey(Employee,
+                                 on_delete=models.CASCADE)
     start_date = models.DateField('Date debut')
     start_date.editable = True
     end_date = models.DateField('Date fin')
@@ -147,8 +149,10 @@ class TimesheetDetail(models.Model):
     end_date = models.TimeField('Heure fin')
     task_description = models.ManyToManyField(TimesheetTask, verbose_name='Description(s) tache',
                                               help_text="Entrez une ou plusieurs taches.")
-    patient = models.ForeignKey('invoices.Patient')
-    timesheet = models.ForeignKey(Timesheet)
+    patient = models.ForeignKey('invoices.Patient',
+                                on_delete=models.CASCADE)
+    timesheet = models.ForeignKey(Timesheet,
+                                  on_delete=models.CASCADE)
     other = models.CharField(max_length=50, blank=True, null=True)
 
     def clean(self):

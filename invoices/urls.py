@@ -17,9 +17,9 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.static import serve
-from invoices import settings
 from rest_framework.authtoken import views as authtoken_views
 from django.conf import settings
+from django.urls import path
 
 from invoices.views import CareCodeAutocomplete, PatientAutocomplete, EmployeeAutocomplete, \
     MedicalPrescriptionAutocomplete, delete_prestation
@@ -51,11 +51,11 @@ urlpatterns = [
         name='delete-prestation',
     ),
     url(r'^jet/', include('jet.urls', 'jet')),
-    url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
-    url(r'^admin/', include(admin.site.urls)),
+    #url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
+    path('admin/', admin.site.urls),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api-token-auth/', authtoken_views.obtain_auth_token),
-    url(r'^api/v1/', include('api.urls', namespace='api'))
+    url(r'^api/v1/', include(('api.urls', 'api'), namespace='api'))
 ]
 
 urlpatterns += [

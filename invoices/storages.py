@@ -2,8 +2,9 @@ import os
 import mimetypes
 import ntpath
 
-from apiclient.http import MediaIoBaseUpload
+
 from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, GoogleDrivePermissionRole, GoogleDriveFilePermission
+from googleapiclient.http import MediaIoBaseUpload
 
 
 class CustomizedGoogleDriveStorage(GoogleDriveStorage):

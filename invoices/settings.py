@@ -27,7 +27,7 @@ DEBUG = True
 
 # Do not Allow all host headers
 #TODO: fix this hard coded value
-ALLOWED_HOSTS = ['.sur.lu','inurdjango-m-rest.herokuapp.com']
+ALLOWED_HOSTS = ['127.0.0.1','.sur.lu','inurdjango-m-rest.herokuapp.com']
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
@@ -35,7 +35,7 @@ CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 INSTALLED_APPS = (
     'dal',
     'dal_select2',
-    'jet.dashboard',
+    #'bootstrap_admin',  # always before django.contrib.admin
     'jet',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -53,15 +53,15 @@ INSTALLED_APPS = (
     #'debug_toolbar'
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.contrib.auth.middleware.RemoteUserMiddleware',
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
@@ -90,7 +90,7 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 # Parse database configuration from $DATABASE_URL
 import dj_database_url
 
-DATABASES = {'default': dj_database_url.config(default='postgres://nursev3:nursev3@localhost:5432/nursev3')}
+DATABASES = {'default': dj_database_url.config(default='postgres://inur:inur@localhost:5432/inur')}
 
 # Enable Connection Pooling
 # DATABASES['default']['ENGINE'] = 'django_postgrespool'
