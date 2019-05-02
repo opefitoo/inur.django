@@ -27,7 +27,7 @@ DEBUG = True
 
 # Do not Allow all host headers
 #TODO: fix this hard coded value
-ALLOWED_HOSTS = ['127.0.0.1','.sur.lu','inurdjango-m-rest.herokuapp.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.sur.lu','inurdjango-m-rest.herokuapp.com']
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
@@ -56,7 +56,7 @@ INSTALLED_APPS = (
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -95,6 +95,21 @@ DATABASES = {'default': dj_database_url.config(default='postgres://inur:inur@loc
 # Enable Connection Pooling
 # DATABASES['default']['ENGINE'] = 'django_postgrespool'
 DATABASES['default']['AUTOCOMMIT'] = True
+
+
+
+# DATABASES = {
+#     'default': {        
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'django_db',
+#         'USER' : 'user_name',
+#         'PASSWORD' : 'password',
+#         'HOST' : '127.0.0.1',
+#         'PORT' : '5432',
+#     }
+# }
+
+
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

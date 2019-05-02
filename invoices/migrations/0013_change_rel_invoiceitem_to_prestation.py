@@ -43,9 +43,9 @@ def create_invoices_for_orphan_prestations(apps, schema_editor):
         patient_group['months'][month] = month_group
         groups[patient_id] = patient_group
 
-    for patient_group in groups.itervalues():
+    for patient_group in groups.values():
         patient = patient_group['patient']
-        for month_group in patient_group['months'].itervalues():
+        for month_group in patient_group['months'].values():
             invoice_item = InvoiceItemModel()
             invoice_item.invoice_date = month_group['date']
             invoice_item.invoice_sent = False

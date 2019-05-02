@@ -171,8 +171,7 @@ class PrestationInline(TabularInline):
 
     def delete(self, obj):
         url = reverse('delete-prestation')
-
-        return format_html("<a href='%s' class='deletelink' data-prestation_id='%s'>Delete</a>" % (url, obj.id))
+        return format_html("<a href='%s?prestation_id=%s' class='deletelink'>Delete</a>" % (url, obj.id))
 
     copy.allow_tags = True
     delete.allow_tags = True
