@@ -81,13 +81,14 @@ class EmployeeAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 
-@require_GET
+@require_POST
 def delete_prestation(request):
-    prestation_id = request.GET.get('prestation_id', None)
-    if request.method != "GET" or prestation_id is None or not request.user.has_perm('invoices.delete_prestation'):
+    prestation_id = request.POST.get('prestation_id', None)
+    if request.method != "POST" or prestation_id is None or not request.user.has_perm('invoices.delete_prestation'):
         raise Http404
 
     prestation = Prestation.objects.get(pk=prestation_id)
     prestation.delete()
 
-    return redirect(request.META.get('HTTP_REFERER'))
+    return JsonResponse({'status': 'Success'})
+

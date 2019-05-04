@@ -1,9 +1,9 @@
-$(function() {
-    $('#prestations-empty .field-delete').html('');
+jQuery(function() {
+    jQuery('#prestations-empty .field-delete').html('');
 
     function csrfSafeMethod(method) {
         // these HTTP methods do not require CSRF protection
-        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        return (/^(GET|HEAD|OPTIONS|TRACE)jQuery/.test(method));
     }
 
     function getCookie(name) {
@@ -22,19 +22,19 @@ $(function() {
         return cookieValue;
     }
 
-    $('.inline-group').on('click', '.delete_inline', function(e) {
+    jQuery('.inline-group').on('click', '.deletelink', function(e) {
         e.preventDefault();
-        var $inline_group = $(this).closest('.inline-group');
-        var prefix = $inline_group.data('inline-formset').options.prefix;
+        var jQueryinline_group = jQuery(this).closest('.inline-group');
+        var prefix = jQueryinline_group.data('inline-formset').options.prefix;
 
-        var form_row = $(this).closest('.form-row');
-        var prestation_id = $(this).data('prestation_id');
+        var form_row = jQuery(this).closest('.form-row');
+        var prestation_id = jQuery(this).data('prestation_id');
 
         var is_confirmed = confirm("Do you want to delete Prestation?");
         if (true == is_confirmed) {
             var csrftoken = getCookie('csrftoken');
-            $.ajax({
-                url: $(this).attr('href'),
+            jQuery.ajax({
+                url: jQuery(this).attr('href'),
                 method: 'POST',
                 data: {
                     'prestation_id': prestation_id
@@ -46,10 +46,10 @@ $(function() {
                 },
                 success: function(response) {
                     form_row.remove();
-                    var $totalFormsInput = $inline_group.find('[name="' + prefix + '-TOTAL_FORMS"]');
-                    console.log($totalFormsInput, $inline_group, prefix);
-                    var totalForms = parseInt($inline_group.find('.inline-related').length);
-                    $totalFormsInput.val(totalForms);
+                    var jQuerytotalFormsInput = jQueryinline_group.find('[name="' + prefix + '-TOTAL_FORMS"]');
+                    console.log(jQuerytotalFormsInput, jQueryinline_group, prefix);
+                    var totalForms = parseInt(jQueryinline_group.find('.inline-related').length);
+                    jQuerytotalFormsInput.val(totalForms);
                 }
             });
         }
