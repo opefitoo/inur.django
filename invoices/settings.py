@@ -36,7 +36,7 @@ INSTALLED_APPS = (
     'dal',
     'dal_select2',
     #'bootstrap_admin',  # always before django.contrib.admin
-    'jet',
+    #'jet',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

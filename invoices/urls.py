@@ -34,8 +34,6 @@ urlpatterns = [
         delete_prestation,
         name='delete-prestation',
     ),
-    url(r'^jet/', include('jet.urls', 'jet')),
-    #url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
     path('admin/', admin.site.urls),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api-token-auth/', authtoken_views.obtain_auth_token),

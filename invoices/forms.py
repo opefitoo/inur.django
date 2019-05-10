@@ -1,12 +1,11 @@
+from dal_select2.widgets import ModelSelect2
 from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, ModelForm
 from django import forms
-from django.contrib import admin
-from django.core import exceptions
 from datetime import datetime
 
 from invoices.models import Prestation, CareCode, InvoiceItem, Patient, MedicalPrescription
 from invoices.timesheet import Employee
-from invoices.widgets import AutocompleteModelSelect2CustomWidget, CustomAdminSplitDateTime, CodeSnWidget
+from invoices.widgets import CustomAdminSplitDateTime, CodeSnWidget
 
 
 def check_for_periods_intersection(cleaned_data):
@@ -64,12 +63,12 @@ class PrestationInlineFormSet(BaseInlineFormSet):
 class PrestationForm(ModelForm):
     carecode = ModelChoiceField(
         queryset=CareCode.objects.all(),
-        widget=AutocompleteModelSelect2CustomWidget(url='carecode-autocomplete')
+        widget=ModelSelect2(url='carecode-autocomplete')
     )
     employee = ModelChoiceField(
         queryset=Employee.objects.all(),
         required=False,
-        widget=AutocompleteModelSelect2CustomWidget(url='employee-autocomplete')
+        widget=ModelSelect2(url='employee-autocomplete')
     )
     at_home_paired = ModelChoiceField(
         queryset=Prestation.objects.all(),
@@ -111,12 +110,12 @@ class PrestationForm(ModelForm):
 class InvoiceItemForm(ModelForm):
     patient = ModelChoiceField(
         queryset=Patient.objects.all(),
-        widget=AutocompleteModelSelect2CustomWidget(url='patient-autocomplete', forward=['is_private'])
+        widget=ModelSelect2(url='patient-autocomplete', forward=['is_private'])
     )
 
     medical_prescription = ModelChoiceField(
         queryset=MedicalPrescription.objects.all(),
-        widget=AutocompleteModelSelect2CustomWidget(url='medical-prescription-autocomplete', forward=['patient']),
+        widget=ModelSelect2(url='medical-prescription-autocomplete', forward=['patient']),
         required=False
     )
 

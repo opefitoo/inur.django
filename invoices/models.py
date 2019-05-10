@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 class CareCode(models.Model):
+    class Meta:
+        ordering = ['-id']
     code = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100)

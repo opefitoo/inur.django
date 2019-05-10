@@ -1,3 +1,4 @@
+let $ = django.jQuery;
 $(function() {
     function maskCodeSn() {
         if (!$('input[name="is_private"]').prop('checked')) {
