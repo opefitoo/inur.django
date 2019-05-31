@@ -51,7 +51,6 @@ def process_codes(apps, schema_editor):
                     c = care_code(code=code, name=row[0][0:49], description=row[0])
                     c.save()
                     validity_date = apps.get_model("invoices", "ValidityDate")
-                    print(row)
                     v = validity_date(start_date=start_date,
                                       gross_amount=row[3].replace(',', '.'), care_code=c)
                     v.save()

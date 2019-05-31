@@ -77,6 +77,8 @@ class ValidityDate(models.Model):
     Depending on Prestation date, gross_amount that is calculated in Invoice will differ.
 
     """
+    class Meta:
+        ordering = ['-id']
     start_date = models.DateField("date debut validite")
     end_date = models.DateField("date fin validite", blank=True, null=True)
     gross_amount = models.DecimalField("montant brut", max_digits=5, decimal_places=2)

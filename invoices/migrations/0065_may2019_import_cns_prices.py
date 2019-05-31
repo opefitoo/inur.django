@@ -49,9 +49,11 @@ def process_codes(apps, schema_editor):
                             codes_that_are_too_old.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date,
                                                                                 v.end_date))
                         elif v.end_date is None and v.start_date < start_date:
-                            v = validity_date(start_date=start_date, end_date=end_date,
-                                              gross_amount=row[3].replace(',', '.'), care_code=c)
+                            validity_date = apps.get_model("invoices", "ValidityDate")
+                            v.end_date = parse_date("2019-04-30")
                             v.save()
+                            vnew = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=care_code_to_updt)
+                            vnew.save()
                         else:
                             unknowns.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
 
