@@ -27,7 +27,7 @@ DEBUG = True
 
 # Do not Allow all host headers
 #TODO: fix this hard coded value
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.sur.lu','inurdjango-m-rest.herokuapp.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.sur.lu','inurdjango-m-rest.herokuapp.com','.herokuapp.com']
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
