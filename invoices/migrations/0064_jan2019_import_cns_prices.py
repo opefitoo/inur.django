@@ -52,7 +52,7 @@ def process_codes(apps, schema_editor):
                     c.save()
                     validity_date = apps.get_model("invoices", "ValidityDate")
                     print(row)
-                    v = validity_date(start_date=start_date, end_date=end_date,
+                    v = validity_date(start_date=start_date,
                                       gross_amount=row[3].replace(',', '.'), care_code=c)
                     v.save()
     print("*** Updated codes %s", updated_codes)
