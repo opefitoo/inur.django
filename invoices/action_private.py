@@ -11,6 +11,7 @@ from reportlab.platypus.tables import Table, TableStyle
 import pytz
 from django.utils.encoding import smart_text
 import decimal
+from constance import config
 
 def pdf_private_invoice(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
@@ -101,17 +102,13 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
             newData.append(('', '', '', 'Sous-Total', _qty_sum, _gross_sum, _net_sum, _part_sum,''))
     _total_facture = _compute_sum(data[1:], 7)
     newData.append(('', '', '', 'Total', _compute_sum(data[1:], 4), _compute_sum(data[1:], 5), _compute_sum(data[1:], 6), _compute_sum(data[1:], 7),''))
-            
-            
+
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + 'Regine SIMBA\n'
-                   + '1A, rue fort wallis\n'
-                   + 'L-2714 Luxembourg\n'
-                   + 'T' + u"é".encode("utf-8") + "l: 691.30.85.84", 
-                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + '300744-44'
+                   + "{0}\n{1}\n{2}\n{3}".format(config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
+                                                 config.NURSE_PHONE_NUMBER),
+                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
                    ], 
-                  [ u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n" 
+                  [u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n"
                    + u'Nom et Pr'+ smart_text("e") + u'nom du patient: %s' % smart_text(patientNameAndFirstName) ,
                    u'Nom: %s' % smart_text(patientName.strip()) +'\n'
                    + u'Pr' + smart_text(u"é") + u'nom: %s' % smart_text(patientFirstName.strip()) +'\n'

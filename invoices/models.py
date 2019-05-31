@@ -2,13 +2,11 @@
 import logging
 import pytz
 import os
-import uuid
 import re
 from copy import deepcopy
 from datetime import datetime
 
 from django.core.exceptions import ValidationError
-from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
@@ -16,8 +14,6 @@ from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
-from invoices import settings
-from constance import config
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.managers import InvoiceItemBatchManager
@@ -28,7 +24,6 @@ from invoices.storages import CustomizedGoogleDriveStorage
 
 prestation_gcalendar = PrestationGoogleCalendar()
 
-# Define Google Drive Storage
 gd_storage = CustomizedGoogleDriveStorage()
 
 logger = logging.getLogger(__name__)
@@ -39,7 +34,7 @@ class CareCode(models.Model):
         ordering = ['-id']
     code = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=50)
-    description = models.TextField(max_length=100)
+    description = models.TextField(max_length=400)
     reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
     exclusive_care_codes = models.ManyToManyField("self", blank=True)
 
@@ -68,17 +63,20 @@ class CareCode(models.Model):
         # round to only two decimals
         return round(((self.gross_amount(date) * 12) / 100), 2)
 
-    def __str__(self):  # Python 3: def __str__(self):
-        return '%s:%s' % (self.code , self.name)
+    def __str__(self):
+        return '%s:%s' % (self.code, self.name)
 
     @staticmethod
     def autocomplete_search_fields():
         return 'name', 'code'
 
 
-# TODO 2: CareCode cannot have start and end validity dates that overlap
-# TODO 3: depending on Prestation date, gross_amount that is calculated in Invoice will differ
 class ValidityDate(models.Model):
+    """
+    CareCode cannot have start and end validity dates that overlap.
+    Depending on Prestation date, gross_amount that is calculated in Invoice will differ.
+
+    """
     start_date = models.DateField("date debut validite")
     end_date = models.DateField("date fin validite", blank=True, null=True)
     gross_amount = models.DecimalField("montant brut", max_digits=5, decimal_places=2)

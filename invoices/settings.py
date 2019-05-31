@@ -164,45 +164,45 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-JET_THEMES = [
-    {
-        'theme': 'default',
-        'color': '#47bac1',
-        'title': 'Default'
-    },
-    {
-        'theme': 'green',
-        'color': '#44b78b',
-        'title': 'Green'
-    },
-    {
-        'theme': 'light-green',
-        'color': '#2faa60',
-        'title': 'Light Green'
-    },
-    {
-        'theme': 'light-violet',
-        'color': '#a464c4',
-        'title': 'Light Violet'
-    },
-    {
-        'theme': 'light-blue',
-        'color': '#5EADDE',
-        'title': 'Light Blue'
-    },
-    {
-        'theme': 'light-gray',
-        'color': '#222',
-        'title': 'Light Gray'
-    }
-]
 
 COUNTRIES_FIRST = ['LU', 'FR', 'BE', 'DE']
 COUNTRIES_FIRST_BREAK = '...'
 
+CONSTANCE_ADDITIONAL_FIELDS = {
+    'yes_no_null_select': ['django.forms.fields.ChoiceField', {
+        'widget': 'django.forms.Select',
+        'choices': ((None, "..."), (True, "Oui"), (False, "Non"))
+    }],
+}
+
 CONSTANCE_CONFIG = {
     'AT_HOME_CARE_CODE': (
         'NF01', "CareCode that is set to Prestation's copy which is created if at_home is checked", str),
+    'MAIN_NURSE_CODE': (
+        '300744-44', "Code infirmier pour les soins", str),
+    'MAIN_BANK_ACCOUNT': (
+        'LU55 0019 4555 2516 1000 BCEELULL', "Compte bancaire IBAN pour les virement bancaire ", str),
+    'ALTERNATE_BANK_ACCOUNT': (
+        'LUXX XXXX XXXX XXXX XXXX XXXXLULL', "Compte bancaire n.2 IBAN pour les virement bancaire ", str),
+    'NURSE_NAME':
+        ('Regine SIMBA',
+         'Nom du prestataire de soins (apparait sur les factures)', str),
+    'NURSE_ADDRESS':
+        ('1A, rue fort wallis',
+         'Adresse du prestataire de soins (apparait sur les factures)', str),
+    'NURSE_ZIP_CODE_CITY':
+        ('L-2714 Luxembourg',
+         'Code postal et Ville du prestataire de soins (apparait sur les factures)', str),
+    'NURSE_PHONE_NUMBER':
+        ('Tél: 691.30.85.84',
+         'Nom et adresse du prestataire de soins (apparait sur les factures)', str),
+    'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select')
+}
+
+CONSTANCE_CONFIG_FIELDSETS = {
+    'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE'),
+    'Options de Facturation': ('MAIN_NURSE_CODE','NURSE_NAME','NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
+                               'NURSE_PHONE_NUMBER','MAIN_BANK_ACCOUNT','ALTERNATE_BANK_ACCOUNT'),
 }
 
 GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
@@ -212,3 +212,5 @@ if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_
         json.dump(json.loads(credentials), outfile)
 
 #INTERNAL_IPS = {'127.0.0.1',}
+
+IMPORTER_CSV_FOLDER = os.path.join(BASE_DIR, '../initialdata/')

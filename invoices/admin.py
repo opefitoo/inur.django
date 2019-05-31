@@ -7,7 +7,8 @@ from django.urls import reverse
 from django.utils.functional import curry
 from django.utils.html import format_html
 
-from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
+from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private, \
+    export_xml
 from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, PrestationInlineFormSet, \
     PatientForm
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
@@ -58,7 +59,7 @@ class ValidityDateInline(admin.TabularInline):
 class CareCoreAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
-    actions = [apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private]
+    actions = [apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private, export_xml]
     inlines = [ValidityDateInline]
 
 
@@ -104,13 +105,13 @@ admin.site.register(Patient, PatientAdmin)
 
 
 class PrestationAdmin(admin.ModelAdmin):
-    from invoices.invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
+    from invoices.invaction import create_invoice_for_health_insurance
 
     list_filter = ('invoice_item__patient', 'invoice_item', 'carecode')
     date_hierarchy = 'date'
     list_display = ('carecode', 'date')
     search_fields = ['carecode__code', 'carecode__name']
-    actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
+    actions = [create_invoice_for_health_insurance]
 
     form = PrestationForm
 
