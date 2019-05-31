@@ -48,6 +48,10 @@ def process_codes(apps, schema_editor):
                         elif v.end_date is not None and v.end_date < start_date and v.start_date < start_date:
                             codes_that_are_too_old.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date,
                                                                                 v.end_date))
+                        elif v.end_date is None and v.start_date < start_date:
+                            v = validity_date(start_date=start_date, end_date=end_date,
+                                              gross_amount=row[3].replace(',', '.'), care_code=c)
+                            v.save()
                         else:
                             unknowns.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
 
