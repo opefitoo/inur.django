@@ -50,3 +50,6 @@ urlpatterns += [
 #     urlpatterns += [
 #         url(r'^__debug__/', include(debug_toolbar.urls)),
 #     ]
+admin.site.site_header = "Invoice for Nurses Admin (inur)"
+admin.site.site_title = "INUR Admin Portal"
+admin.site.index_title = "Welcome to INUR Portal"
