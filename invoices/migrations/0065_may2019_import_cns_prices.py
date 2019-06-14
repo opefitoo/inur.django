@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import csv
 import os
 
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import migrations
 
 from invoices import settings
@@ -56,7 +56,11 @@ def process_codes(apps, schema_editor):
                             v.end_date = parse_date("2019-04-30")
                             v.save()
                             vnew = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=care_code_to_updt)
-                            vnew.save()
+                            try:
+                                vnew.clean()
+                                vnew.save()
+                            except ValidationError as e:
+                                print(e)
                             break
                         elif v.end_date == end_date and v.start_date == start_date:
                             v.gross_amount = row[3].replace(',', '.')
@@ -69,7 +73,11 @@ def process_codes(apps, schema_editor):
                     c.save()
                     validity_date = apps.get_model("invoices", "ValidityDate")
                     v = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=c)
-                    v.save()
+                    try:
+                        v.clean()
+                        v.save()
+                    except ValidationError as e:
+                        print(e)
     print("*** Updated codes %s", updated_codes)
     print("*** Codes Too Old to update %s", codes_that_are_too_old)
     print("*** Unknown Situation Or Nothing to do %s" % unknowns)
