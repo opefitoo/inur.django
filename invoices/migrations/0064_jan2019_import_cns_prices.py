@@ -49,7 +49,7 @@ def process_codes(apps, schema_editor):
                             unknowns.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
                     if need_new_vdate:
                         validity_date = apps.get_model("invoices", "ValidityDate")
-                        v_new = validity_date(start_date=start_date,
+                        v_new = validity_date(start_date=start_date, end_date=end_date,
                                               gross_amount=row[3].replace(',', '.'), care_code=care_code_to_updt)
                         v_new.save()
                         codes_that_are_too_old.append('%s from %s to %s' % (care_code_to_updt.code, v_new.start_date,
@@ -59,7 +59,7 @@ def process_codes(apps, schema_editor):
                     c = care_code(code=code, name=row[0][0:49], description=row[0])
                     c.save()
                     validity_date = apps.get_model("invoices", "ValidityDate")
-                    v = validity_date(start_date=start_date,
+                    v = validity_date(start_date=start_date, end_date=end_date,
                                       gross_amount=row[3].replace(',', '.'), care_code=c)
                     v.save()
     print("*** Updated codes %s", updated_codes)
