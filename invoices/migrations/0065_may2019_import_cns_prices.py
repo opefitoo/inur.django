@@ -57,12 +57,11 @@ def process_codes(apps, schema_editor):
                             v.save()
                             vnew = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=care_code_to_updt)
                             try:
-                                vnew.clean()
+                                vnew.full_clean()
                                 vnew.save()
                             except ValidationError as e:
                                 print(e)
-                            break
-                        elif v.end_date == end_date and v.start_date == start_date:
+                        elif v.end_date is None and v.start_date == start_date:
                             v.gross_amount = row[3].replace(',', '.')
                             v.save()
                         else:
@@ -74,7 +73,7 @@ def process_codes(apps, schema_editor):
                     validity_date = apps.get_model("invoices", "ValidityDate")
                     v = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=c)
                     try:
-                        v.clean()
+                        v.full_clean()
                         v.save()
                     except ValidationError as e:
                         print(e)
