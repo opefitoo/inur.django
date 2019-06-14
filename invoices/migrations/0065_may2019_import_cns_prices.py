@@ -45,7 +45,9 @@ def process_codes(apps, schema_editor):
                             else:
                                 updated_codes.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date,
                                                                                 v.end_date))
-                        elif v.end_date is not None and v.end_date < start_date and v.start_date < start_date:
+                        elif v.end_date is not None \
+                                and (v.end_date < start_date and v.end_date != parse_date("2019-04-30")) \
+                                and v.start_date < start_date:
                             codes_that_are_too_old.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date,
                                                                                 v.end_date))
                         elif (v.end_date is None or v.end_date == parse_date("2019-04-30")) \
