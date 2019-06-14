@@ -54,6 +54,10 @@ def process_codes(apps, schema_editor):
                             v.save()
                             vnew = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=care_code_to_updt)
                             vnew.save()
+                        elif v.end_date == end_date and v.start_date == start_date:
+                            v.gross_amount = row[3].replace(',', '.')
+                            v.save()
+                            break
                         else:
                             unknowns.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
 
