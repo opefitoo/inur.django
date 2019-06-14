@@ -34,6 +34,7 @@ def process_codes(apps, schema_editor):
                     care_code_to_updt.save()
                     validity_date = apps.get_model("invoices", "ValidityDate")
                     vs = validity_date.objects.filter(care_code__id=care_code_to_updt.id)
+                    need_new_vdate = False
                     for v in vs:
                         if (v.end_date is None or v.end_date < start_date) \
                                 and v.start_date == start_date:
@@ -43,14 +44,16 @@ def process_codes(apps, schema_editor):
                             updated_codes.append(
                                 '%s from %s to %s' % (care_code_to_updt.code, v.end_date, v.start_date))
                         elif v.end_date is not None and v.end_date < start_date and v.start_date < start_date:
-                            validity_date = apps.get_model("invoices", "ValidityDate")
-                            vnew = validity_date(start_date=start_date,
-                                                 gross_amount=row[3].replace(',', '.'), care_code=care_code_to_updt)
-                            vnew.save()
-                            codes_that_are_too_old.append('%s from %s to %s' % (care_code_to_updt.code, vnew.start_date,
-                                                                                vnew.end_date))
+                            need_new_vdate = True
                         else:
                             unknowns.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
+                    if need_new_vdate:
+                        validity_date = apps.get_model("invoices", "ValidityDate")
+                        v_new = validity_date(start_date=start_date,
+                                              gross_amount=row[3].replace(',', '.'), care_code=care_code_to_updt)
+                        v_new.save()
+                        codes_that_are_too_old.append('%s from %s to %s' % (care_code_to_updt.code, v_new.start_date,
+                                                                            v_new.end_date))
 
                 except ObjectDoesNotExist:
                     c = care_code(code=code, name=row[0][0:49], description=row[0])
