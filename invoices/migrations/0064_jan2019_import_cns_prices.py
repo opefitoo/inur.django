@@ -45,6 +45,11 @@ def process_codes(apps, schema_editor):
                                 '%s from %s to %s' % (care_code_to_updt.code, v.end_date, v.start_date))
                         elif v.end_date is not None and v.end_date < start_date and v.start_date < start_date:
                             need_new_vdate = True
+                        elif v.end_date == end_date and v.start_date == start_date:
+                            v.gross_amount = row[3].replace(',', '.')
+                            v.save()
+                            need_new_vdate = False
+                            break
                         else:
                             unknowns.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
                     if need_new_vdate:
