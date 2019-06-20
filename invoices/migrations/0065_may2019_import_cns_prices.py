@@ -56,7 +56,7 @@ def process_codes(apps, schema_editor):
                             v.end_date = parse_date("2019-04-30")
                             v.save()
                             vnew = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=care_code_to_updt)
-                            if validity_date.objects.filter(start_date=parse_date("2019-5-1")) is not None:
+                            if validity_date.objects.filter(start_date=parse_date("2019-5-1"), care_code__id=care_code_to_updt.id) is None:
                                 try:
                                     vnew.full_clean()
                                     vnew.save()
