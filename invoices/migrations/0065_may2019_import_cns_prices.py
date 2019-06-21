@@ -61,14 +61,15 @@ def process_codes(apps, schema_editor):
                 current_validity = validity_date.objects.filter(care_code__id=care_code_to_updt.id,
                                                                 start_date=parse_date("2019-5-1"),
                                                                 end_date=None)
-                if current_validity.values() is not None:
+                if current_validity.values().count() != 0:
                     for v in current_validity:
                         v.gross_amount = row[3].replace(',', '.')
                         v.end_date = None
                         v.full_clean()
                         v.save()
                 else:
-                    v = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=c)
+                    v = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'),
+                                      care_code=care_code_to_updt)
                     v.full_clean()
                     v.save()
                     created_codes.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
