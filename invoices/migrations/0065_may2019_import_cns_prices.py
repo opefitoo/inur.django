@@ -17,6 +17,7 @@ def process_codes(apps, schema_editor):
     updated_codes = []
     codes_that_are_too_old = []
     unknowns = []
+    created_codes = []
     path = '2019_may_cns_codes.csv'
     start_date = parse_date("2019-05-01")
     end_date = None
@@ -32,52 +33,45 @@ def process_codes(apps, schema_editor):
                     care_code_to_updt.name = row[0][0:49]
                     care_code_to_updt.description = row[0]
                     care_code_to_updt.save()
-                    validity_date = apps.get_model("invoices", "ValidityDate")
-                    vs = validity_date.objects.filter(care_code__id=care_code_to_updt.id)
-                    for v in vs:
-                        if (v.end_date is None or v.end_date < start_date) \
-                                and v.start_date == start_date:
-                            v.gross_amount = row[3].replace(',', '.')
-                            v.end_date = end_date
-                            v.save()
-                            if v.end_date is not None:
-                                updated_codes.append(','.join(care_code_to_updt.code + v.end_date + v.start_date))
-                            else:
-                                updated_codes.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date,
-                                                                                v.end_date))
-                        elif v.end_date is not None \
-                                and (v.end_date < start_date and v.end_date != parse_date("2019-04-30")) \
-                                and v.start_date < start_date:
-                            codes_that_are_too_old.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date,
-                                                                                v.end_date))
-                        elif (v.end_date is None or v.end_date == parse_date("2019-04-30")) \
-                                and v.start_date < start_date:
-                            validity_date = apps.get_model("invoices", "ValidityDate")
-                            v.end_date = parse_date("2019-04-30")
-                            v.save()
-                            vnew = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=care_code_to_updt)
-                            if validity_date.objects.filter(start_date=parse_date("2019-5-1"), care_code__id=care_code_to_updt.id) is None:
-                                try:
-                                    vnew.full_clean()
-                                    vnew.save()
-                                except ValidationError as e:
-                                    print(e)
-                        elif v.end_date is None and v.start_date == start_date:
-                            v.gross_amount = row[3].replace(',', '.')
-                            v.save()
-                        else:
-                            unknowns.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
-
                 except ObjectDoesNotExist:
                     c = care_code(code=code, name=row[0][0:49], description=row[0])
                     c.save()
-                    validity_date = apps.get_model("invoices", "ValidityDate")
-                    v = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=c)
-                    try:
+                validity_date = apps.get_model("invoices", "ValidityDate")
+                vs = validity_date.objects.filter(care_code__id=care_code_to_updt.id)
+                for v in vs:
+                    if v.end_date is None and v.start_date == start_date:
+                        v.gross_amount = row[3].replace(',', '.')
+                        v.end_date = end_date
+                        v.save()
+                    elif v.end_date == parse_date("2019-04-30") and v.start_date == parse_date("2019-01-01"):
+                        codes_that_are_too_old.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date,
+                                                                            v.end_date))
+                    elif v.end_date is None and v.start_date == parse_date("2019-01-01"):
+                        v.end_date = parse_date("2019-04-30")
                         v.full_clean()
                         v.save()
-                    except ValidationError as e:
-                        print(e)
+                        updated_codes.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
+                    elif v.end_date < parse_date("2019-04-30") and v.start_date < start_date:
+                        codes_that_are_too_old.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date,
+                                                                            v.end_date))
+                    else:
+                        unknowns.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
+                current_validity = validity_date.objects.filter(care_code__id=care_code_to_updt.id,
+                                                                start_date=parse_date("2019-5-1"),
+                                                                end_date=None)
+                if current_validity.values() is not None:
+                    for v in current_validity:
+                        v.gross_amount = row[3].replace(',', '.')
+                        v.end_date = None
+                        v.full_clean()
+                        v.save()
+                else:
+                    v = validity_date(start_date=start_date, gross_amount=row[3].replace(',', '.'), care_code=c)
+                    v.full_clean()
+                    v.save()
+                    created_codes.append('%s from %s to %s' % (care_code_to_updt.code, v.start_date, v.end_date))
+
+    print("*** Created codes %s", created_codes)
     print("*** Updated codes %s", updated_codes)
     print("*** Codes Too Old to update %s", codes_that_are_too_old)
     print("*** Unknown Situation Or Nothing to do %s" % unknowns)
