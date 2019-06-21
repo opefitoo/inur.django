@@ -183,7 +183,9 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
             , "patient_name" : patientName + " " + patientFirstName
             , "invoice_amount" : newData[23][5]}
 
+
 pdf_private_invoice.short_description = u"Facture Privée PDF"
+
 
 def _compute_sum(data, position):
     sum = 0
