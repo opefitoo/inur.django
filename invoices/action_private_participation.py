@@ -111,7 +111,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                    + 'Regine SIMBA\n'
                    + '1A, rue fort wallis\n'
                    + 'L-2714 Luxembourg\n'
-                   + 'T' + u"é".encode("utf-8") + "l: 691.30.85.84",
+                   + u"Tél: 691.30.85.84",
                    'CODE DU FOURNISSEUR DE SOINS DE SANTE\n'
                    + '300744-44'
                    ],
