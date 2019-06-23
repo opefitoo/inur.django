@@ -124,9 +124,10 @@ class Timesheet(models.Model):
     submitted_date = models.DateTimeField("Date d'envoi", blank=True,
                                           null=True)
     submitted_date.editable = True
-    other_details = models.TextField("Autres details", max_length=100, blank=True,
+    other_details = models.TextField(u"Autres détails", max_length=100, blank=True,
                                      null=True)
     timesheet_validated = models.BooleanField("Valide", default=False)
+
     def __str__(self):  # Python 3: def __str__(self):
         return '%s - du %s au %s' % (self.employee, self.start_date, self.end_date)
 
@@ -159,7 +160,7 @@ class TimesheetDetail(models.Model):
         exclude = []
         if self.patient is not None and self.patient.id is None:
             exclude = ['patient']
-        #if self.task_description is not None:
+        # if self.task_description is not None:
         #    exclude.append('task_description')
         if self.timesheet is not None and self.timesheet.id is None:
             exclude.append('timesheet')
@@ -171,7 +172,7 @@ class TimesheetDetail(models.Model):
             raise ValidationError(messages)
 
     @staticmethod
-    def validate(instance_id,data):
+    def validate(instance_id, data):
         result = {}
         result.update(TimesheetDetail.validate_dates(data))
         return result
@@ -181,9 +182,90 @@ class TimesheetDetail(models.Model):
         messages = {}
         is_valid = data['end_date'] is None or data['start_date'].time() <= data['end_date']
         if not is_valid:
-            messages = {'end_date': u"Heure de fin être supérieure à l'heure de début"}
+            messages = {'end_date': u"Heure de fin doit être supérieure à l'heure de début"}
+
+        return messages
+
+    def __str__(self):
+        return ''
+
+
+class SimplifiedTimesheet(models.Model):
+    employee = models.ForeignKey('invoices.Employee',
+                                 on_delete=models.CASCADE)
+    employee.editable = False
+    employee.visible = False
+    start_date = models.DateField(u'Date début',
+                                  help_text=u'Date de début de votre timesheet, '
+                                            u'qui sera en  général la date de début du mois')
+    start_date.editable = True
+    end_date = models.DateField('Date fin',
+                                help_text=u'Date de fin de votre timesheet,'
+                                          u' qui sera en  général la date de la fin du mois')
+    end_date.editable = True
+    timesheet_validated = models.BooleanField("Valide", default=False)
+
+    def clean(self):
+        exclude = []
+
+        if hasattr(self, 'employee') and self.employee is not None and self.employee.id is None:
+            exclude.append('employee')
+
+        super(SimplifiedTimesheet, self).clean_fields(exclude)
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance_id, data):
+        result = {}
+        result.update(SimplifiedTimesheet.validate_dates(data))
+        return result
+
+    @staticmethod
+    def validate_dates(data):
+        messages = {}
+        is_valid = data['end_date'] is None or data['start_date'] <= data['end_date']
+        if not is_valid:
+            messages = {'end_date': u"Date de fin doit être après la date de début"}
 
         return messages
 
     def __str__(self):  # Python 3: def __str__(self):
+        return '%s - du %s au %s' % (self.employee, self.start_date, self.end_date)
+
+
+class SimplifiedTimesheetDetail(models.Model):
+    start_date = models.DateTimeField('Date')
+    end_date = models.TimeField('Heure fin')
+    simplified_timesheet = models.ForeignKey(SimplifiedTimesheet,
+                                             on_delete=models.CASCADE)
+
+    def clean(self):
+        exclude = []
+
+        if self.simplified_timesheet is not None and self.simplified_timesheet.id is None:
+            exclude.append('simplified_timesheet')
+
+        super(SimplifiedTimesheetDetail, self).clean_fields(exclude)
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance_id, data):
+        result = {}
+        result.update(SimplifiedTimesheetDetail.validate_dates(data))
+        return result
+
+    @staticmethod
+    def validate_dates(data):
+        messages = {}
+        is_valid = data['end_date'] is None or data['start_date'].time() <= data['end_date']
+        if not is_valid:
+            messages = {'end_date': u"Heure de fin doit être avant l'heure de début"}
+
+        return messages
+
+    def __str__(self):
         return ''

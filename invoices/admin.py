@@ -13,7 +13,8 @@ from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm,
     PatientForm
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
-from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
+from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask, \
+    SimplifiedTimesheetDetail, SimplifiedTimesheet
 
 
 class JobPostionAdmin(admin.ModelAdmin):
@@ -264,8 +265,8 @@ class TimesheetAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if not change:
-            currentUser = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
-            obj.employee = currentUser[0]
+            current_user = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
+            obj.employee = current_user[0]
         obj.save()
 
     def timesheet_owner(self, instance):
@@ -277,4 +278,42 @@ class TimesheetAdmin(admin.ModelAdmin):
             return qs
         return qs.filter(employee__user=request.user)
 
+
 admin.site.register(Timesheet, TimesheetAdmin)
+
+
+class SimplifiedTimesheetDetailInline(admin.TabularInline):
+    extra = 1
+    model = SimplifiedTimesheetDetail
+    fields = ('start_date', 'end_date')
+    search_fields = ['patient']
+    ordering = ['start_date']
+
+
+class SimplifiedTimesheetAdmin(admin.ModelAdmin):
+    fields = ('start_date', 'end_date', 'timesheet_validated')
+    date_hierarchy = 'end_date'
+    inlines = [SimplifiedTimesheetDetailInline]
+    list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated')
+    list_filter = ['employee', ]
+    list_select_related = True
+    readonly_fields = ('timesheet_validated',)
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            current_user = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
+            obj.employee = current_user[0]
+        obj.save()
+
+    def timesheet_owner(self, instance):
+        return instance.employee.user.username
+
+    def get_queryset(self, request):
+        qs = super(SimplifiedTimesheetAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(employee__user=request.user)
+
+
+admin.site.register(SimplifiedTimesheet, SimplifiedTimesheetAdmin)
+
