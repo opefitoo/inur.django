@@ -2,8 +2,10 @@
 
 import datetime
 
-from models import Patient, InvoiceItem, Prestation#, PrivateInvoiceItem
-from django.http import HttpResponseRedirect
+from django.core import serializers
+
+from invoices.models import Patient, InvoiceItem, CareCode, ValidityDate  # , PrivateInvoiceItem
+from django.http import HttpResponseRedirect, HttpResponse
 
 
 def previous_months_invoices_jan(modeladmin, request, queryset):
@@ -150,12 +152,24 @@ def previous_months_invoices_april(modeladmin, request, queryset):
 
 
 def make_private(modeladmin, request, queryset):
-    # response = HttpResponse(content_type='text')
+
     for ccode in queryset:
         ccode.reimbursed = False
         ccode.clean()
         ccode.save()
 
+def export_xml(modeladmin, request, queryset):
+    #response = HttpResponse(content_type='application/xml')
+    XMLSerializer = serializers.get_serializer("xml")
+    xml_serializer = XMLSerializer()
+    xml_serializer.serialize(queryset)
+    data = xml_serializer.getvalue()
+    with open("file.xml", "w") as out:
+        all_objects = list(ValidityDate.objects.all()) + list(CareCode.objects.all())
+        xml_serializer.serialize(all_objects, stream=out)
+    data = open("file.xml", "rb").read()
+    return HttpResponse(data, content_type="application/xml")
+    #response['Content-Disposition'] = 'attachment; filename="file.xml"'
 
 def apply_start_date_2017(modeladmin, request, queryset):
     # response = HttpResponse(content_type='text')
@@ -231,33 +245,6 @@ def previous_months_invoices_july_2017(modeladmin, request, queryset):
              invoice_counters += 1
 
 
-def syncro_clients(modeladmin, request, queryset):
-    import requests
-    import os
-
-    #client_id = os.environ['RSRC_GURU_CLIENT_SECRET']
-    #client_secret = 'RSRC_GURU_CLIENT_SECRET'
-    client_id = '5c124391a2412c2d2e8c54a5416167153a37667c7d2884fc9e36c43f92d96e5d'
-    client_secret = '33b20c509a69d32bf2fea63df5ecc72af46bb0ba9d4a4f76aab0e061648e3ac7'
-    redirect_uri = 'https://regine3.herokuapp.com/admin/'
-    authorize_url = "https://api.resourceguruapp.com/oauth/authorize?client_id=$client_id&redirect_uri=$redirect_uri&response_type=code"
-    token_url = 'https://api.resourceguruapp.com/oauth/token'
-
-    from oauthlib.oauth2 import BackendApplicationClient
-    from requests.auth import HTTPBasicAuth
-    from requests_oauthlib import OAuth2Session
-    auth = HTTPBasicAuth (client_id, client_secret)
-    client = BackendApplicationClient (client_id=client_id)
-    oauth = OAuth2Session (client=client)
-    token = oauth.fetch_token (token_url=token_url, auth=auth)
-
-    headers = {"Authorization": "Bearer " + token['access_token']}
-
-    resources = requests.get ("https://api.resourceguruapp.com/v1/example-account-subdomain/resources",
-                              headers=headers)
-    print resources
-
-
 
 
 
@@ -306,40 +293,3 @@ def create_invoice_for_health_insurance(modeladmin, request, queryset):
 
 create_invoice_for_health_insurance.short_description = u"Créer une facture pour CNS"
 
-
-def create_invoice_for_client_no_irs_reimbursed(modeladmin, request, queryset):
-    from collections import defaultdict
-
-    prestations_to_invoice = defaultdict (list)
-    invoices_created = []
-    invpks = []
-    for p in queryset:
-        if PrivateInvoiceItem.objects.filter (prestations__id=p.pk).count () == 0 and not p.carecode.reimbursed:
-            prestations_to_invoice[p.patient].append (p)
-
-    _private_patient_flag = False
-    for k, v in prestations_to_invoice.iteritems ():
-        if (k.private_patient):
-            invoiceitem = PrivateInvoiceItem (private_patient=k,
-                                              invoice_date=datetime.datetime.now (),
-                                              invoice_sent=False,
-                                              invoice_paid=False)
-            _private_patient_flag = True
-        else:
-            invoiceitem = InvoiceItem (patient=k,
-                                       invoice_date=datetime.datetime.now (),
-                                       invoice_sent=False,
-                                       invoice_paid=False)
-            invoices_created.append (invoiceitem)
-            invpks.append (invoiceitem.pk)
-        invoiceitem.save ()
-        for prestav in v:
-            invoiceitem.prestations.add (prestav)
-
-    if not _private_patient_flag:
-        return HttpResponseRedirect ("/admin/invoices/invoiceitem/")
-    else:
-        return HttpResponseRedirect ("/admin/invoices/privateinvoiceitem/")
-
-
-create_invoice_for_client_no_irs_reimbursed.short_description = u"Créer une facture pour client avec soins non remboursés"

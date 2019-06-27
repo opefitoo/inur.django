@@ -25,28 +25,47 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
-def generate_road_book_2015(modeladmin, request, queryset):
+def generate_road_book_2016(modeladmin, request, queryset):
+    import  datetime
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
     now = timezone.now()
-    response['Content-Disposition'] = 'attachment; filename="road-book-2015-%s.pdf"' % now.strftime('%d-%m-%Y')
+    response['Content-Disposition'] = 'attachment; filename="road-book-2016-%s.pdf"' % now.strftime('%d-%m-%Y')
+    name_map = {'zipcode': 'zipcode', 'address': 'address', 'pk': 'id'}
 
-    allyear_patients = Patient.objects.raw(
-        "select pr.date,p.* from invoices_prestation pr, invoices_patient p, invoices_carecode cc  where cc.id = pr.carecode_id and cc.code = 'NF1' and pr.patient_id = p.id  and pr.date >= '2015-01-01' and pr.date <= '2015-12-31' group by pr.date,p.id order by pr.date asc")
-    allyear_patients.db
+
+    allyear_patients = Patient.objects.raw("select prst.date,p.* from invoices_invoiceitem pr, invoices_patient p, invoices_carecode cc, invoices_prestation prst where cc.id = prst.carecode_id and cc.code like '%NF%' and pr.patient_id = p.id and prst.date >= '2016-01-01' and prst.date <= '2016-12-31' and prst.invoice_item_id = pr.id group by prst.date,p.id order by prst.date asc")
+
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute("select prst.date,p.* from invoices_invoiceitem pr, invoices_patient p, invoices_carecode cc, invoices_prestation prst where cc.id = prst.carecode_id and cc.code like '%NF%' and pr.patient_id = p.id and prst.date >= '2016-01-01' and prst.date <= '2016-12-31' and prst.invoice_item_id = pr.id group by prst.date,p.id order by prst.date asc")
+        row = cursor.fetchall()
 
     elements = []
     data = []
-    data.append(('Nom Patient', 'Adresse', 'Date', 'Distance'))
+    #data.append(('Nom Patient', 'Adresse', 'Date', 'Distance'))
+
+    import csv
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="roadbook2016.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Nom Patient', 'Adresse', 'Date', 'Distance'])
+
 
     sumdistance = 0
-    for p in allyear_patients:
-        _patient_address = u"%s %s, %s" % (p.address, p.zipcode, p.city)
-        if now != p.date:
+    counter = 1
+    for p in row:
+        counter = counter + 1
+        if counter == 5:
+            break
+        _patient_address = u"%s %s, %s" % (p[5], p[6], p[7])
+        if now != p[0]:
             _point_start = "1A rue fort wallis,Luxembourg"
         else:
             _point_start = _point_start
-        now = p.date
+        now = p[0]
         _point_end = _patient_address
         r = requests.get(
             'https://maps.googleapis.com/maps/api/distancematrix/json?origins=fort%s&destinations=%s&mode=car&language=en-EN&sensor=false' % (
@@ -57,7 +76,7 @@ def generate_road_book_2015(modeladmin, request, queryset):
             sumdistance += r.json()['rows'][0]['elements'][0]['distance']['value']
         elif r.status_code == 200 and 'OK' == r.json()['status'] and r.json()['rows'][0]['elements'][0][
             'status'] == u'NOT_FOUND':
-            _point_start = p.city
+            _point_start = p[7]
             r = requests.get(
                 'https://maps.googleapis.com/maps/api/distancematrix/json?origins=fort%s&destinations=%s&mode=car&language=en-EN&sensor=false' % (
                     _point_start, _point_end))
@@ -87,10 +106,10 @@ def generate_road_book_2015(modeladmin, request, queryset):
                        'status'], "p.end:" + _point_end, "p.start:" + _point_start, r.json()['rows'][0]['elements'][0],
                    sep='--')
 
-        data.append((p.name + ' ' + p.first_name,
+            writer.writerow([p[4] + ' ' + p[3],
                      _patient_address,
-                     (p.date).strftime('%d/%m/%Y %H:%M'),
-                     pdistance))
+                     (p[0]).strftime('%d/%m/%Y %H:%M'),
+                     pdistance])
 
         _point_start = _point_end
 
@@ -106,13 +125,14 @@ def generate_road_book_2015(modeladmin, request, queryset):
 
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
-    elements.append(Paragraph(u"Livre de bord pour l'année 2015 (génération automatique)", styles['Center']))
+    elements.append(Paragraph(u"Livre de bord pour l'année 2016 (génération automatique)", styles['Center']))
     elements.append(table)
     elements.append(Spacer(1, 18))
     elements.append(
-        Paragraph("La distance totale parcourue en 2015 est de %s KM" % (sumdistance / 1000), styles['Center']))
+        Paragraph("La distance totale parcourue en 2016 est de %s KM" % (sumdistance / 1000), styles['Center']))
     doc = SimpleDocTemplate(response, pagesize=letter, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm,
                             bottomMargin=1 * cm)
 
-    doc.build(elements)
+    #doc.build(elements)
+
     return response

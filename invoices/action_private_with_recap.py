@@ -9,7 +9,6 @@ from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from django.utils.timezone import localtime, now
-from django.utils.encoding import smart_unicode
 import decimal
 
 def pdf_private_invoice_with_recap(modeladmin, request, queryset):
@@ -180,7 +179,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     elements.append(Spacer(1, 18))
     
     _pouracquit_signature = Table([["Pour acquit, le:", "Signature et cachet"]], [10*cm, 10*cm], 1*[0.5*cm], hAlign='LEFT')
-    
+
+    ## TODO: global setting replacement
     _infos_iban = Table([["LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(Spacer(1, 10))
     #elements.append(_infos_iban)
@@ -190,6 +190,9 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         _infos_iban = Table([["Lors du virement, veuillez indiquer la r"+ u"é" + "f"+ u"é"+ "rence: %s " %invoice_number]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     #elements.append( _infos_iban )
     #elements.append(_pouracquit_signature)
+    _file_name = '-'.join([a.invoice_number for a in queryset.order_by("invoice_number")])
+    _payment_ref = _file_name.replace(" ", "")[:10]
+    elements.extend(_build_recap(_recap_date, _payment_ref, recapitulatif_data))
     return {"elements" : elements
             , "invoice_number" : invoice_number
             , "patient_name" : patientName + " " + patientFirstName

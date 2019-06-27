@@ -25,7 +25,9 @@ SECRET_KEY = 'pc_pf1h+5n4h(ayu2)j@2_c+qgumxfa5xeplar6*eq8x745lg!'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Do not Allow all host headers
+#TODO: fix this hard coded value
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.sur.lu', '.herokuapp.com']
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
@@ -33,8 +35,8 @@ CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 INSTALLED_APPS = (
     'dal',
     'dal_select2',
-    'jet.dashboard',
-    'jet',
+    #'bootstrap_admin',  # always before django.contrib.admin
+    #'jet',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -47,18 +49,20 @@ INSTALLED_APPS = (
     'constance',
     'constance.backends.database',
     'invoices',
-    'api'
+    'api',
+    #'debug_toolbar'
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.contrib.auth.middleware.RemoteUserMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 ROOT_URLCONF = 'invoices.urls'
@@ -66,7 +70,7 @@ ROOT_URLCONF = 'invoices.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -86,17 +90,30 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 # Parse database configuration from $DATABASE_URL
 import dj_database_url
 
-DATABASES = {'default': dj_database_url.config(default='postgres://nursev3:nursev3@localhost:5432/nursev3')}
+DATABASES = {'default': dj_database_url.config(default='postgres://inur:inur@localhost:5432/inur')}
 
 # Enable Connection Pooling
 # DATABASES['default']['ENGINE'] = 'django_postgrespool'
 DATABASES['default']['AUTOCOMMIT'] = True
 
+
+
+# DATABASES = {
+#     'default': {        
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'django_db',
+#         'USER' : 'user_name',
+#         'PASSWORD' : 'password',
+#         'HOST' : '127.0.0.1',
+#         'PORT' : '5432',
+#     }
+# }
+
+
+
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Allow all host headers
-ALLOWED_HOSTS = ['*']
 
 # Static asset configuration
 import os
@@ -115,7 +132,7 @@ MEDIA_URL = '/media/'
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-be'
 
 TIME_ZONE = 'Europe/Luxembourg'
 
@@ -144,48 +161,48 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication'
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 10,
 }
 
-JET_THEMES = [
-    {
-        'theme': 'default',
-        'color': '#47bac1',
-        'title': 'Default'
-    },
-    {
-        'theme': 'green',
-        'color': '#44b78b',
-        'title': 'Green'
-    },
-    {
-        'theme': 'light-green',
-        'color': '#2faa60',
-        'title': 'Light Green'
-    },
-    {
-        'theme': 'light-violet',
-        'color': '#a464c4',
-        'title': 'Light Violet'
-    },
-    {
-        'theme': 'light-blue',
-        'color': '#5EADDE',
-        'title': 'Light Blue'
-    },
-    {
-        'theme': 'light-gray',
-        'color': '#222',
-        'title': 'Light Gray'
-    }
-]
 
 COUNTRIES_FIRST = ['LU', 'FR', 'BE', 'DE']
 COUNTRIES_FIRST_BREAK = '...'
 
+CONSTANCE_ADDITIONAL_FIELDS = {
+    'yes_no_null_select': ['django.forms.fields.ChoiceField', {
+        'widget': 'django.forms.Select',
+        'choices': ((None, "..."), (True, "Oui"), (False, "Non"))
+    }],
+}
+
 CONSTANCE_CONFIG = {
     'AT_HOME_CARE_CODE': (
         'NF01', "CareCode that is set to Prestation's copy which is created if at_home is checked", str),
+    'MAIN_NURSE_CODE': (
+        '300744-44', "Code infirmier pour les soins", str),
+    'MAIN_BANK_ACCOUNT': (
+        'LU55 0019 4555 2516 1000 BCEELULL', "Compte bancaire IBAN pour les virement bancaire ", str),
+    'ALTERNATE_BANK_ACCOUNT': (
+        'LUXX XXXX XXXX XXXX XXXX XXXXLULL', "Compte bancaire n.2 IBAN pour les virement bancaire ", str),
+    'NURSE_NAME':
+        ('Regine SIMBA',
+         'Nom du prestataire de soins (apparait sur les factures)', str),
+    'NURSE_ADDRESS':
+        ('1A, rue fort wallis',
+         'Adresse du prestataire de soins (apparait sur les factures)', str),
+    'NURSE_ZIP_CODE_CITY':
+        ('L-2714 Luxembourg',
+         'Code postal et Ville du prestataire de soins (apparait sur les factures)', str),
+    'NURSE_PHONE_NUMBER':
+        ('Tél: 691.30.85.84',
+         'Nom et adresse du prestataire de soins (apparait sur les factures)', str),
+    'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select')
+}
+
+CONSTANCE_CONFIG_FIELDSETS = {
+    'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE'),
+    'Options de Facturation': ('MAIN_NURSE_CODE','NURSE_NAME','NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
+                               'NURSE_PHONE_NUMBER','MAIN_BANK_ACCOUNT','ALTERNATE_BANK_ACCOUNT'),
 }
 
 GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
@@ -193,3 +210,7 @@ if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_
     credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
         json.dump(json.loads(credentials), outfile)
+
+#INTERNAL_IPS = {'127.0.0.1',}
+
+IMPORTER_CSV_FOLDER = os.path.join(BASE_DIR, '../initialdata/')

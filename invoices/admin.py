@@ -1,14 +1,20 @@
 from django.contrib import admin
+from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
 from django.utils.functional import curry
+from django.utils.html import format_html
 
-from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private
-from forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm
-from models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
-    Hospitalization
-from timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask
+from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private, \
+    export_xml
+from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, PrestationInlineFormSet, \
+    PatientForm
+from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
+    Hospitalization, InvoiceItemBatch
+from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask, \
+    SimplifiedTimesheetDetail, SimplifiedTimesheet
 
 
 class JobPostionAdmin(admin.ModelAdmin):
@@ -54,7 +60,7 @@ class ValidityDateInline(admin.TabularInline):
 class CareCoreAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
-    actions = [apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private]
+    actions = [apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private, export_xml]
     inlines = [ValidityDateInline]
 
 
@@ -68,30 +74,46 @@ class EmployeeAdmin(admin.ModelAdmin):
 
 admin.site.register(Employee, EmployeeAdmin)
 
+
 class HospitalizationInline(admin.TabularInline):
     extra = 0
     model = Hospitalization
-    fields = ('start_date','end_date','description')
+    formset = HospitalizationFormSet
+    fields = ('start_date', 'end_date', 'description')
+
+
+class MedicalPrescriptionInlineAdmin(admin.TabularInline):
+    extra = 0
+    model = MedicalPrescription
+    readonly_fields = ('scan_preview', )
+
+    def scan_preview(self, obj):
+        return obj.image_preview(300, 300)
+
+    scan_preview.allow_tags = True
+
 
 class PatientAdmin(admin.ModelAdmin):
-    from generate_pacifico_invoices import generate_pacifico
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     search_fields = ['name', 'first_name', 'code_sn']
-    actions = [generate_pacifico]
-    inlines = [HospitalizationInline]
+    form = PatientForm
+    actions = []
+    inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
 
 
 admin.site.register(Patient, PatientAdmin)
 
 
 class PrestationAdmin(admin.ModelAdmin):
-    from invaction import create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed
+    from invoices.invaction import create_invoice_for_health_insurance
 
+    list_filter = ('invoice_item__patient', 'invoice_item', 'carecode')
     date_hierarchy = 'date'
     list_display = ('carecode', 'date')
     search_fields = ['carecode__code', 'carecode__name']
-    actions = [create_invoice_for_health_insurance, create_invoice_for_client_no_irs_reimbursed]
+    actions = [create_invoice_for_health_insurance]
+
     form = PrestationForm
 
     def get_changeform_initial_data(self, request):
@@ -106,9 +128,6 @@ class PrestationAdmin(admin.ModelAdmin):
         return initial
 
 
-admin.site.register(Prestation, PrestationAdmin)
-
-
 class PhysicianAdmin(admin.ModelAdmin):
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'provider_code')
@@ -120,29 +139,45 @@ admin.site.register(Physician, PhysicianAdmin)
 
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
-    list_display = ('date', 'prescriptor', 'file')
-    search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name']
+    list_display = ('date', 'prescriptor','patient','file')
+    search_fields = ['date', 'prescriptor__name', 'prescriptor__firstname', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
 
 
 admin.site.register(MedicalPrescription, MedicalPrescriptionAdmin)
 
 
-class PrestationInline(admin.TabularInline):
+class PrestationInline(TabularInline):
     extra = 0
+    max_num = InvoiceItem.PRESTATION_LIMIT_MAX
     model = Prestation
+    formset = PrestationInlineFormSet
     form = PrestationForm
-    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee', 'copy')
-    readonly_fields = ("copy",)
+    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee', 'copy', 'delete')
+    readonly_fields = ('copy', 'delete')
     search_fields = ['carecode', 'date', 'employee']
+    can_delete = False
+    ordering = ['date']
 
     class Media:
-        js = ["js/inline-copy.js",]
+        js = [
+            "js/inline-copy.js",
+            "js/inline-delete.js",
+        ]
+        css = {
+            'all': ('css/inline-prestation.css',)
+        }
 
     def copy(self, obj):
-        return "<a href='#' class='copy_inline'>Copy</a>"
+        return format_html("<a href='#' class='copy_inline'>Copy</a>")
+
+
+    def delete(self, obj):
+        url = reverse('delete-prestation')
+        return format_html("<a href='%s' class='deletelink' data-prestation_id='%s'>Delete</a>" % (url, obj.id))
 
     copy.allow_tags = True
+    delete.allow_tags = True
 
     def get_formset(self, request, obj=None, **kwargs):
         initial = []
@@ -165,46 +200,120 @@ class PrestationInline(admin.TabularInline):
 
 class InvoiceItemAdmin(admin.ModelAdmin):
     from invoices.action import export_to_pdf
-    from action_private import pdf_private_invoice
-    from action_private_participation import pdf_private_invoice_pp
-    from invaction import previous_months_invoices_april, previous_months_invoices_july_2017
-    from generate_pacifico_invoices import niedercorn_avril_mai_2017
-    from invaction import syncro_clients
+    from invoices.action_private import pdf_private_invoice
+    from invoices.action_private_participation import pdf_private_invoice_pp
+    from invoices.action_depinsurance import export_to_pdf2
     form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient__name', 'patient__first_name']
-    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, syncro_clients,
-               previous_months_invoices_april, previous_months_invoices_july_2017, niedercorn_avril_mai_2017]
+    readonly_fields = ('medical_prescription_preview',)
+    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, export_to_pdf2]
     inlines = [PrestationInline]
+    fieldsets = (
+        (None, {
+            'fields': ('invoice_number', 'is_private', 'patient', 'invoice_date')
+        }),
+        ('Advanced options', {
+            'classes': ('collapse',),
+            'fields': ('accident_id', 'accident_date', 'is_valid', 'validation_comment'),
+        }),
+    )
 
+    def medical_prescription_preview(self, obj):
+        return obj.medical_prescription.image_preview()
+
+    medical_prescription_preview.allow_tags = True
 
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
 
 
+class InvoiceItemInlineAdmin(admin.TabularInline):
+    show_change_link = True
+    max_num = 0
+    extra = 0
+    model = InvoiceItem
+    fields = ('invoice_date', 'is_valid', 'validation_comment')
+    readonly_fields = ('invoice_date',)
+    can_delete = False
+
+
+class InvoiceItemBatchAdmin(admin.ModelAdmin):
+    inlines = [InvoiceItemInlineAdmin]
+    readonly_fields = ('file',)
+
+admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
+
+
 class TimesheetDetailInline(admin.TabularInline):
-    extra = 2
+    extra = 1
     model = TimesheetDetail
-    fields = ('start_date', 'end_date', 'task_description', 'patient',)
+    fields = ('start_date', 'end_date','task_description', 'patient',)
     search_fields = ['patient']
+    ordering = ['start_date']
 
 
 class TimesheetAdmin(admin.ModelAdmin):
     fields = ('start_date', 'end_date', 'submitted_date', 'other_details', 'timesheet_validated')
+    date_hierarchy = 'end_date'
     inlines = [TimesheetDetailInline]
     list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated')
+    list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated',)
 
     def save_model(self, request, obj, form, change):
         if not change:
-            currentUser = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
-            obj.employee = currentUser[0]
+            current_user = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
+            obj.employee = current_user[0]
         obj.save()
 
     def timesheet_owner(self, instance):
         return instance.employee.user.username
 
+    def get_queryset(self, request):
+        qs = super(TimesheetAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(employee__user=request.user)
+
 
 admin.site.register(Timesheet, TimesheetAdmin)
+
+
+class SimplifiedTimesheetDetailInline(admin.TabularInline):
+    extra = 1
+    model = SimplifiedTimesheetDetail
+    fields = ('start_date', 'end_date')
+    search_fields = ['patient']
+    ordering = ['start_date']
+
+
+class SimplifiedTimesheetAdmin(admin.ModelAdmin):
+    fields = ('start_date', 'end_date', 'timesheet_validated')
+    date_hierarchy = 'end_date'
+    inlines = [SimplifiedTimesheetDetailInline]
+    list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated')
+    list_filter = ['employee', ]
+    list_select_related = True
+    readonly_fields = ('timesheet_validated',)
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            current_user = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
+            obj.employee = current_user[0]
+        obj.save()
+
+    def timesheet_owner(self, instance):
+        return instance.employee.user.username
+
+    def get_queryset(self, request):
+        qs = super(SimplifiedTimesheetAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(employee__user=request.user)
+
+
+admin.site.register(SimplifiedTimesheet, SimplifiedTimesheetAdmin)
+

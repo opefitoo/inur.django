@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 from django_countries.serializers import CountryFieldMixin
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
+    ValidityDate
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
@@ -25,12 +26,13 @@ class CareCodeSerializer(serializers.ModelSerializer):
 
 class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
     def validate(self, data):
-        is_private = False
-        if 'is_private' in data:
-            is_private = data['is_private']
-        is_code_sn_valid, message = Patient.is_code_sn_valid(is_private, data['code_sn'])
-        if not is_code_sn_valid:
-            raise serializers.ValidationError(message)
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        
+        messages = Patient.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
 
         return data
 
@@ -38,7 +40,7 @@ class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
         model = Patient
         fields = (
             'id', 'code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'country', 'phone_number',
-            'email_address', 'participation_statutaire', 'is_private')
+            'email_address', 'participation_statutaire', 'is_private', 'date_of_death')
 
 
 class PhysicianSerializer(CountryFieldMixin, serializers.ModelSerializer):
@@ -51,8 +53,12 @@ class PhysicianSerializer(CountryFieldMixin, serializers.ModelSerializer):
 
 class PrestationSerializer(serializers.ModelSerializer):
     def validate(self, data):
-        if 'at_home' in data and data['at_home'] and not Prestation.check_default_at_home_carecode_exists():
-            raise serializers.ValidationError(Prestation.at_home_carecode_does_not_exist_msg())
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        messages = Prestation.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
 
         return data
 
@@ -62,15 +68,29 @@ class PrestationSerializer(serializers.ModelSerializer):
 
 
 class MedicalPrescriptionSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        messages = MedicalPrescription.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
+
+        return data
+
     class Meta:
         model = MedicalPrescription
-        fields = ('id', 'prescriptor', 'date', 'file')
+        fields = ('id', 'prescriptor', 'patient', 'date', 'end_date', 'file')
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
     def validate(self, data):
-        if data['is_private'] != data['patient'].is_private:
-            raise serializers.ValidationError("Only private Patients allowed in private Invoice Item.")
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        messages = InvoiceItem.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
 
         return data
 
@@ -97,3 +117,36 @@ class TimesheetTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimesheetTask
         fields = ('id', 'name', 'description')
+
+
+class HospitalizationSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        messages = Hospitalization.validate(instance_id, data)
+        messages.update(Hospitalization.validate_date_range(instance_id, data))
+        if messages:
+            raise serializers.ValidationError(messages)
+
+        return data
+
+    class Meta:
+        model = Hospitalization
+        fields = ('id', 'start_date', 'end_date', 'description', 'patient')
+
+
+class ValidityDateSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        messages = ValidityDate.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
+
+        return data
+
+    class Meta:
+        model = ValidityDate
+        fields = ('id', 'start_date', 'end_date', 'gross_amount', 'care_code')

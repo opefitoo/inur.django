@@ -15,6 +15,8 @@ router.register(r'job-positions', views.JobPositionViewSet)
 router.register(r'timesheets', views.TimesheetViewSet)
 router.register(r'timesheet-tasks', views.TimesheetTaskViewSet)
 router.register(r'medical-prescriptions', views.MedicalPrescriptionViewSet)
+router.register(r'hospitalizations', views.HospitalizationViewSet)
+router.register(r'validity-dates', views.ValidityDateViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),

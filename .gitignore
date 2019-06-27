@@ -1,5 +1,7 @@
+myenv
 .env
 venv
+venv2
 *.pyc
 staticfiles
 .project
@@ -11,6 +13,10 @@ db.sqlite*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+
+invoices/local_settings.py
+
+www/static*
 
 # C extensions
 *.so
@@ -65,3 +71,8 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

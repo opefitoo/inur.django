@@ -1,0 +1,6 @@
+<p class="datetime">
+  {{ date_label }} {% with widget=widget.subwidgets.0 %}{% include widget.template_name %}{% endwith %}<br />
+  {{ time_label }} {% with widget=widget.subwidgets.1 %}{% include widget.template_name %}{% endwith %}
+  <input type="button" class="default_time" value="8 A.M." />
+  <input type="button" class="default_time" value="8 P.M." />
+</p>
