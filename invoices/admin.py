@@ -3,15 +3,10 @@ from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from django.template.response import TemplateResponse
-from django.urls import reverse, path
+from django.urls import reverse
 from django.utils.functional import curry
-from django.utils.html import format_html, format_html_join
-from django.conf.urls import url
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 
-import invoices
-from invoices import models
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private, \
     export_xml
 from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, \
@@ -309,7 +304,7 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
     list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours', 'total_hours_saturdays',
-              'total_hours_sundays')
+                       'total_hours_sundays')
     verbose_name = 'Time sheet simple'
     verbose_name_plural = 'Time sheets simples'
 
@@ -369,4 +364,3 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
 #
 
 admin.site.register(SimplifiedTimesheet, SimplifiedTimesheetAdmin)
-
