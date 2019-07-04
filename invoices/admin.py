@@ -305,8 +305,7 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
               'total_hours_sundays')
     date_hierarchy = 'end_date'
     inlines = [SimplifiedTimesheetDetailInline]
-    list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated', 'total_hours',
-                    'total_hours_saturdays',              'total_hours_sundays')
+    list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated',)
     list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours', 'total_hours_saturdays',
