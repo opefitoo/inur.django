@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
+import pytz
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
+
 from invoices.storages import CustomizedGoogleDriveStorage
 from django.core.exceptions import ValidationError
 
@@ -205,6 +210,38 @@ class SimplifiedTimesheet(models.Model):
     end_date.editable = True
     timesheet_validated = models.BooleanField("Valide", default=False)
 
+    def __calculate_total_hours(self):
+        calculated_hours = {"total": 0,
+                            "saturdays": 0,
+                            "sundays": 0}
+        total = timezone.timedelta(0)
+        total_saturdays = timezone.timedelta(0)
+        total_sundays = timezone.timedelta(0)
+        for v in self.simplifiedtimesheetdetail_set.all():
+            delta = datetime.combine(timezone.now(), v.end_date) - \
+                    datetime.combine(timezone.now(), v.start_date.astimezone().time().replace(tzinfo=None))
+            total = total + delta
+            if v.start_date.astimezone().weekday() == 5:
+                total_saturdays = total_saturdays + delta
+            elif v.start_date.astimezone().weekday() == 6:
+                total_sundays = total_sundays + delta
+        calculated_hours["total"] = total
+        calculated_hours["total_saturdays"] = total_saturdays
+        calculated_hours["total_sundays"] = total_sundays
+        return calculated_hours
+
+    @property
+    def total_hours(self):
+        return self.__calculate_total_hours()["total"]
+
+    @property
+    def total_hours_saturdays(self):
+        return self.__calculate_total_hours()["total_saturdays"]
+
+    @property
+    def total_hours_sundays(self):
+        return self.__calculate_total_hours()["total_sundays"]
+
     def clean(self):
         exclude = []
 
@@ -240,6 +277,10 @@ class SimplifiedTimesheetDetail(models.Model):
     end_date = models.TimeField('Heure fin')
     simplified_timesheet = models.ForeignKey(SimplifiedTimesheet,
                                              on_delete=models.CASCADE)
+
+    class Meta(object):
+        verbose_name = 'Time sheet simple'
+        verbose_name_plural = 'Time sheets simples'
 
     def clean(self):
         exclude = []

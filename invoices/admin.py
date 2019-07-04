@@ -3,13 +3,19 @@ from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from django.urls import reverse
+from django.template.response import TemplateResponse
+from django.urls import reverse, path
 from django.utils.functional import curry
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
+from django.conf.urls import url
+from django.utils.safestring import mark_safe
 
+import invoices
+from invoices import models
 from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private, \
     export_xml
-from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, PrestationInlineFormSet, \
+from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, \
+    PrestationInlineFormSet, \
     PatientForm
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
@@ -85,7 +91,7 @@ class HospitalizationInline(admin.TabularInline):
 class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     extra = 0
     model = MedicalPrescription
-    readonly_fields = ('scan_preview', )
+    readonly_fields = ('scan_preview',)
 
     def scan_preview(self, obj):
         return obj.image_preview(300, 300)
@@ -139,7 +145,7 @@ admin.site.register(Physician, PhysicianAdmin)
 
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
-    list_display = ('date', 'prescriptor','patient','file')
+    list_display = ('date', 'prescriptor', 'patient', 'file')
     search_fields = ['date', 'prescriptor__name', 'prescriptor__firstname', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
 
@@ -170,7 +176,6 @@ class PrestationInline(TabularInline):
 
     def copy(self, obj):
         return format_html("<a href='#' class='copy_inline'>Copy</a>")
-
 
     def delete(self, obj):
         url = reverse('delete-prestation')
@@ -226,6 +231,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
 
     medical_prescription_preview.allow_tags = True
 
+
 admin.site.register(InvoiceItem, InvoiceItemAdmin)
 
 
@@ -243,13 +249,14 @@ class InvoiceItemBatchAdmin(admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
     readonly_fields = ('file',)
 
+
 admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
 
 
 class TimesheetDetailInline(admin.TabularInline):
     extra = 1
     model = TimesheetDetail
-    fields = ('start_date', 'end_date','task_description', 'patient',)
+    fields = ('start_date', 'end_date', 'task_description', 'patient',)
     search_fields = ['patient']
     ordering = ['start_date']
 
@@ -262,10 +269,13 @@ class TimesheetAdmin(admin.ModelAdmin):
     list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated',)
+    verbose_name = 'Time sheet simple'
+    verbose_name_plural = 'Time sheets simples'
 
     def save_model(self, request, obj, form, change):
         if not change:
-            current_user = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
+            current_user = Employee.objects.raw(
+                'select * from invoices_employee where user_id = %s' % (request.user.id))
             obj.employee = current_user[0]
         obj.save()
 
@@ -285,23 +295,29 @@ admin.site.register(Timesheet, TimesheetAdmin)
 class SimplifiedTimesheetDetailInline(admin.TabularInline):
     extra = 1
     model = SimplifiedTimesheetDetail
-    fields = ('start_date', 'end_date')
+    fields = ('start_date', 'end_date',)
     search_fields = ['patient']
     ordering = ['start_date']
 
 
 class SimplifiedTimesheetAdmin(admin.ModelAdmin):
-    fields = ('start_date', 'end_date', 'timesheet_validated')
+    fields = ('start_date', 'end_date', 'timesheet_validated', 'total_hours', 'total_hours_saturdays',
+              'total_hours_sundays')
     date_hierarchy = 'end_date'
     inlines = [SimplifiedTimesheetDetailInline]
-    list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated')
+    list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated', 'total_hours',
+                    'total_hours_saturdays',              'total_hours_sundays')
     list_filter = ['employee', ]
     list_select_related = True
-    readonly_fields = ('timesheet_validated',)
+    readonly_fields = ('timesheet_validated', 'total_hours', 'total_hours_saturdays',
+              'total_hours_sundays')
+    verbose_name = 'Time sheet simple'
+    verbose_name_plural = 'Time sheets simples'
 
     def save_model(self, request, obj, form, change):
         if not change:
-            current_user = Employee.objects.raw('select * from invoices_employee where user_id = %s' % (request.user.id))
+            current_user = Employee.objects.raw(
+                'select * from invoices_employee where user_id = %s' % (request.user.id))
             obj.employee = current_user[0]
         obj.save()
 
@@ -314,6 +330,44 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
             return qs
         return qs.filter(employee__user=request.user)
 
+
+# class SimplifiedTimesheetAdmin2(admin.ModelAdmin):
+#     fields = ('start_date', 'end_date', 'timesheet_validated', 'total_hours', 'total_hours_saturdays',
+#               'total_hours_sundays')
+#     date_hierarchy = 'end_date'
+#     inlines = [SimplifiedTimesheetDetailInline]
+#     list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated', 'total_hours',
+#                     'total_hours_saturdays', 'total_hours_sundays')
+#     list_filter = ['employee', ]
+#     list_select_related = True
+#     readonly_fields = ('timesheet_validated', 'total_hours', 'total_hours_saturdays', 'total_hours_sundays')
+#     verbose_name = 'Time sheet simple'
+#     verbose_name_plural = 'Time sheets simples'
+#     change_form_template = 'admin/preview_template.html'
+#
+#     # def calculate_total_hours(self, instance):
+#     #     return format_html_join(
+#     #         mark_safe('<br>'),
+#     #         '{}',
+#     #         SimplifiedTimesheet.objects.calculate_total_hours().get('total')
+#     #     ) or mark_safe("<span class='errors'>I can't determine this address.</span>")
+#
+#     def save_model(self, request, obj, form, change):
+#         if not change:
+#             current_user = Employee.objects.raw(
+#                 'select * from invoices_employee where user_id = %s' % (request.user.id))
+#             obj.employee = current_user[0]
+#         obj.save()
+#
+#     def timesheet_owner(self, instance):
+#         return instance.employee.user.username
+#
+#     def get_queryset(self, request):
+#         qs = super(SimplifiedTimesheetAdmin2, self).get_queryset(request)
+#         if request.user.is_superuser:
+#             return qs
+#         return qs.filter(employee__user=request.user)
+#
 
 admin.site.register(SimplifiedTimesheet, SimplifiedTimesheetAdmin)
 
