@@ -195,6 +195,11 @@ class TimesheetDetail(models.Model):
 
 
 class SimplifiedTimesheet(models.Model):
+
+    class Meta(object):
+        verbose_name = u'Temps de travail'
+        verbose_name_plural = u'Temps de travail'
+
     employee = models.ForeignKey('invoices.Employee',
                                  on_delete=models.CASCADE)
     employee.editable = False
@@ -278,8 +283,8 @@ class SimplifiedTimesheetDetail(models.Model):
                                              on_delete=models.CASCADE)
 
     class Meta(object):
-        verbose_name = 'Time sheet simple'
-        verbose_name_plural = 'Time sheets simples'
+        verbose_name = u'Détail temps de travail'
+        verbose_name_plural = u'Détails temps de travail'
 
     def clean(self):
         exclude = []
