@@ -27,6 +27,7 @@ def pdf_private_invoice(modeladmin, request, queryset):
                                                                                               queryset[0].invoice_number,
                                                                                               queryset[0].invoice_date.strftime('%d-%m-%Y'))
         elif hasattr(queryset[0], 'patient'):
+            _file_name = '-'.join([a.invoice_number for a in queryset.order_by("invoice_number")])
             response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s.pdf"' %(queryset[0].patient.name,
                                                                                               queryset[0].invoice_number,
                                                                                               queryset[0].invoice_date.strftime('%d-%m-%Y'))
