@@ -217,7 +217,9 @@ class InvoiceItemAdmin(admin.ModelAdmin):
         }),
         ('Advanced options', {
             'classes': ('collapse',),
-            'fields': ('accident_id', 'accident_date', 'is_valid', 'validation_comment'),
+            'fields': ('accident_id', 'accident_date', 'is_valid', 'validation_comment',
+                       'patient_invoice_date', 'invoice_send_date', 'invoice_sent', 'invoice_paid',
+                       'medical_prescription'),
         }),
     )
 
