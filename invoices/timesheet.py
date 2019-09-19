@@ -25,6 +25,10 @@ class Employee(models.Model):
     start_contract = models.DateField('start date')
     end_contract = models.DateField('end date', blank=True,
                                     null=True)
+    provider_code = models.CharField(u'Code prestataire',
+                                     help_text=u'Saisissez le code prestataire auprès de la C.N.S',
+                                     max_length=30,
+                                     blank=True)
     occupation = models.ForeignKey(JobPosition,
                                    on_delete=models.CASCADE)
     has_gdrive_access = models.BooleanField("Allow access to Google Drive files", default=False)

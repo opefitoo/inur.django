@@ -21,6 +21,7 @@ from invoices.managers import InvoiceItemBatchManager
 from django.utils.timezone import now
 
 from invoices.storages import CustomizedGoogleDriveStorage
+from constance import config
 
 prestation_gcalendar = PrestationGoogleCalendar()
 
@@ -495,6 +496,10 @@ def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
 
 
 class InvoiceItem(models.Model):
+    class Meta(object):
+        verbose_name = u"Mémoire d'honoraire"
+        verbose_name_plural = u"Mémoires d'honoraire"
+
     PRESTATION_LIMIT_MAX = 20
 
     invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)

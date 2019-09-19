@@ -222,6 +222,8 @@ class InvoiceItemAdmin(admin.ModelAdmin):
                        'medical_prescription'),
         }),
     )
+    verbose_name = u"Mémoire d'honoraire"
+    verbose_name_plural = u"Mémoires d'honoraire"
 
     def medical_prescription_preview(self, obj):
         return obj.medical_prescription.image_preview()

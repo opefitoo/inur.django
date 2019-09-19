@@ -15,6 +15,7 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 import pytz
 from django.utils.encoding import smart_text
 import decimal
+from constance import config
 
 
 def get_doc_elements(queryset):
@@ -96,7 +97,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
                          presta.carecode.net_amount(presta.date, patient.is_private, patient.participation_statutaire),
                          (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
                          "",
-                         "300744-44"))
+                         presta.employee.provider_code))
 
     for x in range(len(data), 22):
         data.append((x, '', '', '', '', '', '', '', ''))
@@ -111,12 +112,9 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     newData.append(('', '', '', 'Total', _compute_sum(data[1:], 4), _compute_sum(data[1:], 5), '', '', ''))
 
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + 'Regine SIMBA\n'
-                   + '1A, rue fort wallis\n'
-                   + 'L-2714 Luxembourg\n'
-                   + u"Tél: 691.30.85.84",
-                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + '300744-44'
+                   + "{0}\n{1}\n{2}\n{3}".format(config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
+                                                 config.NURSE_PHONE_NUMBER),
+                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
                    ],
                   [u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n"
                    + u'Nom et Pr' + smart_text("e") + u'nom du patient: %s' % smart_text(patientNameAndFirstName),
