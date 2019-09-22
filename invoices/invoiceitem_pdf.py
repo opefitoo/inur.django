@@ -87,11 +87,12 @@ def _build_final_page(total, order_number):
     table2 = Table(data2, [5 * cm, 3 * cm, 3 * cm, 7 * cm], [1.25 * cm, 0.5 * cm, 1.25 * cm, 1.25 * cm])
     table2.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                 ('ALIGN', (3, 0), (3, 0), 'CENTER'),
-                               ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),
-                               ('FONTSIZE', (0, 0), (-1, -1), 8),
-                               ('BOX', (3, 0), (3, 3), 0.25, colors.black),
-                               ('BOX', (3, 0), (3, 1), 0.25, colors.black),
-                               ('BOX', (1, 3), (1, 3), 1, colors.black)]))
+                                ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),
+                                ('SPAN', (1, 2), (2, 2)),
+                                ('FONTSIZE', (0, 0), (-1, -1), 8),
+                                ('BOX', (3, 0), (3, 3), 0.25, colors.black),
+                                ('BOX', (3, 0), (3, 1), 0.25, colors.black),
+                                ('BOX', (1, 3), (1, 3), 1, colors.black)]))
     elements.append(table2)
     elements.append(Spacer(1, 20))
     styles = getSampleStyleSheet()
