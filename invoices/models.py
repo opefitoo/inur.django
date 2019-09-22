@@ -186,6 +186,12 @@ class Patient(models.Model):
 
         return messages
 
+    def clean_name(self):
+        return self.cleaned_data['name'].upper()
+
+    def clean_first_name(self):
+        return self.cleaned_data['first_name'].capitalize()
+
 
 class Hospitalization(models.Model):
     start_date = models.DateField(u"Début d'hospitlisation")
