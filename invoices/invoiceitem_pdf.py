@@ -5,7 +5,7 @@ import os
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus.flowables import Spacer, PageBreak
@@ -37,7 +37,10 @@ def get_doc_elements(queryset):
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
             elements.append(PageBreak())
-    elements.extend(_build_recap(recapitulatif_data))
+    recap_data = _build_recap(recapitulatif_data)
+    elements.extend(recap_data[0])
+    elements.append(PageBreak())
+    elements.extend(_build_final_page(recap_data[1], recap_data[2]))
 
     return elements
 
@@ -61,6 +64,70 @@ def _build_recap(recaps):
                                ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
                                ]))
     elements.append(table)
+    return elements, total, i
+
+
+def _build_final_page(total, order_number):
+    elements = []
+    data = [["RELEVE DES NOTES D’HONORAIRES DES"],
+            ["ACTES ET SERVICES DES INFIRMIERS"]]
+    table = Table(data, [10 * cm], [0.75 * cm, 0.75*cm])
+    table.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                               ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),
+                               ('FONTSIZE', (0, 0), (-1, -1),  12),
+                               ('BOX', (0, 0), (-1, -1), 1.25, colors.black),
+                               ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                               ]))
+    elements.append(table)
+    elements.append(Spacer(1, 18))
+    data2 = [[u"Identification du fournisseur de", config.NURSE_NAME, "", u"réservé à l’union des caisses de maladie"],
+             [u"soins de santé",  "", "", ""],
+             [u"Coordonnées bancaires :", config.MAIN_BANK_ACCOUNT, "", ""],
+             ["Code: ", config.MAIN_NURSE_CODE, "", ""]]
+    table2 = Table(data2, [5 * cm, 3 * cm, 3 * cm, 7 * cm], [1.25 * cm, 0.5 * cm, 1.25 * cm, 1.25 * cm])
+    table2.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                                ('ALIGN', (3, 0), (3, 0), 'CENTER'),
+                               ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),
+                               ('FONTSIZE', (0, 0), (-1, -1), 8),
+                               ('BOX', (3, 0), (3, 3), 0.25, colors.black),
+                               ('BOX', (3, 0), (3, 1), 0.25, colors.black),
+                               ('BOX', (1, 3), (1, 3), 1, colors.black)]))
+    elements.append(table2)
+    elements.append(Spacer(1, 20))
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='Justify', alignment=TA_JUSTIFY))
+    elements.append(Paragraph(u"Récapitulation des notes d’honoraires du chef de la fourniture de soins de santé dispensés aux personnes protégées relevant de l’assurance maladie / assurance accidents ou de l’assurance dépendance.",
+                              styles['Justify']))
+    elements.append(Spacer(2, 20))
+    elements.append(Paragraph(u"Pendant la période du :.................................. au :..................................",
+                              styles['Justify']))
+    data3 = [["Nombre des mémoires d’honoraires ou\nd’enregistrements du support informatique:",
+              order_number]]
+    table3 = Table(data3, [9 * cm, 8 * cm], [1.25 * cm])
+    table3.setStyle(TableStyle([('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                                ('ALIGN', (-1, -1), (-1, -1), 'CENTER'),
+                                ('VALIGN', (-1, -1), (-1, -1), 'MIDDLE'),
+                               ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),
+                               ('FONTSIZE', (0, 0), (-1, -1), 9),
+                               ('BOX', (1, 0), (-1, -1), 1.25, colors.black)]))
+    elements.append(Spacer(2, 20))
+    elements.append(table3)
+    elements.append(Spacer(2, 20))
+    data4 = [[u"Montant total des honoraires à charge de\nl’organisme assureur (montant net cf. zone 14) du\nmém. d’honoraires):",
+              "%.2f EUR" %round(total, 2)]]
+    table4 = Table(data4    , [9 * cm, 8 * cm], [1.25 * cm])
+    table4.setStyle(TableStyle([('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                                ('ALIGN', (-1, -1), (-1, -1), 'CENTER'),
+                                ('VALIGN', (-1, -1), (-1, -1), 'MIDDLE'),
+                                ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),
+                                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                                ('BOX', (1, 0), (-1, -1), 1.25, colors.black)]))
+    elements.append(table4)
+    elements.append(Spacer(40, 60))
+    styles.add(ParagraphStyle(name='Left', alignment=TA_LEFT))
+    elements.append(Paragraph(
+        u"Certifié sincère et véritable, mais non encore acquitté: ________________ ,le ______________________",
+        styles['Left']))
     return elements
 
 
@@ -150,7 +217,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
     elements.append(Spacer(1, 18))
     elements.append(
-        Paragraph("Memoire d'Honoraires Num. %s en date du : %s" % (invoice_number, invoice_date), styles['Center']))
+        Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s" % (invoice_number, invoice_date), styles['Center']))
     elements.append(Spacer(1, 18))
 
     elements.append(table)
