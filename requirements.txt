@@ -13,7 +13,7 @@ djangorestframework==3.7.3
 gunicorn>=19.5.0
 Markdown==2.6.9
 packaging==16.8
-Pillow==3.3.2
+Pillow==6.2.0
 psycopg2==2.7.3.2
 pyparsing==2.1.10
 pytz==2015.2
