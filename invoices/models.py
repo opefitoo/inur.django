@@ -37,6 +37,10 @@ class CareCode(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=400)
     reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
+    contribution_undue = models.BooleanField(u"Participation forfaitaire non dûe",
+                                         help_text=u"Si vous sélectionnez cette option la participation de 12% ne "
+                                         u"sera pas déduite de cette prestation",
+                                        default=False)
     exclusive_care_codes = models.ManyToManyField("self", blank=True)
 
     def gross_amount(self, date):
@@ -50,10 +54,10 @@ class CareCode(models.Model):
 
     def net_amount(self, date, private_patient, participation_statutaire):
         if not private_patient:
-            if self.reimbursed:
+            if self.reimbursed and not self.contribution_undue:
                 return round(((self.gross_amount(date) * 88) / 100), 2) + self._fin_part(date, participation_statutaire)
             else:
-                return 0
+                return self.gross_amount(date)
         else:
             return 0
 
@@ -70,6 +74,28 @@ class CareCode(models.Model):
     @staticmethod
     def autocomplete_search_fields():
         return 'name', 'code'
+
+    def clean(self, *args, **kwargs):
+        super(CareCode, self).clean_fields()
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance_id, data):
+        result = {}
+        result.update(CareCode.validate_combination(data))
+        return result
+
+    @staticmethod
+    def validate_combination(data):
+        messages = {}
+        if 'contribution_undue' in data and data['contribution_undue'] is not None:
+            is_invalid = data['reimbursed'] is False and data['contribution_undue'] is True
+            if is_invalid:
+                messages = {'contribution_undue':
+                            u'Vous ne pouvez appliquer ce champ que pour les soins remboursés par la CNS'}
+        return messages
 
 
 class ValidityDate(models.Model):
