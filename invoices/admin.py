@@ -95,7 +95,7 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
 
 
 class PatientAdmin(admin.ModelAdmin):
-    fields = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire', 'age')
+    
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     readonly_fields = ('age', )
