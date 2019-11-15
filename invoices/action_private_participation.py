@@ -87,9 +87,14 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                      (presta.date).strftime('%d/%m/%Y'),
                      '1',
                      presta.carecode.gross_amount(presta.date),
-                     presta.carecode.net_amount(presta.date, patient.is_private, patient.participation_statutaire),
+                     presta.carecode.net_amount(presta.date,
+                                                patient.is_private,
+                                                patient.participation_statutaire
+                                                and patient.age > 18),
                      "%10.2f" % (decimal.Decimal(presta.carecode.gross_amount(presta.date)) -
-                                                 decimal.Decimal(presta.carecode.net_amount(presta.date, patient.is_private, patient.participation_statutaire)))))
+                                                 decimal.Decimal(presta.carecode.net_amount(presta.date,
+                                                                                            patient.is_private,
+                                                                                            patient.participation_statutaire)))))
 
     for x in range(len(data), 22):
         data.append((x, '', '', '', '', '', ''))

@@ -87,10 +87,14 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                      (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
                      presta.quantity,
                      presta.carecode.gross_amount(presta.date) * presta.quantity,
-                     presta.carecode.net_amount(presta.date, patient.is_private, patient.participation_statutaire) * presta.quantity,
-                     "%10.2f" % ((decimal.Decimal(presta.carecode.gross_amount(presta.date)) - decimal.Decimal(presta.carecode.net_amount(presta.date,
-                                                                                                                                         patient.is_private,
-                                                                                                                                         patient.participation_statutaire))) * decimal.Decimal(presta.quantity)),
+                     presta.carecode.net_amount(presta.date,
+                                                patient.is_private,
+                                                patient.participation_statutaire
+                                                and patient.age > 18) * presta.quantity,
+                     "%10.2f" % ((decimal.Decimal(presta.carecode.gross_amount(presta.date))
+                                  - decimal.Decimal(presta.carecode.net_amount(presta.date,
+                                                                               patient.is_private,
+                                                                               patient.participation_statutaire and patient.age > 18))) * decimal.Decimal(presta.quantity)),
                      presta.employee))
     
     for x in range(len(data)  , 22):

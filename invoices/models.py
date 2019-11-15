@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
+from typing import Optional, Dict, Any
+
 import pytz
 import os
 import re
@@ -33,14 +35,15 @@ logger = logging.getLogger(__name__)
 class CareCode(models.Model):
     class Meta:
         ordering = ['-id']
+
     code = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=400)
     reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
     contribution_undue = models.BooleanField(u"Participation forfaitaire non dûe",
-                                         help_text=u"Si vous sélectionnez cette option la participation de 12% ne "
-                                         u"sera pas déduite de cette prestation",
-                                        default=False)
+                                             help_text=u"Si vous sélectionnez cette option la participation de 12% ne "
+                                                       u"sera pas déduite de cette prestation",
+                                             default=False)
     exclusive_care_codes = models.ManyToManyField("self", blank=True)
 
     def gross_amount(self, date):
@@ -94,7 +97,7 @@ class CareCode(models.Model):
             is_invalid = data['reimbursed'] is False and data['contribution_undue'] is True
             if is_invalid:
                 messages = {'contribution_undue':
-                            u'Vous ne pouvez appliquer ce champ que pour les soins remboursés par la CNS'}
+                                u'Vous ne pouvez appliquer ce champ que pour les soins remboursés par la CNS'}
         return messages
 
 
@@ -104,8 +107,10 @@ class ValidityDate(models.Model):
     Depending on Prestation date, gross_amount that is calculated in Invoice will differ.
 
     """
+
     class Meta:
         ordering = ['-id']
+
     start_date = models.DateField("date debut validite")
     end_date = models.DateField("date fin validite", blank=True, null=True)
     gross_amount = models.DecimalField("montant brut", max_digits=5, decimal_places=2)
@@ -157,6 +162,10 @@ class Patient(models.Model):
     participation_statutaire = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
     date_of_death = models.DateField(u"Date de décès", default=None, blank=True, null=True)
+
+    @property
+    def age(self):
+        return self.calculate_age(None)
 
     @staticmethod
     def autocomplete_search_fields():
@@ -211,6 +220,22 @@ class Patient(models.Model):
                 messages = {'code_sn': 'Code SN must be unique'}
 
         return messages
+
+    def calculate_age(self, care_date: object) -> object:
+        if care_date is None:
+            care_date = datetime.now()
+        born = self.extract_birth_date()
+        if born is not None:
+            return care_date.year - born.year - ((care_date.month, care_date.day) < (born.month, born.day))
+        return None
+
+    def extract_birth_date(self) -> object:
+        stripped_sn_code = self.code_sn.replace(" ", "")
+        if stripped_sn_code is not None and (stripped_sn_code[:4]).isdigit():
+            if (stripped_sn_code[4:6]).isdigit() and int(stripped_sn_code[4:6]) < 13:
+                if (stripped_sn_code[6:8]).isdigit() and int(stripped_sn_code[6:8]) < 32:
+                    return datetime.strptime(stripped_sn_code[:8], '%Y%m%d')
+        return None
 
     def clean_name(self):
         return self.cleaned_data['name'].upper()
@@ -467,6 +492,7 @@ class InvoiceItemBatch(models.Model):
     payment_date = models.DateField(null=True, blank=True)
     file = models.FileField(storage=gd_storage, blank=True, upload_to=invoiceitembatch_filename)
     _original_file = None
+
     # invoices to be corrected
     # total_amount
 

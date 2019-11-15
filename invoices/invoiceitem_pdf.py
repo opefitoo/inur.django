@@ -162,7 +162,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
                          (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
                          '1',
                          presta.carecode.gross_amount(presta.date),
-                         presta.carecode.net_amount(presta.date, patient.is_private, patient.participation_statutaire),
+                         presta.carecode.net_amount(presta.date, patient.is_private, (patient.participation_statutaire
+                                                                                      and patient.age > 18)),
                          (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
                          "",
                          presta.employee.provider_code))
