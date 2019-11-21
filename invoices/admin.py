@@ -15,7 +15,7 @@ from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm,
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
 from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask, \
-    SimplifiedTimesheetDetail, SimplifiedTimesheet
+    SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 
 
 class JobPostionAdmin(admin.ModelAdmin):
@@ -291,6 +291,20 @@ class TimesheetAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Timesheet, TimesheetAdmin)
+
+
+class PublicHolidayCalendarDetailInline(admin.TabularInline):
+    extra = 1
+    model = PublicHolidayCalendarDetail
+
+
+class PublicHolidayCalendarAdmin(admin.ModelAdmin):
+    inlines = [PublicHolidayCalendarDetailInline]
+    verbose_name = u'Congés légaux'
+    verbose_name_plural = u'Congés légaux'
+
+
+admin.site.register(PublicHolidayCalendar, PublicHolidayCalendarAdmin)
 
 
 class SimplifiedTimesheetDetailInline(admin.TabularInline):

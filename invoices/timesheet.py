@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
+from datetime import date
 
+from django.core.validators import MaxValueValidator, MinValueValidator, BaseValidator
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
+from django.utils.datetime_safe import strftime
+from django.utils.deconstruct import deconstructible
 
 from invoices.storages import CustomizedGoogleDriveStorage
 from django.core.exceptions import ValidationError
@@ -199,7 +202,6 @@ class TimesheetDetail(models.Model):
 
 
 class SimplifiedTimesheet(models.Model):
-
     class Meta(object):
         verbose_name = u'Temps de travail'
         verbose_name_plural = u'Temps de travail'
@@ -318,3 +320,55 @@ class SimplifiedTimesheetDetail(models.Model):
 
     def __str__(self):
         return ''
+
+
+def current_year():
+    return date.today().year
+
+
+def max_value_current_year(value):
+    return MaxValueValidator(current_year())(value)
+
+
+class PublicHolidayCalendar(models.Model):
+    calendar_year = models.PositiveIntegerField(
+        default=current_year())
+
+    def __str__(self):
+        return u"Congés publics pour l'année: %d" % self.calendar_year
+
+
+class PublicHolidayCalendarDetail(models.Model):
+    calendar_date = models.DateField(u'Date calendrier',
+                                     help_text=u'Saisir la date calendrier du jour férié')
+    calendar_link = models.ForeignKey(PublicHolidayCalendar, on_delete=models.CASCADE)
+
+    def clean(self):
+        exclude = []
+
+        if self.calendar_link is not None and self.calendar_link.id is None:
+            exclude.append('calendar_link')
+
+        super(PublicHolidayCalendarDetail, self).clean_fields(exclude)
+        messages = self.validate(self, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance, data):
+        result = {}
+        result.update(PublicHolidayCalendarDetail.validate_same_year(data, instance.calendar_link.calendar_year))
+        return result
+
+    @staticmethod
+    def validate_same_year(data, year):
+        messages = {}
+        is_valid = data['calendar_date'] is None or data['calendar_date'].year == year
+        if not is_valid:
+            messages = {'calendar_date': u"Veuillez saisir des dates pour l'année %s" % year}
+        return messages
+
+    def __str__(self):
+        return "%s - %s" \
+               % (date(self.calendar_date.year, self.calendar_date.month, self.calendar_date.day).strftime("%A"),
+                  self.calendar_date)
