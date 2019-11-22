@@ -291,7 +291,7 @@ class SimplifiedTimesheet(models.Model):
     @property
     def hours_should_work(self):
         return self.date_range(self.start_date, self.end_date) \
-               * (self.employee.employeecontractdetail_set.filter(start_date__gte=self.start_date).first()
+               * (self.employee.employeecontractdetail_set.filter(start_date__lte=self.start_date).first()
                   .number_of_hours / 5)
 
     @staticmethod
