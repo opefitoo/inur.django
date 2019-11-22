@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import date
+from datetime import date, datetime
 
 from django.core.validators import MaxValueValidator, MinValueValidator, BaseValidator
 from django.db import models
@@ -7,8 +7,6 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django.utils.datetime_safe import strftime
-from django.utils.deconstruct import deconstructible
 
 from invoices.storages import CustomizedGoogleDriveStorage
 from django.core.exceptions import ValidationError
@@ -222,22 +220,23 @@ class SimplifiedTimesheet(models.Model):
 
     def __calculate_total_hours(self):
         calculated_hours = {"total": 0,
-                            "saturdays": 0,
-                            "sundays": 0}
+                            "total_sundays": 0,
+                            "total_public_holidays": 0}
         total = timezone.timedelta(0)
-        total_saturdays = timezone.timedelta(0)
         total_sundays = timezone.timedelta(0)
+        total_public_holidays = timezone.timedelta(0)
         for v in self.simplifiedtimesheetdetail_set.all():
             delta = datetime.combine(timezone.now(), v.end_date) - \
                     datetime.combine(timezone.now(), v.start_date.astimezone().time().replace(tzinfo=None))
             total = total + delta
-            if v.start_date.astimezone().weekday() == 5:
-                total_saturdays = total_saturdays + delta
-            elif v.start_date.astimezone().weekday() == 6:
+            if v.start_date.astimezone().weekday() == 6:
                 total_sundays = total_sundays + delta
+            if PublicHolidayCalendarDetail.objects.filter(
+                    calendar_date__exact=v.start_date.astimezone()).first() is not None:
+                total_public_holidays = total_public_holidays + delta
         calculated_hours["total"] = total
-        calculated_hours["total_saturdays"] = total_saturdays
         calculated_hours["total_sundays"] = total_sundays
+        calculated_hours["total_public_holidays"] = total_public_holidays
         return calculated_hours
 
     @property
@@ -245,12 +244,12 @@ class SimplifiedTimesheet(models.Model):
         return self.__calculate_total_hours()["total"]
 
     @property
-    def total_hours_saturdays(self):
-        return self.__calculate_total_hours()["total_saturdays"]
-
-    @property
     def total_hours_sundays(self):
         return self.__calculate_total_hours()["total_sundays"]
+    
+    @property
+    def total_hours_public_holidays(self):
+        return self.__calculate_total_hours()["total_public_holidays"]
 
     def clean(self):
         exclude = []
