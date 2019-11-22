@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from django.core.validators import MaxValueValidator, MinValueValidator, BaseValidator
 from django.db import models
@@ -55,8 +55,22 @@ class Employee(models.Model):
     def autocomplete_search_fields():
         return 'occupation__name', 'user__first_name', 'user__last_name', 'user__username'
 
-    def __str__(self):  # Python 3: def __str__(self):
+    def __str__(self):
         return '%s' % (self.user.username.strip())
+
+
+class EmployeeContractDetail(models.Model):
+    start_date = models.DateField(u'Date début période')
+    end_date = models.DateField(u'Date fin période', blank=True, null=True)
+    number_of_hours = models.PositiveSmallIntegerField("Nombre d'heures par semaine",
+                                                       validators=[MinValueValidator(5), MaxValueValidator(40)])
+    employee_link = models.ForeignKey(Employee, on_delete=models.CASCADE)
+
+    def calculate_current_daily_hours(self):
+        return self.number_of_hours / 5
+
+    def __str__(self):
+        return 'Du %s au %s : %d heures/semaine' % (self.start_date, self.end_date, self.number_of_hours)
 
 
 @receiver(pre_save, sender=User, dispatch_uid="user_pre_save_gservices_permissions")
@@ -199,6 +213,18 @@ class TimesheetDetail(models.Model):
         return ''
 
 
+def current_month():
+    return date.today().month
+
+
+def current_year():
+    return date.today().year
+
+
+def max_value_current_year(value):
+    return MaxValueValidator(current_year())(value)
+
+
 class SimplifiedTimesheet(models.Model):
     class Meta(object):
         verbose_name = u'Temps de travail'
@@ -217,6 +243,29 @@ class SimplifiedTimesheet(models.Model):
                                           u' qui sera en  général la date de la fin du mois')
     end_date.editable = True
     timesheet_validated = models.BooleanField("Valide", default=False)
+
+    time_sheet_year = models.PositiveIntegerField(
+        default=current_year())
+
+    YEARS_MONTHS = [
+        (1, u'Janvier'),
+        (2, u'Février'),
+        (3, u'Mars'),
+        (4, u'Avril'),
+        (5, u'Mai'),
+        (6, u'Juin'),
+        (7, u'Juillet'),
+        (8, u'Août'),
+        (9, u'Septembre'),
+        (10, u'Octobre'),
+        (11, u'Novembre'),
+        (12, u'Décembre'),
+    ]
+    time_sheet_month = models.PositiveSmallIntegerField(
+        max_length=2,
+        choices=YEARS_MONTHS,
+        default=current_month(),
+    )
 
     def __calculate_total_hours(self):
         calculated_hours = {"total": 0,
@@ -240,13 +289,35 @@ class SimplifiedTimesheet(models.Model):
         return calculated_hours
 
     @property
+    def hours_should_work(self):
+        return self.date_range(self.start_date, self.end_date) \
+               * (self.employee.employeecontractdetail_set.filter(start_date__gte=self.start_date).first()
+                  .number_of_hours / 5)
+
+    @staticmethod
+    def date_range(start_date, end_date):
+        days = 0
+        for i in range(int((end_date - start_date).days)):
+            next_date = start_date + timedelta(i)
+            if next_date.weekday() not in (5, 6):
+                days = days + 1
+        for i in PublicHolidayCalendarDetail.objects.filter(calendar_date__lte=end_date, calendar_date__gte=start_date):
+            if i.calendar_date.weekday() not in (5, 6):
+                days = days - 1
+        return days
+
+    @property
+    def total_working_days(self):
+        return self.date_range(self.start_date, self.end_date)
+
+    @property
     def total_hours(self):
         return self.__calculate_total_hours()["total"]
 
     @property
     def total_hours_sundays(self):
         return self.__calculate_total_hours()["total_sundays"]
-    
+
     @property
     def total_hours_public_holidays(self):
         return self.__calculate_total_hours()["total_public_holidays"]
@@ -258,12 +329,12 @@ class SimplifiedTimesheet(models.Model):
             exclude.append('employee')
 
         super(SimplifiedTimesheet, self).clean_fields(exclude)
-        messages = self.validate(self.id, self.__dict__)
+        messages = self.validate(self, self.__dict__)
         if messages:
             raise ValidationError(messages)
 
     @staticmethod
-    def validate(instance_id, data):
+    def validate(instance, data):
         result = {}
         result.update(SimplifiedTimesheet.validate_dates(data))
         return result
@@ -298,14 +369,16 @@ class SimplifiedTimesheetDetail(models.Model):
             exclude.append('simplified_timesheet')
 
         super(SimplifiedTimesheetDetail, self).clean_fields(exclude)
-        messages = self.validate(self.id, self.__dict__)
+        messages = self.validate(self, self.__dict__)
         if messages:
             raise ValidationError(messages)
 
     @staticmethod
-    def validate(instance_id, data):
+    def validate(instance, data):
         result = {}
         result.update(SimplifiedTimesheetDetail.validate_dates(data))
+        result.update(SimplifiedTimesheetDetail.validate_periods(instance.simplified_timesheet.time_sheet_month,
+                                                                 instance.simplified_timesheet.time_sheet_year, data))
         return result
 
     @staticmethod
@@ -317,16 +390,17 @@ class SimplifiedTimesheetDetail(models.Model):
 
         return messages
 
+    @staticmethod
+    def validate_periods(month, year, data):
+        messages = {}
+        is_valid = data['start_date'].month == month and data['start_date'].year == year
+        if not is_valid:
+            messages = {'start_date': u"Date doit être dans le mois %d de l'année %s" % (month, year)}
+
+        return messages
+
     def __str__(self):
         return ''
-
-
-def current_year():
-    return date.today().year
-
-
-def max_value_current_year(value):
-    return MaxValueValidator(current_year())(value)
 
 
 class PublicHolidayCalendar(models.Model):

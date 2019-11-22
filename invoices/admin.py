@@ -15,7 +15,8 @@ from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm,
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
 from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask, \
-    SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
+    SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar, \
+    EmployeeContractDetail
 
 
 class JobPostionAdmin(admin.ModelAdmin):
@@ -68,7 +69,13 @@ class CareCoreAdmin(admin.ModelAdmin):
 admin.site.register(CareCode, CareCoreAdmin)
 
 
+class EmployeeContractDetailInline(TabularInline):
+    extra = 0
+    model = EmployeeContractDetail
+
+
 class EmployeeAdmin(admin.ModelAdmin):
+    inlines = [EmployeeContractDetailInline]
     list_display = ('user', 'start_contract', 'end_contract', 'occupation')
     search_fields = ['user', 'occupation']
 
@@ -322,7 +329,7 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
     list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
-                       'total_hours_sundays', 'total_hours_public_holidays')
+                       'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days', 'hours_should_work')
     verbose_name = 'Time sheet simple'
     verbose_name_plural = 'Time sheets simples'
 
