@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import date, datetime, timedelta
+from typing import Any, Union
 
 from django.core.validators import MaxValueValidator, MinValueValidator, BaseValidator
 from django.db import models
@@ -10,6 +11,7 @@ from django.utils import timezone
 
 from invoices.storages import CustomizedGoogleDriveStorage
 from django.core.exceptions import ValidationError
+from django.core.cache import cache
 
 
 class JobPosition(models.Model):
@@ -268,6 +270,9 @@ class SimplifiedTimesheet(models.Model):
     )
 
     def __calculate_total_hours(self):
+        calculated_hours = cache.get('total_hours_dictionary')
+        if calculated_hours is not None:
+            return calculated_hours
         calculated_hours = {"total": 0,
                             "total_sundays": 0,
                             "total_public_holidays": 0}
@@ -286,13 +291,22 @@ class SimplifiedTimesheet(models.Model):
         calculated_hours["total"] = total
         calculated_hours["total_sundays"] = total_sundays
         calculated_hours["total_public_holidays"] = total_public_holidays
+        cache.set('total_hours_dictionary', calculated_hours, 30)
         return calculated_hours
 
     @property
     def hours_should_work(self):
-        return self.date_range(self.start_date, self.end_date) \
-               * (self.employee.employeecontractdetail_set.filter(start_date__lte=self.start_date).first()
-                  .number_of_hours / 5)
+        # r = self.employee.employeecontractdetail_set.filter(start_date__lte=self.start_date, end_date__isnull=True) | \
+        #     self.employee.employeecontractdetail_set.filter(start_date__gte=self.start_date,
+        #                                                     end_date__lte=self.end_date)
+        calculated_hours = cache.get('total_hours_dictionary')
+        if calculated_hours is None:
+            calculated_hours = self.__calculate_total_hours()
+        total_legal_working_hours = self.date_range(self.start_date, self.end_date) \
+                                    * (self.employee.employeecontractdetail_set.filter(
+            start_date__lte=self.start_date).first().number_of_hours / 5)
+        balance: Union[float, Any] = calculated_hours["total"].total_seconds() - total_legal_working_hours * 3600
+        return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
 
     @staticmethod
     def date_range(start_date, end_date):
@@ -312,7 +326,8 @@ class SimplifiedTimesheet(models.Model):
 
     @property
     def total_hours(self):
-        return self.__calculate_total_hours()["total"]
+        total_delta = self.__calculate_total_hours()["total"].total_seconds()
+        return "%d h:%d mn" % (total_delta // 3600, (total_delta % 3600) // 60)
 
     @property
     def total_hours_sundays(self):
