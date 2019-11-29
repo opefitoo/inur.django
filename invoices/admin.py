@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
+from django.core.checks import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.utils.functional import curry
@@ -11,7 +12,7 @@ from invoices.invaction import apply_start_date_2017, apply_start_date_2015, app
     export_xml
 from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, \
     PrestationInlineFormSet, \
-    PatientForm
+    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
 from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask, \
@@ -102,10 +103,9 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
 
 
 class PatientAdmin(admin.ModelAdmin):
-    
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
-    readonly_fields = ('age', )
+    readonly_fields = ('age',)
     search_fields = ['name', 'first_name', 'code_sn']
     form = PatientForm
     actions = []
@@ -320,6 +320,7 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
     fields = ('start_date', 'end_date',)
     search_fields = ['patient']
     ordering = ['start_date']
+    form = SimplifiedTimesheetDetailForm
 
 
 class SimplifiedTimesheetAdmin(admin.ModelAdmin):
@@ -330,8 +331,10 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
                        'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days', 'hours_should_work')
-    verbose_name = 'Time sheet simple'
-    verbose_name_plural = 'Time sheets simples'
+    verbose_name = 'Temps de travail'
+    verbose_name_plural = 'Temps de travail'
+    actions = ['validate_time_sheets']
+    form = SimplifiedTimesheetForm
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -348,6 +351,41 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(employee__user=request.user)
+
+    def validate_time_sheets(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de valider des %s." % self.verbose_name_plural,
+                              level=messages.WARNING)
+            return
+        rows_updated = 0
+        obj: SimplifiedTimesheet
+        for obj in queryset:
+            obj.timesheet_validated = not obj.timesheet_validated
+            obj.save()
+            rows_updated = rows_updated + 1
+        if rows_updated == 1:
+            message_bit = u"1 time sheet a été"
+        else:
+            message_bit = u"%s time sheet ont été" % rows_updated
+        self.message_user(request, u"%s (in)validé avec succès." % message_bit)
+
+    def change_view(self, request, object_id, extra_context=None):
+        if SimplifiedTimesheet.objects.get(pk=object_id).timesheet_validated and not request.user.is_superuser:
+            extra_context = extra_context or {}
+            extra_context['readonly'] = True
+        return super(SimplifiedTimesheetAdmin, self).change_view(request, object_id, extra_context=extra_context)
+
+    def has_change_permission(self, request, obj=None):
+        if obj and obj.timesheet_validated and not request.user.is_superuser:
+            return False
+        return self.has_change_permission
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.timesheet_validated and not request.user.is_superuser:
+            return False
+        return self.has_delete_permission
+
+
 
 
 # class SimplifiedTimesheetAdmin2(admin.ModelAdmin):

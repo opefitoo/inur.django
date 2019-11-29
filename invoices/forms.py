@@ -1,10 +1,10 @@
 from dal_select2.widgets import ModelSelect2
-from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, ModelForm
+from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, ModelForm, DateField, BooleanField
 from django import forms
 from datetime import datetime
 
 from invoices.models import Prestation, CareCode, InvoiceItem, Patient, MedicalPrescription
-from invoices.timesheet import Employee
+from invoices.timesheet import Employee, SimplifiedTimesheet, SimplifiedTimesheetDetail
 from invoices.widgets import CustomAdminSplitDateTime, CodeSnWidget
 
 
@@ -58,6 +58,31 @@ class PrestationInlineFormSet(BaseInlineFormSet):
         if expected_count > InvoiceItem.PRESTATION_LIMIT_MAX:
             message = "Max number of Prestations for one InvoiceItem is %s" % (str(InvoiceItem.PRESTATION_LIMIT_MAX))
             raise ValidationError(message)
+
+
+class SimplifiedTimesheetForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.timesheet_validated:
+            for k, v in self.fields.items():
+                v.disabled = True
+
+    class Meta:
+        model = SimplifiedTimesheet
+        fields = '__all__'
+
+
+class SimplifiedTimesheetDetailForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self.instance, 'simplified_timesheet') and self.instance.simplified_timesheet.timesheet_validated:
+            for k, v in self.fields.items():
+                v.disabled = True
+
+    class Meta:
+        model = SimplifiedTimesheetDetail
+        fields = '__all__'
+
 
 
 class PrestationForm(ModelForm):
