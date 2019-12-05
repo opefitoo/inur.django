@@ -231,6 +231,7 @@ class SimplifiedTimesheet(models.Model):
     class Meta(object):
         verbose_name = u'Temps de travail'
         verbose_name_plural = u'Temps de travail'
+
     timesheet_validated = models.BooleanField("Valide", default=False)
     employee = models.ForeignKey('invoices.Employee',
                                  on_delete=models.CASCADE)
@@ -240,12 +241,10 @@ class SimplifiedTimesheet(models.Model):
                                   help_text=u'Date de début de votre timesheet, '
                                             u'qui sera en  général la date de début du mois')
 
-
     end_date = models.DateField('Date fin',
                                 help_text=u'Date de fin de votre timesheet,'
                                           u' qui sera en  général la date de la fin du mois')
     end_date.editable = True
-
 
     time_sheet_year = models.PositiveIntegerField(
         default=current_year())
@@ -311,6 +310,8 @@ class SimplifiedTimesheet(models.Model):
 
     @staticmethod
     def date_range(start_date, end_date):
+        if not start_date and not end_date:
+            return
         days = 0
         for i in range(int((end_date - start_date).days)):
             next_date = start_date + timedelta(i)
