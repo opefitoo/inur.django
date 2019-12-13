@@ -327,16 +327,16 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
 
 
 class SimplifiedTimesheetAdmin(admin.ModelAdmin):
-    #date_hierarchy = 'start_date'
+    ordering = ('-time_sheet_year', '-time_sheet_month')
     inlines = [SimplifiedTimesheetDetailInline]
-    list_display = ('timesheet_owner', 'timesheet_validated',)
+    list_display = ('timesheet_owner', 'timesheet_validated', 'time_sheet_year', 'time_sheet_month')
     list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
                        'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days', 'hours_should_work',)
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
-    actions = ['validate_time_sheets', 'merge_time_sheets']
+    actions = ['validate_time_sheets', ]
     form = SimplifiedTimesheetForm
 
     def save_model(self, request, obj, form, change):
@@ -354,41 +354,6 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(employee__user=request.user)
-
-    def merge_time_sheets(self, request, queryset):
-        dicts = {}
-        for employee in Employee.objects.all():
-            timesheets = SimplifiedTimesheet.objects.filter(employee=employee, timesheet_validated=False)
-            for timesheet in timesheets:
-                # print(timesheet)
-                for tdetail in SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee,
-                                                                        simplified_timesheet=timesheet):
-                    key = "%s-%d-%d" % (employee.id, tdetail.start_date.year, tdetail.start_date.month)
-                    if key not in dicts:
-                        dicts[key] = [tdetail]
-                    else:
-                        dicts[key].append(tdetail)
-                timesheet.timesheet_validated = True
-                timesheet.save()
-        for k, v in dicts.items():
-            if len(v) > 0:
-                employee_id = k.split("-")[0]
-                year = k.split("-")[1]
-                month = k.split("-")[2]
-                max_id = SimplifiedTimesheet.objects.all().order_by("-id")[0]
-                new_timesheet = SimplifiedTimesheet.objects.get_or_create(id=max_id.id + 1,
-                                                                          start_date=datetime(int(year),
-                                                                                              int(month), 1),
-                                                                          end_date=datetime(int(year),
-                                                                                            int(month),
-                                                                                            calendar.monthrange(int(year),
-                                                                                                                int(month))[1]),
-                                                                          time_sheet_month=month,
-                                                                          time_sheet_year=year,
-                                                                          employee=Employee.objects.get(id=employee_id))
-                for td in v:
-                    td.simplified_timesheet = new_timesheet[0]
-                    td.save()
 
     def validate_time_sheets(self, request, queryset):
         if not request.user.is_superuser:
