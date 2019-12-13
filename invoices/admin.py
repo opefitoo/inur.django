@@ -1,3 +1,6 @@
+import calendar
+from datetime import datetime
+
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
@@ -8,7 +11,7 @@ from django.urls import reverse
 from django.utils.functional import curry
 from django.utils.html import format_html
 
-from invoices.invaction import apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private, \
+from invoices.invaction import make_private, \
     export_xml
 from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, \
     PrestationInlineFormSet, \
@@ -60,14 +63,14 @@ class ValidityDateInline(admin.TabularInline):
     search_fields = ['start_date', 'end_date', 'gross_amount']
 
 
-class CareCoreAdmin(admin.ModelAdmin):
+class CareCodeAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
-    actions = [apply_start_date_2017, apply_start_date_2015, apply_start_date_2013, make_private, export_xml]
+    actions = [make_private, export_xml]
     inlines = [ValidityDateInline]
 
 
-admin.site.register(CareCode, CareCoreAdmin)
+admin.site.register(CareCode, CareCodeAdmin)
 
 
 class EmployeeContractDetailInline(TabularInline):
@@ -326,14 +329,15 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
 class SimplifiedTimesheetAdmin(admin.ModelAdmin):
     date_hierarchy = 'start_date'
     inlines = [SimplifiedTimesheetDetailInline]
-    list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated',)
+    list_display = ('timesheet_owner', 'timesheet_validated',)
     list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
-                       'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days', 'hours_should_work')
+                       'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days', 'hours_should_work',
+                       'start_date', 'end_date',)
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
-    actions = ['validate_time_sheets']
+    actions = ['validate_time_sheets', 'merge_time_sheets']
     form = SimplifiedTimesheetForm
 
     def save_model(self, request, obj, form, change):
@@ -351,6 +355,41 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(employee__user=request.user)
+
+    def merge_time_sheets(self, request, queryset):
+        dicts = {}
+        for employee in Employee.objects.all():
+            timesheets = SimplifiedTimesheet.objects.filter(employee=employee, timesheet_validated=False)
+            for timesheet in timesheets:
+                # print(timesheet)
+                for tdetail in SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee,
+                                                                        simplified_timesheet=timesheet):
+                    key = "%s-%d-%d" % (employee.id, tdetail.start_date.year, tdetail.start_date.month)
+                    if key not in dicts:
+                        dicts[key] = [tdetail]
+                    else:
+                        dicts[key].append(tdetail)
+                timesheet.timesheet_validated = True
+                timesheet.save()
+        for k, v in dicts.items():
+            if len(v) > 0:
+                employee_id = k.split("-")[0]
+                year = k.split("-")[1]
+                month = k.split("-")[2]
+                max_id = SimplifiedTimesheet.objects.all().order_by("-id")[0]
+                new_timesheet = SimplifiedTimesheet.objects.get_or_create(id=max_id.id + 1,
+                                                                          start_date=datetime(int(year),
+                                                                                              int(month), 1),
+                                                                          end_date=datetime(int(year),
+                                                                                            int(month),
+                                                                                            calendar.monthrange(int(year),
+                                                                                                                int(month))[1]),
+                                                                          time_sheet_month=month,
+                                                                          time_sheet_year=year,
+                                                                          employee=Employee.objects.get(id=employee_id))
+                for td in v:
+                    td.simplified_timesheet = new_timesheet[0]
+                    td.save()
 
     def validate_time_sheets(self, request, queryset):
         if not request.user.is_superuser:
@@ -384,8 +423,6 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
         if obj and obj.timesheet_validated and not request.user.is_superuser:
             return False
         return self.has_delete_permission
-
-
 
 
 # class SimplifiedTimesheetAdmin2(admin.ModelAdmin):

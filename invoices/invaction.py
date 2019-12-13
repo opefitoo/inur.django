@@ -169,32 +169,6 @@ def export_xml(modeladmin, request, queryset):
         xml_serializer.serialize(all_objects, stream=out)
     data = open("file.xml", "rb").read()
     return HttpResponse(data, content_type="application/xml")
-    #response['Content-Disposition'] = 'attachment; filename="file.xml"'
-
-def apply_start_date_2017(modeladmin, request, queryset):
-    # response = HttpResponse(content_type='text')
-    for ccode in queryset:
-        ccode.start_date = datetime.datetime(2017, 1, 1)
-        ccode.clean()
-        ccode.save()
-
-
-def apply_start_date_2015(modeladmin, request, queryset):
-    # response = HttpResponse(content_type='text')
-    for ccode in queryset:
-        ccode.start_date = datetime.datetime(2015, 1, 1)
-        ccode.end_date = datetime.datetime(2016, 12, 31)
-        ccode.clean()
-        ccode.save()
-
-
-def apply_start_date_2013(modeladmin, request, queryset):
-    # response = HttpResponse(content_type='text')
-    for ccode in queryset:
-        ccode.start_date = datetime.datetime(2013, 1, 1)
-        ccode.end_date = datetime.datetime(2015, 12, 31)
-        ccode.clean()
-        ccode.save()
 
 
 def previous_months_invoices_july_2017(modeladmin, request, queryset):
