@@ -327,14 +327,13 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
 
 
 class SimplifiedTimesheetAdmin(admin.ModelAdmin):
-    date_hierarchy = 'start_date'
+    #date_hierarchy = 'start_date'
     inlines = [SimplifiedTimesheetDetailInline]
     list_display = ('timesheet_owner', 'timesheet_validated',)
     list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
-                       'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days', 'hours_should_work',
-                       'start_date', 'end_date',)
+                       'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days', 'hours_should_work',)
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
     actions = ['validate_time_sheets', 'merge_time_sheets']

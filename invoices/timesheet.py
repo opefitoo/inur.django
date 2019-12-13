@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import calendar
 from datetime import date, datetime, timedelta
 from typing import Any, Union
 
@@ -237,15 +238,6 @@ class SimplifiedTimesheet(models.Model):
                                  on_delete=models.CASCADE)
     employee.editable = False
     employee.visible = False
-    start_date = models.DateField(u'Date début',
-                                  help_text=u'Date de début de votre timesheet, '
-                                            u'qui sera en  général la date de début du mois')
-
-    end_date = models.DateField('Date fin',
-                                help_text=u'Date de fin de votre timesheet,'
-                                          u' qui sera en  général la date de la fin du mois')
-    end_date.editable = True
-
     time_sheet_year = models.PositiveIntegerField(
         default=current_year())
 
@@ -264,13 +256,12 @@ class SimplifiedTimesheet(models.Model):
         (12, u'Décembre'),
     ]
     time_sheet_month = models.PositiveSmallIntegerField(
-        max_length=2,
         choices=YEARS_MONTHS,
         default=current_month(),
     )
 
     def __calculate_total_hours(self):
-        calculated_hours = cache.get('total_hours_dictionary')
+        calculated_hours = cache.get('total_hours_dictionary%s' % self.id)
         if calculated_hours is not None:
             return calculated_hours
         calculated_hours = {"total": 0,
@@ -291,7 +282,7 @@ class SimplifiedTimesheet(models.Model):
         calculated_hours["total"] = total
         calculated_hours["total_sundays"] = total_sundays
         calculated_hours["total_public_holidays"] = total_public_holidays
-        cache.set('total_hours_dictionary', calculated_hours, 30)
+        cache.set('total_hours_dictionary%s' % self.id, calculated_hours)
         return calculated_hours
 
     @property
@@ -299,12 +290,11 @@ class SimplifiedTimesheet(models.Model):
         # r = self.employee.employeecontractdetail_set.filter(start_date__lte=self.start_date, end_date__isnull=True) | \
         #     self.employee.employeecontractdetail_set.filter(start_date__gte=self.start_date,
         #                                                     end_date__lte=self.end_date)
-        calculated_hours = cache.get('total_hours_dictionary')
+        calculated_hours = cache.get('total_hours_dictionary%s' % self.id)
         if calculated_hours is None:
             calculated_hours = self.__calculate_total_hours()
-        total_legal_working_hours = self.date_range(self.start_date, self.end_date) \
-                                    * (self.employee.employeecontractdetail_set.filter(
-            start_date__lte=self.start_date).first().number_of_hours / 5)
+        total_legal_working_hours = self.date_range(self.get_start_date, self.get_end_date) * \
+                                    (self.employee.employeecontractdetail_set.filter(start_date__lte=self.get_start_date).first().number_of_hours / 5)
         balance: Union[float, Any] = calculated_hours["total"].total_seconds() - total_legal_working_hours * 3600
         return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
 
@@ -324,7 +314,7 @@ class SimplifiedTimesheet(models.Model):
 
     @property
     def total_working_days(self):
-        return self.date_range(self.start_date, self.end_date)
+        return self.date_range(self.get_start_date, self.get_end_date)
 
     @property
     def total_hours(self):
@@ -353,20 +343,20 @@ class SimplifiedTimesheet(models.Model):
     @staticmethod
     def validate(instance, data):
         result = {}
-        result.update(SimplifiedTimesheet.validate_dates(data))
+        #result.update(SimplifiedTimesheet.validate_dates(data))
         return result
 
-    @staticmethod
-    def validate_dates(data):
-        messages = {}
-        is_valid = data['end_date'] is None or data['start_date'] <= data['end_date']
-        if not is_valid:
-            messages = {'end_date': u"Date de fin doit être après la date de début"}
+    @property
+    def get_start_date(self):
+        return datetime(self.time_sheet_year, self.time_sheet_month, 1)
 
-        return messages
+    @property
+    def get_end_date(self):
+        return datetime(self.time_sheet_year, self.time_sheet_month,
+                        calendar.monthrange(self.time_sheet_year, self.time_sheet_month)[1])
 
     def __str__(self):  # Python 3: def __str__(self):
-        return '%s - du %s au %s' % (self.employee, self.start_date, self.end_date)
+        return u'%s - du  %s au %s' % (self.employee, self.get_start_date, self.get_end_date)
 
 
 class SimplifiedTimesheetDetail(models.Model):
