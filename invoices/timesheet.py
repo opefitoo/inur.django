@@ -232,6 +232,10 @@ class SimplifiedTimesheet(models.Model):
     class Meta(object):
         verbose_name = u'Temps de travail'
         verbose_name_plural = u'Temps de travail'
+        constraints = [
+            models.UniqueConstraint(fields=['employee', 'time_sheet_year', 'time_sheet_month'],
+                                    name='unique time sheet')
+        ]
 
     timesheet_validated = models.BooleanField("Valide", default=False)
     employee = models.ForeignKey('invoices.Employee',
@@ -261,9 +265,10 @@ class SimplifiedTimesheet(models.Model):
     )
 
     def __calculate_total_hours(self):
-        calculated_hours = cache.get('total_hours_dictionary%s' % self.id)
-        if calculated_hours is not None:
-            return calculated_hours
+        if self.id:
+            calculated_hours = cache.get('total_hours_dictionary%s' % self.id)
+            if calculated_hours is not None:
+                return calculated_hours
         calculated_hours = {"total": 0,
                             "total_sundays": 0,
                             "total_public_holidays": 0}
@@ -282,17 +287,16 @@ class SimplifiedTimesheet(models.Model):
         calculated_hours["total"] = total
         calculated_hours["total_sundays"] = total_sundays
         calculated_hours["total_public_holidays"] = total_public_holidays
-        cache.set('total_hours_dictionary%s' % self.id, calculated_hours)
+        if self.id:
+            cache.set('total_hours_dictionary%s' % self.id, calculated_hours)
         return calculated_hours
 
     @property
     def hours_should_work(self):
-        # r = self.employee.employeecontractdetail_set.filter(start_date__lte=self.start_date, end_date__isnull=True) | \
-        #     self.employee.employeecontractdetail_set.filter(start_date__gte=self.start_date,
-        #                                                     end_date__lte=self.end_date)
-        calculated_hours = cache.get('total_hours_dictionary%s' % self.id)
-        if calculated_hours is None:
-            calculated_hours = self.__calculate_total_hours()
+        if self.id:
+            calculated_hours = cache.get('total_hours_dictionary%s' % self.id)
+            if calculated_hours is None:
+                calculated_hours = self.__calculate_total_hours()
         total_legal_working_hours = self.date_range(self.get_start_date, self.get_end_date) * \
                                     (self.employee.employeecontractdetail_set.filter(start_date__lte=self.get_start_date).first().number_of_hours / 5)
         balance: Union[float, Any] = calculated_hours["total"].total_seconds() - total_legal_working_hours * 3600
@@ -343,7 +347,6 @@ class SimplifiedTimesheet(models.Model):
     @staticmethod
     def validate(instance, data):
         result = {}
-        #result.update(SimplifiedTimesheet.validate_dates(data))
         return result
 
     @property
