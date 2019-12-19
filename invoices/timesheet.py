@@ -3,7 +3,7 @@ import calendar
 from datetime import date, datetime, timedelta
 from typing import Any, Union
 
-from django.core.validators import MaxValueValidator, MinValueValidator, BaseValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_delete, post_save, pre_save
@@ -59,7 +59,7 @@ class Employee(models.Model):
         return 'occupation__name', 'user__first_name', 'user__last_name', 'user__username'
 
     def __str__(self):
-        return '%s' % (self.user.username.strip())
+        return '%s' % (self.user.username.strip().capitalize())
 
 
 class EmployeeContractDetail(models.Model):

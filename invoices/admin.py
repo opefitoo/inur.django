@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils.functional import curry
 from django.utils.html import format_html
 
+from invoices.holidays import HolidayRequest
 from invoices.invaction import make_private, \
     export_xml
 from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, \
@@ -317,6 +318,21 @@ class PublicHolidayCalendarAdmin(admin.ModelAdmin):
 admin.site.register(PublicHolidayCalendar, PublicHolidayCalendarAdmin)
 
 
+class HolidayRequestAdmin(admin.ModelAdmin):
+    verbose_name = u"Demande d'absence"
+    verbose_name_plural = u"Demandes d'absence"
+    readonly_fields = ('request_accepted', 'validated_by','employee')
+
+    def get_queryset(self, request):
+        qs = super(HolidayRequestAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(employee=request.user)
+
+
+admin.site.register(HolidayRequest, HolidayRequestAdmin)
+
+
 class SimplifiedTimesheetDetailInline(admin.TabularInline):
     extra = 1
     model = SimplifiedTimesheetDetail
@@ -388,43 +404,5 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
             return False
         return self.has_delete_permission
 
-
-# class SimplifiedTimesheetAdmin2(admin.ModelAdmin):
-#     fields = ('start_date', 'end_date', 'timesheet_validated', 'total_hours', 'total_hours_saturdays',
-#               'total_hours_sundays')
-#     date_hierarchy = 'end_date'
-#     inlines = [SimplifiedTimesheetDetailInline]
-#     list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated', 'total_hours',
-#                     'total_hours_saturdays', 'total_hours_sundays')
-#     list_filter = ['employee', ]
-#     list_select_related = True
-#     readonly_fields = ('timesheet_validated', 'total_hours', 'total_hours_saturdays', 'total_hours_sundays')
-#     verbose_name = 'Time sheet simple'
-#     verbose_name_plural = 'Time sheets simples'
-#     change_form_template = 'admin/preview_template.html'
-#
-#     # def calculate_total_hours(self, instance):
-#     #     return format_html_join(
-#     #         mark_safe('<br>'),
-#     #         '{}',
-#     #         SimplifiedTimesheet.objects.calculate_total_hours().get('total')
-#     #     ) or mark_safe("<span class='errors'>I can't determine this address.</span>")
-#
-#     def save_model(self, request, obj, form, change):
-#         if not change:
-#             current_user = Employee.objects.raw(
-#                 'select * from invoices_employee where user_id = %s' % (request.user.id))
-#             obj.employee = current_user[0]
-#         obj.save()
-#
-#     def timesheet_owner(self, instance):
-#         return instance.employee.user.username
-#
-#     def get_queryset(self, request):
-#         qs = super(SimplifiedTimesheetAdmin2, self).get_queryset(request)
-#         if request.user.is_superuser:
-#             return qs
-#         return qs.filter(employee__user=request.user)
-#
 
 admin.site.register(SimplifiedTimesheet, SimplifiedTimesheetAdmin)
