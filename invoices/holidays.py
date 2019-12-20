@@ -60,7 +60,7 @@ class HolidayRequest(models.Model):
 
     def __str__(self):
         return u'%s - %s du  %s au %s' % (
-        self.employee, self.REASONS[self.reason - 1][1], self.start_date, self.end_date)
+            self.employee, self.REASONS[self.reason - 1][1], self.start_date, self.end_date)
 
 
 def validate_date_range(instance_id, data):
@@ -86,7 +86,7 @@ def validate_date_range_vs_timesheet(instance_id, data):
         simplified_timesheet__employee__user_id=data['employee_id'])
     if 1 == conflicts.count():
         messages = {'start_date': u"Intersection avec des Temps de travail de : %s à %s" % (conflicts[0].start_date,
-                                                                                           conflicts[0].end_date)}
+                                                                                            conflicts[0].end_date)}
     elif 1 < conflicts.count():
         messages = {'start_date': u"Intersection avec des Temps de travail de : %s à %s et %d autres conflits"
                                   % (conflicts[0].start_date, conflicts[0].end_date, conflicts.count() - 1)}

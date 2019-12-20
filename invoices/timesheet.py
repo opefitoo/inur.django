@@ -6,9 +6,11 @@ from typing import Any, Union
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
+from django_currentuser.db.models import CurrentUserField
 
 from invoices.storages import CustomizedGoogleDriveStorage
 from django.core.exceptions import ValidationError
@@ -244,6 +246,8 @@ class SimplifiedTimesheet(models.Model):
     employee.visible = False
     time_sheet_year = models.PositiveIntegerField(
         default=current_year())
+    user = CurrentUserField()
+    user.visible = False
 
     YEARS_MONTHS = [
         (1, u'Janvier'),
@@ -298,7 +302,8 @@ class SimplifiedTimesheet(models.Model):
             if calculated_hours is None:
                 calculated_hours = self.__calculate_total_hours()
         total_legal_working_hours = self.date_range(self.get_start_date, self.get_end_date) * \
-                                    (self.employee.employeecontractdetail_set.filter(start_date__lte=self.get_start_date).first().number_of_hours / 5)
+                                    (self.employee.employeecontractdetail_set.filter(
+                                        start_date__lte=self.get_start_date).first().number_of_hours / 5)
         balance: Union[float, Any] = calculated_hours["total"].total_seconds() - total_legal_working_hours * 3600
         return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
 
@@ -347,7 +352,23 @@ class SimplifiedTimesheet(models.Model):
     @staticmethod
     def validate(instance, data):
         result = {}
+        result.update(SimplifiedTimesheet.validate_one_per_year_month(instance, data))
         return result
+
+    @staticmethod
+    def validate_one_per_year_month(instance, data):
+        messages = {}
+        conflicts_count = SimplifiedTimesheet.objects.filter(
+            time_sheet_year=data['time_sheet_year']). \
+            filter(time_sheet_month=data['time_sheet_month']). \
+            filter(employee__user_id=data['user_id']). \
+            exclude(pk=instance.id).count()
+        if 0 < conflicts_count:
+            messages.update({'time_sheet_year':
+                                 "Il y a déjà un Temps de travail pour cette année et ce mois dans le système"})
+            messages.update({'time_sheet_month':
+                                 "Il y a déjà un Temps de travail pour cette année et ce mois dans le système"})
+        return messages
 
     @property
     def get_start_date(self):
