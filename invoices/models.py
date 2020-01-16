@@ -4,11 +4,11 @@ from typing import Optional, Dict, Any
 
 import pytz
 import os
-import re
 from copy import deepcopy
 from datetime import datetime
 
 from django.core.exceptions import ValidationError
+#from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
@@ -25,9 +25,12 @@ from django.utils.timezone import now
 from invoices.storages import CustomizedGoogleDriveStorage
 from constance import config
 
-prestation_gcalendar = PrestationGoogleCalendar()
+from invoices.validators.validators import MyRegexValidator
 
-gd_storage = CustomizedGoogleDriveStorage()
+prestation_gcalendar = PrestationGoogleCalendar()
+gd_storage: CustomizedGoogleDriveStorage = CustomizedGoogleDriveStorage()
+#else:
+#    gd_storage = FileSystemStorage()
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +153,12 @@ class ValidityDate(models.Model):
 
 # TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
-    code_sn = models.CharField(max_length=30)
+    code_sn = models.CharField(max_length=30, validators=[MyRegexValidator(
+            regex='^[12]\d{12}',
+            message='Premier chiffre (1 à 2) suivi de 12 chiffres (0 à 9)',
+            code='invalid_code_sn'
+        ),
+    ])
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
     address = models.TextField(max_length=255)
@@ -175,18 +183,15 @@ class Patient(models.Model):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
     def clean(self, *args, **kwargs):
-        self.code_sn = self.format_code_sn(self.code_sn, self.is_private)
+        self.code_sn = self.format_code_sn(self.code_sn)
         super(Patient, self).clean_fields()
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
 
     @staticmethod
-    def format_code_sn(code_sn, is_private):
-        if is_private:
-            code_sn = code_sn.replace(" ", "")
-
-        return code_sn
+    def format_code_sn(code_sn):
+        return code_sn.replace(" ", "")
 
     @staticmethod
     def validate(instance_id, data):
@@ -213,12 +218,8 @@ class Patient(models.Model):
         messages = {}
         if 'is_private' in data and not data['is_private']:
             code_sn = data['code_sn'].replace(" ", "")
-            pattern = re.compile('^([1-9]{1}[0-9]{12})$')
-            if pattern.match(code_sn) is None:
-                messages = {'code_sn': 'Code SN should start with non zero digit and be followed by 12 digits'}
-            elif Patient.objects.filter(code_sn=code_sn).exclude(pk=instance_id).count() > 0:
+            if Patient.objects.filter(code_sn=code_sn).exclude(pk=instance_id).count() > 0:
                 messages = {'code_sn': 'Code SN must be unique'}
-
         return messages
 
     def calculate_age(self, care_date: object) -> object:
@@ -859,9 +860,11 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
 def update_prestation_gcalendar_events(sender, instance, **kwargs):
+    #if config.USE_GDRIVE:
     prestation_gcalendar.update_event(instance)
 
 
 @receiver(post_delete, sender=Prestation, dispatch_uid="delete_prestation_gcalendar_events")
 def delete_prestation_gcalendar_events(sender, instance, **kwargs):
+    #if config.USE_GDRIVE:
     prestation_gcalendar.delete_event(instance.id)
