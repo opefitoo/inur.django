@@ -8,7 +8,7 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.platypus.flowables import Spacer, PageBreak
+from reportlab.platypus.flowables import Spacer, PageBreak, Image
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.platypus.doctemplate import SimpleDocTemplate
@@ -37,6 +37,9 @@ def get_doc_elements(queryset):
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
             elements.append(PageBreak())
+            if qs.medical_prescription is not None and qs.medical_prescription.file is not None:
+                elements.append(Image(qs.medical_prescription.file, width=469.88, height=773.19))
+                elements.append(PageBreak())
     recap_data = _build_recap(recapitulatif_data)
     elements.extend(recap_data[0])
     elements.append(PageBreak())
