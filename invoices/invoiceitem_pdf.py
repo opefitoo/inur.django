@@ -37,7 +37,7 @@ def get_doc_elements(queryset):
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
             elements.append(PageBreak())
-            if qs.medical_prescription and qs.medical_prescription.file:
+            if qs.medical_prescription and bool(qs.medical_prescription.file):
                 elements.append(Image(qs.medical_prescription.file, width=469.88, height=773.19))
                 elements.append(PageBreak())
     recap_data = _build_recap(recapitulatif_data)
