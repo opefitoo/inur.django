@@ -120,7 +120,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                   [u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n"
                    + u'Nom et Pr'+ smart_text("e") + u'nom du patient: %s' % smart_text(patientNameAndFirstName) ,
                    u'Nom: %s' % smart_text(patientName.strip()) +'\n'
-                   + u'Pr' + smart_text(u"é") + u'nom: %s' % smart_text(patientFirstName.strip()) +'\n'
+                   + u'Prénom: %s' % smart_text(patientFirstName.strip()) +'\n'
                    + u'Rue: %s' % patientAddress.strip() + '\n'
                    + u'Code postal: %s' % smart_text(patientZipCode.strip()) + '\n'
                    + u'Ville: %s' % smart_text(patientCity.strip()) ],
@@ -247,7 +247,7 @@ def _build_recap(_recap_date, _recap_ref, recaps):
     elements.append(_total_a_payer)
     elements.append(Spacer(1, 18))
 
-    _infos_iban = Table([["Num"  + u"é" + "ro IBAN: LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    _infos_iban = Table([[u"Numéro IBAN: %s" % config.MAIN_BANK_ACCOUNT]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append( _infos_iban )
 
     return elements
