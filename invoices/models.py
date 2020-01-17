@@ -445,8 +445,12 @@ class MedicalPrescription(models.Model):
     def autocomplete_search_fields():
         return 'date', 'prescriptor__name', 'prescriptor__first_name'
 
-    def __str__(self):  # Python 3: def __str__(self):
-        return '%s %s (%s)' % (self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
+    def __str__(self):
+        if bool(self.file):
+            return '%s %s (%s) [%s...]' % (self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
+                                        self.file.name[:5])
+        else:
+            return '%s %s (%s) sans fichier' % (self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
 
 
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
