@@ -42,6 +42,7 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
 
     # save is overwritten as origin one sets filename equal to full path
     def save_file(self, path, content):
+        print('p saving file %s' % path)
         logger.info('saving file %s' % path)
         self._save(path, content)
 
@@ -72,14 +73,16 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
         except (AttributeError, KeyError, IndexError):
             # cases: image don't have getexif
             logger.error('cannot rotate image, image may not have getexif')
+            print('p cannot rotate image, image may not have getexif')
         imgByteArr = io.BytesIO()
         width = 600
         wpercent = (width / float(image.size[0]))
         hsize = int((float(image.size[1]) * float(wpercent)))
         logger.info('resizing image %s' % image)
+        print('resizing image %s' % image)
         image = image.resize((width, hsize), Image.ANTIALIAS)
         image.save(imgByteArr, format=mime_type[0].split('/')[1])
-        logger.info('image saved in %s' % imgByteArr)
+        print('image saved in %s' % imgByteArr)
         media_body = MediaInMemoryUpload(imgByteArr.getvalue(), mime_type, resumable=True, chunksize=1024 * 512)
         body = {
             'title': filename,
