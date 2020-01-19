@@ -8,7 +8,7 @@ from copy import deepcopy
 from datetime import datetime
 
 from django.core.exceptions import ValidationError
-#from django.core.files.storage import FileSystemStorage
+# from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
@@ -29,7 +29,7 @@ from invoices.validators.validators import MyRegexValidator
 
 prestation_gcalendar = PrestationGoogleCalendar()
 gd_storage: CustomizedGoogleDriveStorage = CustomizedGoogleDriveStorage()
-#else:
+# else:
 #    gd_storage = FileSystemStorage()
 
 logger = logging.getLogger(__name__)
@@ -154,10 +154,10 @@ class ValidityDate(models.Model):
 # TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
     code_sn = models.CharField(max_length=30, validators=[MyRegexValidator(
-            regex='^[12]\d{12}',
-            message='Premier chiffre (1 à 2) suivi de 12 chiffres (0 à 9)',
-            code='invalid_code_sn'
-        ),
+        regex='^[12]\d{12}',
+        message='Premier chiffre (1 à 2) suivi de 12 chiffres (0 à 9)',
+        code='invalid_code_sn'
+    ),
     ])
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
@@ -380,6 +380,13 @@ def update_medical_prescription_filename(instance, filename):
     return os.path.join(path, filename)
 
 
+def validate_image(image):
+    file_size = image.file.size
+    limit_kb = 1024
+    if file_size > limit_kb * 1024:
+        raise ValidationError("Taille maximale du fichier est %s KO" % limit_kb)
+
+
 class MedicalPrescription(models.Model):
     prescriptor = models.ForeignKey(Physician, related_name='medical_prescription',
                                     help_text='Please chose the Physician who is giving the medical prescription',
@@ -389,7 +396,9 @@ class MedicalPrescription(models.Model):
                                 on_delete=models.CASCADE)
     date = models.DateField('Date ordonnance')
     end_date = models.DateField('Date fin des soins', null=True, blank=True)
-    file = models.ImageField(storage=gd_storage, blank=True, upload_to=update_medical_prescription_filename)
+    file = models.ImageField(storage=gd_storage, blank=True,
+                             upload_to=update_medical_prescription_filename,
+                             validators=[validate_image])
     _original_file = None
 
     @property
@@ -448,10 +457,12 @@ class MedicalPrescription(models.Model):
 
     def __str__(self):
         if bool(self.file):
-            return '%s %s (%s) [%s...]' % (self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
-                                        self.file.name[:5])
+            return '%s %s (%s) [%s...]' % (
+            self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
+            self.file.name[:5])
         else:
-            return '%s %s (%s) sans fichier' % (self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
+            return '%s %s (%s) sans fichier' % (
+            self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
 
 
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
@@ -865,11 +876,11 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
 def update_prestation_gcalendar_events(sender, instance, **kwargs):
-    #if config.USE_GDRIVE:
+    # if config.USE_GDRIVE:
     prestation_gcalendar.update_event(instance)
 
 
 @receiver(post_delete, sender=Prestation, dispatch_uid="delete_prestation_gcalendar_events")
 def delete_prestation_gcalendar_events(sender, instance, **kwargs):
-    #if config.USE_GDRIVE:
+    # if config.USE_GDRIVE:
     prestation_gcalendar.delete_event(instance.id)
