@@ -9,7 +9,9 @@ from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, Goo
     , GoogleDriveFilePermission
 from googleapiclient.http import MediaInMemoryUpload
 
+from invoices.settings import LOGGING
 
+logging.config.dictConfig(LOGGING)
 logger = logging.getLogger('testlogger')
 
 
