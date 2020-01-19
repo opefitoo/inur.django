@@ -10,7 +10,7 @@ from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, Goo
 from googleapiclient.http import MediaInMemoryUpload
 
 
-logger = logging.getLogger('django')
+logger = logging.getLogger('testlogger')
 
 
 class CustomizedGoogleDriveStorage(GoogleDriveStorage):
@@ -42,6 +42,7 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
 
     # save is overwritten as origin one sets filename equal to full path
     def save_file(self, path, content):
+        logger.info('saving file %s' % path)
         self._save(path, content)
 
     # _save is overwritten as origin one sets filename equal to full path
