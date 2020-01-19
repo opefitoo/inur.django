@@ -1,13 +1,12 @@
-import io
+import mimetypes
+import logging
 import mimetypes
 import ntpath
 import os
-import logging
 
-from PIL import ExifTags, Image
 from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, GoogleDrivePermissionRole \
     , GoogleDriveFilePermission
-from googleapiclient.http import MediaInMemoryUpload
+from googleapiclient.http import MediaIoBaseUpload
 from rq import Queue
 
 from worker import conn
@@ -61,32 +60,7 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
         mime_type = mimetypes.guess_type(filename)
         if mime_type[0] is None:
             mime_type = self._UNKNOWN_MIMETYPE_
-        try:
-            image = Image.open(content.file)
-            for orientation in ExifTags.TAGS.keys():
-                if ExifTags.TAGS[orientation] == 'Orientation':
-                    break
-            exif = dict(image._getexif().items())
-            if exif[orientation] == 3:
-                image = image.rotate(180, expand=True)
-            elif exif[orientation] == 6:
-                image = image.rotate(270, expand=True)
-            elif exif[orientation] == 8:
-                image = image.rotate(90, expand=True)
-        except (AttributeError, KeyError, IndexError):
-            # cases: image don't have getexif
-            logger.error('cannot rotate image, image may not have getexif')
-            print('p cannot rotate image, image may not have getexif')
-        imgByteArr = io.BytesIO()
-        width = 600
-        wpercent = (width / float(image.size[0]))
-        hsize = int((float(image.size[1]) * float(wpercent)))
-        logger.info('resizing image %s' % image)
-        print('resizing image %s' % image)
-        image = image.resize((width, hsize), Image.ANTIALIAS)
-        image.save(imgByteArr, format=mime_type[0].split('/')[1])
-        print('image saved in %s' % imgByteArr)
-        media_body = MediaInMemoryUpload(imgByteArr.getvalue(), mime_type, resumable=True, chunksize=1024 * 512)
+        media_body = MediaIoBaseUpload(content.file, mime_type, resumable=True, chunksize=1024 * 512)
         body = {
             'title': filename,
             'mimeType': mime_type
