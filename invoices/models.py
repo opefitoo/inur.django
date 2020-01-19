@@ -32,7 +32,7 @@ gd_storage: CustomizedGoogleDriveStorage = CustomizedGoogleDriveStorage()
 #else:
 #    gd_storage = FileSystemStorage()
 
-logger = logging.getLogger('testlogger')
+logger = logging.getLogger(__name__)
 
 
 class CareCode(models.Model):
@@ -401,7 +401,8 @@ class MedicalPrescription(models.Model):
         self._original_file = self.file
 
     def clean(self):
-        logger.inf('clean medical prescription %s' % self)
+        logger.error('test')
+        logger.info('clean medical prescription %s' % self)
         exclude = []
         if self.patient is not None and self.patient.id is None:
             exclude = ['patient']
