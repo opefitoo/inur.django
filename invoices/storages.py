@@ -10,7 +10,7 @@ from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, Goo
 from googleapiclient.http import MediaInMemoryUpload
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('django')
 
 
 class CustomizedGoogleDriveStorage(GoogleDriveStorage):
