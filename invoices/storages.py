@@ -2,11 +2,15 @@ import io
 import mimetypes
 import ntpath
 import os
+import logging
 
 from PIL import ExifTags, Image
 from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, GoogleDrivePermissionRole \
     , GoogleDriveFilePermission
 from googleapiclient.http import MediaInMemoryUpload
+
+
+logger = logging.getLogger(__name__)
 
 
 class CustomizedGoogleDriveStorage(GoogleDriveStorage):
@@ -66,13 +70,15 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
                 image = image.rotate(90, expand=True)
         except (AttributeError, KeyError, IndexError):
             # cases: image don't have getexif
-            pass
+            logger.error('cannot rotate image, image may not have getexif')
         imgByteArr = io.BytesIO()
         width = 600
         wpercent = (width / float(image.size[0]))
         hsize = int((float(image.size[1]) * float(wpercent)))
+        logger.info('resizing image %s' % image)
         image = image.resize((width, hsize), Image.ANTIALIAS)
         image.save(imgByteArr, format=mime_type[0].split('/')[1])
+        logger.info('image saved in %s' % imgByteArr)
         media_body = MediaInMemoryUpload(imgByteArr.getvalue(), mime_type, resumable=True, chunksize=1024 * 512)
         body = {
             'title': filename,
