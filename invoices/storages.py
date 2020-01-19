@@ -10,7 +10,7 @@ from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, Goo
 from googleapiclient.http import MediaInMemoryUpload
 from rq import Queue
 
-from invoices.worker import conn
+from worker import conn
 
 logger = logging.getLogger(__name__)
 
