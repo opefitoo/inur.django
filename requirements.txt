@@ -38,3 +38,4 @@ uritemplate==3.0.1
 whitenoise==5.0.1
 bootstrap-admin==0.4.3
 django-currentuser
+rq

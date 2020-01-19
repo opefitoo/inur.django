@@ -401,7 +401,6 @@ class MedicalPrescription(models.Model):
         self._original_file = self.file
 
     def clean(self):
-        logger.error('test')
         logger.info('clean medical prescription %s' % self)
         exclude = []
         if self.patient is not None and self.patient.id is None:

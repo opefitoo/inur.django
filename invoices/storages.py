@@ -8,6 +8,9 @@ from PIL import ExifTags, Image
 from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, GoogleDrivePermissionRole \
     , GoogleDriveFilePermission
 from googleapiclient.http import MediaInMemoryUpload
+from rq import Queue
+
+from invoices.worker import conn
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +46,8 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
     def save_file(self, path, content):
         print('p saving file %s' % path)
         logger.info('saving file %s' % path)
-        self._save(path, content)
+        q = Queue(connection=conn)
+        q.enqueue(self._save, path, content)
 
     # _save is overwritten as origin one sets filename equal to full path
     def _save(self, path, content):
