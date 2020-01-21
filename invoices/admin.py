@@ -212,7 +212,7 @@ class PrestationInline(TabularInline):
 
 
 class InvoiceItemAdmin(admin.ModelAdmin):
-    from invoices.action import export_to_pdf
+    from invoices.action import export_to_pdf, export_to_pdf_with_medical_prescription_files
     from invoices.action_private import pdf_private_invoice
     from invoices.action_private_participation import pdf_private_invoice_pp
     from invoices.action_depinsurance import export_to_pdf2
@@ -222,7 +222,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient__name', 'patient__first_name']
     readonly_fields = ('medical_prescription_preview',)
-    actions = [export_to_pdf, pdf_private_invoice_pp, pdf_private_invoice, export_to_pdf2]
+    actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp, pdf_private_invoice, export_to_pdf2]
     inlines = [PrestationInline]
     fieldsets = (
         (None, {

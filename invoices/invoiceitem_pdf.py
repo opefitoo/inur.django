@@ -18,10 +18,10 @@ import decimal
 from constance import config
 
 
-def get_doc_elements(queryset):
+def get_doc_elements(queryset, med_p=False):
     elements = []
-    recapitulatif_data = []
-
+    summary_data = []
+    already_added_images = []
     for qs in queryset.order_by("invoice_number"):
         dd = [qs.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
               range(0, len(qs.prestations.all()), 20)]
@@ -35,12 +35,14 @@ def get_doc_elements(queryset):
                                       qs.accident_date)
 
             elements.extend(_result["elements"])
-            recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
+            summary_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
             elements.append(PageBreak())
-            if qs.medical_prescription and bool(qs.medical_prescription.file):
+            if med_p and qs.medical_prescription and bool(qs.medical_prescription.file) \
+                    and qs.medical_prescription.file.file.name not in already_added_images:
                 elements.append(Image(qs.medical_prescription.file, width=469.88, height=773.19))
                 elements.append(PageBreak())
-    recap_data = _build_recap(recapitulatif_data)
+                already_added_images.append(qs.medical_prescription.file.file.name)
+    recap_data = _build_recap(summary_data)
     elements.extend(recap_data[0])
     elements.append(PageBreak())
     elements.extend(_build_final_page(recap_data[1], recap_data[2]))
@@ -74,17 +76,17 @@ def _build_final_page(total, order_number):
     elements = []
     data = [["RELEVE DES NOTES D’HONORAIRES DES"],
             ["ACTES ET SERVICES DES INFIRMIERS"]]
-    table = Table(data, [10 * cm], [0.75 * cm, 0.75*cm])
+    table = Table(data, [10 * cm], [0.75 * cm, 0.75 * cm])
     table.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),
-                               ('FONTSIZE', (0, 0), (-1, -1),  12),
+                               ('FONTSIZE', (0, 0), (-1, -1), 12),
                                ('BOX', (0, 0), (-1, -1), 1.25, colors.black),
                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                ]))
     elements.append(table)
     elements.append(Spacer(1, 18))
     data2 = [[u"Identification du fournisseur de", config.NURSE_NAME, "", u"réservé à l’union des caisses de maladie"],
-             [u"soins de santé",  "", "", ""],
+             [u"soins de santé", "", "", ""],
              [u"Coordonnées bancaires :", config.MAIN_BANK_ACCOUNT, "", ""],
              ["Code: ", config.MAIN_NURSE_CODE, "", ""]]
     table2 = Table(data2, [5 * cm, 3 * cm, 3 * cm, 7 * cm], [1.25 * cm, 0.5 * cm, 1.25 * cm, 1.25 * cm])
@@ -100,26 +102,29 @@ def _build_final_page(total, order_number):
     elements.append(Spacer(1, 20))
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name='Justify', alignment=TA_JUSTIFY))
-    elements.append(Paragraph(u"Récapitulation des notes d’honoraires du chef de la fourniture de soins de santé dispensés aux personnes protégées relevant de l’assurance maladie / assurance accidents ou de l’assurance dépendance.",
-                              styles['Justify']))
+    elements.append(Paragraph(
+        u"Récapitulation des notes d’honoraires du chef de la fourniture de soins de santé dispensés aux personnes protégées relevant de l’assurance maladie / assurance accidents ou de l’assurance dépendance.",
+        styles['Justify']))
     elements.append(Spacer(2, 20))
-    elements.append(Paragraph(u"Pendant la période du :.................................. au :..................................",
-                              styles['Justify']))
+    elements.append(
+        Paragraph(u"Pendant la période du :.................................. au :..................................",
+                  styles['Justify']))
     data3 = [["Nombre des mémoires d’honoraires ou\nd’enregistrements du support informatique:",
               order_number]]
     table3 = Table(data3, [9 * cm, 8 * cm], [1.25 * cm])
     table3.setStyle(TableStyle([('ALIGN', (0, 0), (0, 0), 'LEFT'),
                                 ('ALIGN', (-1, -1), (-1, -1), 'CENTER'),
                                 ('VALIGN', (-1, -1), (-1, -1), 'MIDDLE'),
-                               ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),
-                               ('FONTSIZE', (0, 0), (-1, -1), 9),
-                               ('BOX', (1, 0), (-1, -1), 1.25, colors.black)]))
+                                ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),
+                                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                                ('BOX', (1, 0), (-1, -1), 1.25, colors.black)]))
     elements.append(Spacer(2, 20))
     elements.append(table3)
     elements.append(Spacer(2, 20))
-    data4 = [[u"Montant total des honoraires à charge de\nl’organisme assureur (montant net cf. zone 14) du\nmém. d’honoraires):",
-              "%.2f EUR" %round(total, 2)]]
-    table4 = Table(data4    , [9 * cm, 8 * cm], [1.25 * cm])
+    data4 = [[
+        u"Montant total des honoraires à charge de\nl’organisme assureur (montant net cf. zone 14) du\nmém. d’honoraires):",
+        "%.2f EUR" % round(total, 2)]]
+    table4 = Table(data4, [9 * cm, 8 * cm], [1.25 * cm])
     table4.setStyle(TableStyle([('ALIGN', (0, 0), (0, 0), 'LEFT'),
                                 ('ALIGN', (-1, -1), (-1, -1), 'CENTER'),
                                 ('VALIGN', (-1, -1), (-1, -1), 'MIDDLE'),
