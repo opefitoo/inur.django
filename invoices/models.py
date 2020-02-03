@@ -185,7 +185,8 @@ class Patient(models.Model):
     def clean(self, *args, **kwargs):
         self.code_sn = self.format_code_sn(self.code_sn)
         super(Patient, self).clean_fields()
-        messages = self.validate(self.id, self.__dict__)
+        patient_age = self.calculate_age(datetime.now())
+        messages = self.validate(self.id, patient_age, self.__dict__)
         if messages:
             raise ValidationError(messages)
 
@@ -194,11 +195,11 @@ class Patient(models.Model):
         return code_sn.replace(" ", "")
 
     @staticmethod
-    def validate(instance_id, data):
+    def validate(instance_id, patient_age, data):
         result = {}
         result.update(Patient.validate_code_sn(instance_id, data))
         result.update(Patient.validate_date_of_death(instance_id, data))
-
+        result.update(Patient.patient_age_validation(patient_age, data))
         return result
 
     @staticmethod
@@ -220,6 +221,14 @@ class Patient(models.Model):
             code_sn = data['code_sn'].replace(" ", "")
             if Patient.objects.filter(code_sn=code_sn).exclude(pk=instance_id).count() > 0:
                 messages = {'code_sn': 'Code SN must be unique'}
+        return messages
+
+    @staticmethod
+    def patient_age_validation(patient_age, data):
+        messages = {}
+        if 'is_private' in data and not data['is_private']:
+            if patient_age is None or patient_age < 1 or patient_age > 120:
+                messages = {'code_sn': 'Code SN does not look ok, patient cannot be %d year(s) old' % patient_age}
         return messages
 
     def calculate_age(self, care_date: object) -> object:
@@ -458,11 +467,11 @@ class MedicalPrescription(models.Model):
     def __str__(self):
         if bool(self.file):
             return '%s %s (%s) [%s...]' % (
-            self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
-            self.file.name[:5])
+                self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
+                self.file.name[:5])
         else:
             return '%s %s (%s) sans fichier' % (
-            self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
+                self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
 
 
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
