@@ -410,7 +410,7 @@ class SimplifiedTimesheetDetail(models.Model):
         result.update(SimplifiedTimesheetDetail.validate_dates(data))
         result.update(SimplifiedTimesheetDetail.validate_periods(instance.simplified_timesheet.time_sheet_month,
                                                                  instance.simplified_timesheet.time_sheet_year, data))
-        result.update(validate_date_range_vs_holiday_requests(data, instance.simplified_timesheet.employee.user.id))
+        result.update(validate_date_range_vs_holiday_requests(data, instance.simplified_timesheet.user.id))
         return result
 
     @staticmethod
