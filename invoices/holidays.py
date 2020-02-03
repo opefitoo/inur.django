@@ -19,7 +19,8 @@ class HolidayRequest(models.Model):
     REASONS = [
         (1, u'Congés'),
         (2, u'Maladie'),
-        (3, u'Formation')
+        (3, u'Formation'),
+        (4, u'Desiderata')
     ]
     request_accepted = models.BooleanField(u"Demande acceptée", default=False, blank=True)
     validated_by = models.ForeignKey('invoices.Employee', related_name='validator',
