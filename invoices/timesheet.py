@@ -410,6 +410,7 @@ class SimplifiedTimesheetDetail(models.Model):
         result.update(SimplifiedTimesheetDetail.validate_dates(data))
         result.update(SimplifiedTimesheetDetail.validate_periods(instance.simplified_timesheet.time_sheet_month,
                                                                  instance.simplified_timesheet.time_sheet_year, data))
+        result.update(validate_date_range_vs_holiday_requests(data, instance.simplified_timesheet.employee.user.id))
         return result
 
     @staticmethod
@@ -476,3 +477,22 @@ class PublicHolidayCalendarDetail(models.Model):
         return "%s - %s" \
                % (date(self.calendar_date.year, self.calendar_date.month, self.calendar_date.day).strftime("%A"),
                   self.calendar_date)
+
+
+def validate_date_range_vs_holiday_requests(data, employee_id):
+    msgs = {}
+    from invoices.holidays import HolidayRequest
+    end_date_time = data['start_date']
+    end_date_time.replace(hour=data['end_date'].hour, minute=data['end_date'].minute)
+    conflicts = HolidayRequest.objects.filter(
+        Q(start_date__range=(data['start_date'], end_date_time))
+    ).filter(
+        employee_id=employee_id)
+    if 1 == conflicts.count():
+        msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
+                                                                                          conflicts[0].end_date)}
+    elif 1 < conflicts.count():
+        msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s et %d autres conflits"
+                              % (conflicts[0].start_date, conflicts[0].end_date, conflicts.count() - 1)}
+
+    return msgs
