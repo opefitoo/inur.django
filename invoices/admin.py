@@ -8,13 +8,12 @@ from django.contrib.auth.models import User
 from django.core.checks import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
-from django.utils.functional import curry
 from django.utils.html import format_html
 
 from invoices.holidays import HolidayRequest
 from invoices.invaction import make_private, \
     export_xml
-from invoices.forms import ValidityDateFormSet, PrestationForm, InvoiceItemForm, HospitalizationFormSet, \
+from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
@@ -64,6 +63,7 @@ class ValidityDateInline(admin.TabularInline):
     search_fields = ['start_date', 'end_date', 'gross_amount']
 
 
+@admin.register(CareCode)
 class CareCodeAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
@@ -71,21 +71,16 @@ class CareCodeAdmin(admin.ModelAdmin):
     inlines = [ValidityDateInline]
 
 
-admin.site.register(CareCode, CareCodeAdmin)
-
-
 class EmployeeContractDetailInline(TabularInline):
     extra = 0
     model = EmployeeContractDetail
 
 
+@admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     inlines = [EmployeeContractDetailInline]
     list_display = ('user', 'start_contract', 'end_contract', 'occupation')
     search_fields = ['user', 'occupation']
-
-
-admin.site.register(Employee, EmployeeAdmin)
 
 
 class HospitalizationInline(admin.TabularInline):
@@ -106,6 +101,7 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     scan_preview.allow_tags = True
 
 
+@admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
@@ -116,9 +112,7 @@ class PatientAdmin(admin.ModelAdmin):
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
 
 
-admin.site.register(Patient, PatientAdmin)
-
-
+@admin.register(Prestation)
 class PrestationAdmin(admin.ModelAdmin):
     from invoices.invaction import create_invoice_for_health_insurance
 
@@ -127,8 +121,6 @@ class PrestationAdmin(admin.ModelAdmin):
     list_display = ('carecode', 'date')
     search_fields = ['carecode__code', 'carecode__name']
     actions = [create_invoice_for_health_insurance]
-
-    form = PrestationForm
 
     def get_changeform_initial_data(self, request):
         initial = {}
@@ -141,24 +133,25 @@ class PrestationAdmin(admin.ModelAdmin):
 
         return initial
 
+    def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
+        initial = {}
+        print(initial)
 
+
+@admin.register(Physician)
 class PhysicianAdmin(admin.ModelAdmin):
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'provider_code')
     search_fields = ['name', 'first_name', 'code_sn']
 
 
-admin.site.register(Physician, PhysicianAdmin)
-
-
+@admin.register(MedicalPrescription)
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
     list_display = ('date', 'prescriptor', 'patient', 'file')
     search_fields = ['date', 'prescriptor__name', 'prescriptor__firstname', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
-
-
-admin.site.register(MedicalPrescription, MedicalPrescriptionAdmin)
+    autocomplete_fields = ['prescriptor', 'patient']
 
 
 class PrestationInline(TabularInline):
@@ -166,12 +159,12 @@ class PrestationInline(TabularInline):
     max_num = InvoiceItem.PRESTATION_LIMIT_MAX
     model = Prestation
     formset = PrestationInlineFormSet
-    form = PrestationForm
-    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee', 'copy', 'delete')
-    readonly_fields = ('copy', 'delete')
+    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee',)
+    autocomplete_fields = ['carecode']
+    # readonly_fields = ('copy', 'delete')
     search_fields = ['carecode', 'date', 'employee']
-    can_delete = False
     ordering = ['date']
+    can_order = True
 
     class Media:
         js = [
@@ -185,44 +178,28 @@ class PrestationInline(TabularInline):
     def copy(self, obj):
         return format_html("<a href='#' class='copy_inline'>Copy</a>")
 
-    def delete(self, obj):
-        url = reverse('delete-prestation')
-        return format_html("<a href='%s' class='deletelink' data-prestation_id='%s'>Delete</a>" % (url, obj.id))
-
+    # def delete(self, obj):
+    #     url = reverse('delete-prestation')
+    #     return format_html("<a href='%s' class='deletelink' data-prestation_id='%s'>Delete</a>" % (url, obj.id))
+    #
     copy.allow_tags = True
-    delete.allow_tags = True
-
-    def get_formset(self, request, obj=None, **kwargs):
-        initial = []
-        formset = super(PrestationInline, self).get_formset(request, obj, **kwargs)
-        user = request.user
-        try:
-            employee = user.employee
-            if request.method == "GET":
-                formset.form.base_fields['employee'].initial = employee.id
-                initial.append({
-                    'employee': employee.id,
-                })
-        except ObjectDoesNotExist:
-            pass
-
-        formset.__init__ = curry(formset.__init__, initial=initial)
-
-        return formset
+    # delete.allow_tags = True
 
 
+@admin.register(InvoiceItem)
 class InvoiceItemAdmin(admin.ModelAdmin):
     from invoices.action import export_to_pdf, export_to_pdf_with_medical_prescription_files
     from invoices.action_private import pdf_private_invoice
     from invoices.action_private_participation import pdf_private_invoice_pp
     from invoices.action_depinsurance import export_to_pdf2
-    form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient__name', 'patient__first_name']
     readonly_fields = ('medical_prescription_preview',)
-    actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp, pdf_private_invoice, export_to_pdf2]
+    autocomplete_fields = ['patient', 'medical_prescription']
+    actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
+               pdf_private_invoice, export_to_pdf2]
     inlines = [PrestationInline]
     fieldsets = (
         (None, {
@@ -242,9 +219,6 @@ class InvoiceItemAdmin(admin.ModelAdmin):
         return obj.medical_prescription.image_preview()
 
     medical_prescription_preview.allow_tags = True
-
-
-admin.site.register(InvoiceItem, InvoiceItemAdmin)
 
 
 class InvoiceItemInlineAdmin(admin.TabularInline):
@@ -273,6 +247,7 @@ class TimesheetDetailInline(admin.TabularInline):
     ordering = ['start_date']
 
 
+@admin.register(Timesheet)
 class TimesheetAdmin(admin.ModelAdmin):
     fields = ('start_date', 'end_date', 'submitted_date', 'other_details', 'timesheet_validated')
     date_hierarchy = 'end_date'
@@ -301,36 +276,29 @@ class TimesheetAdmin(admin.ModelAdmin):
         return qs.filter(employee__user=request.user)
 
 
-admin.site.register(Timesheet, TimesheetAdmin)
-
-
 class PublicHolidayCalendarDetailInline(admin.TabularInline):
     extra = 1
     model = PublicHolidayCalendarDetail
 
 
+@admin.register(PublicHolidayCalendar)
 class PublicHolidayCalendarAdmin(admin.ModelAdmin):
     inlines = [PublicHolidayCalendarDetailInline]
     verbose_name = u'Congés légaux'
     verbose_name_plural = u'Congés légaux'
 
 
-admin.site.register(PublicHolidayCalendar, PublicHolidayCalendarAdmin)
-
-
+@admin.register(HolidayRequest)
 class HolidayRequestAdmin(admin.ModelAdmin):
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
-    readonly_fields = ('request_accepted', 'validated_by','employee')
+    readonly_fields = ('request_accepted', 'validated_by', 'employee')
 
     def get_queryset(self, request):
         qs = super(HolidayRequestAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
         return qs.filter(employee=request.user)
-
-
-admin.site.register(HolidayRequest, HolidayRequestAdmin)
 
 
 class SimplifiedTimesheetDetailInline(admin.TabularInline):
@@ -342,6 +310,7 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
     form = SimplifiedTimesheetDetailForm
 
 
+@admin.register(SimplifiedTimesheet)
 class SimplifiedTimesheetAdmin(admin.ModelAdmin):
     ordering = ('-time_sheet_year', '-time_sheet_month')
     inlines = [SimplifiedTimesheetDetailInline]
@@ -403,6 +372,3 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
         if obj and obj.timesheet_validated and not request.user.is_superuser:
             return False
         return self.has_delete_permission
-
-
-admin.site.register(SimplifiedTimesheet, SimplifiedTimesheetAdmin)

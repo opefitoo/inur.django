@@ -33,10 +33,6 @@ CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
 # Application definition
 INSTALLED_APPS = (
-    'dal',
-    'dal_select2',
-    #'bootstrap_admin',  # always before django.contrib.admin
-    #'jet',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,6 +55,7 @@ MIDDLEWARE = (
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
@@ -211,6 +208,6 @@ if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
         json.dump(json.loads(credentials), outfile)
 
-#INTERNAL_IPS = {'127.0.0.1',}
+INTERNAL_IPS = {'127.0.0.1',}
 
 IMPORTER_CSV_FOLDER = os.path.join(BASE_DIR, '../initialdata/')

@@ -5,30 +5,31 @@ from rest_framework.authtoken import views as authtoken_views
 from django.conf import settings
 from django.urls import path
 
-from invoices.views import CareCodeAutocomplete, PatientAutocomplete, EmployeeAutocomplete, \
-    MedicalPrescriptionAutocomplete, delete_prestation
+from invoices.views import delete_prestation
+
+admin.autodiscover()
 
 urlpatterns = [
-    url(
-        r'^carecode-autocomplete/$',
-        CareCodeAutocomplete.as_view(),
-        name='carecode-autocomplete',
-    ),
-    url(
-        r'^patient-autocomplete/$',
-        PatientAutocomplete.as_view(),
-        name='patient-autocomplete',
-    ),
-    url(
-        r'^medical-prescription-autocomplete/$',
-        MedicalPrescriptionAutocomplete.as_view(),
-        name='medical-prescription-autocomplete',
-    ),
-    url(
-        r'^employee-autocomplete/$',
-        EmployeeAutocomplete.as_view(),
-        name='employee-autocomplete',
-    ),
+    # url(
+    #     r'^carecode-autocomplete/$',
+    #     CareCodeAutocomplete.as_view(),
+    #     name='carecode-autocomplete',
+    # ),
+    # url(
+    #     r'^patient-autocomplete/$',
+    #     PatientAutocomplete.as_view(),
+    #     name='patient-autocomplete',
+    # ),
+    # url(
+    #     r'^medical-prescription-autocomplete/$',
+    #     MedicalPrescriptionAutocomplete.as_view(),
+    #     name='medical-prescription-autocomplete',
+    # ),
+    # url(
+    #     r'^employee-autocomplete/$',
+    #     EmployeeAutocomplete.as_view(),
+    #     name='employee-autocomplete',
+    # ),
     url(
         r'^admin/delete-prestation/$',  
         delete_prestation,
@@ -53,3 +54,13 @@ urlpatterns += [
 admin.site.site_header = "Invoice for Nurses Admin (inur)"
 admin.site.site_title = "INUR Admin Portal"
 admin.site.index_title = "Welcome to INUR Portal"
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+
+        # For django versions before 2.0:
+        # url(r'^__debug__/', include(debug_toolbar.urls)),
+
+    ] + urlpatterns

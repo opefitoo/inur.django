@@ -1,7 +1,7 @@
-from dal_select2.widgets import ModelSelect2
-from django.forms import BaseInlineFormSet, ValidationError, ModelChoiceField, ModelForm, DateField, BooleanField
-from django import forms
 from datetime import datetime
+
+from django import forms
+from django.forms import BaseInlineFormSet, ValidationError, ModelForm
 
 from invoices.models import Prestation, CareCode, InvoiceItem, Patient, MedicalPrescription
 from invoices.timesheet import Employee, SimplifiedTimesheet, SimplifiedTimesheetDetail
@@ -83,77 +83,69 @@ class SimplifiedTimesheetDetailForm(ModelForm):
         model = SimplifiedTimesheetDetail
         fields = '__all__'
 
+# class PrestationForm(ModelForm):
+#     carecode = ModelChoiceField(
+#         queryset=CareCode.objects.all(),
+#         widget=ModelSelect2(url='carecode-autocomplete')
+#     )
+#     employee = ModelChoiceField(
+#         queryset=Employee.objects.all(),
+#         required=False,
+#         widget=ModelSelect2(url='employee-autocomplete')
+#     )
+#     at_home_paired = ModelChoiceField(
+#         queryset=Prestation.objects.all(),
+#         required=False,
+#         widget=forms.HiddenInput()
+#     )
+#
+#     at_home_paired_name = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}), disabled=True,
+#                                           required=False)
+#     paired_at_home_name = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}), disabled=True,
+#                                           required=False)
+#
+#     def __init__(self, *args, **kwargs):
+#         super(PrestationForm, self).__init__(*args, **kwargs)
+#         self.fields['carecode'].autocomplete = False
+#         self.fields['employee'].autocomplete = False
+#         self.fields['date'].widget = CustomAdminSplitDateTime()
+#
+#         if self.instance.at_home_paired is not None:
+#             self.fields['carecode'].disabled = True
+#             self.fields['at_home'].disabled = True
+#         if hasattr(self.instance, 'paired_at_home') and self.instance.paired_at_home is not None:
+#             self.fields['at_home'].disabled = True
+#             self.fields['at_home_paired_name'].widget = forms.HiddenInput()
+#             self.fields['paired_at_home_name'].initial = self.instance.paired_at_home_name
+#         elif hasattr(self.instance, 'at_home_paired') and self.instance.at_home_paired is not None:
+#             self.fields['at_home'].disabled = True
+#             self.fields['paired_at_home_name'].widget = forms.HiddenInput()
+#             self.fields['at_home_paired_name'].initial = self.instance.at_home_paired_name
+#         else:
+#             self.fields['at_home_paired_name'].widget = forms.HiddenInput()
+#             self.fields['paired_at_home_name'].widget = forms.HiddenInput()
+#
+#     class Meta:
+#         model = Prestation
+#         fields = '__all__'
 
 
-class PrestationForm(ModelForm):
-    carecode = ModelChoiceField(
-        queryset=CareCode.objects.all(),
-        widget=ModelSelect2(url='carecode-autocomplete')
-    )
-    employee = ModelChoiceField(
-        queryset=Employee.objects.all(),
-        required=False,
-        widget=ModelSelect2(url='employee-autocomplete')
-    )
-    at_home_paired = ModelChoiceField(
-        queryset=Prestation.objects.all(),
-        required=False,
-        widget=forms.HiddenInput()
-    )
-
-    at_home_paired_name = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}), disabled=True,
-                                          required=False)
-    paired_at_home_name = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}), disabled=True,
-                                          required=False)
-
-    def __init__(self, *args, **kwargs):
-        super(PrestationForm, self).__init__(*args, **kwargs)
-        self.fields['carecode'].autocomplete = False
-        self.fields['employee'].autocomplete = False
-        self.fields['date'].widget = CustomAdminSplitDateTime()
-
-        if self.instance.at_home_paired is not None:
-            self.fields['carecode'].disabled = True
-            self.fields['at_home'].disabled = True
-        if hasattr(self.instance, 'paired_at_home') and self.instance.paired_at_home is not None:
-            self.fields['at_home'].disabled = True
-            self.fields['at_home_paired_name'].widget = forms.HiddenInput()
-            self.fields['paired_at_home_name'].initial = self.instance.paired_at_home_name
-        elif hasattr(self.instance, 'at_home_paired') and self.instance.at_home_paired is not None:
-            self.fields['at_home'].disabled = True
-            self.fields['paired_at_home_name'].widget = forms.HiddenInput()
-            self.fields['at_home_paired_name'].initial = self.instance.at_home_paired_name
-        else:
-            self.fields['at_home_paired_name'].widget = forms.HiddenInput()
-            self.fields['paired_at_home_name'].widget = forms.HiddenInput()
-
-    class Meta:
-        model = Prestation
-        fields = '__all__'
-
-
-class InvoiceItemForm(ModelForm):
-    patient = ModelChoiceField(
-        queryset=Patient.objects.all(),
-        widget=ModelSelect2(url='patient-autocomplete', forward=['is_private'])
-    )
-
-    medical_prescription = ModelChoiceField(
-        queryset=MedicalPrescription.objects.all(),
-        widget=ModelSelect2(url='medical-prescription-autocomplete', forward=['patient']),
-        required=False
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(InvoiceItemForm, self).__init__(*args, **kwargs)
-        self.fields['patient'].autocomplete = False
-        self.fields['medical_prescription'].autocomplete = False
-        self.fields['is_valid'].widget = forms.HiddenInput()
-        self.fields['validation_comment'].widget = forms.HiddenInput()
-
-    class Meta:
-        model = InvoiceItem
-        fields = '__all__'
+# class InvoiceItemForm(ModelForm):
+#
+#     # medical_prescription = ModelChoiceField(
+#     #     queryset=MedicalPrescription.objects.all(),
+#     #     widget=ModelSelect2(url='medical-prescription-autocomplete', forward=['patient']),
+#     #     required=False
+#     # )
+#     #
+#     def __init__(self, *args, **kwargs):
+#         super(InvoiceItemForm, self).__init__(*args, **kwargs)
+#         if self.instance.has_patient():
+#             self.fields['medical_prescription'].queryset = MedicalPrescription.objects.filter(patient=self.instance.patient)
+#
+#     class Meta:
+#         model = InvoiceItem
+#         fields = '__all__'
 
 
 class HospitalizationFormSet(BaseInlineFormSet):

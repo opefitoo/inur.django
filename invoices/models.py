@@ -7,6 +7,7 @@ import os
 from copy import deepcopy
 from datetime import datetime
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 # from django.core.files.storage import FileSystemStorage
 from django.db import models
@@ -153,6 +154,9 @@ class ValidityDate(models.Model):
 
 # TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
+    class Meta:
+        ordering = ['-id']
+
     code_sn = models.CharField(max_length=30, validators=[MyRegexValidator(
         regex='^[12]\d{12}',
         message='Premier chiffre (1 à 2) suivi de 12 chiffres (0 à 9)',
@@ -358,6 +362,8 @@ class Hospitalization(models.Model):
 # TODO: 1. can maybe be extending common class with Patient ?
 # TODO: 2. synchronize physician details with Google contacts
 class Physician(models.Model):
+    class Meta:
+        ordering = ['-id']
     provider_code = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
@@ -397,6 +403,9 @@ def validate_image(image):
 
 
 class MedicalPrescription(models.Model):
+    class Meta:
+        ordering = ['-id']
+
     prescriptor = models.ForeignKey(Physician, related_name='medical_prescription',
                                     help_text='Please chose the Physician who is giving the medical prescription',
                                     on_delete=models.CASCADE)
@@ -588,12 +597,16 @@ class InvoiceItem(models.Model):
 
     invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)
     is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
-                                     help_text='Seuls les patients qui ne disposent pas de la prise en charge CNS seront recherches dans le champ Patient (prive)',
+                                     help_text=u'Seuls les patients qui ne disposent pas de la prise en charge CNS '
+                                               u'seront recherchés dans le champ Patient (privé)',
                                      default=False)
     patient = models.ForeignKey(Patient, related_name='invoice_items',
-                                help_text=u"choisir parmi les patients en entrant quelques lettres de son nom ou prenom",
+                                help_text=u"choisir parmi les patients en entrant quelques lettres de son nom ou prénom",
                                 on_delete=models.CASCADE)
-    accident_id = models.CharField(max_length=30, help_text=u"Numero d'accident est facultatif", null=True, blank=True)
+    # subcontractor = models.ForeignKey(Patient, related_name='invoice_subcontractor',
+    #                                   help_text=u'Si vous introduisez un sous traitant',
+    #                                   on_delete=models.CASCADE, null=True, blank=True)
+    accident_id = models.CharField(max_length=30, help_text=u"Numéro d'accident est facultatif", null=True, blank=True)
     accident_date = models.DateField(help_text=u"Date d'accident est facultatif", null=True, blank=True)
     invoice_date = models.DateField('Invoice date')
     patient_invoice_date = models.DateField('Date envoi au patient', null=True, blank=True)
@@ -618,7 +631,6 @@ class InvoiceItem(models.Model):
         result = {}
         result.update(InvoiceItem.validate_is_private(data))
         result.update(InvoiceItem.validate_patient(data))
-
         return result
 
     @staticmethod
@@ -669,8 +681,8 @@ class InvoiceItem(models.Model):
     def invoice_month(self):
         return self.invoice_date.strftime("%B %Y")
 
-    def __str__(self):  # Python 3: def __str__(self):
-        return 'invocie no.: %s - nom patient: %s' % (self.invoice_number, self.patient)
+    def __str__(self):
+        return 'invoice no.: %s - nom patient: %s' % (self.invoice_number, self.patient)
 
     @staticmethod
     def autocomplete_search_fields():
@@ -685,7 +697,7 @@ class Prestation(models.Model):
                                  related_name='prestations',
                                  blank=True,
                                  null=True,
-                                 default=None,
+                                 default=settings.AUTH_USER_MODEL,
                                  on_delete=models.CASCADE)
     carecode = models.ForeignKey(CareCode,
                                  related_name='prestations',
