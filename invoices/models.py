@@ -26,6 +26,7 @@ from django.utils.timezone import now
 from invoices.storages import CustomizedGoogleDriveStorage
 from constance import config
 
+from invoices.timesheet import Employee
 from invoices.validators.validators import MyRegexValidator
 
 prestation_gcalendar = PrestationGoogleCalendar()
@@ -747,8 +748,20 @@ class Prestation(models.Model):
         result.update(Prestation.validate_carecode(instance_id, data))
         result.update(Prestation.validate_patient_alive(data))
         result.update(Prestation.validate_max_limit(data))
-
+        result.update(Prestation.validate_employee(data))
         return result
+
+    @staticmethod
+    def validate_employee(data):
+        messages = {}
+        employee = None
+        if 'employee' in data:
+            employee = data['employee']
+        elif 'employee_id' in data and data['employee_id'] is not None:
+            employee = Employee.objects.filter(pk=data['employee_id']).get()
+        else:
+            messages = {'employee': 'Please fill Employee field'}
+        return messages
 
     @staticmethod
     def validate_at_home_default_config(data):
