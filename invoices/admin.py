@@ -18,6 +18,7 @@ from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
+from invoices.quickfix_actions import set_employee_for_invoice
 from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar, \
     EmployeeContractDetail
@@ -199,7 +200,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient', 'medical_prescription']
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
-               pdf_private_invoice, export_to_pdf2]
+               pdf_private_invoice, export_to_pdf2, set_employee_for_invoice]
     inlines = [PrestationInline]
     fieldsets = (
         (None, {
