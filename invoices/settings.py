@@ -46,11 +46,13 @@ INSTALLED_APPS = (
     'constance.backends.database',
     'invoices',
     'api',
+    'corsheaders',
     #'debug_toolbar'
 )
 
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -157,8 +159,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication'
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
 }
 
 
@@ -211,3 +213,7 @@ if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_
 INTERNAL_IPS = {'127.0.0.1',}
 
 IMPORTER_CSV_FOLDER = os.path.join(BASE_DIR, '../initialdata/')
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:4200',
+]

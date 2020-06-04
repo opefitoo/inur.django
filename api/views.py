@@ -1,11 +1,12 @@
 from django.contrib.auth.models import User, Group
-from rest_framework import viewsets
-from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, PrestationSerializer, \
+from rest_framework import viewsets, filters
+from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, \
+    PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
-    ValidityDateSerializer
+    ValidityDateSerializer, InvoiceItemBatchSerializer
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate
+    ValidityDate, InvoiceItemBatch
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
@@ -31,7 +32,8 @@ class CareCodeViewSet(viewsets.ModelViewSet):
     """
     queryset = CareCode.objects.all()
     serializer_class = CareCodeSerializer
-
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['code', 'name']
 
 class PatientViewSet(viewsets.ModelViewSet):
     """
@@ -71,6 +73,13 @@ class JobPositionViewSet(viewsets.ModelViewSet):
     """
     queryset = JobPosition.objects.all()
     serializer_class = JobPositionSerializer
+
+class BatchViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows JobPositions to be viewed.
+    """
+    queryset = InvoiceItemBatch.objects.all()
+    serializer_class = InvoiceItemBatchSerializer
 
 
 class TimesheetViewSet(viewsets.ModelViewSet):

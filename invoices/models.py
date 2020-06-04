@@ -17,6 +17,8 @@ from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
+from gdstorage.storage import GoogleDriveStorage
+
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.managers import InvoiceItemBatchManager
@@ -31,6 +33,7 @@ from invoices.validators.validators import MyRegexValidator
 
 prestation_gcalendar = PrestationGoogleCalendar()
 gd_storage: CustomizedGoogleDriveStorage = CustomizedGoogleDriveStorage()
+batch_gd_storage: GoogleDriveStorage = GoogleDriveStorage()
 # else:
 #    gd_storage = FileSystemStorage()
 
@@ -50,6 +53,10 @@ class CareCode(models.Model):
                                                        u"sera pas déduite de cette prestation",
                                              default=False)
     exclusive_care_codes = models.ManyToManyField("self", blank=True)
+
+    @property
+    def current_gross_amount(self):
+        return self.gross_amount(datetime.date.today())
 
     def gross_amount(self, date):
         for v in self.validity_dates.all():
@@ -526,7 +533,7 @@ class InvoiceItemBatch(models.Model):
     end_date = models.DateField('Invoice batch start date')
     send_date = models.DateField(null=True, blank=True)
     payment_date = models.DateField(null=True, blank=True)
-    file = models.FileField(storage=gd_storage, blank=True, upload_to=invoiceitembatch_filename)
+    file = models.FileField(storage=batch_gd_storage, blank=True, upload_to=invoiceitembatch_filename)
     _original_file = None
 
     # invoices to be corrected
@@ -571,16 +578,16 @@ def invoiceitembatch_generate_pdf_name(sender, instance, **kwargs):
     instance.file = InvoiceItemBatchPdf.get_filename(instance)
     origin_file = instance.get_original_file()
     if origin_file.name and origin_file != instance.file:
-        gd_storage.delete(origin_file.name)
+        batch_gd_storage.delete(origin_file.name)
 
 
-@receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_save")
-def invoiceitembatch_generate_pdf(sender, instance, **kwargs):
-    InvoiceItemBatchManager.update_associated_invoiceitems(instance)
-    file_content = InvoiceItemBatchPdf.get_inmemory_pdf(instance)
-    path = InvoiceItemBatchPdf.get_path(instance)
-    instance._original_file = instance.file
-    gd_storage.save_file(path, file_content)
+# @receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_save")
+# def invoiceitembatch_generate_pdf(sender, instance, **kwargs):
+#     InvoiceItemBatchManager.update_associated_invoiceitems(instance)
+#     file_content = InvoiceItemBatchPdf.get_inmemory_pdf(instance)
+#     path = InvoiceItemBatchPdf.get_path(instance)
+#     instance._original_file = instance.file
+#     batch_gd_storage.save_file(path, file_content)
 
 
 @receiver(post_delete, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_delete")

@@ -2,7 +2,7 @@ from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 from django_countries.serializers import CountryFieldMixin
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate
+    ValidityDate, InvoiceItemBatch
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
 
 
@@ -18,10 +18,29 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = ('url', 'name')
 
 
+class ValidityDateSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        instance_id = None
+        if self.instance is not None:
+            instance_id = self.instance.id
+        messages = ValidityDate.validate(instance_id, data)
+        if messages:
+            raise serializers.ValidationError(messages)
+
+        return data
+
+    class Meta:
+        model = ValidityDate
+        fields = ('id', 'start_date', 'end_date', 'gross_amount', 'care_code')
+
+
 class CareCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CareCode
-        fields = ('id', 'code', 'name', 'description', 'reimbursed', 'exclusive_care_codes')
+        depth = 1
+        validity_dates = ValidityDateSerializer()
+        fields = (
+        'id', 'code', 'name', 'description', 'reimbursed', 'current_gross_amount', 'exclusive_care_codes', 'validity_dates')
 
 
 class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
@@ -29,7 +48,7 @@ class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
         instance_id = None
         if self.instance is not None:
             instance_id = self.instance.id
-        
+
         messages = Patient.validate(instance_id, data)
         if messages:
             raise serializers.ValidationError(messages)
@@ -101,6 +120,12 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
                   'is_private')
 
 
+class InvoiceItemBatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvoiceItemBatch
+        fields = ('id', 'start_date', 'end_date', 'send_date', 'payment_date', 'file')
+
+
 class JobPositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobPosition
@@ -134,19 +159,3 @@ class HospitalizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hospitalization
         fields = ('id', 'start_date', 'end_date', 'description', 'patient')
-
-
-class ValidityDateSerializer(serializers.ModelSerializer):
-    def validate(self, data):
-        instance_id = None
-        if self.instance is not None:
-            instance_id = self.instance.id
-        messages = ValidityDate.validate(instance_id, data)
-        if messages:
-            raise serializers.ValidationError(messages)
-
-        return data
-
-    class Meta:
-        model = ValidityDate
-        fields = ('id', 'start_date', 'end_date', 'gross_amount', 'care_code')

@@ -1,21 +1,17 @@
-import calendar
-from datetime import datetime
-
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.checks import messages
 from django.core.exceptions import ObjectDoesNotExist
-from django.urls import reverse
 from django.utils.html import format_html
 
-from invoices.holidays import HolidayRequest
-from invoices.invaction import make_private, \
-    export_xml
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm
+from invoices.holidays import HolidayRequest
+from invoices.invaction import make_private, \
+    export_xml
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
 from invoices.quickfix_actions import set_employee_for_invoice
