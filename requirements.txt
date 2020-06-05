@@ -1,10 +1,10 @@
 appdirs==1.4.4
 dj-database-url==0.5.0
 dj-static==0.0.6
-#django==3.0.5
+django==3.0.7
 #git+git://github.com/django/django@060d9d4229c436c44cf8e3a301f34c4b1f9f6c85#egg=django
 #git+git://github.com/django/django@6137ec2bf2c6398b5980b8cea91ff757a867b222#egg=django
-git+git://github.com/django/django@adf58311b84f2aa92ca57661a8ba8679481ac930#egg=django
+#git+git://github.com/django/django@adf58311b84f2aa92ca57661a8ba8679481ac930#egg=django
 django-appconf==1.0.4
 django-constance==2.6.0
 django-countries==6.1.2
@@ -16,7 +16,7 @@ django-postgrespool==0.3.1
 djangorestframework==3.11.0
 enum34==1.1.10
 #google-api-python-client==1.7.11
-google-api-python-client==1.8.3
+google-api-python-client==1.9.1
 gunicorn==20.0.4
 httplib2==0.18.1
 Markdown==3.2.2
