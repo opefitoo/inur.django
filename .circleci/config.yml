@@ -16,25 +16,15 @@ jobs: # A basic unit of work in a run
           POSTGRES_DB: circle_test
     steps: # steps that comprise the `build` job
       - checkout # check out source code to working directory
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
-      - restore_cache:
-      # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
-          key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
+#      - run: sudo chown -R circleci:circleci /usr/local/bin
+#      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
       - run:
           command: |
             sudo pip install pipenv
-            pipenv install
-      - save_cache: # cache Python dependencies using checksum of Pipfile as the cache-key
-          key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
-          paths:
-            - ".venv"
-            - "/usr/local/bin"
-            - "/usr/local/lib/python3.6/site-packages"
+            pipenv install -r requirements.txt
       - run:
           command: |
-            echo 'export GOOGLE_APPLICATION_CREDENTIALS="invoices/tests/keys/inuropefitoo-2514073fda1c.json"' >> $BASH_ENV
-            source $BASH_ENV
+            pipenv run export GOOGLE_APPLICATION_CREDENTIALS="invoices/tests/keys/inuropefitoo-2514073fda1c.json"
             pipenv run python manage.py test
       - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
           path: test-results
