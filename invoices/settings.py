@@ -90,10 +90,17 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 import dj_database_url
 
 DATABASES = {'default': dj_database_url.config(default='postgres://inur:inur@localhost:5432/inur')}
-
+if 'test' in sys.argv:
+    DATABASES['default'] = dj_database_url.config(default='postgresql://root@localhost/circle_test?sslmode=disable')
 # Enable Connection Pooling
 # DATABASES['default']['ENGINE'] = 'django_postgrespool'
 DATABASES['default']['AUTOCOMMIT'] = True
+DATABASES['default']['TEST'] = {
+
+if 'test' in sys.argv:
+    DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
+    DATABASES['default']['NAME'] = 'databasename.db3'    
+}
 
 
 

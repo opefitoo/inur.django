@@ -15,9 +15,7 @@ class PrestationGoogleCalendar:
     calendar = None
 
     def get_credentials(self):
-        credentials = service_account.Credentials.from_service_account_file(self._json_keyfile_path).
-                                                                       .with_scopes(["https://www.googleapis.com/auth/calendar"])
-
+        credentials = service_account.Credentials.from_service_account_file(self._json_keyfile_path)#.with_scopes(["https://www.googleapis.com/auth/calendar"])
         return credentials
 
     def __init__(self, json_keyfile_path=None):
@@ -31,8 +29,8 @@ class PrestationGoogleCalendar:
         self._json_keyfile_path = json_keyfile_path or settings.GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE
 
         credentials = self.get_credentials()
-        http = credentials.authorize(httplib2.Http())
-        self._service = discovery.build('calendar', 'v3', http=http)
+        #http = credentials.authorize(httplib2.Http())
+        self._service = discovery.build('calendar', 'v3', credentials=credentials)
         self._set_calendar()
 
     def _set_calendar(self):
