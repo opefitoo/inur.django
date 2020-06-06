@@ -95,12 +95,6 @@ if 'test' in sys.argv:
 # Enable Connection Pooling
 # DATABASES['default']['ENGINE'] = 'django_postgrespool'
 DATABASES['default']['AUTOCOMMIT'] = True
-DATABASES['default']['TEST'] = {
-
-if 'test' in sys.argv:
-    DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
-    DATABASES['default']['NAME'] = 'databasename.db3'    
-}
 
 
 
