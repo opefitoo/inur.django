@@ -21,7 +21,7 @@ jobs: # A basic unit of work in a run
       - run:
           command: |
             sudo pip install pipenv
-            pipenv install -r requirements.txt
+            pipenv install -r requirements.txt --skip-lock
       - run:
           command: |
             echo GOOGLE_APPLICATION_CREDENTIALS=./invoices/tests/keys/inuropefitoo-2514073fda1c.json>.env
