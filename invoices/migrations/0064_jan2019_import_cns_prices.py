@@ -14,6 +14,8 @@ from django.utils.dateparse import parse_date
 
 
 def process_codes(apps, schema_editor):
+    if 'test' in os.sys.argv:
+        return
     updated_codes = []
     codes_that_are_too_old = []
     unknowns = []
