@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 from constance import config
 
 from api.serializers import PrestationSerializer
-from invoices.models import CareCode, Patient, InvoiceItem, Prestation
+from invoices.models import CareCode, Patient, InvoiceItem, Prestation, invoices.Employee
 
 
 class PrestationTestCase(BaseTestCase, APITestCase):
@@ -34,23 +34,33 @@ class PrestationTestCase(BaseTestCase, APITestCase):
                                                  patient=patient,
                                                  invoice_date=date,
                                                  is_private=False)
+        jobposition = JobPosition.objects.create(name='name 0')
+        employee = Employee.objects.create(user=self.user,
+                                            start_contract=date,
+                                            occupation=jobposition)
+
 
         self.items = [self.model.objects.create(invoice_item=invoiceitem,
                                                 carecode=carecode,
+                                                employee=employee,
                                                 date=date),
                       self.model.objects.create(invoice_item=invoiceitem,
                                                 carecode=carecode,
+                                                employee=employee,
                                                 date=date),
                       self.model.objects.create(invoice_item=invoiceitem,
                                                 carecode=carecode,
+                                                employee=employee,
                                                 date=date),
                       self.model.objects.create(invoice_item=invoiceitem,
                                                 carecode=carecode,
+                                                employee=employee,
                                                 date=date)]
 
         self.valid_payload = {
             'invoice_item': invoiceitem.id,
             'carecode': carecode.id,
+            'employee': employee.id,
             'date': date.strftime('%Y-%m-%dT%H:%M:%S')
         }
 
