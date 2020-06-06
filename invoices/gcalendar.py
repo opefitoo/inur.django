@@ -4,7 +4,8 @@ import datetime
 
 from apiclient import discovery
 from googleapiclient.errors import HttpError
-from oauth2client.service_account import ServiceAccountCredentials
+#from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2 import service_account
 from django.conf import settings
 from django.utils import timezone
 
@@ -14,8 +15,8 @@ class PrestationGoogleCalendar:
     calendar = None
 
     def get_credentials(self):
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(self._json_keyfile_path,
-                                                                       scopes=["https://www.googleapis.com/auth/calendar"])
+        credentials = service_account.Credentials.from_service_account_file(self._json_keyfile_path).
+                                                                       .with_scopes(["https://www.googleapis.com/auth/calendar"])
 
         return credentials
 

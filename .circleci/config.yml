@@ -16,15 +16,15 @@ jobs: # A basic unit of work in a run
           POSTGRES_DB: circle_test
     steps: # steps that comprise the `build` job
       - checkout # check out source code to working directory
-#      - run: sudo chown -R circleci:circleci /usr/local/bin
-#      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
       - run:
           command: |
             sudo pip install pipenv
             pipenv install -r requirements.txt
       - run:
           command: |
-            echo GOOGLE_APPLICATION_CREDENTIALS="invoices/tests/keys/inuropefitoo-2514073fda1c.json">.env
+            echo GOOGLE_APPLICATION_CREDENTIALS=./invoices/tests/keys/inuropefitoo-2514073fda1c.json>.env
             pipenv run python manage.py test
       - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
           path: test-results

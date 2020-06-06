@@ -208,7 +208,8 @@ GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_stor
 if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE):
     credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
-        json.dump(json.loads(credentials), outfile)
+        with open(credentials) as json_file:
+            json.dump(json.load(json_file), outfile)
 
 INTERNAL_IPS = {'127.0.0.1',}
 

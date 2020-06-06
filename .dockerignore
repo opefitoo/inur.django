@@ -6,3 +6,5 @@ db.sqlite3
 
 # Editor files
 .vscode/
+
+.env
