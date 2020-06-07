@@ -6,6 +6,7 @@ import os
 
 from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, GoogleDrivePermissionRole \
     , GoogleDriveFilePermission
+from apiclient import errors
 from googleapiclient.http import MediaIoBaseUpload
 from rq import Queue
 
@@ -100,6 +101,53 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
             self._set_permissions()
         else:
             return None
+
+    def insert_permission(self, path, value, perm_type, role):
+        """Insert a new permission.
+
+        Args:
+          path: Path of the file to insert permission for.
+          value: User or group e-mail address, domain name or None for 'default'
+                 type.
+          perm_type: The value 'user', 'group', 'domain' or 'default'.
+          role: The value 'owner', 'writer' or 'reader'.
+        Returns:
+          The inserted permission if successful, None otherwise.
+        """
+        file = self._get_or_create_folder(path)
+        file_id = file['id']
+        new_permission = {
+            'value': value,
+            'type': perm_type,
+            'role': role,
+            'emailAddress': value
+        }
+        try:
+            return self._drive_service.permissions().create(fileId=file_id,
+                                                            body=new_permission).execute()
+        except errors.HttpError as error:
+            print
+            'An error occurred: %s' % error
+        return None
+
+    def delete_permission(self, path, permission_id):
+        """Delete a permission.
+
+        Args:
+          path: Path of the file to insert permission for.
+          permission_id: the Id for the permission ressource according to Google API.
+        Returns:
+          The inserted permission if successful, None otherwise.
+        """
+        file = self._get_or_create_folder(path)
+        file_id = file['id']
+        try:
+            return self._drive_service.permissions().delete(fileId=file_id,
+                                                            permissionId=permission_id).execute()
+        except errors.HttpError as error:
+            print
+            'An error occurred: %s' % error
+        return None
 
     @staticmethod
     def _get_permission(email):
