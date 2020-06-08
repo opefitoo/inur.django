@@ -102,6 +102,23 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
         else:
             return None
 
+    def update_folder_permissions_v3(self, path, email, has_access):
+        folder_data = self._get_or_create_folder(path)
+        folder_permissions = self._drive_service.permissions().list(fileId=folder_data["id"], fields='*').execute()
+        user_permissions = [d for d in folder_permissions['permissions'] if d.get('emailAddress', '') == email]
+        permissions_granted = len(user_permissions)
+        if folder_data is not None:
+            if has_access and 0 == permissions_granted:
+                p = self._get_permission(email)
+                self._drive_service.permissions().insert(fileId=folder_data["id"], body=p.raw).execute()
+            elif not has_access and 0 < permissions_granted:
+                for user_permission in user_permissions:
+                    self._drive_service.permissions().delete(fileId=folder_data["id"],
+                                                             permissionId=user_permission['id']).execute()
+                self._set_permissions()
+            else:
+                return None
+
     def insert_permission(self, path, value, perm_type, role):
         """Insert a new permission.
 
