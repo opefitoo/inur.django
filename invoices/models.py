@@ -708,6 +708,8 @@ class InvoiceItem(models.Model):
 
 
 class Prestation(models.Model):
+    class Meta:
+        ordering = ['-date']
     invoice_item = models.ForeignKey(InvoiceItem,
                                      related_name='prestations',
                                      on_delete=models.CASCADE)
