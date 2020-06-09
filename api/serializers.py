@@ -1,6 +1,9 @@
 from django.contrib.auth.models import User, Group
+from django.utils import timezone
 from rest_framework import serializers
 from django_countries.serializers import CountryFieldMixin
+from rest_framework.exceptions import ValidationError
+
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
@@ -57,9 +60,10 @@ class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Patient
-        fields = (
-            'id', 'code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'country', 'phone_number',
-            'email_address', 'participation_statutaire', 'is_private', 'date_of_death')
+        fields = ('code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'country', 'phone_number',
+                  'email_address', 'participation_statutaire', 'is_private')
+        participation_statutaire = serializers.NullBooleanField(required=False)
+        is_private = serializers.NullBooleanField(required=False)
 
 
 class PhysicianSerializer(CountryFieldMixin, serializers.ModelSerializer):

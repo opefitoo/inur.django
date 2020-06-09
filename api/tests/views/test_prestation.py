@@ -15,10 +15,10 @@ class PrestationTestCase(BaseTestCase, APITestCase):
         self.serializer = PrestationSerializer
 
         date = timezone.now()
-        carecode = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
-                                           name='Some name1',
-                                           description='Description',
-                                           reimbursed=False)
+        # carecode = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
+        #                                    name='Some name1',
+        #                                    description='Description',
+        #                                    reimbursed=False)
         patient = Patient.objects.create(code_sn='code_sn0',
                                          first_name='first name 0',
                                          name='name 0',

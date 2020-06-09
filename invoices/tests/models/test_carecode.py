@@ -9,7 +9,7 @@ class CareCodeTestCase(TestCase):
                             description='description',
                             reimbursed=False)
 
-        self.assertEqual(str(carecode), '%s: %s' % (carecode.code, carecode.name))
+        self.assertEqual(str(carecode), '%s:  %s' % (carecode.code, carecode.name))
 
     def test_autocomplete(self):
         self.assertEqual(CareCode.autocomplete_search_fields(), ('name', 'code'))

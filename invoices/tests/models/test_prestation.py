@@ -159,10 +159,10 @@ class PrestationTestCase(TestCase):
         self.assertEqual(at_home_prestation.paired_at_home_name, str(at_home_prestation.paired_at_home))
 
     def test_at_home_paired_name(self):
-        at_home_care_code = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
-                                                    name='some name',
-                                                    description='description',
-                                                    reimbursed=False)
+        # at_home_care_code = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
+        #                                             name='some name',
+        #                                             description='description',
+        #                                             reimbursed=False)
 
         at_home_prestation = Prestation.objects.create(invoice_item=self.invoice_item,
                                                        employee=self.employee,

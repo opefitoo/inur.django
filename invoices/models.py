@@ -160,6 +160,24 @@ class ValidityDate(models.Model):
         return messages
 
 
+def extract_birth_date(code_sn) -> object:
+    stripped_sn_code = code_sn.replace(" ", "")
+    if stripped_sn_code is not None and (stripped_sn_code[:4]).isdigit():
+        if (stripped_sn_code[4:6]).isdigit() and int(stripped_sn_code[4:6]) < 13:
+            if (stripped_sn_code[6:8]).isdigit() and int(stripped_sn_code[6:8]) < 32:
+                return datetime.strptime(stripped_sn_code[:8], '%Y%m%d')
+    return None
+
+
+def calculate_age(care_date, code_sn):
+    if care_date is None:
+        care_date = datetime.now()
+    born = extract_birth_date(code_sn)
+    if born is not None:
+        return care_date.year - born.year - ((care_date.month, care_date.day) < (born.month, born.day))
+    return None
+
+
 # TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
     class Meta:
@@ -198,7 +216,7 @@ class Patient(models.Model):
         self.code_sn = self.format_code_sn(self.code_sn)
         super(Patient, self).clean_fields()
         patient_age = self.calculate_age(datetime.now())
-        messages = self.validate(self.id, patient_age, self.__dict__)
+        messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
 
@@ -207,11 +225,11 @@ class Patient(models.Model):
         return code_sn.replace(" ", "")
 
     @staticmethod
-    def validate(instance_id, patient_age, data):
+    def validate(instance_id, data):
         result = {}
         result.update(Patient.validate_code_sn(instance_id, data))
         result.update(Patient.validate_date_of_death(instance_id, data))
-        result.update(Patient.patient_age_validation(patient_age, data))
+        result.update(Patient.patient_age_validation(data))
         return result
 
     @staticmethod
@@ -236,28 +254,19 @@ class Patient(models.Model):
         return messages
 
     @staticmethod
-    def patient_age_validation(patient_age, data):
+    def patient_age_validation(data):
         messages = {}
+        patient_age = calculate_age(None, data['code_sn'])
         if 'is_private' in data and not data['is_private']:
             if patient_age is None or patient_age < 1 or patient_age > 120:
                 messages = {'code_sn': 'Code SN does not look ok, patient cannot be %d year(s) old' % patient_age}
         return messages
 
     def calculate_age(self, care_date: object) -> object:
-        if care_date is None:
-            care_date = datetime.now()
-        born = self.extract_birth_date()
-        if born is not None:
-            return care_date.year - born.year - ((care_date.month, care_date.day) < (born.month, born.day))
-        return None
+        return calculate_age(care_date, self.code_sn)
 
     def extract_birth_date(self) -> object:
-        stripped_sn_code = self.code_sn.replace(" ", "")
-        if stripped_sn_code is not None and (stripped_sn_code[:4]).isdigit():
-            if (stripped_sn_code[4:6]).isdigit() and int(stripped_sn_code[4:6]) < 13:
-                if (stripped_sn_code[6:8]).isdigit() and int(stripped_sn_code[6:8]) < 32:
-                    return datetime.strptime(stripped_sn_code[:8], '%Y%m%d')
-        return None
+        return self.extract_birth_date(self.code_sn)
 
     def clean_name(self):
         return self.cleaned_data['name'].upper()
@@ -372,6 +381,7 @@ class Hospitalization(models.Model):
 class Physician(models.Model):
     class Meta:
         ordering = ['-id']
+
     provider_code = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
@@ -626,7 +636,8 @@ class InvoiceItem(models.Model):
     is_valid = models.BooleanField(default=True)
     validation_comment = models.TextField(null=True, blank=True)
     medical_prescription = models.ForeignKey(MedicalPrescription, related_name='invoice_items', null=True, blank=True,
-                                             help_text='Please chose a Medical Prescription', on_delete=models.SET_NULL)
+                                             help_text='Please choose a Medical Prescription',
+                                             on_delete=models.SET_NULL)
 
     def clean(self, *args, **kwargs):
         super(InvoiceItem, self).clean_fields()

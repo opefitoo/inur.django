@@ -39,7 +39,7 @@ class PatientTestCase(TestCase):
         data['is_private'] = False
         self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['format'])
 
-        data['code_sn'] = '0245789764822'
+        data['code_sn'] = '1977030651433'
         self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['format'])
 
         data['code_sn'] = '1245789764822'
