@@ -88,7 +88,8 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
         folder_data = self._get_or_create_folder(path)
         if folder_data is not None:
             folder_permissions = self._drive_service.permissions().list(fileId=folder_data["id"]).execute()
-            user_permissions = [d for d in folder_permissions['items'] if d.get('emailAddress', '') == email]
+            if folder_permissions is not None:
+                user_permissions = [d for d in folder_permissions['items'] if d.get('emailAddress', '') == email]
         permissions_granted = len(user_permissions)
         if folder_data is not None:
             if has_access and 0 == permissions_granted:
