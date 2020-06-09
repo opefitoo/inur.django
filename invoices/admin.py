@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.checks import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
 from django.utils.html import format_html
 
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
@@ -14,7 +15,6 @@ from invoices.invaction import make_private, \
     export_xml
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
-from invoices.quickfix_actions import set_employee_for_invoice
 from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar, \
     EmployeeContractDetail
@@ -156,15 +156,17 @@ class PrestationInline(TabularInline):
     max_num = InvoiceItem.PRESTATION_LIMIT_MAX
     model = Prestation
     formset = PrestationInlineFormSet
-    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee',)
+    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee', 'copy', 'delete')
     autocomplete_fields = ['carecode']
-    # readonly_fields = ('copy', 'delete')
+    readonly_fields = ('copy', 'delete',)
     search_fields = ['carecode', 'date', 'employee']
     ordering = ['date']
     can_order = True
 
     class Media:
         js = [
+            'admin/js/vendor/jquery/jquery.min.js',
+            'admin/js/jquery.init.js',
             "js/inline-copy.js",
             "js/inline-delete.js",
         ]
@@ -175,12 +177,12 @@ class PrestationInline(TabularInline):
     def copy(self, obj):
         return format_html("<a href='#' class='copy_inline'>Copy</a>")
 
-    # def delete(self, obj):
-    #     url = reverse('delete-prestation')
-    #     return format_html("<a href='%s' class='deletelink' data-prestation_id='%s'>Delete</a>" % (url, obj.id))
-    #
+    def delete(self, obj):
+        url = reverse('delete-prestation')
+        return format_html("<a href='%s' class='deletelink' data-prestation_id='%s'>Delete</a>" % (url, obj.id))
+
     copy.allow_tags = True
-    # delete.allow_tags = True
+    delete.allow_tags = True
 
 
 @admin.register(InvoiceItem)
@@ -196,7 +198,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient', 'medical_prescription']
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
-               pdf_private_invoice, export_to_pdf2, set_employee_for_invoice]
+               pdf_private_invoice, export_to_pdf2]
     inlines = [PrestationInline]
     fieldsets = (
         (None, {

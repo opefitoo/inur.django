@@ -90,8 +90,8 @@ def user_pre_save_gservices_permissions(sender, instance, **kwargs):
             has_access = False
             prestation_gcalendar.update_calendar_permissions(origin_email, has_access)
             path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-            gd_storage.update_folder_permissions(path, origin_email, has_access)
-            gd_storage.update_folder_permissions(gd_storage.INVOICEITEM_BATCH_FOLDER, origin_email, has_access)
+            gd_storage.update_folder_permissions_v3(path, origin_email, has_access)
+            gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, origin_email, has_access)
     except User.DoesNotExist:
         pass
 
@@ -105,8 +105,8 @@ def user_revoke_gservices_permissions(sender, instance, **kwargs):
         has_access = False
         prestation_gcalendar.update_calendar_permissions(email, has_access)
         path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-        gd_storage.update_folder_permissions(path, email, has_access)
-        gd_storage.update_folder_permissions(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
+        gd_storage.update_folder_permissions_v3(path, email, has_access)
+        gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
 
 
 @receiver([post_save, post_delete], sender=Employee, dispatch_uid="employee_update_gdrive_permissions")
@@ -116,8 +116,8 @@ def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
     if email:
         path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
         has_access = instance.has_gdrive_access
-        gd_storage.update_folder_permissions(path, email, has_access)
-        gd_storage.update_folder_permissions(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
+        gd_storage.update_folder_permissions_v3(path, email, has_access)
+        gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
 
 
 @receiver(post_save, sender=Employee, dispatch_uid="employee_update_gcalendar_permissions")
@@ -138,8 +138,8 @@ def employee_revoke_gservices_permissions(sender, instance, **kwargs):
         has_access = False
         prestation_gcalendar.update_calendar_permissions(email, has_access)
         path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-        gd_storage.update_folder_permissions(path, email, has_access)
-        gd_storage.update_folder_permissions(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
+        gd_storage.update_folder_permissions_v3(path, email, has_access)
+        gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
 
 
 class Timesheet(models.Model):
