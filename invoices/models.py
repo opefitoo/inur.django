@@ -215,7 +215,6 @@ class Patient(models.Model):
     def clean(self, *args, **kwargs):
         self.code_sn = self.format_code_sn(self.code_sn)
         super(Patient, self).clean_fields()
-        patient_age = self.calculate_age(datetime.now())
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
