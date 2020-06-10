@@ -1,11 +1,12 @@
 from datetime import datetime
 
+from dal import autocomplete
 from django import forms
 from django.forms import BaseInlineFormSet, ValidationError, ModelForm
 
-from invoices.models import Prestation, CareCode, InvoiceItem, Patient, MedicalPrescription
-from invoices.timesheet import Employee, SimplifiedTimesheet, SimplifiedTimesheetDetail
-from invoices.widgets import CustomAdminSplitDateTime, CodeSnWidget
+from invoices.models import InvoiceItem, MedicalPrescription, Patient
+from invoices.timesheet import SimplifiedTimesheet, SimplifiedTimesheetDetail
+from invoices.widgets import CodeSnWidget
 
 
 def check_for_periods_intersection(cleaned_data):
@@ -130,22 +131,31 @@ class SimplifiedTimesheetDetailForm(ModelForm):
 #         fields = '__all__'
 
 
-# class InvoiceItemForm(ModelForm):
-#
-#     # medical_prescription = ModelChoiceField(
-#     #     queryset=MedicalPrescription.objects.all(),
-#     #     widget=ModelSelect2(url='medical-prescription-autocomplete', forward=['patient']),
-#     #     required=False
-#     # )
-#     #
-#     def __init__(self, *args, **kwargs):
-#         super(InvoiceItemForm, self).__init__(*args, **kwargs)
-#         if self.instance.has_patient():
-#             self.fields['medical_prescription'].queryset = MedicalPrescription.objects.filter(patient=self.instance.patient)
-#
-#     class Meta:
-#         model = InvoiceItem
-#         fields = '__all__'
+class InvoiceItemForm(forms.ModelForm):
+    medical_prescription = forms.ModelChoiceField(
+        help_text='Veuillez choisir un ami',
+        queryset=MedicalPrescription.objects.all(),
+        widget=autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
+                                             attrs={'data-placeholder': '...',
+                                                    'data-minimum-input-length': 3},
+                                             forward=['patient']),
+        required=False,
+    )
+
+    #
+    # def __init__(self, *args, **kwargs):
+    #     super(InvoiceItemForm, self).__init__(*args, **kwargs)
+    #     if self.instance.has_patient():
+    #         self.fields['medical_prescription'].queryset = MedicalPrescription.objects.filter(patient=self.instance.patient)
+    class Meta:
+        model = InvoiceItem
+        fields = '__all__'
+        # widgets = {
+        #     'medical_prescription': dal.autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
+        #                                                           attrs={'data-placeholder': '...',
+        #                                                                  'data-minimum-input-length': 3},
+        #                                                           forward=['patient'])
+        # }
 
 
 class HospitalizationFormSet(BaseInlineFormSet):

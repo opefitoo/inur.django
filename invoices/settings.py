@@ -34,6 +34,8 @@ CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 # Application definition
 INSTALLED_APPS = (
     'django.contrib.admin',
+    'dal',
+    'dal_select2',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -185,7 +187,7 @@ CONSTANCE_CONFIG = {
         'LUXX XXXX XXXX XXXX XXXX XXXXLULL', "Compte bancaire n.2 IBAN pour les virement bancaire ", str),
     'NURSE_NAME':
         ('Regine SIMBA',
-         'Nom du prestataire de soins (apparait sur les factures)', str),
+         'Nom du prestataire de soins (apparaît sur les factures)', str),
     'NURSE_ADDRESS':
         ('1A, rue fort wallis',
          'Adresse du prestataire de soins (apparait sur les factures)', str),
@@ -200,8 +202,8 @@ CONSTANCE_CONFIG = {
 
 CONSTANCE_CONFIG_FIELDSETS = {
     'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE'),
-    'Options de Facturation': ('MAIN_NURSE_CODE','NURSE_NAME','NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
-                               'NURSE_PHONE_NUMBER','MAIN_BANK_ACCOUNT','ALTERNATE_BANK_ACCOUNT'),
+    'Options de Facturation': ('MAIN_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
+                               'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT'),
 }
 
 GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
@@ -210,7 +212,7 @@ if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
         json.dump(json.loads(credentials), outfile)
 
-INTERNAL_IPS = {'127.0.0.1',}
+INTERNAL_IPS = {'127.0.0.1', }
 
 IMPORTER_CSV_FOLDER = os.path.join(BASE_DIR, '../initialdata/')
 
