@@ -40,8 +40,9 @@ jobs: # A basic unit of work in a run
       - run: sudo apt-get update && sudo apt-get install git-secret
       - run:
           command: |
-            echo $GIT_SECRET_PRIVATE
-            echo $GIT_SECRET_PRIVATE > ./private_key.gpg
+            echo "git secret here"
+            echo ${GIT_SECRET_PRIVATE}
+            echo ${GIT_SECRET_PRIVATE} > ./private_key.gpg
             gpg --import ./private_key.gpg
             git secret reveal -f
             echo GOOGLE_APPLICATION_CREDENTIALS=.gitsecrets/inuropefitoo-81423d9d316b.json>.env
