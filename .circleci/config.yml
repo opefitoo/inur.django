@@ -24,7 +24,6 @@ commands:
       - run: git secret reveal -f
 
 jobs: # A basic unit of work in a run
-  context: inuropefitoo
   build: # runs not using Workflows must have a `build` job as entry point 
     # directory where steps are run
     working_directory: ~/circleci-demo-python-django
