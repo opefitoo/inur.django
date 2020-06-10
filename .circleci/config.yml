@@ -48,7 +48,7 @@ jobs: # A basic unit of work in a run
             - "/usr/local/lib/python3.6/site-packages"
       - run:
           command: |
-            echo GOOGLE_APPLICATION_CREDENTIALS=.gitsecrets/inuropefitoo-81423d9d316b.json>.env
+            echo GOOGLE_APPLICATION_CREDENTIALS=.gitsecret/inuropefitoo-81423d9d316b.json>.env
             pipenv run python manage.py test
       - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
           path: test-results
