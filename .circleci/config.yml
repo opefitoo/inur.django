@@ -29,6 +29,7 @@ jobs: # A basic unit of work in a run
       - run: wget -qO - https://api.bintray.com/users/sobolevn/keys/gpg/public.key | sudo apt-key add -
       - run: sudo apt-get update && sudo apt-get install git-secret
       - run: echo -e "$GIT_SECRET_PRIVATE" | gpg --import
+      - run: git secret tell inur.circleci
       - run: git secret reveal -f
       - run: sudo chown -R circleci:circleci /usr/local/bin
       - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
