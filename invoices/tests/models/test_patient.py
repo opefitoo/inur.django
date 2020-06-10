@@ -25,11 +25,11 @@ class PatientTestCase(TestCase):
     def test_code_sn(self):
         instance_id = None
         error_messages = {
-            'format': {'code_sn': 'Code SN should start with non zero digit and be followed by 12 digits'},
+            'format': {'code_sn': ''},
             'unique': {'code_sn': 'Code SN must be unique'}
         }
         data = {
-            'code_sn': '0123',
+            'code_sn': '19770306124566',
         }
         self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
 
@@ -37,10 +37,10 @@ class PatientTestCase(TestCase):
         self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
 
         data['is_private'] = False
-        self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['format'])
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
 
-        data['code_sn'] = '0245789764822'
-        self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['format'])
+        data['code_sn'] = '1977030651433'
+        self.assertEqual(Patient.validate_code_sn(instance_id, data), {})
 
         data['code_sn'] = '1245789764822'
         self.assertEqual(Patient.validate_code_sn(instance_id, data), error_messages['unique'])
@@ -50,13 +50,13 @@ class PatientTestCase(TestCase):
 
     def test_format_code_sn(self):
         code_sn = ' 0 2 4 5 7 8 9 7 6 4 8 2 2 '
-        self.assertEqual(Patient.format_code_sn(code_sn, True), code_sn.replace(" ", ""))
-        self.assertEqual(Patient.format_code_sn(code_sn, False), code_sn)
+        self.assertEqual(Patient.format_code_sn(code_sn), code_sn.replace(" ", ""))
+        self.assertEqual(Patient.format_code_sn(code_sn), "0245789764822")
 
         code_sn = '1245 78 97 648 22'
-        self.assertEqual(Patient.format_code_sn(code_sn, True), code_sn.replace(" ", ""))
-        self.assertEqual(Patient.format_code_sn(code_sn, False), code_sn)
+        self.assertEqual(Patient.format_code_sn(code_sn), code_sn.replace(" ", ""))
+        self.assertEqual(Patient.format_code_sn(code_sn), "1245789764822")
 
         code_sn = 'weq 22 45s 78976 4 822 as'
-        self.assertEqual(Patient.format_code_sn(code_sn, True), code_sn.replace(" ", ""))
-        self.assertEqual(Patient.format_code_sn(code_sn, False), code_sn)
+        self.assertEqual(Patient.format_code_sn(code_sn), code_sn.replace(" ", ""))
+        self.assertEqual(Patient.format_code_sn(code_sn), "weq2245s789764822as")

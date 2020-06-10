@@ -1,3 +1,5 @@
+from django.utils.datetime_safe import datetime
+
 from api.tests.views.base import BaseTestCase
 from django.utils import timezone
 from rest_framework.test import APITestCase
@@ -5,6 +7,7 @@ from constance import config
 
 from api.serializers import PrestationSerializer
 from invoices.models import CareCode, Patient, InvoiceItem, Prestation
+from invoices.timesheet import JobPosition, Employee
 
 
 class PrestationTestCase(BaseTestCase, APITestCase):
@@ -13,12 +16,17 @@ class PrestationTestCase(BaseTestCase, APITestCase):
         self.model_name = 'prestation'
         self.model = Prestation
         self.serializer = PrestationSerializer
+        date = datetime.now()
+        jobposition = JobPosition.objects.create(name='name 0')
+        employee = Employee.objects.create(user=self.user,
+                                           start_contract=date,
+                                           occupation=jobposition)
 
         date = timezone.now()
-        carecode = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
-                                           name='Some name1',
-                                           description='Description',
-                                           reimbursed=False)
+        # carecode = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
+        #                                    name='Some name1',
+        #                                    description='Description',
+        #                                    reimbursed=False)
         patient = Patient.objects.create(code_sn='code_sn0',
                                          first_name='first name 0',
                                          name='name 0',
@@ -37,20 +45,25 @@ class PrestationTestCase(BaseTestCase, APITestCase):
 
         self.items = [self.model.objects.create(invoice_item=invoiceitem,
                                                 carecode=carecode,
+                                                employee=employee,
                                                 date=date),
                       self.model.objects.create(invoice_item=invoiceitem,
                                                 carecode=carecode,
+                                                employee=employee,
                                                 date=date),
                       self.model.objects.create(invoice_item=invoiceitem,
                                                 carecode=carecode,
+                                                employee=employee,
                                                 date=date),
                       self.model.objects.create(invoice_item=invoiceitem,
                                                 carecode=carecode,
+                                                employee=employee,
                                                 date=date)]
 
         self.valid_payload = {
             'invoice_item': invoiceitem.id,
             'carecode': carecode.id,
+            'employee': employee.id,
             'date': date.strftime('%Y-%m-%dT%H:%M:%S')
         }
 
