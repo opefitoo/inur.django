@@ -1,27 +1,4 @@
 version: 2.1 # use CircleCI 2.0
-commands:
-  install_git_secret:
-    description: Install git secret cli
-    steps:
-      - run: sudo apt-get update && sudo apt-get install apt-transport-https
-      - run: echo "deb https://dl.bintray.com/sobolevn/deb git-secret main" | sudo tee -a /etc/apt/sources.list
-      - run: wget -qO - https://api.bintray.com/users/sobolevn/keys/gpg/public.key | sudo apt-key add -
-      - run: sudo apt-get update && sudo apt-get install git-secret
-
-  import_gpg_key:
-    description: Import gpg key from env var
-    parameters:
-      variable_name:
-        type: env_var_name
-        default: GPG_KEY # TODO: pass through job
-        description: environment variable containing gpg key
-    steps:
-      - run: echo -e "$<< parameters.variable_name >>" | gpg --import
-
-  reveal_secrets:
-    description: Reveal the secrets
-    steps:
-      - run: git secret reveal -f
 
 jobs: # A basic unit of work in a run
   build: # runs not using Workflows must have a `build` job as entry point 
@@ -33,6 +10,7 @@ jobs: # A basic unit of work in a run
         environment: # environment variables for primary container
           PIPENV_VENV_IN_PROJECT: true
           DATABASE_URL: postgresql://root@localhost/circle_test?sslmode=disable
+          GIT_SECRET_PRIVATE : $GIT_SECRET_PRIVATE
       # CircleCI PostgreSQL images available at: https://hub.docker.com/r/circleci/postgres/
       - image: circleci/postgres:9.6.2
         environment: # environment variables for the Postgres container.
