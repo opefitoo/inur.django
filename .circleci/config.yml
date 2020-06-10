@@ -57,12 +57,12 @@ jobs: # A basic unit of work in a run
             - ".venv"
             - "/usr/local/bin"
             - "/usr/local/lib/python3.6/site-packages"
+      - run: sudo apt-get update && sudo apt-get install apt-transport-https
+      - run: echo "deb https://dl.bintray.com/sobolevn/deb git-secret main" | sudo tee -a /etc/apt/sources.list
+      - run: wget -qO - https://api.bintray.com/users/sobolevn/keys/gpg/public.key | sudo apt-key add -
+      - run: sudo apt-get update && sudo apt-get install git-secret
       - run:
           command: |
-            sudo apt-get update && sudo apt-get install apt-transport-https
-            echo "deb https://dl.bintray.com/sobolevn/deb git-secret main" | sudo tee -a /etc/apt/sources.list
-            wget -qO - https://api.bintray.com/users/sobolevn/keys/gpg/public.key | sudo apt-key add -
-            sudo apt-get update && sudo apt-get install git-secret
             echo -e "$GIT_SECRET_PRIVATE" | gpg --import
             git secret reveal -f
             echo GOOGLE_APPLICATION_CREDENTIALS=.gitsecrets/inuropefitoo-81423d9d316b.json>.env
