@@ -18,26 +18,12 @@ jobs: # A basic unit of work in a run
           POSTGRES_DB: circle_test
     steps: # steps that comprise the `build` job
       - checkout # check out source code to working directory
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
-    #  - restore_cache:
-      # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
-    #      key: deps9-{{ .Branch }}-{{ checksum "requirements.txt" }}
-      - run:
-          command: |
-            sudo pip install pipenv
-            pipenv install -r requirements.txt --skip-lock
-
-      - save_cache: # cache Python dependencies using checksum of Pipfile as the cache-key
-          key: deps9-{{ .Branch }}-{{ checksum "requirements.txt" }}
-          paths:
-            - ".venv"
-            - "/usr/local/bin"
-            - "/usr/local/lib/python3.6/site-packages"
       - run: sudo apt-get update && sudo apt-get install apt-transport-https
       - run: echo "deb https://dl.bintray.com/sobolevn/deb git-secret main" | sudo tee -a /etc/apt/sources.list
       - run: wget -qO - https://api.bintray.com/users/sobolevn/keys/gpg/public.key | sudo apt-key add -
       - run: sudo apt-get update && sudo apt-get install git-secret
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
       - run:
           command: |
             echo "git secret here"
@@ -47,6 +33,21 @@ jobs: # A basic unit of work in a run
           command: |
             gpg --import ./private_key.gpg
             git secret reveal -f
+      - restore_cache:
+      # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
+          key: deps9-{{ .Branch }}-{{ checksum "requirements.txt" }}
+      - run:
+          command: |
+            sudo pip install pipenv
+            pipenv install -r requirements.txt --skip-lock
+      - save_cache: # cache Python dependencies using checksum of Pipfile as the cache-key
+          key: deps9-{{ .Branch }}-{{ checksum "requirements.txt" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.6/site-packages"
+      - run:
+          command: |
             echo GOOGLE_APPLICATION_CREDENTIALS=.gitsecrets/inuropefitoo-81423d9d316b.json>.env
             pipenv run python manage.py test
       - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
