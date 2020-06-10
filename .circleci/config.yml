@@ -62,7 +62,8 @@ jobs: # A basic unit of work in a run
       - run: sudo apt-get update && sudo apt-get install git-secret
       - run:
           command: |
-            echo -e "$GIT_SECRET_PRIVATE" | gpg --import
+            echo -e $GIT_SECRET_PRIVATE > ./private_key.gpg
+            gpg --import ./private_key.gpg
             git secret reveal -f
             echo GOOGLE_APPLICATION_CREDENTIALS=.gitsecrets/inuropefitoo-81423d9d316b.json>.env
             pipenv run python manage.py test
