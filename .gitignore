@@ -78,3 +78,7 @@ target/
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# Google key
+.gitsecret/*.json
+.gitsecret/keys/random_seed
