@@ -90,7 +90,7 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 import dj_database_url
 
 DATABASES = {'default': dj_database_url.config(default='postgres://inur:inur@localhost:5432/inur')}
-if 'test' in os.sys.argv:
+if 'CIRCLECI' in os.sys.argv:
     DATABASES['default'] = dj_database_url.config(default='postgresql://root@localhost/circle_test?sslmode=disable')
 
 # Enable Connection Pooling
