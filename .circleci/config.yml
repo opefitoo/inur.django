@@ -17,13 +17,13 @@ jobs: # A basic unit of work in a run
           POSTGRES_USER: root
           POSTGRES_DB: circle_test
     steps: # steps that comprise the `build` job
-      - run: GIT_SECRET_PRIVATE=$(echo $GIT_SECRET_PRIVATE | base64 -d)
+      - run: GIT_SECRET_PRIVATE_LOCAL=$(echo $GIT_SECRET_PRIVATE | base64 -d)
       - checkout # check out source code to working directory
       - run: sudo apt-get update && sudo apt-get install apt-transport-https
       - run: echo "deb https://dl.bintray.com/sobolevn/deb git-secret main" | sudo tee -a /etc/apt/sources.list
       - run: wget -qO - https://api.bintray.com/users/sobolevn/keys/gpg/public.key | sudo apt-key add -
       - run: sudo apt-get update && sudo apt-get install git-secret
-      - run: echo -e "$GIT_SECRET_PRIVATE" | gpg --import
+      - run: echo -e "$GIT_SECRET_PRIVATE_LOCAL" | gpg --import
       - run: git secret tell inur@circleci.com
       - run: git secret reveal -f
       - run: sudo chown -R circleci:circleci /usr/local/bin
