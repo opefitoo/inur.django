@@ -17,7 +17,7 @@ jobs: # A basic unit of work in a run
           POSTGRES_USER: root
           POSTGRES_DB: circle_test
     steps: # steps that comprise the `build` job
-      - run: GIT_SECRET_PRIVATE=$(echo $MY_ENCODED_VALUE | base64 -d)
+      - run: GIT_SECRET_PRIVATE=$(echo $GIT_SECRET_PRIVATE | base64 -d)
       - checkout # check out source code to working directory
       - run: sudo apt-get update && sudo apt-get install apt-transport-https
       - run: echo "deb https://dl.bintray.com/sobolevn/deb git-secret main" | sudo tee -a /etc/apt/sources.list
