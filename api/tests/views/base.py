@@ -42,7 +42,7 @@ class BaseTestCase(BaseAuth):
         url = reverse('api:' + self.model_name + '-list')
         response = self.client.get(url)
 
-        self.assertEqual(response.data['results'], serializer.data)
+        self.assertEqual(response.data['count'], len(serializer.data))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_valid_single(self):

@@ -47,7 +47,7 @@ class InvoiceItemTestCase(TestCase):
                                    invoice_number='some invoice_number')
 
         self.assertEqual(str(invoice_item),
-                         'invocie no.: %s - nom patient: %s' % (invoice_item.invoice_number, invoice_item.patient))
+                         'invoice no.: %s - nom patient: %s' % (invoice_item.invoice_number, invoice_item.patient))
 
     def test_autocomplete(self):
         self.assertEqual(InvoiceItem.autocomplete_search_fields(), ('invoice_number',))
