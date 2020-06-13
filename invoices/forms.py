@@ -133,11 +133,10 @@ class SimplifiedTimesheetDetailForm(ModelForm):
 
 class InvoiceItemForm(forms.ModelForm):
     medical_prescription = forms.ModelChoiceField(
-        help_text='Veuillez choisir un ami',
+        help_text='Veuillez choisir une ordonnance',
         queryset=MedicalPrescription.objects.all(),
         widget=autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
-                                             attrs={'data-placeholder': '...',
-                                                    'data-minimum-input-length': 3},
+                                             attrs={'data-placeholder': '...'},
                                              forward=['patient']),
         required=False,
     )
