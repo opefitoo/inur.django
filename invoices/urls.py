@@ -5,7 +5,7 @@ from rest_framework.authtoken import views as authtoken_views
 from django.conf import settings
 from django.urls import path
 
-from invoices.views import delete_prestation
+from invoices.views import delete_prestation, MedicalPrescriptionAutocomplete
 
 admin.autodiscover()
 
@@ -20,11 +20,11 @@ urlpatterns = [
     #     PatientAutocomplete.as_view(),
     #     name='patient-autocomplete',
     # ),
-    # url(
-    #     r'^medical-prescription-autocomplete/$',
-    #     MedicalPrescriptionAutocomplete.as_view(),
-    #     name='medical-prescription-autocomplete',
-    # ),
+    url(
+        r'^medical-prescription-autocomplete/$',
+        MedicalPrescriptionAutocomplete.as_view(),
+        name='medical-prescription-autocomplete',
+    ),
     # url(
     #     r'^employee-autocomplete/$',
     #     EmployeeAutocomplete.as_view(),

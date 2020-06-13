@@ -9,7 +9,7 @@ from django.utils.html import format_html
 
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
-    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm
+    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm
 from invoices.holidays import HolidayRequest
 from invoices.invaction import make_private, \
     export_xml
@@ -146,7 +146,7 @@ class PhysicianAdmin(admin.ModelAdmin):
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
     list_display = ('date', 'prescriptor', 'patient', 'file')
-    search_fields = ['date', 'prescriptor__name', 'prescriptor__firstname', 'patient__name', 'patient__first_name']
+    search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
     autocomplete_fields = ['prescriptor', 'patient']
 
@@ -191,12 +191,13 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     from invoices.action_private import pdf_private_invoice
     from invoices.action_private_participation import pdf_private_invoice_pp
     from invoices.action_depinsurance import export_to_pdf2
+    form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient__name', 'patient__first_name']
     readonly_fields = ('medical_prescription_preview',)
-    autocomplete_fields = ['patient', 'medical_prescription']
+    autocomplete_fields = ['patient']
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
                pdf_private_invoice, export_to_pdf2]
     inlines = [PrestationInline]
@@ -292,12 +293,49 @@ class HolidayRequestAdmin(admin.ModelAdmin):
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
     readonly_fields = ('request_accepted', 'validated_by', 'employee')
+    actions = ['validate_or_invalidate_request', ]
+    list_display = ('employee', 'start_date', 'end_date', 'request_accepted', 'validated_by')
 
-    def get_queryset(self, request):
-        qs = super(HolidayRequestAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(employee=request.user)
+    def validate_or_invalidate_request(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de valider des %s." % self.verbose_name_plural,
+                              level=messages.WARNING)
+            return
+        rows_updated = 0
+        obj: HolidayRequest
+        for obj in queryset:
+            obj.request_accepted = not obj.request_accepted
+            if obj.request_accepted:
+                try:
+                    obj.validated_by = Employee.objects.get(user_id=request.user.id)
+                except Employee.DoesNotExist as e:
+                    self.message_user(request, "Vous n'avez de profil employé sur l'application pour valider une %s." %
+                                      self.verbose_name_plural,
+                                      level=messages.ERROR)
+                    return
+            else:
+                obj.validated_by = None
+            obj.save()
+            rows_updated = rows_updated + 1
+        if rows_updated == 1:
+            message_bit = u"1 %s a été" % self.verbose_name
+        else:
+            message_bit = u"%s %s ont été" % (rows_updated, self.verbose_name_plural)
+        self.message_user(request, u"%s (in)validé avec succès." % message_bit)
+
+    def get_readonly_fields(self, request, obj=None):
+        if (HolidayRequest.objects.get(pk=obj.id).request_accepted and not request.user.is_superuser) \
+                or HolidayRequest.objects.get(pk=obj.id).employee.employee.user.id != request.user.id:
+            return ('employee', 'start_date', 'end_date', 'half_day', 'reason',
+                    'request_accepted', 'validated_by')
+        return self.readonly_fields
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.request_accepted \
+                and HolidayRequest.objects.get(pk=obj.id).employee.employee.user.id != request.user.id \
+                and not request.user.is_superuser:
+            return False
+        return self.has_delete_permission
 
 
 class SimplifiedTimesheetDetailInline(admin.TabularInline):
