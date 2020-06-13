@@ -9,7 +9,7 @@ from django.utils.html import format_html
 
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
-    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm
+    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm
 from invoices.holidays import HolidayRequest
 from invoices.invaction import make_private, \
     export_xml
@@ -146,7 +146,7 @@ class PhysicianAdmin(admin.ModelAdmin):
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
     list_display = ('date', 'prescriptor', 'patient', 'file')
-    search_fields = ['date', 'prescriptor__name', 'prescriptor__firstname', 'patient__name', 'patient__first_name']
+    search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
     autocomplete_fields = ['prescriptor', 'patient']
 
@@ -191,12 +191,13 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     from invoices.action_private import pdf_private_invoice
     from invoices.action_private_participation import pdf_private_invoice_pp
     from invoices.action_depinsurance import export_to_pdf2
+    form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
     search_fields = ['patient__name', 'patient__first_name']
     readonly_fields = ('medical_prescription_preview',)
-    autocomplete_fields = ['patient', 'medical_prescription']
+    autocomplete_fields = ['patient']
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
                pdf_private_invoice, export_to_pdf2]
     inlines = [PrestationInline]
