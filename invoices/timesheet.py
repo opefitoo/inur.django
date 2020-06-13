@@ -143,6 +143,8 @@ def employee_revoke_gservices_permissions(sender, instance, **kwargs):
 
 
 class Timesheet(models.Model):
+    class Meta:
+        ordering = ['-id']
     employee = models.ForeignKey(Employee,
                                  on_delete=models.CASCADE)
     start_date = models.DateField('Date debut')
@@ -161,6 +163,8 @@ class Timesheet(models.Model):
 
 
 class TimesheetTask(models.Model):
+    class Meta:
+        ordering = ['-id']
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100, blank=True,
                                    null=True)

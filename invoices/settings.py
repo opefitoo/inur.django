@@ -92,6 +92,8 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 import dj_database_url
 
 DATABASES = {'default': dj_database_url.config(default='postgres://inur:inur@localhost:5432/inur')}
+if 'test' in os.sys.argv:
+    DATABASES['default'] = dj_database_url.config(default='postgresql://root@localhost/circle_test?sslmode=disable')
 
 # Enable Connection Pooling
 # DATABASES['default']['ENGINE'] = 'django_postgrespool'
@@ -210,7 +212,9 @@ GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_stor
 if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE):
     credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
-        json.dump(json.loads(credentials), outfile)
+        with open(credentials) as json_file:
+            json.dump(json.load(json_file), outfile)
+
 
 INTERNAL_IPS = {'127.0.0.1', }
 

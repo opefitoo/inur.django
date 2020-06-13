@@ -13,7 +13,7 @@ class JobPositionTestCase(TestCase):
 
 class EmployeeTestCase(TestCase):
     def test_string_representation(self):
-        user = User(username='some_username')
+        user = User(username='Some_username')
         employee = Employee(user=user)
 
         self.assertEqual(str(employee), '%s' % (employee.user.username.strip()))

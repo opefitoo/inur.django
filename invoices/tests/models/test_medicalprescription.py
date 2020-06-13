@@ -17,7 +17,7 @@ class MedicalPrescriptionTestCase(TestCase):
                                            date=date)
 
         self.assertEqual(str(prescription),
-                         '%s %s (%s)' % (
+                         '%s %s (%s) sans fichier' % (
                          prescription.prescriptor.name.strip(), prescription.prescriptor.first_name.strip(),
                          prescription.date))
 
