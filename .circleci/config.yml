@@ -17,12 +17,6 @@ jobs: # A basic unit of work in a run
           POSTGRES_USER: root
           POSTGRES_DB: circle_test
     steps: # steps that comprise the `build` job
-      - run:
-          command: |
-            echo "git secret here"
-            echo $GIT_SECRET_PRIVATE
-            echo $GIT_SECRET_PRIVATE >~/private_key.gpg
-            cat ~/private_key.gpg
       - checkout # check out source code to working directory
       - run: sudo apt-get update && sudo apt-get install apt-transport-https
       - run: echo "deb https://dl.bintray.com/sobolevn/deb git-secret main" | sudo tee -a /etc/apt/sources.list
@@ -48,7 +42,7 @@ jobs: # A basic unit of work in a run
             - "/usr/local/lib/python3.6/site-packages"
       - run:
           command: |
-            echo GOOGLE_APPLICATION_CREDENTIALS=.gitsecret/inuropefitoo-81423d9d316b.json>.env
+            cp .gitsecret/inuropefitoo-81423d9d316b.json ./keys/gdrive_storage_key.json
             pipenv run python manage.py test
       - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
           path: test-results
