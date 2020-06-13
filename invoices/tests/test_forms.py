@@ -252,7 +252,9 @@ class PrestationInlineFormSetMaxLimitTestCase(TestCase):
         row_data['at_home'] = True
         cleaned_data.append(row_data)
         cleaned_data.append(row_data)
-        self.assertRaises(PrestationInlineFormSet.validate_max_limit(cleaned_data))
+        cleaned_data.append(row_data)
+        with self.assertRaises(ValidationError):
+            PrestationInlineFormSet.validate_max_limit(cleaned_data)
 
     def test_bigger_than_max(self):
         cleaned_data = self.cleaned_data
@@ -260,4 +262,7 @@ class PrestationInlineFormSetMaxLimitTestCase(TestCase):
         cleaned_data.append(row_data)
         row_data['at_home'] = True
         cleaned_data.append(row_data)
-        self.assertRaises(PrestationInlineFormSet.validate_max_limit(cleaned_data))
+        cleaned_data.append(row_data)
+        cleaned_data.append(row_data)
+        with self.assertRaises(ValidationError):
+            PrestationInlineFormSet.validate_max_limit(cleaned_data)

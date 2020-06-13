@@ -95,6 +95,7 @@ class PrestationTestCase(TestCase):
         self.assertEqual(Prestation.validate_at_home_default_config(data), {})
 
         data['at_home'] = True
+        CareCode.objects.filter(code=config.AT_HOME_CARE_CODE).delete()
         self.assertEqual(Prestation.validate_at_home_default_config(data), error_msg)
 
         self.care_code_first = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
