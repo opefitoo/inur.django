@@ -12,6 +12,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django_currentuser.db.models import CurrentUserField
 
+#from invoices.holidays import HolidayRequest
 from invoices.storages import CustomizedGoogleDriveStorage
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
@@ -341,6 +342,18 @@ class SimplifiedTimesheet(models.Model):
     @property
     def total_hours_public_holidays(self):
         return self.__calculate_total_hours()["total_public_holidays"]
+    #
+    # @property
+    # def total_holiday_hours(self):
+    #     start_date = timezone.now().replace(year=self.time_sheet_year, month=self.time_sheet_month, day=1)
+    #     end_date = timezone.now().replace(year=self.time_sheet_year,
+    #                                       month=self.time_sheet_month,
+    #                                       day=calendar.monthrange(self.time_sheet_year, self.time_sheet_month)[1])
+    #     HolidayRequest.objects.filter(
+    #         Q(start_date__range=start_date, end_date))
+    #     ).filter(
+    #         employee_id=employee_id).filter(request_accepted=True)
+
 
     def clean(self):
         exclude = []
@@ -488,10 +501,9 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
     from invoices.holidays import HolidayRequest
     end_date_time = data['start_date']
     end_date_time.replace(hour=data['end_date'].hour, minute=data['end_date'].minute)
-    conflicts = HolidayRequest.objects.filter(
-        Q(start_date__range=(data['start_date'], end_date_time))
-    ).filter(
-        employee_id=employee_id).filter(request_accepted=True)
+    conflicts = HolidayRequest.objects.filter(start_date__range=(data['start_date'], end_date_time),
+                                              employee_id=employee_id,
+                                              request_accepted=True)
     if 1 == conflicts.count():
         msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
                                                                                           conflicts[0].end_date)}
