@@ -491,7 +491,7 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
     conflicts = HolidayRequest.objects.filter(
         Q(start_date__range=(data['start_date'], end_date_time))
     ).filter(
-        employee_id=employee_id)
+        employee_id=employee_id).filter(request_accepted=True)
     if 1 == conflicts.count():
         msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
                                                                                           conflicts[0].end_date)}
