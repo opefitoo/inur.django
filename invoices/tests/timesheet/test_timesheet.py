@@ -87,3 +87,19 @@ class TimesheetDetailTestCase(TestCase):
         another_holiday_request.save()
         self.assertEqual(validate_date_range_vs_holiday_requests(data, self.user.id),
                          {'start_date': "Intersection avec des demandes d'absence de : 2020-06-10 à 2020-06-12"})
+
+    def test_validate_date_range_vs_holiday_requests_intersect_with_holidays_outside(self):
+            data = {
+                'start_date': timezone.now().replace(month=6, day=10, hour=8, minute=00),
+                'end_date': timezone.now().replace(month=6, day=10, hour=16, minute=00),
+            }
+            # create holiday request but now being validated
+            another_holiday_request = HolidayRequest.objects.create(employee=self.user,
+                                                                    start_date=timezone.now().replace(month=6, day=8),
+                                                                    end_date=timezone.now().replace(month=6, day=20),
+                                                                    half_day=False,
+                                                                    reason=1,
+                                                                    request_accepted=True)
+            another_holiday_request.save()
+            self.assertEqual(validate_date_range_vs_holiday_requests(data, self.user.id),
+                             {'start_date': "Intersection avec des demandes d'absence de : 2020-06-08 à 2020-06-20"})
