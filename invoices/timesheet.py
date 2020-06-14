@@ -501,9 +501,15 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
     from invoices.holidays import HolidayRequest
     end_date_time = data['start_date']
     end_date_time.replace(hour=data['end_date'].hour, minute=data['end_date'].minute)
-    conflicts = HolidayRequest.objects.filter(start_date__range=(data['start_date'], end_date_time),
-                                              employee_id=employee_id,
-                                              request_accepted=True)
+    conflicts = HolidayRequest.objects.filter(
+        Q(start_date__range=(data['start_date'], data['end_date'])) |
+        Q(end_date__range=(data['start_date'], data['end_date'])) |
+        Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
+        Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
+    ).filter(employee_id=employee_id, request_accepted=True)
+    # conflicts = HolidayRequest.objects.filter(start_date__range=(data['start_date'], end_date_time),
+    #                                           employee_id=employee_id,
+    #                                           request_accepted=True)
     if 1 == conflicts.count():
         msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
                                                                                           conflicts[0].end_date)}
