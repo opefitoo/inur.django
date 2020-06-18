@@ -27,8 +27,6 @@ class HolidayRequest(models.Model):
                                      on_delete=models.CASCADE, blank=True,
                                      null=True)
     employee = CurrentUserField()
-    employee.editable = False
-    employee.visible = False
     start_date = models.DateField(u'Date début')
     end_date = models.DateField(u'Date fin')
     half_day = models.BooleanField(u"Demi journée")
