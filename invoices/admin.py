@@ -294,7 +294,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
     verbose_name_plural = u"Demandes d'absence"
     readonly_fields = ('request_accepted', 'validated_by', 'employee')
     actions = ['validate_or_invalidate_request', ]
-    list_display = ('employee', 'start_date', 'end_date', 'request_accepted', 'validated_by')
+    list_display = ('employee', 'start_date', 'end_date', 'reason', 'request_accepted', 'validated_by')
 
     def validate_or_invalidate_request(self, request, queryset):
         if not request.user.is_superuser:
@@ -307,8 +307,9 @@ class HolidayRequestAdmin(admin.ModelAdmin):
             obj.request_accepted = not obj.request_accepted
             if obj.request_accepted:
                 try:
-                    obj.validated_by = Employee.objects.get(user_id=request.user.id)
-                except Employee.DoesNotExist as e:
+                    employee = Employee.objects.get(user_id=request.user.id)
+                    obj.validated_by = employee
+                except Employee.DoesNotExist    :
                     self.message_user(request, "Vous n'avez de profil employé sur l'application pour valider une %s." %
                                       self.verbose_name_plural,
                                       level=messages.ERROR)
@@ -324,10 +325,13 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         self.message_user(request, u"%s (in)validé avec succès." % message_bit)
 
     def get_readonly_fields(self, request, obj=None):
-        if (HolidayRequest.objects.get(pk=obj.id).request_accepted and not request.user.is_superuser) \
-                or HolidayRequest.objects.get(pk=obj.id).employee.employee.user.id != request.user.id:
-            return ('employee', 'start_date', 'end_date', 'half_day', 'reason',
-                    'request_accepted', 'validated_by')
+        if obj is not None:
+            if (HolidayRequest.objects.get(pk=obj.id).request_accepted and not request.user.is_superuser) \
+                    or HolidayRequest.objects.get(pk=obj.id).employee.employee.user.id != request.user.id:
+                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'request_accepted', 'validated_by'
+        else:
+            if request.user.is_superuser:
+                return [f for f in self.readonly_fields if f != 'employee']
         return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
