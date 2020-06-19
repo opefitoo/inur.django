@@ -309,7 +309,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 try:
                     employee = Employee.objects.get(user_id=request.user.id)
                     obj.validated_by = employee
-                except Employee.DoesNotExist    :
+                except Employee.DoesNotExist:
                     self.message_user(request, "Vous n'avez de profil employé sur l'application pour valider une %s." %
                                       self.verbose_name_plural,
                                       level=messages.ERROR)

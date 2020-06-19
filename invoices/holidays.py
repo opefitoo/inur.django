@@ -2,9 +2,14 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.http import HttpRequest
+from django.urls import reverse
 from django_currentuser.db.models import CurrentUserField
 
-from invoices.timesheet import SimplifiedTimesheetDetail
+from invoices.notifications import send_email_notification_to_admins
+from invoices.timesheet import SimplifiedTimesheetDetail, Employee
 
 
 class HolidayRequest(models.Model):
@@ -57,6 +62,10 @@ class HolidayRequest(models.Model):
             messages = {'end_date': 'End date must be bigger than Start date'}
         return messages
 
+    def get_admin_url(self):
+        info = (self._meta.app_label, self._meta.model_name)
+        return reverse('admin:%s_%s_change' % info, args=(self.pk,))
+
     def __str__(self):
         return u'%s - %s du  %s au %s' % (
             self.employee, self.REASONS[self.reason - 1][1], self.start_date, self.end_date)
@@ -89,3 +98,16 @@ def validate_date_range_vs_timesheet(instance_id, data):
                                   % (conflicts[0].start_date, conflicts[0].end_date, conflicts.count() - 1)}
 
     return messages
+
+
+@receiver(post_save, sender=HolidayRequest, dispatch_uid="notify_holiday_request_creation")
+def notify_holiday_request_creation(sender, **kwargs):
+    instance = kwargs['instance']
+    url = instance.get_admin_url()
+    to_emails = []
+    for em in Employee.objects.filter(occupation__name='administratrice'):
+        to_emails.append(em.user.email)
+    if len(to_emails) > 0:
+        send_email_notification_to_admins('A new holiday request from %s' % instance,
+                                          'please validate. %s' % url,
+                                          to_emails)
