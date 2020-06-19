@@ -26,7 +26,7 @@ SECRET_KEY = 'pc_pf1h+5n4h(ayu2)j@2_c+qgumxfa5xeplar6*eq8x745lg!'
 DEBUG = True
 
 # Do not Allow all host headers
-#TODO: fix this hard coded value
+# TODO: fix this hard coded value
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.sur.lu', '.herokuapp.com']
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
@@ -49,7 +49,7 @@ INSTALLED_APPS = (
     'invoices',
     'api',
     'corsheaders',
-    #'debug_toolbar'
+    # 'debug_toolbar'
 )
 
 MIDDLEWARE = (
@@ -59,7 +59,7 @@ MIDDLEWARE = (
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    #'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
@@ -99,8 +99,6 @@ if 'CIRCLECI' in os.sys.argv:
 # DATABASES['default']['ENGINE'] = 'django_postgrespool'
 DATABASES['default']['AUTOCOMMIT'] = True
 
-
-
 # DATABASES = {
 #     'default': {        
 #         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -113,10 +111,8 @@ DATABASES['default']['AUTOCOMMIT'] = True
 # }
 
 
-
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
 
 # Static asset configuration
 import os
@@ -166,7 +162,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
-
 
 COUNTRIES_FIRST = ['LU', 'FR', 'BE', 'DE']
 COUNTRIES_FIRST_BREAK = '...'
@@ -221,3 +216,13 @@ IMPORTER_CSV_FOLDER = os.path.join(BASE_DIR, '../initialdata/')
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:4200',
 ]
+
+if 'EMAIL_HOST' in os.environ:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ['EMAIL_HOST']
+    EMAIL_USE_TLS = True
+    EMAIL_PORT = 587
+    EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+    EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
