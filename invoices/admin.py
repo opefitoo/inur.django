@@ -15,6 +15,7 @@ from invoices.invaction import make_private, \
     export_xml
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
+from invoices.notifications import notify_holiday_request_validation
 from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar, \
     EmployeeContractDetail
@@ -317,6 +318,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
             else:
                 obj.validated_by = None
             obj.save()
+            notify_holiday_request_validation(obj, request)
             rows_updated = rows_updated + 1
         if rows_updated == 1:
             message_bit = u"1 %s a été" % self.verbose_name

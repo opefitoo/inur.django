@@ -1,24 +1,23 @@
-import static
-from django.core.mail import mail_admins, send_mail
-
-from invoices.timesheet import Employee
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
 
 
-def notify_holiday_request_validation(instance, request):
-    url = instance.get_admin_url()
-    print(url)
-    to_emails = []
-    for em in Employee.objects.filter(occupation__name='administratrice'):
-        to_emails.append(em.user.email)
-    send_email_notification_to_admins('You holiday request has been validated by %s' % instance.employee.user,
-                                      'please check. %s' % request.get_aboslute_url(),
-                                      to_emails)
+def notify_holiday_request_validation(obj, request):
+    to_emails = [User.objects.get(id=obj.employee_id).email]
+    if obj.request_accepted:
+        send_email_notification('Your holiday request has been validated by %s' % request.user,
+                                'please check. %s' % request.build_absolute_uri(),
+                                to_emails)
+    else:
+        send_email_notification('Your holiday request has been rejected by %s' % request.user,
+                                'please check. %s' % request.build_absolute_uri(),
+                                to_emails)
 
 
-def send_email_notification_to_admins(subject, message, to_emails):
+def send_email_notification(subject, message, to_emails):
     send_mail(
         subject,
         message,
-        'nomail@benammar.com',
+        'nomail@opefitoo.com',
         to_emails,
     )

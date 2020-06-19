@@ -4,11 +4,10 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.http import HttpRequest
 from django.urls import reverse
 from django_currentuser.db.models import CurrentUserField
 
-from invoices.notifications import send_email_notification_to_admins
+from invoices.notifications import send_email_notification
 from invoices.timesheet import SimplifiedTimesheetDetail, Employee
 
 
@@ -101,13 +100,14 @@ def validate_date_range_vs_timesheet(instance_id, data):
 
 
 @receiver(post_save, sender=HolidayRequest, dispatch_uid="notify_holiday_request_creation")
-def notify_holiday_request_creation(sender, **kwargs):
-    instance = kwargs['instance']
+def notify_holiday_request_creation(sender, instance, created, **kwargs):
+    if not created:
+        return
     url = instance.get_admin_url()
     to_emails = []
     for em in Employee.objects.filter(occupation__name='administratrice'):
         to_emails.append(em.user.email)
     if len(to_emails) > 0:
-        send_email_notification_to_admins('A new holiday request from %s' % instance,
-                                          'please validate. %s' % url,
-                                          to_emails)
+        send_email_notification('A new holiday request from %s' % instance,
+                                'please validate. %s' % url,
+                                to_emails)
