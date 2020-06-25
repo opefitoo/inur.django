@@ -4,7 +4,7 @@ from dal import autocomplete
 from django import forms
 from django.forms import BaseInlineFormSet, ValidationError, ModelForm
 
-from invoices.models import InvoiceItem, MedicalPrescription, Patient
+from invoices.models import InvoiceItem, MedicalPrescription
 from invoices.timesheet import SimplifiedTimesheet, SimplifiedTimesheetDetail
 from invoices.widgets import CodeSnWidget
 

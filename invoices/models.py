@@ -28,7 +28,7 @@ from django.utils.timezone import now
 from invoices.storages import CustomizedGoogleDriveStorage
 from constance import config
 
-from invoices.timesheet import Employee
+from invoices.employee import Employee
 from invoices.validators.validators import MyRegexValidator
 
 prestation_gcalendar = PrestationGoogleCalendar()
@@ -275,6 +275,8 @@ class Patient(models.Model):
 
 
 class Hospitalization(models.Model):
+    class Meta:
+        ordering = ['-id']
     start_date = models.DateField(u"Début d'hospitlisation")
     end_date = models.DateField(u"Date de fin")
     description = models.TextField(max_length=50, default=None, blank=True, null=True)
@@ -607,6 +609,7 @@ def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
 
 class InvoiceItem(models.Model):
     class Meta(object):
+        ordering = ['-id']
         verbose_name = u"Mémoire d'honoraire"
         verbose_name_plural = u"Mémoires d'honoraire"
 

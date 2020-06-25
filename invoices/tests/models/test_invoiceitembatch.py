@@ -6,7 +6,7 @@ from django.test import override_settings
 from django.contrib.auth.models import User
 
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, InvoiceItemBatch
-from invoices.timesheet import Employee, JobPosition
+from invoices.employee import Employee, JobPosition
 
 
 class InvoiceItemBatchTestCase(TestCase):

@@ -6,7 +6,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus.doctemplate import SimpleDocTemplate
 
 from invoices.models import InvoiceItem, Prestation
-from invoices.timesheet import Employee
+from invoices.employee import Employee
 
 
 def set_employee_for_invoice(modeladmin, request, queryset):
