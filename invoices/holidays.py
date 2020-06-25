@@ -7,8 +7,11 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django_currentuser.db.models import CurrentUserField
 
+from helpers.employee import get_admin_emails
+from invoices.employee import Employee
 from invoices.notifications import send_email_notification
-from invoices.timesheet import SimplifiedTimesheetDetail, Employee
+import invoices.timesheet
+from invoices.validators import validators
 
 
 class HolidayRequest(models.Model):
@@ -27,9 +30,10 @@ class HolidayRequest(models.Model):
         (4, u'Desiderata')
     ]
     request_accepted = models.BooleanField(u"Demande acceptée", default=False, blank=True)
-    validated_by = models.ForeignKey('invoices.Employee', related_name='validator',
+    validated_by = models.ForeignKey(Employee, related_name='validator',
                                      on_delete=models.CASCADE, blank=True,
                                      null=True)
+    #FIXME rename to user, not employee
     employee = CurrentUserField()
     start_date = models.DateField(u'Date début')
     end_date = models.DateField(u'Date fin')
@@ -50,7 +54,7 @@ class HolidayRequest(models.Model):
         result = {}
         result.update(HolidayRequest.validate_dates(data))
         result.update(validate_date_range(instance_id, data))
-        result.update(validate_date_range_vs_timesheet(instance_id, data))
+        result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
         return result
 
     @staticmethod
@@ -85,28 +89,12 @@ def validate_date_range(instance_id, data):
     return messages
 
 
-def validate_date_range_vs_timesheet(instance_id, data):
-    messages = {}
-    conflicts = SimplifiedTimesheetDetail.objects.filter(start_date__range=(data['start_date'], data['end_date']),
-                                                         simplified_timesheet__employee__user_id=data['employee_id'])
-    if 1 == conflicts.count():
-        messages = {'start_date': u"Intersection avec des Temps de travail de : %s à %s" % (conflicts[0].start_date,
-                                                                                            conflicts[0].end_date)}
-    elif 1 < conflicts.count():
-        messages = {'start_date': u"Intersection avec des Temps de travail de : %s à %s et %d autres conflits"
-                                  % (conflicts[0].start_date, conflicts[0].end_date, conflicts.count() - 1)}
-
-    return messages
-
-
 @receiver(post_save, sender=HolidayRequest, dispatch_uid="notify_holiday_request_creation")
 def notify_holiday_request_creation(sender, instance, created, **kwargs):
     if not created:
         return
     url = instance.get_admin_url()
-    to_emails = []
-    for em in Employee.objects.filter(occupation__name='administratrice'):
-        to_emails.append(em.user.email)
+    to_emails = get_admin_emails()
     if len(to_emails) > 0:
         send_email_notification('A new holiday request from %s' % instance,
                                 'please validate. %s' % url,

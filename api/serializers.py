@@ -6,7 +6,8 @@ from rest_framework.exceptions import ValidationError
 
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
-from invoices.timesheet import JobPosition, Timesheet, TimesheetTask
+from invoices.timesheet import Timesheet, TimesheetTask
+from invoices.employee import JobPosition
 
 
 class UserSerializer(serializers.ModelSerializer):

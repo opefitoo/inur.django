@@ -7,7 +7,7 @@ from constance import config
 
 from api.serializers import PrestationSerializer
 from invoices.models import CareCode, Patient, InvoiceItem, Prestation
-from invoices.timesheet import JobPosition, Employee
+from invoices.employee import Employee, JobPosition
 
 
 class PrestationTestCase(BaseTestCase, APITestCase):

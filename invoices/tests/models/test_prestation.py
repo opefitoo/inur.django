@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 from constance import config
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Hospitalization
-from invoices.timesheet import Employee, JobPosition
+from invoices.employee import Employee, JobPosition
 
 
 class PrestationTestCase(TestCase):

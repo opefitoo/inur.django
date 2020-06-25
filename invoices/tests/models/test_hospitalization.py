@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Hospitalization
-from invoices.timesheet import Employee, JobPosition
+from invoices.employee import Employee, JobPosition
 
 
 class HospitalizationTestCase(TestCase):
