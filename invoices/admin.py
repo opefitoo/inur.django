@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.utils.html import format_html
 
+from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm
@@ -16,9 +17,8 @@ from invoices.invaction import make_private, \
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
 from invoices.notifications import notify_holiday_request_validation
-from invoices.timesheet import Employee, JobPosition, Timesheet, TimesheetDetail, TimesheetTask, \
-    SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar, \
-    EmployeeContractDetail
+from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
+    SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 
 
 class JobPostionAdmin(admin.ModelAdmin):
@@ -361,7 +361,8 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
     list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
-                       'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days', 'hours_should_work',)
+                       'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days',
+                       'total_hours_holidays_taken', 'hours_should_work',)
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
     actions = ['validate_time_sheets', ]
@@ -369,9 +370,7 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if not change:
-            current_user = Employee.objects.raw(
-                'select * from invoices_employee where user_id = %s' % (request.user.id))
-            obj.employee = current_user[0]
+            obj.employee = Employee.objects.get(user_id=obj.user.id)
         obj.save()
 
     def timesheet_owner(self, instance):

@@ -3,144 +3,16 @@ import calendar
 from datetime import date, datetime, timedelta
 from typing import Any, Union
 
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator
 from django.db import models
-from django.contrib.auth.models import User
 from django.db.models import Q
-from django.db.models.signals import post_delete, post_save, pre_save
-from django.dispatch import receiver
 from django.utils import timezone
 from django_currentuser.db.models import CurrentUserField
 
-#from invoices.holidays import HolidayRequest
-from invoices.storages import CustomizedGoogleDriveStorage
-from django.core.exceptions import ValidationError
-from django.core.cache import cache
-
-
-class JobPosition(models.Model):
-    name = models.CharField(max_length=50)
-    description = models.TextField(max_length=100, blank=True,
-                                   null=True)
-
-    def __str__(self):  # Python 3: def __str__(self):
-        return '%s' % (self.name.strip())
-
-
-class Employee(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    start_contract = models.DateField('start date')
-    end_contract = models.DateField('end date', blank=True,
-                                    null=True)
-    provider_code = models.CharField(u'Code prestataire',
-                                     help_text=u'Saisissez le code prestataire auprès de la C.N.S',
-                                     max_length=30,
-                                     blank=True)
-    occupation = models.ForeignKey(JobPosition,
-                                   on_delete=models.CASCADE)
-    has_gdrive_access = models.BooleanField("Allow access to Google Drive files", default=False)
-    has_gcalendar_access = models.BooleanField("Allow access to Prestations' calendar", default=False)
-
-    def clean(self, *args, **kwargs):
-        super(Employee, self).clean()
-        is_has_gdrive_access_valid, message = self.is_has_gdrive_access_valid(self.has_gdrive_access, self.user)
-        if not is_has_gdrive_access_valid:
-            raise ValidationError({'has_gdrive_access': message})
-
-    @staticmethod
-    def is_has_gdrive_access_valid(has_gdrive_access, user):
-        is_valid = True
-        message = ''
-        if has_gdrive_access and not user.email:
-            message = 'User must have email to grant access'
-            is_valid = False
-
-        return is_valid, message
-
-    @staticmethod
-    def autocomplete_search_fields():
-        return 'occupation__name', 'user__first_name', 'user__last_name', 'user__username'
-
-    def __str__(self):
-        return '%s' % (self.user.username.strip().capitalize())
-
-
-class EmployeeContractDetail(models.Model):
-    start_date = models.DateField(u'Date début période')
-    end_date = models.DateField(u'Date fin période', blank=True, null=True)
-    number_of_hours = models.PositiveSmallIntegerField("Nombre d'heures par semaine",
-                                                       validators=[MinValueValidator(5), MaxValueValidator(40)])
-    employee_link = models.ForeignKey(Employee, on_delete=models.CASCADE)
-
-    def calculate_current_daily_hours(self):
-        return self.number_of_hours / 5
-
-    def __str__(self):
-        return 'Du %s au %s : %d heures/semaine' % (self.start_date, self.end_date, self.number_of_hours)
-
-
-@receiver(pre_save, sender=User, dispatch_uid="user_pre_save_gservices_permissions")
-def user_pre_save_gservices_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    from invoices.models import gd_storage
-    try:
-        origin_user = User.objects.filter(pk=instance.id).get()
-        origin_email = origin_user.email
-        email = instance.email
-        if origin_email != email:
-            has_access = False
-            prestation_gcalendar.update_calendar_permissions(origin_email, has_access)
-            path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-            gd_storage.update_folder_permissions_v3(path, origin_email, has_access)
-            gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, origin_email, has_access)
-    except User.DoesNotExist:
-        pass
-
-
-@receiver(post_delete, sender=User, dispatch_uid="user_revoke_gservices_permissions")
-def user_revoke_gservices_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    from invoices.models import gd_storage
-    email = instance.email
-    if email:
-        has_access = False
-        prestation_gcalendar.update_calendar_permissions(email, has_access)
-        path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-        gd_storage.update_folder_permissions_v3(path, email, has_access)
-        gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
-
-
-@receiver([post_save, post_delete], sender=Employee, dispatch_uid="employee_update_gdrive_permissions")
-def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
-    from invoices.models import gd_storage
-    email = instance.user.email
-    if email:
-        path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-        has_access = instance.has_gdrive_access
-        gd_storage.update_folder_permissions_v3(path, email, has_access)
-        gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
-
-
-@receiver(post_save, sender=Employee, dispatch_uid="employee_update_gcalendar_permissions")
-def employee_update_gcalendar_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    email = instance.user.email
-    if email:
-        has_access = instance.has_gcalendar_access
-        prestation_gcalendar.update_calendar_permissions(email, has_access)
-
-
-@receiver(post_delete, sender=Employee, dispatch_uid="employee_revoke_gservices_permissions")
-def employee_revoke_gservices_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    from invoices.models import gd_storage
-    email = instance.user.email
-    if email:
-        has_access = False
-        prestation_gcalendar.update_calendar_permissions(email, has_access)
-        path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-        gd_storage.update_folder_permissions_v3(path, email, has_access)
-        gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
+from helpers.holidays import how_many_hours_taken_in_period
+from invoices.employee import Employee
 
 
 class Timesheet(models.Model):
@@ -280,7 +152,8 @@ class SimplifiedTimesheet(models.Model):
                 return calculated_hours
         calculated_hours = {"total": 0,
                             "total_sundays": 0,
-                            "total_public_holidays": 0}
+                            "total_public_holidays": 0,
+                            "total_hours_holidays_taken": 0}
         total = timezone.timedelta(0)
         total_sundays = timezone.timedelta(0)
         total_public_holidays = timezone.timedelta(0)
@@ -293,12 +166,21 @@ class SimplifiedTimesheet(models.Model):
             if PublicHolidayCalendarDetail.objects.filter(
                     calendar_date__exact=v.start_date.astimezone()).first() is not None:
                 total_public_holidays = total_public_holidays + delta
+        calculated_hours["total_hours_holidays_taken"] = self.absence_hours_taken()
         calculated_hours["total"] = total
         calculated_hours["total_sundays"] = total_sundays
         calculated_hours["total_public_holidays"] = total_public_holidays
         if self.id:
             cache.set('total_hours_dictionary%s' % self.id, calculated_hours)
         return calculated_hours
+
+    def absence_hours_taken(self):
+        data = {'start_date': self.get_start_date, 'end_date': self.get_end_date, 'user_id': self.user.id}
+        return how_many_hours_taken_in_period(data)
+
+    @property
+    def total_hours_holidays_taken(self):
+        return self.__calculate_total_hours()["total_hours_holidays_taken"]
 
     @property
     def hours_should_work(self):
@@ -309,7 +191,8 @@ class SimplifiedTimesheet(models.Model):
         total_legal_working_hours = self.date_range(self.get_start_date, self.get_end_date) * \
                                     (self.employee.employeecontractdetail_set.filter(
                                         start_date__lte=self.get_start_date).first().number_of_hours / 5)
-        balance: Union[float, Any] = calculated_hours["total"].total_seconds() - total_legal_working_hours * 3600
+        balance: Union[float, Any] = calculated_hours["total"].total_seconds() + \
+                                     (calculated_hours["total_hours_holidays_taken"] - total_legal_working_hours) * 3600
         return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
 
     @staticmethod
@@ -502,14 +385,11 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
     end_date_time = data['start_date']
     end_date_time.replace(hour=data['end_date'].hour, minute=data['end_date'].minute)
     conflicts = HolidayRequest.objects.filter(
-        Q(start_date__range=(data['start_date'], data['end_date'])) |
-        Q(end_date__range=(data['start_date'], data['end_date'])) |
+        Q(start_date__range=(data['start_date'], end_date_time)) |
+        Q(end_date__range=(data['start_date'], end_date_time)) |
         Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
-        Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
+        Q(start_date__lte=end_date_time, end_date__gte=end_date_time)
     ).filter(employee_id=employee_id, request_accepted=True)
-    # conflicts = HolidayRequest.objects.filter(start_date__range=(data['start_date'], end_date_time),
-    #                                           employee_id=employee_id,
-    #                                           request_accepted=True)
     if 1 == conflicts.count():
         msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
                                                                                           conflicts[0].end_date)}

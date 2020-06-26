@@ -2,7 +2,7 @@ from api.tests.views.base import BaseTestCase
 from rest_framework.test import APITestCase
 
 from api.serializers import JobPositionSerializer
-from invoices.timesheet import JobPosition
+from invoices.employee import JobPosition
 
 
 class JobPositionTestCase(BaseTestCase, APITestCase):

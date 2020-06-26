@@ -4,7 +4,8 @@ from api.tests.views.base import BaseTestCase
 from rest_framework.test import APITestCase
 
 from api.serializers import TimesheetSerializer
-from invoices.timesheet import JobPosition, Timesheet, Employee
+from invoices.timesheet import Timesheet
+from invoices.employee import Employee, JobPosition
 
 
 class TimesheetTestCase(BaseTestCase, APITestCase):
