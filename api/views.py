@@ -4,11 +4,12 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
-    ValidityDateSerializer, InvoiceItemBatchSerializer
+    ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.timesheet import Timesheet, TimesheetTask
 from invoices.employee import JobPosition
+from invoices.events import EventType, Event 
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -121,3 +122,13 @@ class ValidityDateViewSet(viewsets.ModelViewSet):
     """
     queryset = ValidityDate.objects.all()
     serializer_class = ValidityDateSerializer
+
+class EventTypeViewSet(viewsets.ModelViewSet):
+
+    queryset = EventType.objects.all()
+    serializer_class =EventTypeSerializer 
+
+class EventViewSet(viewsets.ModelViewSet):
+
+    queryset = Event.objects.all()
+    serializer_class =EventSerializer     
