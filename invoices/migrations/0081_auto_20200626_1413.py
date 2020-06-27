@@ -44,4 +44,32 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Scheduling',
             },
         ),
+        migrations.AlterModelOptions(
+            name='eventtype',
+            options={'ordering': ['-id'], 'verbose_name': 'Scheduling Type', 'verbose_name_plural': 'Scheduling Type'},
+        ),
+        migrations.AlterField(
+        model_name='event',
+        name='patient',
+        field=models.ForeignKey(blank=True, help_text='Veuillez séléctionner un patient', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='Ptient', to='invoices.Patient'),
+        ),
+        migrations.AlterModelOptions(
+            name='event',
+            options={'verbose_name': 'Événements', 'verbose_name_plural': 'Événements'},
+        ),
+        migrations.AlterModelOptions(
+            name='eventtype',
+            options={'ordering': ['-id'], 'verbose_name': 'Événements -> Type', 'verbose_name_plural': 'Événements -> Type'},
+        ),
+        migrations.AlterField(
+            model_name='event',
+            name='event_type',
+            field=models.ForeignKey(blank=True, help_text='Type dévénement', null=True, on_delete=django.db.models.deletion.SET_NULL, to='invoices.EventType'),
+        ),
+        migrations.AlterField(
+            model_name='event',
+            name='patient',
+            field=models.ForeignKey(blank=True, help_text='Veuillez séléctionner un patient', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='Patient', to='invoices.Patient'),
+        )
+
     ]

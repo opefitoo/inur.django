@@ -9,7 +9,12 @@ class Command(BaseCommand):
     help = 'Checks for patient birthdays'
 
     def handle(self, *args, **options):
-            eventype = EventType.objects.get(name='Birthdays')
+            event_types = EventType.objects.filter(name='Birthdays')
+            if not event_types:
+                eventype_birthday = EventType(
+                    name = 'Birthdays'
+                    )
+                eventype_birthday.save()
 
             thisday = datetime.date.today()
             lastday = thisday+ datetime.timedelta(days=+30)
@@ -31,7 +36,7 @@ class Command(BaseCommand):
                     event= Event(
                         day = searches_date,
                         state = 1,
-                        event_type = eventype,
+                        event_type = eventype_birthday,
                         notes = 'test',
                         patient = patient 
                         )
