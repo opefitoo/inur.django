@@ -1,4 +1,4 @@
 web: gunicorn invoices.wsgi --log-file -
 worker: python worker.py
-clock: python clock.py
+events: python manage.py check_events
 
