@@ -116,7 +116,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='prestation',
             name='employee',
-            field=models.ForeignKey(blank=True, default='auth.User', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='prestations', to='invoices.Employee'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='prestations', to='invoices.Employee'),
         ),
         migrations.AlterField(
             model_name='publicholidaycalendar',
