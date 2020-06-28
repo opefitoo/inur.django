@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
-import invoices.timesheet
+import invoices.models.timesheet
 
 
 class Migration(migrations.Migration):
@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='PublicHolidayCalendar',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('calendar_year', models.PositiveIntegerField(default=2019, validators=[django.core.validators.MinValueValidator(1984), invoices.timesheet.max_value_current_year])),
+                ('calendar_year', models.PositiveIntegerField(default=2019, validators=[django.core.validators.MinValueValidator(1984), invoices.models.timesheet.max_value_current_year])),
             ],
         ),
         migrations.CreateModel(

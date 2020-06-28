@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.contrib import messages
-from django.http import HttpResponse
-from invoices.invoiceitem_pdf import get_doc_elements
-from reportlab.lib.units import cm
-from reportlab.platypus.doctemplate import SimpleDocTemplate
 
 from invoices.models import InvoiceItem, Prestation
-from invoices.employee import Employee
+from invoices.models.employee import Employee
 
 
 def set_employee_for_invoice(modeladmin, request, queryset):

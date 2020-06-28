@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='invoiceitem',
             name='invoice_number',
-            field=models.CharField(default=invoices.models.get_default_invoice_number, max_length=50, unique=True),
+            field=models.CharField(default=invoices.models.models.get_default_invoice_number, max_length=50, unique=True),
         ),
     ]

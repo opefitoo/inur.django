@@ -2,10 +2,10 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from invoices.holidays import HolidayRequest
-from invoices.timesheet import Timesheet, TimesheetTask, TimesheetDetail, \
+from invoices.models.holidays import HolidayRequest
+from invoices.models.timesheet import TimesheetTask, TimesheetDetail, \
     validate_date_range_vs_holiday_requests, SimplifiedTimesheet
-from invoices.employee import Employee, EmployeeContractDetail, JobPosition
+from invoices.models.employee import Employee, EmployeeContractDetail, JobPosition
 
 
 class JobPositionTestCase(TestCase):

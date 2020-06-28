@@ -7,10 +7,9 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django_currentuser.db.models import CurrentUserField
 
-from helpers.employee import get_admin_emails
-from invoices.employee import Employee
+from invoices.helpers.employee import get_admin_emails
+from invoices.models.employee import Employee
 from invoices.notifications import send_email_notification
-import invoices.timesheet
 from invoices.validators import validators
 
 
@@ -40,6 +39,11 @@ class HolidayRequest(models.Model):
     half_day = models.BooleanField(u"Demi journée")
     reason = models.PositiveSmallIntegerField(
         choices=REASONS)
+
+    def number_of_days(self):
+        sum(1 for day in daygenerator if day.weekday() < 5)
+        sum()
+        return self.end_date - self.start_date
 
     def clean(self, *args, **kwargs):
         exclude = []

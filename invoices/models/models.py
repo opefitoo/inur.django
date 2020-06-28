@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Optional, Dict, Any
 
 import pytz
 import os
@@ -21,14 +20,13 @@ from gdstorage.storage import GoogleDriveStorage
 
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
-from invoices.managers import InvoiceItemBatchManager
 
 from django.utils.timezone import now
 
+from invoices.models.employee import Employee
 from invoices.storages import CustomizedGoogleDriveStorage
 from constance import config
 
-from invoices.employee import Employee
 from invoices.validators.validators import MyRegexValidator
 
 prestation_gcalendar = PrestationGoogleCalendar()
@@ -716,7 +714,7 @@ class Prestation(models.Model):
     invoice_item = models.ForeignKey(InvoiceItem,
                                      related_name='prestations',
                                      on_delete=models.CASCADE)
-    employee = models.ForeignKey('invoices.Employee',
+    employee = models.ForeignKey(Employee,
                                  related_name='prestations',
                                  blank=True,
                                  null=True,

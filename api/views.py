@@ -1,14 +1,11 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets, filters
 from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, \
-    PrestationSerializer, \
-    InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
-    TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
-    ValidityDateSerializer, InvoiceItemBatchSerializer
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch
-from invoices.timesheet import Timesheet, TimesheetTask
-from invoices.employee import JobPosition
+    PrestationSerializer, InvoiceItemSerializer, JobPositionSerializer, PhysicianSerializer, \
+    MedicalPrescriptionSerializer, HospitalizationSerializer, ValidityDateSerializer, InvoiceItemBatchSerializer
+from invoices.models.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, \
+    Hospitalization, ValidityDate, InvoiceItemBatch
+from invoices.models.employee import JobPosition
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -35,6 +32,7 @@ class CareCodeViewSet(viewsets.ModelViewSet):
     serializer_class = CareCodeSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['code', 'name']
+
 
 class PatientViewSet(viewsets.ModelViewSet):
     """
@@ -75,28 +73,13 @@ class JobPositionViewSet(viewsets.ModelViewSet):
     queryset = JobPosition.objects.all()
     serializer_class = JobPositionSerializer
 
+
 class BatchViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows JobPositions to be viewed.
     """
     queryset = InvoiceItemBatch.objects.all()
     serializer_class = InvoiceItemBatchSerializer
-
-
-class TimesheetViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows Timesheets to be viewed.
-    """
-    queryset = Timesheet.objects.all()
-    serializer_class = TimesheetSerializer
-
-
-class TimesheetTaskViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows TimesheetTasks to be viewed.
-    """
-    queryset = TimesheetTask.objects.all()
-    serializer_class = TimesheetTaskSerializer
 
 
 class MedicalPrescriptionViewSet(viewsets.ModelViewSet):

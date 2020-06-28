@@ -6,33 +6,24 @@ from django.core.checks import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.utils.html import format_html
-
-from invoices.employee import Employee, EmployeeContractDetail, JobPosition
+from invoices.models.holidays import HolidayRequest
+from invoices.models.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm
-from invoices.holidays import HolidayRequest
-from invoices.invaction import make_private, \
-    export_xml
-from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
-    Hospitalization, InvoiceItemBatch
+from invoices.invaction import make_private, export_xml
+from invoices.models.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, \
+    MedicalPrescription, Hospitalization, InvoiceItemBatch
 from invoices.notifications import notify_holiday_request_validation
-from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
-    SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
+from invoices.models.timesheet import SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, \
+    PublicHolidayCalendar
 
 
-class JobPostionAdmin(admin.ModelAdmin):
+class JobPositionAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
 
 
-admin.site.register(JobPosition, JobPostionAdmin)
-
-
-class TimesheetTaskAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description')
-
-
-admin.site.register(TimesheetTask, TimesheetTaskAdmin)
+admin.site.register(JobPosition, JobPositionAdmin)
 
 
 # Define an inline admin descriptor for Employee model
@@ -238,43 +229,6 @@ class InvoiceItemBatchAdmin(admin.ModelAdmin):
 
 
 admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
-
-
-class TimesheetDetailInline(admin.TabularInline):
-    extra = 1
-    model = TimesheetDetail
-    fields = ('start_date', 'end_date', 'task_description', 'patient',)
-    search_fields = ['patient']
-    ordering = ['start_date']
-
-
-@admin.register(Timesheet)
-class TimesheetAdmin(admin.ModelAdmin):
-    fields = ('start_date', 'end_date', 'submitted_date', 'other_details', 'timesheet_validated')
-    date_hierarchy = 'end_date'
-    inlines = [TimesheetDetailInline]
-    list_display = ('start_date', 'end_date', 'timesheet_owner', 'timesheet_validated')
-    list_filter = ['employee', ]
-    list_select_related = True
-    readonly_fields = ('timesheet_validated',)
-    verbose_name = 'Time sheet simple'
-    verbose_name_plural = 'Time sheets simples'
-
-    def save_model(self, request, obj, form, change):
-        if not change:
-            current_user = Employee.objects.raw(
-                'select * from invoices_employee where user_id = %s' % (request.user.id))
-            obj.employee = current_user[0]
-        obj.save()
-
-    def timesheet_owner(self, instance):
-        return instance.employee.user.username
-
-    def get_queryset(self, request):
-        qs = super(TimesheetAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(employee__user=request.user)
 
 
 class PublicHolidayCalendarDetailInline(admin.TabularInline):

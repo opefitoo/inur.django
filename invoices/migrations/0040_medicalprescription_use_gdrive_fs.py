@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='medicalprescription',
             name='file',
-            field=models.ImageField(blank=True, storage=gdstorage.storage.GoogleDriveStorage(), upload_to=invoices.models.update_medical_prescription_filename),
+            field=models.ImageField(blank=True, storage=gdstorage.storage.GoogleDriveStorage(), upload_to=invoices.models.models.update_medical_prescription_filename),
         ),
     ]

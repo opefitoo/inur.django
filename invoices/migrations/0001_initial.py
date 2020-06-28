@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
             name='InvoiceItem',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('invoice_number', models.CharField(default=invoices.models.get_default_invoice_number, max_length=50)),
+                ('invoice_number', models.CharField(default=invoices.models.models.get_default_invoice_number, max_length=50)),
                 ('accident_id', models.CharField(blank=True, help_text="Numero d'accident est facultatif", max_length=30, null=True)),
                 ('accident_date', models.DateField(blank=True, help_text="Date d'accident est facultatif", null=True)),
                 ('invoice_date', models.DateField(verbose_name=b'Invoice date')),
@@ -79,7 +79,7 @@ class Migration(migrations.Migration):
             name='PrivateInvoiceItem',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('invoice_number', models.CharField(default=invoices.models.get_default_invoice_number, max_length=50)),
+                ('invoice_number', models.CharField(default=invoices.models.models.get_default_invoice_number, max_length=50)),
                 ('accident_id', models.CharField(blank=True, help_text="Numero d'accident est facultatif", max_length=30, null=True)),
                 ('accident_date', models.DateField(blank=True, help_text="Date d'accident est facultatif", null=True)),
                 ('invoice_date', models.DateField(verbose_name=b'Date facture')),

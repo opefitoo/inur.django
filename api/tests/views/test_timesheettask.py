@@ -2,7 +2,7 @@ from api.tests.views.base import BaseTestCase
 from rest_framework.test import APITestCase
 
 from api.serializers import TimesheetTaskSerializer
-from invoices.timesheet import TimesheetTask
+from invoices.models.timesheet import TimesheetTask
 
 
 class TimesheetTaskTestCase(BaseTestCase, APITestCase):

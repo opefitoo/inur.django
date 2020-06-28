@@ -2,7 +2,7 @@ from dal import autocomplete
 from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST, require_GET
-from invoices.models import CareCode, Prestation, Patient, MedicalPrescription
+from invoices.models.models import CareCode, Prestation, Patient, MedicalPrescription
 
 
 def get_queryset_filter(query_str, fields):

@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='invoiceitembatch',
             name='file',
-            field=models.FileField(blank=True, storage=invoices.storages.CustomizedGoogleDriveStorage(), upload_to=invoices.models.invoiceitembatch_filename),
+            field=models.FileField(blank=True, storage=invoices.storages.CustomizedGoogleDriveStorage(), upload_to=invoices.models.models.invoiceitembatch_filename),
         ),
     ]

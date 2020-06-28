@@ -1,13 +1,10 @@
 from django.contrib.auth.models import User, Group
-from django.utils import timezone
 from rest_framework import serializers
 from django_countries.serializers import CountryFieldMixin
-from rest_framework.exceptions import ValidationError
 
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
+from invoices.models.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
-from invoices.timesheet import Timesheet, TimesheetTask
-from invoices.employee import JobPosition
+from invoices.models.employee import JobPosition
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -134,18 +131,6 @@ class InvoiceItemBatchSerializer(serializers.ModelSerializer):
 class JobPositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobPosition
-        fields = ('id', 'name', 'description')
-
-
-class TimesheetSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Timesheet
-        fields = ('id', 'employee', 'start_date', 'end_date', 'submitted_date', 'other_details', 'timesheet_validated')
-
-
-class TimesheetTaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TimesheetTask
         fields = ('id', 'name', 'description')
 
 

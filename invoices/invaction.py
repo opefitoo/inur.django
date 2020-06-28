@@ -4,7 +4,7 @@ import datetime
 
 from django.core import serializers
 
-from invoices.models import Patient, InvoiceItem, CareCode, ValidityDate  # , PrivateInvoiceItem
+from invoices.models.models import Patient, InvoiceItem, CareCode, ValidityDate  # , PrivateInvoiceItem
 from django.http import HttpResponseRedirect, HttpResponse
 
 

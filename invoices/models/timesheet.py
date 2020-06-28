@@ -11,88 +11,85 @@ from django.db.models import Q
 from django.utils import timezone
 from django_currentuser.db.models import CurrentUserField
 
-from helpers.holidays import how_many_hours_taken_in_period
-from invoices.employee import Employee
-
-
-class Timesheet(models.Model):
-    class Meta:
-        ordering = ['-id']
-    employee = models.ForeignKey(Employee,
-                                 on_delete=models.CASCADE)
-    start_date = models.DateField('Date debut')
-    start_date.editable = True
-    end_date = models.DateField('Date fin')
-    end_date.editable = True
-    submitted_date = models.DateTimeField("Date d'envoi", blank=True,
-                                          null=True)
-    submitted_date.editable = True
-    other_details = models.TextField(u"Autres détails", max_length=100, blank=True,
-                                     null=True)
-    timesheet_validated = models.BooleanField("Valide", default=False)
-
-    def __str__(self):  # Python 3: def __str__(self):
-        return '%s - du %s au %s' % (self.employee, self.start_date, self.end_date)
-
-
-class TimesheetTask(models.Model):
-    class Meta:
-        ordering = ['-id']
-    name = models.CharField(max_length=50)
-    description = models.TextField(max_length=100, blank=True,
-                                   null=True)
-
-    @staticmethod
-    def autocomplete_search_fields():
-        return 'name'
-
-    def __str__(self):  # Python 3: def __str__(self):
-        return '%s' % (self.name.strip())
-
-
-class TimesheetDetail(models.Model):
-    start_date = models.DateTimeField('Date')
-    end_date = models.TimeField('Heure fin')
-    task_description = models.ManyToManyField(TimesheetTask, verbose_name='Description(s) tache',
-                                              help_text="Entrez une ou plusieurs taches.")
-    patient = models.ForeignKey('invoices.Patient',
-                                on_delete=models.CASCADE)
-    timesheet = models.ForeignKey(Timesheet,
-                                  on_delete=models.CASCADE)
-    other = models.CharField(max_length=50, blank=True, null=True)
-
-    def clean(self):
-        exclude = []
-        if self.patient is not None and self.patient.id is None:
-            exclude = ['patient']
-        # if self.task_description is not None:
-        #    exclude.append('task_description')
-        if self.timesheet is not None and self.timesheet.id is None:
-            exclude.append('timesheet')
-
-        super(TimesheetDetail, self).clean_fields(exclude)
-
-        messages = self.validate(self.id, self.__dict__)
-        if messages:
-            raise ValidationError(messages)
-
-    @staticmethod
-    def validate(instance_id, data):
-        result = {}
-        result.update(TimesheetDetail.validate_dates(data))
-        return result
-
-    @staticmethod
-    def validate_dates(data):
-        messages = {}
-        is_valid = data['end_date'] is None or data['start_date'].time() <= data['end_date']
-        if not is_valid:
-            messages = {'end_date': u"Heure de fin doit être supérieure à l'heure de début"}
-
-        return messages
-
-    def __str__(self):
-        return ''
+# class Timesheet(models.Model):
+#     class Meta:
+#         ordering = ['-id']
+#     employee = models.ForeignKey(Employee,
+#                                  on_delete=models.CASCADE)
+#     start_date = models.DateField('Date debut')
+#     start_date.editable = True
+#     end_date = models.DateField('Date fin')
+#     end_date.editable = True
+#     submitted_date = models.DateTimeField("Date d'envoi", blank=True,
+#                                           null=True)
+#     submitted_date.editable = True
+#     other_details = models.TextField(u"Autres détails", max_length=100, blank=True,
+#                                      null=True)
+#     timesheet_validated = models.BooleanField("Valide", default=False)
+#
+#     def __str__(self):  # Python 3: def __str__(self):
+#         return '%s - du %s au %s' % (self.employee, self.start_date, self.end_date)
+#
+#
+# class TimesheetTask(models.Model):
+#     class Meta:
+#         ordering = ['-id']
+#     name = models.CharField(max_length=50)
+#     description = models.TextField(max_length=100, blank=True,
+#                                    null=True)
+#
+#     @staticmethod
+#     def autocomplete_search_fields():
+#         return 'name'
+#
+#     def __str__(self):  # Python 3: def __str__(self):
+#         return '%s' % (self.name.strip())
+#
+#
+# class TimesheetDetail(models.Model):
+#     start_date = models.DateTimeField('Date')
+#     end_date = models.TimeField('Heure fin')
+#     task_description = models.ManyToManyField(TimesheetTask, verbose_name='Description(s) tache',
+#                                               help_text="Entrez une ou plusieurs taches.")
+#     patient = models.ForeignKey('invoices.Patient',
+#                                 on_delete=models.CASCADE)
+#     timesheet = models.ForeignKey(Timesheet,
+#                                   on_delete=models.CASCADE)
+#     other = models.CharField(max_length=50, blank=True, null=True)
+#
+#     def clean(self):
+#         exclude = []
+#         if self.patient is not None and self.patient.id is None:
+#             exclude = ['patient']
+#         # if self.task_description is not None:
+#         #    exclude.append('task_description')
+#         if self.timesheet is not None and self.timesheet.id is None:
+#             exclude.append('timesheet')
+#
+#         super(TimesheetDetail, self).clean_fields(exclude)
+#
+#         messages = self.validate(self.id, self.__dict__)
+#         if messages:
+#             raise ValidationError(messages)
+#
+#     @staticmethod
+#     def validate(instance_id, data):
+#         result = {}
+#         result.update(TimesheetDetail.validate_dates(data))
+#         return result
+#
+#     @staticmethod
+#     def validate_dates(data):
+#         messages = {}
+#         is_valid = data['end_date'] is None or data['start_date'].time() <= data['end_date']
+#         if not is_valid:
+#             messages = {'end_date': u"Heure de fin doit être supérieure à l'heure de début"}
+#
+#         return messages
+#
+#     def __str__(self):
+#         return ''
+from invoices.models.employee import Employee
 
 
 def current_month():
@@ -117,7 +114,7 @@ class SimplifiedTimesheet(models.Model):
         ]
 
     timesheet_validated = models.BooleanField("Valide", default=False)
-    employee = models.ForeignKey('invoices.Employee',
+    employee = models.ForeignKey(Employee,
                                  on_delete=models.CASCADE)
     employee.editable = False
     employee.visible = False
@@ -176,7 +173,7 @@ class SimplifiedTimesheet(models.Model):
 
     def absence_hours_taken(self):
         data = {'start_date': self.get_start_date, 'end_date': self.get_end_date, 'user_id': self.user.id}
-        return how_many_hours_taken_in_period(data)
+        return invoices.how_many_hours_taken_in_period(data)
 
     @property
     def total_hours_holidays_taken(self):
@@ -381,7 +378,7 @@ class PublicHolidayCalendarDetail(models.Model):
 
 def validate_date_range_vs_holiday_requests(data, employee_id):
     msgs = {}
-    from invoices.holidays import HolidayRequest
+    from invoices.models.holidays import HolidayRequest
     end_date_time = data['start_date']
     end_date_time.replace(hour=data['end_date'].hour, minute=data['end_date'].minute)
     conflicts = HolidayRequest.objects.filter(

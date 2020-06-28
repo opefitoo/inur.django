@@ -5,12 +5,18 @@ from django.db import models
 from django.db.models.signals import pre_save, post_delete, post_save
 from django.dispatch import receiver
 
+from invoices.gcalendar import PrestationGoogleCalendar
+from invoices.helpers.employee import all_holiday_requests
 from invoices.storages import CustomizedGoogleDriveStorage
+
+prestation_gcalendar = PrestationGoogleCalendar()
+gd_storage: CustomizedGoogleDriveStorage = CustomizedGoogleDriveStorage()
 
 
 class JobPosition(models.Model):
     class Meta:
         ordering = ['-id']
+
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100, blank=True,
                                    null=True)
@@ -33,6 +39,12 @@ class Employee(models.Model):
     has_gdrive_access = models.BooleanField("Allow access to Google Drive files", default=False)
     has_gcalendar_access = models.BooleanField("Allow access to Prestations' calendar", default=False)
 
+    @property
+    def holidays_taken(self):
+        if self.user.id:
+            reqs = all_holiday_requests(self.user.id)
+            # for req in reqs:
+        return 0
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
@@ -74,8 +86,6 @@ class EmployeeContractDetail(models.Model):
 
 @receiver(pre_save, sender=User, dispatch_uid="user_pre_save_gservices_permissions")
 def user_pre_save_gservices_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    from invoices.models import gd_storage
     try:
         origin_user = User.objects.filter(pk=instance.id).get()
         origin_email = origin_user.email
@@ -92,8 +102,6 @@ def user_pre_save_gservices_permissions(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=User, dispatch_uid="user_revoke_gservices_permissions")
 def user_revoke_gservices_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    from invoices.models import gd_storage
     email = instance.email
     if email:
         has_access = False
@@ -105,7 +113,6 @@ def user_revoke_gservices_permissions(sender, instance, **kwargs):
 
 @receiver([post_save, post_delete], sender=Employee, dispatch_uid="employee_update_gdrive_permissions")
 def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
-    from invoices.models import gd_storage
     email = instance.user.email
     if email:
         path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
@@ -116,7 +123,6 @@ def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Employee, dispatch_uid="employee_update_gcalendar_permissions")
 def employee_update_gcalendar_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
     email = instance.user.email
     if email:
         has_access = instance.has_gcalendar_access
@@ -125,8 +131,6 @@ def employee_update_gcalendar_permissions(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Employee, dispatch_uid="employee_revoke_gservices_permissions")
 def employee_revoke_gservices_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    from invoices.models import gd_storage
     email = instance.user.email
     if email:
         has_access = False

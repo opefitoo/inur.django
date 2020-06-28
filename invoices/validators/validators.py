@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.utils.deconstruct import deconstructible
 
-from invoices.timesheet import SimplifiedTimesheetDetail
+from invoices.models.timesheet import SimplifiedTimesheetDetail
 
 
 @deconstructible

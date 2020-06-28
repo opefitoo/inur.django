@@ -2,11 +2,8 @@ from datetime import datetime
 
 from django.utils import timezone
 from django.test import TestCase
-from django.test import override_settings
-from django.contrib.auth.models import User
 
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, InvoiceItemBatch
-from invoices.employee import Employee, JobPosition
+from invoices.models import Patient, InvoiceItem, InvoiceItemBatch
 
 
 class InvoiceItemBatchTestCase(TestCase):

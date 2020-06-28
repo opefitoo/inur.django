@@ -1,4 +1,3 @@
-import mimetypes
 import logging
 import mimetypes
 import ntpath
@@ -20,7 +19,7 @@ class CustomizedGoogleDriveStorage(GoogleDriveStorage):
     MEDICAL_PRESCRIPTION_FOLDER = 'Medical Prescription'
 
     def _set_permissions(self):
-        from invoices.employee import Employee
+        from invoices.models.employee import Employee
 
         if not self._permissions:
             employees = Employee.objects.filter(has_gdrive_access=True)
