@@ -4,16 +4,20 @@ from __future__ import unicode_literals
 from django.db import models
 from django.urls import reverse
 from invoices.models import Patient
+from django.utils.translation import gettext as _
 
 
 class EventType(models.Model):
     class Meta:
-        verbose_name = u'Événements -> Type'
-        verbose_name_plural = u'Événements -> Type'
+        verbose_name = _('Event -> Type')
+        verbose_name_plural = _('Event -> Types')
         ordering = ['-id']
 
-    name = models.CharField(max_length=50)
-    
+    name = models.CharField(_('Descriptive Name'), max_length=50)
+    to_be_generated = models.BooleanField(_('To be generated'),
+                                          help_text=_('If checked, these type of events types will be generated auto.'),
+                                          default=False)
+
     @staticmethod
     def autocomplete_search_fields():
         return 'name'
@@ -24,27 +28,28 @@ class EventType(models.Model):
 
 class Event(models.Model):
     class Meta:
-        verbose_name = u'Événements'
-        verbose_name_plural = u'Événements'
+        verbose_name = _('Event')
+        verbose_name_plural = _('Events')
 
     STATES = [
-        (1, u'En attente de validation'),
-        (2, u'Validé'),
-        (3, u'Traité'),
-        (4, u'Ignoré')
+        (1, _('Waiting for validation')),
+        (2, _('Valid')),
+        (3, _('Done')),
+        (4, _('Ignored'))
     ]
 
-    day = models.DateField(u'Jour de l''événement', help_text=u'Jour de l''événement')
+    day = models.DateField(_('Event day'), help_text=_('Event day'))
     state = models.PositiveSmallIntegerField(choices=STATES)
     event_type = models.ForeignKey(EventType, blank=True, null=True,
-                                   help_text='Type d''événement', on_delete=models.SET_NULL)
+                                   help_text=_('Event type'),
+                                   on_delete=models.SET_NULL)
     notes = models.TextField(
-        u'Notes', help_text=u'Notes', blank=True, null=True)
-    patient = models.ForeignKey(Patient, related_name='Patient', blank=True, null=True,
-                                help_text='Veuillez séléctionner un patient',
+        _('Notes'),
+        help_text=_('Notes'), blank=True, null=True)
+    patient = models.ForeignKey(Patient, related_name='event_link_to_patient', blank=True, null=True,
+                                help_text=_('Please select a patient'),
                                 on_delete=models.CASCADE)
+
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
         return u'<a href="%s">%s</a>' % (url, str(self.day))
-
-

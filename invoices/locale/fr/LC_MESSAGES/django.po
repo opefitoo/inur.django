@@ -1,0 +1,89 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-06-28 22:49+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: french\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: events.py:12
+msgid "Event -> Type"
+msgstr "Événement -> Type"
+
+#: events.py:13
+msgid "Event -> Types"
+msgstr "Événements -> Types"
+
+#: events.py:16
+msgid "Descriptive Name"
+msgstr ""
+
+#: events.py:17
+msgid "To be generated"
+msgstr ""
+
+#: events.py:18
+msgid "If checked, these type of events types will be generated auto."
+msgstr "Si sélectionnés, ce type d'évènements seront générés automatiquement"
+
+#: events.py:31
+msgid "Event"
+msgstr "Événements"
+
+#: events.py:32
+#, fuzzy
+#| msgid "Event -> Types"
+msgid "Events"
+msgstr "Événements"
+
+#: events.py:35
+msgid "Waiting for validation"
+msgstr "En attente"
+
+#: events.py:36
+msgid "Valid"
+msgstr "Valide"
+
+#: events.py:37
+msgid "Done"
+msgstr "Fait"
+
+#: events.py:38
+msgid "Ignored"
+msgstr "Ignoré"
+
+#: events.py:41
+#, fuzzy
+#| msgid "Event -> Type"
+msgid "Event day"
+msgstr "Jour de l'évènement"
+
+#: events.py:44
+#, fuzzy
+#| msgid "Event -> Type"
+msgid "Event type"
+msgstr "Type d'évènement"
+
+#: events.py:47 events.py:48
+msgid "Notes"
+msgstr "Notes"
+
+#: events.py:50
+msgid "Please select a patient"
+msgstr "Veuillez Choisir un patient"
+
+#: templates/events/change_list.html:18
+msgid "Home"
+msgstr "Accueil"
