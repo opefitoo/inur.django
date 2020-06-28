@@ -29,15 +29,16 @@
           <ul class="object-tools">
             <li>
                 <a href={{ previous_month }}>
-                    Previous month
+                    {% trans 'Previous month' %}
                 </a>
             </li>
             <li>
                 <a href={{ next_month }}>
-                    Next month
+                    {% trans 'Next month' %}
                 </a>
             </li>
         </ul>
 
         {{ calendar }}
-{% endblock %}
+    {% endblock %}
+    </div>
