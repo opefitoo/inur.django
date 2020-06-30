@@ -1,10 +1,12 @@
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
 from django.views.static import serve
 from rest_framework.authtoken import views as authtoken_views
 from django.conf import settings
 from django.urls import path
 
+from api.views import EventProcessorView
 from invoices.views import delete_prestation, MedicalPrescriptionAutocomplete
 
 admin.autodiscover()
@@ -38,7 +40,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api-token-auth/', authtoken_views.obtain_auth_token),
-    url(r'^api/v1/', include(('api.urls', 'api'), namespace='api'))
+    url(r'^api/v1/', include(('api.urls', 'api'), namespace='api')),
+    url(
+        r'^api/v1/process[/]$',
+        login_required(EventProcessorView.as_view()),
+        name='event_processor_rest_view'),
 ]
 
 urlpatterns += [

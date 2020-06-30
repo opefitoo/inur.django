@@ -8,7 +8,8 @@ from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physicia
     ValidityDate, InvoiceItemBatch
 from invoices.timesheet import Timesheet, TimesheetTask
 from invoices.employee import JobPosition
-from invoices.events import EventType, Event 
+from invoices.events import EventType, Event
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,7 +45,8 @@ class CareCodeSerializer(serializers.ModelSerializer):
         depth = 1
         validity_dates = ValidityDateSerializer()
         fields = (
-        'id', 'code', 'name', 'description', 'reimbursed', 'current_gross_amount', 'exclusive_care_codes', 'validity_dates')
+            'id', 'code', 'name', 'description', 'reimbursed', 'current_gross_amount', 'exclusive_care_codes',
+            'validity_dates')
 
 
 class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
@@ -165,12 +167,14 @@ class HospitalizationSerializer(serializers.ModelSerializer):
         model = Hospitalization
         fields = ('id', 'start_date', 'end_date', 'description', 'patient')
 
+
 class EventTypeSerializer(serializers.ModelSerializer):
-   class Meta:
+    class Meta:
         model = EventType
-        fields = ('id','name')        
+        fields = ('id', 'name')
+
 
 class EventSerializer(serializers.ModelSerializer):
-   class Meta:
+    class Meta:
         model = Event
-        fields = ('day', 'state', 'event_type', 'notes', 'patient')        
+        fields = ('day', 'state', 'event_type', 'notes', 'patient')
