@@ -131,7 +131,7 @@ MEDIA_URL = '/media/'
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'fr-be'
+#LANGUAGE_CODE = 'fr-be'
 
 TIME_ZONE = 'Europe/Luxembourg'
 
@@ -163,7 +163,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
-COUNTRIES_FIRST = ['LU', 'FR', 'BE', 'DE']
+COUNTRIES_FIRST = ['LU', 'FR', 'BE', 'DE', 'IT']
 COUNTRIES_FIRST_BREAK = '...'
 
 CONSTANCE_ADDITIONAL_FIELDS = {

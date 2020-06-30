@@ -1,14 +1,20 @@
 from django.contrib.auth.models import User, Group
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, \
     PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
-    ValidityDateSerializer, InvoiceItemBatchSerializer
+    ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
+from invoices.processors.birthdays import process_and_generate
 from invoices.timesheet import Timesheet, TimesheetTask
 from invoices.employee import JobPosition
+from invoices.events import EventType, Event
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -35,6 +41,7 @@ class CareCodeViewSet(viewsets.ModelViewSet):
     serializer_class = CareCodeSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['code', 'name']
+
 
 class PatientViewSet(viewsets.ModelViewSet):
     """
@@ -74,6 +81,7 @@ class JobPositionViewSet(viewsets.ModelViewSet):
     """
     queryset = JobPosition.objects.all()
     serializer_class = JobPositionSerializer
+
 
 class BatchViewSet(viewsets.ModelViewSet):
     """
@@ -121,3 +129,21 @@ class ValidityDateViewSet(viewsets.ModelViewSet):
     """
     queryset = ValidityDate.objects.all()
     serializer_class = ValidityDateSerializer
+
+
+class EventTypeViewSet(viewsets.ModelViewSet):
+    queryset = EventType.objects.all()
+    serializer_class = EventTypeSerializer
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+
+
+class EventProcessorView(APIView):
+
+    def get(self, request, *args, **kw):
+        result = process_and_generate()
+        response = Response(result, status=status.HTTP_200_OK)
+        return response
