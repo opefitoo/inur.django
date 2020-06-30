@@ -16,7 +16,7 @@ def process_and_generate():
         )
         even_type_birthday.save()
 
-    thisday = timezone.date.today()
+    thisday = timezone.datetime.today()
     lastday = thisday + timezone.timedelta(days=+30)
 
     myregexp = re.compile('^[0-9]{4}(' + str(thisday.month).zfill(2) + '|' + str(lastday.month).zfill(2) + ')')
@@ -24,22 +24,18 @@ def process_and_generate():
     patients = Patient.objects.filter(code_sn__regex=myregexp.pattern).filter(date_of_death__isnull=True)
     for patient in patients:
         patient_birthday = extract_birth_date(patient.code_sn)
-        if patient_birthday.date() > lastday:
-            continue
-        active_year = thisday.year
-        if patient_birthday.month != thisday.month:
-            active_year = lastday.year
-        searches_date = timezone.date(active_year, patient_birthday.month, patient_birthday.day)
-        events = Event.objects.filter(day=searches_date)
-        if not events:
-            event = Event(
-                day=searches_date,
-                state=1,
-                event_type=even_type_birthday,
-                notes='Automatically generated on %d' % timezone.now(),
-                patient=patient
-            )
-            event.save()
-            events_processed.append(event)
+        if patient_birthday.replace(year=lastday.year) <= lastday:
+            searches_date = timezone.now().replace(lastday.year, patient_birthday.month, patient_birthday.day)
+            events = Event.objects.filter(day=searches_date)
+            if not events:
+                event = Event(
+                    day=searches_date,
+                    state=1,
+                    event_type=even_type_birthday,
+                    notes='Automatically generated on %s' % timezone.now(),
+                    patient=patient
+                )
+                event.save()
+                events_processed.append(event)
 
     return events_processed
