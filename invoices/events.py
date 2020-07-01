@@ -52,7 +52,7 @@ class Event(models.Model):
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
-        return u'<a href="%s">%s</a>' % (url, str(self.day))
+        return u'<a href="%s">%s</a>' % (url, str(self))
 
     def __str__(self):  # Python 3: def __str__(self):,
         return '%s for %s on %s' % (self.event_type, self.patient, self.day)
