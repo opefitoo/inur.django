@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User, Group
+from django.core.serializers import serialize
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -144,6 +145,11 @@ class EventViewSet(viewsets.ModelViewSet):
 class EventProcessorView(APIView):
 
     def get(self, request, *args, **kw):
-        result = process_and_generate()
-        response = Response(result, status=status.HTTP_200_OK)
+        """
+        Calling api this way:
+        """
+        result = process_and_generate(int(kw['numdays']))
+        items_serializer = EventSerializer(result, many=True)
+        items = items_serializer.data
+        response = Response(items, status=status.HTTP_200_OK)
         return response

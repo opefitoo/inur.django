@@ -42,7 +42,7 @@ urlpatterns = [
     url(r'^api-token-auth/', authtoken_views.obtain_auth_token),
     url(r'^api/v1/', include(('api.urls', 'api'), namespace='api')),
     url(
-        r'^api/v1/process[/]$',
+        r'^api/v1/process/(?P<numdays>\d+)/$',
         login_required(EventProcessorView.as_view()),
         name='event_processor_rest_view'),
 ]
