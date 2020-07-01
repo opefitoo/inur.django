@@ -146,7 +146,7 @@ class EventProcessorView(APIView):
 
     def get(self, request, *args, **kw):
         """
-        Calling api this way:
+        Calling api this way: http://localhost:8000/api/v1/process/45/
         """
         result = process_and_generate(int(kw['numdays']))
         items_serializer = EventSerializer(result, many=True)
