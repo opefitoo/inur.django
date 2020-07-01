@@ -177,5 +177,5 @@ class EventTypeSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        day = serializers.DateTimeField(format="%Y-%m-%d")
+        day = serializers.DateField(format="%Y-%m-%d")
         fields = ('day', 'state', 'event_type', 'notes', 'patient')
