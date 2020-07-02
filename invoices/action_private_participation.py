@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import decimal
 
+from constance import config
 from django.http import HttpResponse
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
@@ -113,12 +114,11 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                     "%10.2f" % _compute_sum(data[1:], 6)))
 
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + 'Regine SIMBA\n'
-                   + '1A, rue fort wallis\n'
-                   + 'L-2714 Luxembourg\n'
-                   + u"Tél: 691.30.85.84",
-                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + '300744-44'
+                   + "{0}\n{1}\n{2}\n{3}".format(config.NURSE_NAME,
+                                                 config.NURSE_ADDRESS,
+                                                 config.NURSE_ZIP_CODE_CITY,
+                                                 config.NURSE_PHONE_NUMBER),
+                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
                    ],
                   [u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n"
                    + u'Nom et Pr' + smart_text("e") + u'nom du patient: %s' % smart_text(patientNameAndFirstName),
@@ -209,7 +209,7 @@ def _build_recap(_recap_date, _recap_ref, recaps):
     elements = []
 
     _intro = Table([[
-                        "Veuillez trouver ci-joint le r" + u"é" + "capitulatif des factures ainsi que le montant total " + u"à" + " payer"]],
+                        u"Veuillez trouver ci-joint le récapitulatif des factures ainsi que le montant total à payer"]],
                    [10 * cm, 5 * cm], 1 * [0.5 * cm], hAlign='LEFT')
     elements.append(_intro)
     elements.append(Spacer(1, 18))
@@ -250,8 +250,7 @@ def _build_recap(_recap_date, _recap_ref, recaps):
     elements.append(_total_a_payer)
     elements.append(Spacer(1, 18))
 
-    _infos_iban = Table([["Num" + u"é" + "ro compte IBAN: LU55 0019 4555 2516 1000 BCEELULL"]], [10 * cm],
-                        1 * [0.5 * cm], hAlign='LEFT')
+    _infos_iban = Table([[u"Numéro IBAN: %s" % config.MAIN_BANK_ACCOUNT]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(_infos_iban)
 
     return elements

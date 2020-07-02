@@ -3,6 +3,8 @@ import sys
 import os
 
 from io import BytesIO
+
+from constance import config
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
@@ -80,8 +82,7 @@ def _build_recap(recaps, payment_ref):
     elements.append(_total_a_payer)
     elements.append(Spacer(1, 18))
 
-    _infos_iban = Table([[u"Numéro compte IBAN: LU55 0019 4555 2516 1000 BCEELULL"]], [10 * cm],
-                        1 * [0.5 * cm], hAlign='LEFT')
+    _infos_iban = Table([[u"Numéro IBAN: %s" % config.MAIN_BANK_ACCOUNT]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(_infos_iban)
 
     elements.append(Spacer(1, 18))
@@ -142,13 +143,11 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     _total_facture = _compute_sum(data[1:], 5)
 
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   # TODO : replace with Global setting
-                   + 'Regine SIMBA\n'
-                   + '1A, rue fort wallis\n'
-                   + 'L-2714 Luxembourg\n'
-                   + u'Tél: 691.30.85.84',
-                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + '300744-44'
+                    + "{0}\n{1}\n{2}\n{3}".format(config.NURSE_NAME,
+                                                  config.NURSE_ADDRESS,
+                                                  config.NURSE_ZIP_CODE_CITY,
+                                                  config.NURSE_PHONE_NUMBER),
+                    'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
                    ],
                   [u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n"
                    + u'Nom et Pr' + smart_text("e") + u'nom du patient: %s' % smart_text(patientNameAndFirstName),

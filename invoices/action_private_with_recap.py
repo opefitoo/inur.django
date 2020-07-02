@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from constance import config
 from django.http import HttpResponse
+from django.utils.encoding import smart_text
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -72,8 +74,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         patientSocNumber = presta.patient.code_sn
         patientNameAndFirstName = presta.patient
         patientName = presta.patient.name
-        patientFirstName = presta.patient.first_name
-        patientAddress = presta.patient.address
+        patient_first_name = presta.patient.first_name
+        patient_address = presta.patient.address
         patientZipCode = presta.patient.zipcode
         patientCity = presta.patient.city
         data.append((i, presta.carecode.code, 
@@ -99,24 +101,22 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     _total_facture = _compute_sum(data[1:], 5)
     _participation_personnelle = decimal.Decimal(_compute_sum(data[1:], 4)) - decimal.Decimal(_total_facture)
     newData.append(('', '', '', 'Total', "%10.2f" % _compute_sum(data[1:], 4), "%10.2f" % _compute_sum(data[1:], 5), "%10.2f" % _compute_sum(data[1:], 6)))
-            
-            
+
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + 'Regine SIMBA\n'
-                   + '1A, rue fort wallis\n'
-                   + 'L-2714 Luxembourg\n'
-                   + 'T' + u"é".encode("utf-8") + "l: 691.30.85.84", 
-                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + '300744-44'
-                   ], 
-                  [ u'Matricule patient: %s' % smart_unicode(patientSocNumber.strip()) + "\n" 
-                   + u'Nom et Pr'+ smart_unicode("e") + u'nom du patient: %s' % smart_unicode(patientNameAndFirstName) ,
-                   u'Nom: %s' % smart_unicode(patientName.strip()) +'\n'
-                   + u'Pr' + smart_unicode(u"é") + u'nom: %s' % smart_unicode(patientFirstName.strip()) +'\n'
-                   + u'Rue: %s' % patientAddress.strip() + '\n'
-                   + u'Code postal: %s' % smart_unicode(patientZipCode.strip()) + '\n'
-                   + u'Ville: %s' % smart_unicode(patientCity.strip()) ],
-                  [ u'Date accident: %s\n' % (accident_date if accident_date else "")
+                   + "{0}\n{1}\n{2}\n{3}".format(config.NURSE_NAME,
+                                                 config.NURSE_ADDRESS,
+                                                 config.NURSE_ZIP_CODE_CITY,
+                                                 config.NURSE_PHONE_NUMBER),
+                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
+                   ],
+                  [u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n"
+                   + u'Nom et Prénom du patient: %s' % smart_text(patientNameAndFirstName),
+                   u'Nom: %s' % smart_text(patientName.strip()) + '\n'
+                   + u'Pr' + smart_text(u"é") + u'nom: %s' % smart_text(patient_first_name.strip()) + '\n'
+                   + u'Rue: %s' % patient_address.strip() + '\n'
+                   + u'Code postal: %s' % smart_text(patientZipCode.strip()) + '\n'
+                   + u'Ville: %s' % smart_text(patientCity.strip())],
+                  [u'Date accident: %s\n' % (accident_date if accident_date else "")
                    + u'Num. accident: %s' % (accident_id if accident_id else "")]]
     
     headerTable = Table(headerData, 2*[10*cm], [2.5*cm, 1*cm, 1.5*cm] )
@@ -181,7 +181,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     _pouracquit_signature = Table([["Pour acquit, le:", "Signature et cachet"]], [10*cm, 10*cm], 1*[0.5*cm], hAlign='LEFT')
 
     ## TODO: global setting replacement
-    _infos_iban = Table([["LU55 0019 4555 2516 1000 BCEELULL"]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    _infos_iban = Table([[u"Numéro IBAN: %s" % config.MAIN_BANK_ACCOUNT]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(Spacer(1, 10))
     #elements.append(_infos_iban)
     if prescription_date is not None:

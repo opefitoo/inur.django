@@ -236,14 +236,14 @@ def _build_recap(_recap_date, _recap_ref, recaps):
     elements.append(Spacer(1, 18))
 
     elements.append(Spacer(1, 18))
-    _infos_iban = Table([["Lors du virement, veuillez indiquer la r" + u"é" + "f" + u"é" + "rence: %s " % _recap_ref]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
+    _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence: %s " % _recap_ref]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
     _date_infos = Table([["Date facture : %s " % _recap_date]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
 
     elements.append(_date_infos)
     elements.append(Spacer(1, 18))
     elements.append(_infos_iban)
     elements.append(Spacer(1, 18))
-    _total_a_payer = Table([["Total "+ u"à"+ " payer:",  "%10.2f Euros" % total]], [10*cm, 5*cm], 1*[0.5*cm], hAlign='LEFT')
+    _total_a_payer = Table([[u"Total à payer:",  "%10.2f Euros" % total]], [10*cm, 5*cm], 1*[0.5*cm], hAlign='LEFT')
     elements.append(_total_a_payer)
     elements.append(Spacer(1, 18))
 
