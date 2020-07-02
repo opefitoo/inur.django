@@ -7,6 +7,6 @@ class Command(BaseCommand):
     help = 'Checks for patient birthdays'
 
     def handle(self, *args, **options):
-        process_result = process_and_generate()
+        process_result = process_and_generate(30)
         self.stdout.write(self.style.SUCCESS('Process result %s') % process_result)
         return
