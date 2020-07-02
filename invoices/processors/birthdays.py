@@ -16,16 +16,14 @@ def process_and_generate(num_days: int):
         )
         even_type_birthday.save()
 
-    thisday = timezone.datetime.today()
-    lastday = thisday + timezone.timedelta(days=+num_days)
+    this_day = timezone.datetime.today()
+    last_day = this_day + timezone.timedelta(days=+num_days)
 
-    myregexp = re.compile('^[0-9]{4}(' + str(thisday.month).zfill(2) + '|' + str(lastday.month).zfill(2) + ')')
-
-    patients = Patient.objects.filter(code_sn__regex=myregexp.pattern).filter(date_of_death__isnull=True)
+    patients = list_patients_with_birth_date_in_range_still_alive(this_day, last_day)
     for patient in patients:
         patient_birthday = extract_birth_date(patient.code_sn)
-        if patient_birthday.replace(year=lastday.year) <= lastday:
-            searches_date = timezone.now().replace(lastday.year, patient_birthday.month, patient_birthday.day)
+        if patient_birthday.replace(year=last_day.year) <= last_day:
+            searches_date = timezone.now().replace(last_day.year, patient_birthday.month, patient_birthday.day)
             events = Event.objects.filter(day=searches_date)
             if not events:
                 event = Event(
@@ -44,3 +42,11 @@ def process_and_generate(num_days: int):
                     events_processed.append(e)
 
     return events_processed
+
+
+def list_patients_with_birth_date_in_range_still_alive(start_date_range, end_date_range):
+    my_regexp = re.compile(
+        '^[0-9]{4}(' + str(start_date_range.month).zfill(2) + str(start_date_range.day).zfill(2)
+        + '|' + str(end_date_range.month).zfill(2) + str(end_date_range.day).zfill(2)
+        + ')')
+    return Patient.objects.filter(code_sn__regex=my_regexp.pattern).filter(date_of_death__isnull=True)
