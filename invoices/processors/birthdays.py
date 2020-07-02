@@ -46,7 +46,15 @@ def process_and_generate(num_days: int):
 
 def list_patients_with_birth_date_in_range_still_alive(start_date_range, end_date_range):
     my_regexp = re.compile(
-        '^[0-9]{4}(' + str(start_date_range.month).zfill(2) + str(start_date_range.day).zfill(2)
-        + '|' + str(end_date_range.month).zfill(2) + str(end_date_range.day).zfill(2)
-        + ')')
+        '^[0-9]{4}(' + _build_date_range_in_regexp(start_date_range, end_date_range) + ')')
     return Patient.objects.filter(code_sn__regex=my_regexp.pattern).filter(date_of_death__isnull=True)
+
+
+def _build_date_range_in_regexp(start_date, end_date):
+    dateDelta = (end_date - start_date).days
+    STR = ''
+    for date in range(dateDelta + 1):
+        focusedDate = start_date + timezone.timedelta(date)
+        STR += focusedDate.strftime("%m%d") + '|'
+    STR = STR[:-1]
+    return STR
