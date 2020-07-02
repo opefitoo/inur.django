@@ -8,6 +8,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from django_currentuser.db.models import CurrentUserField
 
@@ -18,6 +20,7 @@ from invoices.employee import Employee
 class Timesheet(models.Model):
     class Meta:
         ordering = ['-id']
+
     employee = models.ForeignKey(Employee,
                                  on_delete=models.CASCADE)
     start_date = models.DateField('Date debut')
@@ -38,6 +41,7 @@ class Timesheet(models.Model):
 class TimesheetTask(models.Model):
     class Meta:
         ordering = ['-id']
+
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100, blank=True,
                                    null=True)
@@ -225,6 +229,7 @@ class SimplifiedTimesheet(models.Model):
     @property
     def total_hours_public_holidays(self):
         return self.__calculate_total_hours()["total_public_holidays"]
+
     #
     # @property
     # def total_holiday_hours(self):
@@ -236,7 +241,6 @@ class SimplifiedTimesheet(models.Model):
     #         Q(start_date__range=start_date, end_date))
     #     ).filter(
     #         employee_id=employee_id).filter(request_accepted=True)
-
 
     def clean(self):
         exclude = []
@@ -398,3 +402,8 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
                               % (conflicts[0].start_date, conflicts[0].end_date, conflicts.count() - 1)}
 
     return msgs
+
+
+@receiver(post_save, sender=SimplifiedTimesheet, dispatch_uid="notify_timesheet_refresh_cache")
+def notify_timesheet_refresh_cache(sender, instance, created, **kwargs):
+    cache.clear()
