@@ -89,6 +89,6 @@ msgstr "Mois précédent"
 msgid "Next month"
 msgstr "Mois suivant"
 
-#~| msgid "Event -> Types"
+#msgid "Event -> Types"
 msgid "Events"
 msgstr "Événements"
