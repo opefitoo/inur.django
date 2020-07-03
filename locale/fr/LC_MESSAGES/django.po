@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-28 23:13+0200\n"
+"POT-Creation-Date: 2020-07-03 12:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,46 +37,43 @@ msgstr ""
 msgid "If checked, these type of events types will be generated auto."
 msgstr "Si sélectionnés, ce type d'évènements seront générés automatiquement"
 
-#: events.py:31
+#: events.py:31 events.py:32
 msgid "Event"
 msgstr "Événements"
 
-#: events.py:32
-#| msgid "Event -> Types"
-msgid "Events"
-msgstr "Événements"
-
-#: events.py:35
+#: events.py:36
 msgid "Waiting for validation"
 msgstr "En attente"
 
-#: events.py:36
+#: events.py:37
 msgid "Valid"
 msgstr "Valide"
 
-#: events.py:37
+#: events.py:38
 msgid "Done"
 msgstr "Fait"
 
-#: events.py:38
+#: events.py:39
 msgid "Ignored"
 msgstr "Ignoré"
 
-#: events.py:41
-#| msgid "Event -> Type"
+#: events.py:42
 msgid "Event day"
 msgstr "Jour de l'évènement"
 
-#: events.py:44
-#| msgid "Event -> Type"
+#: events.py:43
+msgid "State"
+msgstr "Etat"
+
+#: events.py:45 events.py:47
 msgid "Event type"
 msgstr "Type d'évènement"
 
-#: events.py:47 events.py:48
+#: events.py:49 events.py:50
 msgid "Notes"
 msgstr "Notes"
 
-#: events.py:50
+#: events.py:52
 msgid "Please select a patient"
 msgstr "Veuillez Choisir un patient"
 
@@ -91,3 +88,7 @@ msgstr "Mois précédent"
 #: templates/events/change_list.html:37
 msgid "Next month"
 msgstr "Mois suivant"
+
+#~| msgid "Event -> Types"
+msgid "Events"
+msgstr "Événements"
