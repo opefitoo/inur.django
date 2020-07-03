@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -28,7 +27,7 @@ msgstr "Événements -> Types"
 
 #: events.py:16
 msgid "Descriptive Name"
-msgstr ""
+msgstr "Nom descriptif"
 
 #: events.py:17
 msgid "To be generated"
@@ -43,7 +42,6 @@ msgid "Event"
 msgstr "Événements"
 
 #: events.py:32
-#, fuzzy
 #| msgid "Event -> Types"
 msgid "Events"
 msgstr "Événements"
@@ -65,13 +63,11 @@ msgid "Ignored"
 msgstr "Ignoré"
 
 #: events.py:41
-#, fuzzy
 #| msgid "Event -> Type"
 msgid "Event day"
 msgstr "Jour de l'évènement"
 
 #: events.py:44
-#, fuzzy
 #| msgid "Event -> Type"
 msgid "Event type"
 msgstr "Type d'évènement"

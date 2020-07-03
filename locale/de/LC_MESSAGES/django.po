@@ -7,7 +7,7 @@
 # Benammar Mehdi <mehdi@benammar.com>, 2020
 # Ahmed Abdul Rahuman <ahmed.ar@hexalogy.com>, 2020
 #
-#, fuzzy
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"

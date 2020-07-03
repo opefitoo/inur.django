@@ -54,8 +54,8 @@ INSTALLED_APPS = (
 
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -65,6 +65,10 @@ MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django_currentuser.middleware.ThreadLocalUserMiddleware',
+)
+#
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'locale'),
 )
 
 ROOT_URLCONF = 'invoices.urls'
@@ -132,7 +136,7 @@ MEDIA_URL = '/media/'
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-#LANGUAGE_CODE = 'fr-be'
+#LANGUAGE_CODE = 'fr'
 
 TIME_ZONE = 'Europe/Luxembourg'
 

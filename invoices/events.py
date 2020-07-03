@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.urls import reverse
 from invoices.models import Patient
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 
 class EventType(models.Model):
@@ -29,7 +29,8 @@ class EventType(models.Model):
 class Event(models.Model):
     class Meta:
         verbose_name = _('Event')
-        verbose_name_plural = _('Events')
+        verbose_name_plural = _('Event')
+        ordering = ['-id']
 
     STATES = [
         (1, _('Waiting for validation')),
@@ -39,10 +40,11 @@ class Event(models.Model):
     ]
 
     day = models.DateField(_('Event day'), help_text=_('Event day'))
-    state = models.PositiveSmallIntegerField(choices=STATES)
+    state = models.PositiveSmallIntegerField(_('State'), choices=STATES)
     event_type = models.ForeignKey(EventType, blank=True, null=True,
                                    help_text=_('Event type'),
-                                   on_delete=models.SET_NULL)
+                                   on_delete=models.SET_NULL,
+                                   verbose_name=_('Event type'))
     notes = models.TextField(
         _('Notes'),
         help_text=_('Notes'), blank=True, null=True)
