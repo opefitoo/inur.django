@@ -23,7 +23,6 @@ from invoices.events import EventType, Event
 
 import datetime
 import calendar
-from calendar import HTMLCalendar
 from django.utils.safestring import mark_safe
 from invoices.utils import EventCalendar
 
