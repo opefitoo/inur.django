@@ -1,0 +1,21 @@
+#printaction {
+    background-image:url(img/cns-logo-small.png);
+    background-repeat: no-repeat;
+    background-position: 5px 8px;
+    background-size: 20px
+}
+
+#privateinvoice {
+    background-image:url(img/bill.svg);
+    background-repeat: no-repeat;
+    background-position: 5px 8px;
+    background-size: 20px
+}
+
+#personalparticipation {
+    background-image:url(img/discount.svg);
+    background-repeat: no-repeat;
+    background-position: 5px 8px;
+    background-size: 20px
+}
+

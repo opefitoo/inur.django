@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from invoices.invoiceitem_pdf import get_doc_elements
 from reportlab.lib.units import cm
 from reportlab.platypus.doctemplate import SimpleDocTemplate
+from django.utils.translation import gettext_lazy as _
 
 
 def export_to_pdf(modeladmin, request, queryset):
@@ -26,7 +27,7 @@ def export_to_pdf(modeladmin, request, queryset):
     return response
 
 
-export_to_pdf.short_description = "Facture CNS"
+export_to_pdf.short_description = _("CNS Invoice")
 
 
 def export_to_pdf_with_medical_prescription_files(modeladmin, request, queryset):

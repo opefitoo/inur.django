@@ -13,7 +13,7 @@ from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from django.utils.timezone import now
 from django.utils.encoding import smart_text
-
+from django.utils.translation import gettext_lazy as _
 
 def pdf_private_invoice_pp(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
@@ -192,7 +192,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         , "invoice_pp": newData[23][6]}
 
 
-pdf_private_invoice_pp.short_description = "Facture PDF Participation Personnelle"
+pdf_private_invoice_pp.short_description = _("Personal participation")
 
 
 def _compute_sum(data, position):

@@ -13,6 +13,7 @@ import pytz
 from django.utils.encoding import smart_text
 import decimal
 from constance import config
+from django.utils.translation import gettext_lazy as _
 
 def pdf_private_invoice(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
@@ -189,7 +190,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
             , "invoice_amount" : newData[23][5]}
 
 
-pdf_private_invoice.short_description = u"Facture Privée PDF"
+pdf_private_invoice.short_description = _("Private Invoice")
 
 
 def _compute_sum(data, position):

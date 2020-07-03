@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-07-03 12:31+0200\n"
+"POT-Creation-Date: 2020-07-03 20:15+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: action.py:30
+msgid "CNS Invoice"
+msgstr "Facture CNS"
+
+#: action_private.py:193
+msgid "Private Invoice"
+msgstr "Facture Privée"
 
 #: events.py:12
 msgid "Event -> Type"
@@ -89,6 +97,3 @@ msgstr "Mois précédent"
 msgid "Next month"
 msgstr "Mois suivant"
 
-#msgid "Event -> Types"
-msgid "Events"
-msgstr "Événements"

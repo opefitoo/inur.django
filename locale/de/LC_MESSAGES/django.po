@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-07-03 12:33+0200\n"
+"POT-Creation-Date: 2020-07-03 20:14+0200\n"
 "PO-Revision-Date: 2020-06-29 10:25+0000\n"
 "Last-Translator: Ahmed Abdul Rahuman <ahmed.ar@hexalogy.com>, 2020\n"
 "Language-Team: German (https://www.transifex.com/opefitoo/teams/111133/de/)\n"
@@ -21,6 +21,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: action.py:30
+msgid "CNS Invoice"
+msgstr "CNS Rechnung"
+
+#: action_private.py:193
+msgid "Private Invoice"
+msgstr "Private Rechnung"
 
 #: events.py:12
 msgid "Event -> Type"
@@ -95,6 +103,3 @@ msgstr "Vorheriger Monat"
 #: templates/events/change_list.html:37
 msgid "Next month"
 msgstr "Nächsten Monat"
-
-msgid "Events"
-msgstr "Veranstaltungen"

@@ -4,9 +4,13 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.checks import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
 
+from invoices.action import export_to_pdf
+from invoices.action_private import pdf_private_invoice
+from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
@@ -194,6 +198,11 @@ class PrestationInline(TabularInline):
 
 @admin.register(InvoiceItem)
 class InvoiceItemAdmin(admin.ModelAdmin):
+    class Media:
+        css = {
+            "all": ("css/invoice_item.css",)
+        }
+
     from invoices.action import export_to_pdf, export_to_pdf_with_medical_prescription_files
     from invoices.action_private import pdf_private_invoice
     from invoices.action_private_participation import pdf_private_invoice_pp
@@ -226,6 +235,44 @@ class InvoiceItemAdmin(admin.ModelAdmin):
         return obj.medical_prescription.image_preview()
 
     medical_prescription_preview.allow_tags = True
+
+    def response_change(self, request, obj):
+        queryset = InvoiceItem.objects.filter(id=obj.id)
+        if "_print_cns" in request.POST:
+            return export_to_pdf(self, request, queryset)
+            # matching_names_except_this = self.get_queryset(request).filter(name=obj.name).exclude(pk=obj.id)
+            # matching_names_except_this.delete()
+            # obj.is_unique = True
+            # obj.save()
+            # self.message_user(request, "This villain is now unique")
+            # return HttpResponseRedirect(".")
+        if "_print_private_invoice" in request.POST:
+            return pdf_private_invoice(self, request, queryset)
+        if "_print_personal_participation" in request.POST:
+            return pdf_private_invoice_pp(self, request, queryset)
+        return super().response_change(request, obj)
+
+    # def response_post_save_change(self, request, obj):
+    #     """This method is called by `self.changeform_view()` when the form
+    #     was submitted successfully and should return an HttpResponse.
+    #     """
+    #     # Check that you clicked the button `_save_and_copy`
+    #     if '_save_and_copy' in request.POST:
+    #         # Create a copy of your object
+    #         # Assuming you have a method `create_from_existing()` in your manager
+    #         new_obj = self.model.objects.create_from_existing(obj)
+    #
+    #         # Get its admin url
+    #         opts = self.model._meta
+    #         info = self.admin_site, opts.app_label, opts.model_name
+    #         route = '{}:{}_{}_change'.format(*info)
+    #         post_url = reverse(route, args=(new_obj.pk,))
+    #
+    #         # And redirect
+    #         return HttpResponseRedirect(post_url)
+    #     else:
+    #         # Otherwise, use default behavior
+    #         return super().response_post_save_change(request, obj)
 
 
 class InvoiceItemInlineAdmin(admin.TabularInline):
