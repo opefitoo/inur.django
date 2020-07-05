@@ -82,11 +82,15 @@ class PrestationGoogleCalendarSurLu:
         event_id = self._get_event_id(event_id=event.id)
         descr_line = "<b>%s</b> %s<br>"
         description = descr_line % ('Patient:', event.patient)
-        description += descr_line % ('Patient Address:', event.patient.address)
-        description += descr_line % ('Patient Phone Number:', event.patient.phone_number)
-        description += descr_line % ('Notes:', event.notes)
+        description += descr_line % ('Adresse Patient:', event.patient.address)
+        description += descr_line % ('Tél Patient:', event.patient.phone_number)
+        if len(event.notes) > 0:
+            description += descr_line % ('Notes:', event.notes)
         summary = '%s %s' % (event.id, event)
-        location = "%s,%s %s" % (event.patient.address, event.patient.zipcode, event.patient.city)
+        location = "%s,%s %s, %s" % (event.patient.address,
+                                     event.patient.zipcode,
+                                     event.patient.city,
+                                     event.patient.country)
 
         event_body = {
             'id': event_id,
