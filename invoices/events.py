@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import os
-
 from django.db import models
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
-
-from invoices.employee import Employee
-from invoices.models import Patient
 from django.utils.translation import gettext_lazy as _
 
-from invoices.settings import BASE_DIR
+from invoices.employee import Employee
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
+from invoices.models import Patient
 
 
 class EventType(models.Model):
@@ -77,10 +73,14 @@ class Event(models.Model):
         return '%s - %s:%s' % (self.employees.user.first_name, self.patient.name, self.time_start_event)
 
 
-@receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
+@receiver(pre_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
 def create_or_update_google_calendar(sender, instance, **kwargs):
     if "soin" == instance.event_type.name:
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
+        if instance.pk:
+            old_event = Event.objects.get(pk=instance.pk)
+            if old_event.employees != instance.employees:
+                calendar_gcalendar.delete_event(old_event)
         calendar_gcalendar.update_event(instance)
 
 
