@@ -75,11 +75,11 @@ class PrestationGoogleCalendarSurLu:
         return self._service.calendars().insert(body=calendar).execute()
 
     @staticmethod
-    def _get_event_id(prestation_id):
-        return str(uuid.uuid5(uuid.NAMESPACE_DNS, 'NURSE_PRESTATION_GCALENDAR' + str(prestation_id)).hex)
+    def _get_event_id(event_id):
+        return str(uuid.uuid5(uuid.NAMESPACE_DNS, 'NURSE_PRESTATION_GCALENDAR' + str(event_id)).hex)
 
     def update_event(self, event):
-        event_id = self._get_event_id(prestation_id=event.id)
+        event_id = self._get_event_id(event_id=event.id)
         descr_line = "<b>%s</b> %s<br>"
         description = descr_line % ('Patient:', event.patient)
         description += descr_line % ('Patient Address:', event.patient.address)
@@ -111,10 +111,10 @@ class PrestationGoogleCalendarSurLu:
 
         return gmail_event
 
-    def delete_event(self, prestation_id):
-        event_id = self._get_event_id(prestation_id=prestation_id)
+    def delete_event(self, event):
+        event_id = self._get_event_id(event_id=event.id)
         try:
-            event = self._service.events().delete(calendarId=self.calendar['id'], eventId=event_id).execute()
+            event = self._service.events().delete(calendarId=event.employees.user.email, eventId=event_id).execute()
         except HttpError:
             event = None
 

@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import os
 
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 
@@ -72,11 +72,20 @@ class Event(models.Model):
         return u'<a href="%s">%s</a>' % (url, str(self))
 
     def __str__(self):  # Python 3: def __str__(self):,
-        return '%s for %s on %s' % (self.event_type, self.patient, self.day)
+        if 'soin' != self.event_type.name:
+            return '%s for %s on %s' % (self.event_type, self.patient, self.day)
+        return '%s - %s:%s' % (self.employees.user.first_name, self.patient.name, self.time_start_event)
 
 
-@receiver(post_save, sender=Event, dispatch_uid="employee_update_gcalendar_permissions")
+@receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
 def create_or_update_google_calendar(sender, instance, **kwargs):
     if "soin" == instance.event_type.name:
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         calendar_gcalendar.update_event(instance)
+
+
+@receiver(post_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
+def delete_google_calendar(sender, instance, **kwargs):
+    if "soin" == instance.event_type.name:
+        calendar_gcalendar = PrestationGoogleCalendarSurLu()
+        calendar_gcalendar.delete_event(instance)
