@@ -1,6 +1,7 @@
 import uuid
 import datetime
 
+import pytz
 from apiclient import discovery
 from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
@@ -92,16 +93,28 @@ class PrestationGoogleCalendarSurLu:
                                      event.patient.city,
                                      event.patient.country)
 
+        naive_date = datetime.datetime(event.day.year,
+                                       event.day.month, event.day.day,
+                                       event.time_start_event.hour,
+                                       event.time_start_event.minute,
+                                       event.time_start_event.second)
+        localized = pytz.timezone('Europe/Luxembourg').localize(naive_date)
+        naive_end_date = datetime.datetime(event.day.year,
+                                           event.day.month, event.day.day,
+                                           event.time_end_event.hour,
+                                           event.time_end_event.minute,
+                                           event.time_end_event.second)
+
         event_body = {
             'id': event_id,
             'summary': summary,
             'description': description,
             'location': location,
             'start': {
-                'dateTime': "%sT%sZ" % (event.day.isoformat(), event.time_start_event.isoformat()),
+                'dateTime': localized.isoformat(),
             },
             'end': {
-                'dateTime': "%sT%sZ" % (event.day.isoformat(), event.time_end_event.isoformat()),
+                'dateTime': pytz.timezone('Europe/Luxembourg').localize(naive_end_date).isoformat(),
             }
         }
 
