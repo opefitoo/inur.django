@@ -1,0 +1,154 @@
+import uuid
+import datetime
+
+from apiclient import discovery
+from google.oauth2 import service_account
+from googleapiclient.errors import HttpError
+from oauth2client.service_account import ServiceAccountCredentials
+from django.conf import settings
+from django.utils import timezone
+
+
+class PrestationGoogleCalendarSurLu:
+    summary = 'Prestations'
+    calendar = None
+
+    def get_credentials(self):
+        SCOPES = ['https://www.googleapis.com/auth/sqlservice.admin',
+                  'https://www.googleapis.com/auth/calendar']
+
+        credentials = service_account.Credentials.from_service_account_file(
+            self._json_keyfile_path, scopes=SCOPES)
+
+        delegated_credentials = credentials.with_subject('mehdi@sur.lu')
+        return delegated_credentials
+
+    def __init__(self, json_keyfile_path=None):
+        """
+        Handles credentials and builds the google service.
+
+        :param _json_keyfile_path: Path
+        :param user_email: String
+        :raise ValueError:
+        """
+        self._json_keyfile_path = json_keyfile_path or settings.GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2
+
+        credentials = self.get_credentials()
+        # http = credentials.authorize(httplib2.Http())
+        self._service = discovery.build('calendar', 'v3', credentials=credentials)
+        # self._set_calendar()
+
+    def _set_calendar(self):
+        calendar = self._get_existing_calendar()
+        if calendar is None:
+            calendar = self._create_calendar()
+
+        self.calendar = calendar
+
+    def list_all_calendars(self):
+        page_token = None
+        while True:
+            calendar_list = self._service.calendarList().list(pageToken=page_token).execute()
+            for calendar_list_entry in calendar_list['items']:
+                print
+                calendar_list_entry['summary']
+            page_token = calendar_list.get('nextPageToken')
+            if not page_token:
+                break
+
+    def _get_existing_calendar(self):
+        calendar = None
+        calendar_list = self._service.calendarList().list().execute()
+        for existing_calendar in calendar_list['items']:
+            if existing_calendar['summary'] == self.summary:
+                calendar = existing_calendar
+
+        return calendar
+
+    def _create_calendar(self):
+        calendar = {
+            'summary': self.summary,
+            'description': 'Nurse. Prestations created in the future',
+            'timeZone': settings.TIME_ZONE
+        }
+
+        return self._service.calendars().insert(body=calendar).execute()
+
+    @staticmethod
+    def _get_event_id(prestation_id):
+        return str(uuid.uuid5(uuid.NAMESPACE_DNS, 'NURSE_PRESTATION_GCALENDAR' + str(prestation_id)).hex)
+
+    def update_event(self, event):
+        event_id = self._get_event_id(prestation_id=event.id)
+        descr_line = "<b>%s</b> %s<br>"
+        description = descr_line % ('Patient:', event.patient)
+        description += descr_line % ('Patient Address:', event.patient.address)
+        description += descr_line % ('Patient Phone Number:', event.patient.phone_number)
+        description += descr_line % ('Notes:', event.notes)
+        summary = '%s %s' % (event.id, event)
+        location = "%s,%s %s" % (event.patient.address, event.patient.zipcode, event.patient.city)
+
+        event_body = {
+            'id': event_id,
+            'summary': summary,
+            'description': description,
+            'location': location,
+            'start': {
+                'dateTime': "%sT%sZ" % (event.day.isoformat(), event.time_start_event.isoformat()),
+            },
+            'end': {
+                'dateTime': "%sT%sZ" % (event.day.isoformat(), event.time_end_event.isoformat()),
+            }
+        }
+
+        gmail_event = self.get_event(event_id=event_id, calendar_id=event.employees.user.email)
+        if gmail_event is None:
+            gmail_event = self._service.events().insert(calendarId=event.employees.user.email,
+                                                        body=event_body).execute()
+        else:
+            gmail_event = self._service.events().update(calendarId=event.employees.user.email, eventId=event_id,
+                                                        body=event_body).execute()
+
+        return gmail_event
+
+    def delete_event(self, prestation_id):
+        event_id = self._get_event_id(prestation_id=prestation_id)
+        try:
+            event = self._service.events().delete(calendarId=self.calendar['id'], eventId=event_id).execute()
+        except HttpError:
+            event = None
+
+        return event
+
+    def get_event(self, event_id, calendar_id):
+        try:
+            event = self._service.events().get(calendarId=calendar_id, eventId=event_id).execute()
+        except HttpError:
+            return None
+        return event
+
+    def update_calendar_permissions(self, email, has_access):
+        rules = self._service.acl().list(calendarId=self.calendar['id']).execute()
+        user_rules = [d for d in rules['items'] if d['scope']['value'] == email]
+        permissions_granted = len(user_rules)
+        if self.calendar is not None:
+            if has_access and 0 == permissions_granted:
+                rule = self._get_acl_rule(email)
+                self._service.acl().insert(calendarId=self.calendar['id'], body=rule).execute()
+            elif not has_access and 0 < permissions_granted:
+                for user_rule in user_rules:
+                    self._service.acl().delete(calendarId=self.calendar['id'], ruleId=user_rule['id']).execute()
+        else:
+            return None
+
+    @staticmethod
+    def _get_acl_rule(email):
+        rule = {
+            'scope': {
+                'type': 'user',
+                'value': email,
+            },
+            'role': 'writer'
+        }
+
+        return rule
