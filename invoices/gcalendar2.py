@@ -83,10 +83,10 @@ class PrestationGoogleCalendarSurLu:
         descr_line = "<b>%s</b> %s<br>"
         description = descr_line % ('Patient:', event.patient)
         description += descr_line % ('Adresse Patient:', event.patient.address)
-        description += descr_line % ('Tél Patient:', event.patient.phone_number)
+        description += descr_line % (u'Tél Patient:', event.patient.phone_number)
         if len(event.notes) > 0:
             description += descr_line % ('Notes:', event.notes)
-        summary = '%s %s' % (event.id, event)
+        summary = '%s %s' % (event.id, event.patient)
         location = "%s,%s %s, %s" % (event.patient.address,
                                      event.patient.zipcode,
                                      event.patient.city,
