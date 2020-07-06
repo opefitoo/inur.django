@@ -65,7 +65,7 @@ class Event(models.Model):
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
-        if self.self.time_start_event:
+        if self.time_start_event:
             return u'<a class="eventtooltip" href="%s">%s %s</a>' % (url,
                                                                      str(self),
                                                                      '<span class="evttooltiptext">chez: %s @ %s '
