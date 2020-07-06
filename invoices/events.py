@@ -76,9 +76,8 @@ class Event(models.Model):
                                                                          self.notes))
         return u'<a class="eventtooltip" href="%s">%s %s</a>' % (url,
                                                                  str(self),
-                                                                 '<span class="evttooltiptext">%s '
-                                                                 '%s</span> '
-                                                                 % (self.notes))
+                                                                 '<span class="evttooltiptext">%s</span> '
+                                                                 % self.notes)
 
     def __str__(self):  # Python 3: def __str__(self):,
         if 'soin' != self.event_type.name:
