@@ -10,6 +10,7 @@ __author__ = 'mehdi'
 from calendar import HTMLCalendar
 from invoices.events import Event
 
+
 # LOCALE_LOCK = threading.Lock()
 
 
@@ -33,9 +34,9 @@ class EventCalendar(HTMLCalendar):
         Return a day as a table cell.
         """
         events_from_day = events.filter(day__day=day)
-        events_html = "<ul>"
+        events_html = '<ul>'
         for event in events_from_day:
-            events_html += event.get_absolute_url() + "<br>"
+            events_html += event.get_absolute_url() + '<br>'
         events_html += "</ul>"
         if day == 0:
             return '<td class="noday">&nbsp;</td>'  # day outside month

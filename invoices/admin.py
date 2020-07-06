@@ -476,6 +476,10 @@ class EventTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
+    class Media:
+        css = {
+            "all": ("css/event.css",)
+        }
     list_display = ['day', 'state', 'event_type', 'notes', 'patient']
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'

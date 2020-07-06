@@ -65,12 +65,18 @@ class Event(models.Model):
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
-        return u'<a href="%s">%s</a>' % (url, str(self))
+        return u'<a class="eventtooltip" href="%s">%s %s</a>' % (url,
+                                                                 str(self),
+                                                                 '<span class="evttooltiptext">chez: %s @ %s %s</span>'
+                                                                 % (
+                                                                     self.patient,
+                                                                     self.time_start_event,
+                                                                     self.notes))
 
     def __str__(self):  # Python 3: def __str__(self):,
         if 'soin' != self.event_type.name:
             return '%s for %s on %s' % (self.event_type, self.patient, self.day)
-        return '%s - %s:%s' % (self.employees.user.first_name, self.patient.name, self.time_start_event)
+        return '%s - %s' % (self.employees.user.first_name, self.patient.name)
 
 
 @receiver(pre_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
