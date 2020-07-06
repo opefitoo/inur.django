@@ -65,13 +65,20 @@ class Event(models.Model):
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
+        if self.self.time_start_event:
+            return u'<a class="eventtooltip" href="%s">%s %s</a>' % (url,
+                                                                     str(self),
+                                                                     '<span class="evttooltiptext">chez: %s @ %s '
+                                                                     '%s</span> '
+                                                                     % (
+                                                                         self.patient,
+                                                                         self.time_start_event,
+                                                                         self.notes))
         return u'<a class="eventtooltip" href="%s">%s %s</a>' % (url,
                                                                  str(self),
-                                                                 '<span class="evttooltiptext">chez: %s @ %s %s</span>'
-                                                                 % (
-                                                                     self.patient,
-                                                                     self.time_start_event,
-                                                                     self.notes))
+                                                                 '<span class="evttooltiptext">%s '
+                                                                 '%s</span> '
+                                                                 % (self.notes))
 
     def __str__(self):  # Python 3: def __str__(self):,
         if 'soin' != self.event_type.name:
