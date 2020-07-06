@@ -24,7 +24,7 @@ def process_and_generate(num_days: int):
         patient_birthday = extract_birth_date(patient.code_sn)
         if patient_birthday.replace(year=last_day.year) <= last_day:
             searches_date = timezone.now().replace(last_day.year, patient_birthday.month, patient_birthday.day)
-            events = Event.objects.filter(day=searches_date)
+            events = Event.objects.filter(day=searches_date).filter(event_type__name='Birthdays')
             if not events:
                 event = Event(
                     day=searches_date,
