@@ -31,6 +31,10 @@ class EventType(models.Model):
         return '%s' % (self.name.strip())
 
 
+def limit_to_active_employees():
+    return {'end_contract__isnull': True}
+
+
 class Event(models.Model):
     class Meta:
         verbose_name = _('Event')
@@ -55,7 +59,8 @@ class Event(models.Model):
                                    verbose_name=_('Event type'))
     employees = models.ForeignKey(Employee, related_name='event_link_to_employee', blank=True, null=True,
                                   help_text=_('Please select an employee'),
-                                  on_delete=models.CASCADE)
+                                  on_delete=models.CASCADE, limit_choices_to=limit_to_active_employees)
+
     notes = models.TextField(
         _('Notes'),
         help_text=_('Notes'), blank=True, null=True)
