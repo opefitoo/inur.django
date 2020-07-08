@@ -39,7 +39,7 @@ class Event(models.Model):
     class Meta:
         verbose_name = _('Event')
         verbose_name_plural = _('Event')
-        ordering = ['-id']
+        ordering = ['-time_start_event']
 
     STATES = [
         (1, _('Waiting for validation')),

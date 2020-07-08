@@ -55,7 +55,7 @@ class EventCalendar(HTMLCalendar):
         Return a formatted month as a table.
         """
 
-        events = Event.objects.filter(day__month=themonth)
+        events = Event.objects.filter(day__month=themonth).order_by('-day').order_by('time_start_event')
 
         v = []
         a = v.append
