@@ -532,5 +532,5 @@ class EventList(Event):
 class EventListAdmin(EventAdmin):
     list_display = ['day', 'state', 'event_type', 'patient', 'employees']
     change_list_template = 'admin/change_list.html'
-    list_filter = ('employees', 'patient')
+    list_filter = ('employees', 'state', 'patient')
     date_hierarchy = 'day'
