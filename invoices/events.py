@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -53,9 +55,8 @@ class Event(models.Model):
                                         help_text=_('Event start time'))
     time_end_event = models.TimeField(_('Event end time'), blank=True, null=True, help_text=_('Event end time'))
     state = models.PositiveSmallIntegerField(_('State'), choices=STATES)
-    event_type = models.ForeignKey(EventType, blank=True, null=True,
-                                   help_text=_('Event type'),
-                                   on_delete=models.SET_NULL,
+    event_type = models.ForeignKey(EventType, help_text=_('Event type'),
+                                   on_delete=models.CASCADE,
                                    verbose_name=_('Event type'))
     employees = models.ForeignKey(Employee, related_name='event_link_to_employee', blank=True, null=True,
                                   help_text=_('Please select an employee'),
@@ -84,6 +85,21 @@ class Event(models.Model):
                                                                  '<span class="evttooltiptext">%s</span> '
                                                                  % self.notes)
 
+    def clean(self, *args, **kwargs):
+        exclude = []
+        super(Event, self).clean_fields(exclude)
+        messages = self.validate(self, self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(model, instance_id, data):
+        result = {}
+        # result.update(HolidayRequest.validate_dates(data))
+        result.update(validate_date_range(instance_id, data))
+        # result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
+        return result
+
     def __str__(self):  # Python 3: def __str__(self):,
         if 'soin' != self.event_type.name:
             return '%s for %s on %s' % (self.event_type, self.patient, self.day)
@@ -106,3 +122,19 @@ def delete_google_calendar(sender, instance, **kwargs):
     if "soin" == instance.event_type.name:
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         calendar_gcalendar.delete_event(instance)
+
+
+def validate_date_range(instance_id, data):
+    messages = {}
+    conflicts_count = Event.objects.filter(day=data['day']).filter(
+        Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
+        Q(time_end_event__range=(data['time_start_event'], data['time_end_event'])) |
+        Q(time_start_event__lte=data['time_start_event'], time_end_event__gte=data['time_start_event']) |
+        Q(time_start_event__lte=data['time_end_event'], time_end_event__gte=data['time_end_event'])
+    ).filter(
+        employees_id=data['employees_id']).exclude(
+        pk=instance_id).count()
+    if 0 < conflicts_count:
+        messages = {'time_start_event': _("Intersection with other %s") % Event._meta.verbose_name_plural}
+    return messages
+
