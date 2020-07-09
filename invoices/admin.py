@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.contrib.admin import TabularInline
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
 from django.contrib.auth.models import User
 from django.core.checks import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.template.response import TemplateResponse
+from django.urls import reverse, path
 from django.utils.html import format_html
 
 from invoices.action import export_to_pdf
@@ -480,10 +481,12 @@ class EventAdmin(admin.ModelAdmin):
         css = {
             "all": ("css/event.css",)
         }
+
     list_display = ['day', 'state', 'event_type', 'notes', 'patient']
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
 
+    @csrf_protect_m
     def changelist_view(self, request, extra_context=None):
         after_day = request.GET.get('day__gte', None)
         extra_context = extra_context or {}
@@ -508,6 +511,7 @@ class EventAdmin(admin.ModelAdmin):
         next_month = datetime.date(year=next_month.year, month=next_month.month,
                                    day=1)  # find first day of next month
 
+        extra_context['list_view'] = reverse('admin:invoices_eventlist_changelist')
         extra_context['previous_month'] = reverse('admin:invoices_event_changelist') + '?day__gte=' + str(
             previous_month)
         extra_context['next_month'] = reverse('admin:invoices_event_changelist') + '?day__gte=' + str(next_month)
@@ -517,3 +521,16 @@ class EventAdmin(admin.ModelAdmin):
         html_calendar = html_calendar.replace('<td ', '<td  width="150" height="150"')
         extra_context['calendar'] = mark_safe(html_calendar)
         return super(EventAdmin, self).changelist_view(request, extra_context)
+
+
+class EventList(Event):
+    class Meta:
+        proxy = True
+
+
+@admin.register(EventList)
+class EventListAdmin(EventAdmin):
+    list_display = ['day', 'state', 'event_type', 'patient', 'employees']
+    change_list_template = 'admin/change_list.html'
+    list_filter = ('employees', 'patient')
+    date_hierarchy = 'day'

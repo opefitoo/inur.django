@@ -97,3 +97,5 @@ msgstr "Mois précédent"
 msgid "Next month"
 msgstr "Mois suivant"
 
+msgid "List view"
+msgstr "Vers la liste simple"
