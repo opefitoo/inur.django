@@ -10,7 +10,6 @@ from django_currentuser.db.models import CurrentUserField
 from helpers.employee import get_admin_emails
 from invoices.employee import Employee
 from invoices.notifications import send_email_notification
-import invoices.timesheet
 from invoices.validators import validators
 
 
@@ -33,7 +32,7 @@ class HolidayRequest(models.Model):
     validated_by = models.ForeignKey(Employee, related_name='validator',
                                      on_delete=models.CASCADE, blank=True,
                                      null=True)
-    #FIXME rename to user, not employee
+    # FIXME rename to user, not employee
     employee = CurrentUserField()
     start_date = models.DateField(u'Date début')
     end_date = models.DateField(u'Date fin')

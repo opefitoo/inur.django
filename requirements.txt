@@ -42,3 +42,5 @@ django-cors-headers
 django-autocomplete-light==3.8.1
 #git+git://github.com/danielmorell/django-autocomplete-light.git@8e0016721886e36fb8e2d3d15cd7d4093a90c328#egg=django-autocomplete-light
 APScheduler==3.6.3
+google-auth-oauthlib
+google-auth-httplib2
