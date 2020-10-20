@@ -204,7 +204,7 @@ class SimplifiedTimesheet(models.Model):
         if not start_date and not end_date:
             return
         days = 0
-        for i in range(int((end_date - start_date).days)):
+        for i in range(0, calendar.monthrange(start_date.year, start_date.month)[1]):
             next_date = start_date + timedelta(i)
             if next_date.weekday() not in (5, 6):
                 days = days + 1
