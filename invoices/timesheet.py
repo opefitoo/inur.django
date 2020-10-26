@@ -157,7 +157,7 @@ class SimplifiedTimesheet(models.Model):
         calculated_hours = {"total": 0,
                             "total_sundays": 0,
                             "total_public_holidays": 0,
-                            "total_hours_holidays_taken": 0}
+                            "total_hours_holidays_taken": [0, ""]}
         total = timezone.timedelta(0)
         total_sundays = timezone.timedelta(0)
         total_public_holidays = timezone.timedelta(0)
@@ -180,7 +180,10 @@ class SimplifiedTimesheet(models.Model):
 
     def absence_hours_taken(self):
         data = {'start_date': self.get_start_date, 'end_date': self.get_end_date, 'user_id': self.user.id}
-        return how_many_hours_taken_in_period(data)
+        return how_many_hours_taken_in_period(data,
+                                              PublicHolidayCalendarDetail.objects.filter(
+                                                  calendar_date__lte=data['end_date'],
+                                                  calendar_date__gte=data['start_date']))
 
     @property
     def total_hours_holidays_taken(self):
@@ -196,7 +199,7 @@ class SimplifiedTimesheet(models.Model):
                                     (self.employee.employeecontractdetail_set.filter(
                                         start_date__lte=self.get_start_date).first().number_of_hours / 5)
         balance: Union[float, Any] = calculated_hours["total"].total_seconds() + \
-                                     (calculated_hours["total_hours_holidays_taken"] - total_legal_working_hours) * 3600
+                                     (calculated_hours["total_hours_holidays_taken"][0] - total_legal_working_hours) * 3600
         return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
 
     @staticmethod
