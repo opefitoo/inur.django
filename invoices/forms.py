@@ -29,12 +29,41 @@ def check_for_periods_intersection(cleaned_data):
             raise ValidationError('Dates periods should not intersect')
 
 
+def check_for_timesheet_intersection(cleaned_data):
+    for row_index, row_data in enumerate(cleaned_data):
+        is_valid = True
+        for index, data in enumerate(cleaned_data):
+            if index == row_index:
+                continue
+
+            if row_data['start_date'] == data['start_date'] and row_data['end_date'] == data['end_date']:
+                is_valid = False
+                raise ValidationError([{data['start_date']: ["Timesheet periods should not intersect"]}])
+            # elif data['end_date'] is not None:
+            #     if data['start_date'] <= row_data['start_date'] <= data['end_date']:
+            #         is_valid = False
+            #     if row_data['end_date'] is not None:
+            #         if data['start_date'] <= row_data['end_date'] <= data['end_date']:
+            #             is_valid = False
+
+        if not is_valid:
+            raise ValidationError('Timesheet periods should not intersect')
+
+
 class ValidityDateFormSet(BaseInlineFormSet):
     def clean(self):
         super(ValidityDateFormSet, self).clean()
 
         if hasattr(self, 'cleaned_data'):
             check_for_periods_intersection(self.cleaned_data)
+
+
+class SimplifiedTimesheetDetailFormSet(BaseInlineFormSet):
+    def clean(self):
+        super(SimplifiedTimesheetDetailFormSet, self).clean()
+
+        if hasattr(self, 'cleaned_data'):
+            check_for_timesheet_intersection(self.cleaned_data)
 
 
 class PrestationInlineFormSet(BaseInlineFormSet):
@@ -83,6 +112,7 @@ class SimplifiedTimesheetDetailForm(ModelForm):
     class Meta:
         model = SimplifiedTimesheetDetail
         fields = '__all__'
+
 
 # class PrestationForm(ModelForm):
 #     carecode = ModelChoiceField(
@@ -136,8 +166,8 @@ class InvoiceItemForm(forms.ModelForm):
         help_text='Veuillez choisir une ordonnance',
         queryset=MedicalPrescription.objects.all(),
         widget=autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
-                                             attrs={'data-placeholder': '...'},
-                                             forward=['patient']),
+                                         attrs={'data-placeholder': '...'},
+                                         forward=['patient']),
         required=False,
     )
 

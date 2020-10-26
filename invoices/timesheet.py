@@ -13,6 +13,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django_currentuser.db.models import CurrentUserField
 
+from helpers.cosmetics import display_time
 from helpers.holidays import how_many_hours_taken_in_period
 from invoices.employee import Employee
 
@@ -129,6 +130,13 @@ class SimplifiedTimesheet(models.Model):
         default=current_year())
     user = CurrentUserField()
     user.visible = False
+    minutes_carried_over = models.IntegerField(u"Balance h. supp. (mn)",
+                                               help_text=u"La balances des Heures supplémentaires calculées en mn. "
+                                                         u"depuis le début du contrat de l'employé",
+                                               default=0)
+    extra_hours_paid = models.IntegerField(u"Heures supplémentaires payées à l'employé",
+                                           help_text=u"Ce champ est réservè à l'administration.",
+                                           default=0)
 
     YEARS_MONTHS = [
         (1, u'Janvier'),
@@ -187,7 +195,7 @@ class SimplifiedTimesheet(models.Model):
         return self.__calculate_total_hours()["total_hours_holidays_taken"]
 
     @property
-    def hours_should_work(self):
+    def calculate_hours_should_work(self):
         if self.id:
             calculated_hours = cache.get('total_hours_dictionary%s' % self.id)
             if calculated_hours is None:
@@ -195,9 +203,18 @@ class SimplifiedTimesheet(models.Model):
         total_legal_working_hours = self.date_range(self.get_start_date, self.get_end_date) * \
                                     (self.employee.employeecontractdetail_set.filter(
                                         start_date__lte=self.get_start_date).first().number_of_hours / 5)
-        balance: Union[float, Any] = calculated_hours["total"].total_seconds() + \
-                                     (calculated_hours["total_hours_holidays_taken"] - total_legal_working_hours) * 3600
-        return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
+        balance: float = (calculated_hours["total_hours_holidays_taken"] - total_legal_working_hours) * 3600 + \
+                         calculated_hours["total"].total_seconds()
+        # return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
+        return balance
+
+    @property
+    def hours_should_work(self):
+        hours_should_work_in_secs = self.calculate_hours_should_work
+        hours = self.calculate_hours_should_work // 3600
+        minutes = (hours_should_work_in_secs - hours * 3600) // 3600
+        return display_time(hours_should_work_in_secs)
+        # return "%d h:%d mn" % (hours, minutes)
 
     @staticmethod
     def date_range(start_date, end_date):
@@ -242,6 +259,24 @@ class SimplifiedTimesheet(models.Model):
     #     ).filter(
     #         employee_id=employee_id).filter(request_accepted=True)
 
+    def calculate_working_hours_balance_in_minutes(self):
+        tss = SimplifiedTimesheet.objects.filter(user=self.user). \
+            filter(timesheet_validated=True). \
+            filter(time_sheet_year__lte=self.time_sheet_year)
+        total_balance = 0
+        for ts in tss:
+            # do not take timesheet in the future
+            if ts.time_sheet_year == self.time_sheet_year and ts.time_sheet_month >= self.time_sheet_month:
+                print("skipping ts: %s" % ts)
+                continue
+            else:
+                total_balance += ts.calculate_hours_should_work
+        return total_balance // 60
+
+    def save(self, *args, **kwargs):
+        self.minutes_carried_over = self.calculate_working_hours_balance_in_minutes() - self.extra_hours_paid * 60
+        super(SimplifiedTimesheet, self).save(*args, **kwargs)
+
     def clean(self):
         exclude = []
 
@@ -257,6 +292,8 @@ class SimplifiedTimesheet(models.Model):
     def validate(instance, data):
         result = {}
         result.update(SimplifiedTimesheet.validate_one_per_year_month(instance, data))
+        result.update(SimplifiedTimesheet.validate_extra_hours_not_exceed_balance(instance, data))
+        # result.update(SimplifiedTimesheetDetail.validate_periods_intersection(instance, data))
         return result
 
     @staticmethod
@@ -272,6 +309,17 @@ class SimplifiedTimesheet(models.Model):
                                  "Il y a déjà un Temps de travail pour cette année et ce mois dans le système"})
             messages.update({'time_sheet_month':
                                  "Il y a déjà un Temps de travail pour cette année et ce mois dans le système"})
+        return messages
+
+    @staticmethod
+    def validate_extra_hours_not_exceed_balance(instance, data):
+        messages = {}
+        balance_worked_hours_in_mn = instance.calculate_working_hours_balance_in_minutes()
+        if balance_worked_hours_in_mn <= 0 and data['extra_hours_paid'] > 0:
+            messages.update(
+                {'extra_hours_paid': u"Impossible de payer des heures supplémentaires : balance négative ou 0"})
+        if 0 < balance_worked_hours_in_mn < data['extra_hours_paid'] * 60:
+            messages.update({'extra_hours_paid': u"Heures supplémentaires payées supérieures à la balance totale"})
         return messages
 
     @property
@@ -334,6 +382,29 @@ class SimplifiedTimesheetDetail(models.Model):
             messages = {'start_date': u"Date doit être dans le mois %d de l'année %s" % (month, year)}
 
         return messages
+    #
+    # @staticmethod
+    # def validate_periods_intersection(timesheet_master, data):
+    #     print(timesheet_master)
+    #     messages = {}
+    #     for row_index, row_data in enumerate(data):
+    #         is_valid = True
+    #         for index, data in enumerate(data):
+    #             if index == row_index:
+    #                 continue
+    #
+    #             if row_data['start_date'] >= data['start_date'] and data['end_date'] is None:
+    #                 is_valid = False
+    #             elif data['end_date'] is not None:
+    #                 if data['start_date'] <= row_data['start_date'] <= data['end_date']:
+    #                     is_valid = False
+    #                 if row_data['end_date'] is not None:
+    #                     if data['start_date'] <= row_data['end_date'] <= data['end_date']:
+    #                         is_valid = False
+    #
+    #         if not is_valid:
+    #             messages = {"start_date": "Dates periods should not intersect"}
+    #     return messages
 
     def __str__(self):
         return ''

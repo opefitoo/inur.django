@@ -15,7 +15,8 @@ from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
-    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm
+    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm, \
+    SimplifiedTimesheetDetailFormSet
 from invoices.holidays import HolidayRequest
 from invoices.invaction import make_private, \
     export_xml
@@ -405,6 +406,7 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
     search_fields = ['patient']
     ordering = ['start_date']
     form = SimplifiedTimesheetDetailForm
+    formset = SimplifiedTimesheetDetailFormSet
 
 
 @admin.register(SimplifiedTimesheet)
@@ -416,7 +418,7 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
                        'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days',
-                       'total_hours_holidays_taken', 'hours_should_work',)
+                       'total_hours_holidays_taken', 'hours_should_work', 'minutes_carried_over')
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
     actions = ['validate_time_sheets', ]
@@ -468,6 +470,20 @@ class SimplifiedTimesheetAdmin(admin.ModelAdmin):
         if obj and obj.timesheet_validated and not request.user.is_superuser:
             return False
         return self.has_delete_permission
+
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_staff:
+            if request.user.is_superuser:
+                return self.readonly_fields
+            else:
+                return self.readonly_fields + 'extra_hours_paid'
+
+    def get_form(self, request, obj=None, **kwargs):
+        help_texts = {'hours_should_work': "Total nombre d'heures prestées - total heures contractuelles pour le mois "
+                                           "courant (les congés pris sont inclus dans le calcul) ! vous devez "
+                                           "enregistrer le formulaire  pour que le champ soit mis à jour !", }
+        kwargs.update({'help_texts': help_texts})
+        return super(SimplifiedTimesheetAdmin, self).get_form(request, obj, **kwargs)
 
 
 @admin.register(EventType)
