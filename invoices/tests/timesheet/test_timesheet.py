@@ -129,7 +129,7 @@ class TimesheetDetailTestCase(TestCase):
                                                                   time_sheet_month=timezone.now().month,
                                                                   user=self.user)
         simplified_timesheet.save()
-        self.assertEqual(6, simplified_timesheet.absence_hours_taken())
+        self.assertEqual(6, simplified_timesheet.absence_hours_taken()[0])
 
     def test_calculate_holiday_requests_for_period_outside_times(self):
         # data = {
