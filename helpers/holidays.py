@@ -34,4 +34,4 @@ def how_many_hours_taken_in_period(data, public_holidays):
                 "explication: ( %d jours congés - %d jours fériés )  x %d nombre h. /j" % (counter,
                                                                               number_of_public_holidays,
                                                                               heures_jour)]
-    return 0
+    return [0, ""]
