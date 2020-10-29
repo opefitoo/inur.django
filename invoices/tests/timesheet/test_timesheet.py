@@ -150,4 +150,4 @@ class TimesheetDetailTestCase(TestCase):
                                                                   time_sheet_month=7,
                                                                   user=self.user)
         simplified_timesheet.save()
-        self.assertEqual(0, simplified_timesheet.absence_hours_taken())
+        self.assertEqual(0, simplified_timesheet.absence_hours_taken()[0])
