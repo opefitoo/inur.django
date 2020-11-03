@@ -1,7 +1,7 @@
 appdirs==1.4.4
 dj-database-url==0.5.0
 dj-static==0.0.6
-django==3.1.2
+django==3.1.3
 #git+git://github.com/django/django@adf58311b84f2aa92ca57661a8ba8679481ac930#egg=django
 django-appconf==1.0.4
 django-constance==2.7.0
@@ -20,14 +20,14 @@ httplib2==0.18.1
 Markdown==3.3.3
 oauth2client==4.1.3
 packaging==20.4
-Pillow==8.0.0
+Pillow==8.0.1
 psycopg2-binary==2.8.6
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pyparsing==2.4.7
 python-dateutil==2.8.1
-pytz==2020.1
-reportlab==3.5.53
+pytz==2020.4
+reportlab==3.5.55
 requests==2.24.0
 rsa==4.6
 six==1.15.0
@@ -44,3 +44,4 @@ django-autocomplete-light==3.8.1
 APScheduler==3.6.3
 google-auth-oauthlib
 google-auth-httplib2
+holidays

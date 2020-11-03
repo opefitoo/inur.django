@@ -21,17 +21,17 @@ class JobPosition(models.Model):
 
 class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    start_contract = models.DateField('start date')
-    end_contract = models.DateField('end date', blank=True,
+    start_contract = models.DateField(u'start date')
+    end_contract = models.DateField(u'end date', blank=True,
                                     null=True)
-    provider_code = models.CharField(u'Code prestataire',
-                                     help_text=u'Saisissez le code prestataire auprès de la C.N.S',
+    provider_code = models.CharField(u'Provider code',
+                                     help_text=u'Enter the service provider code at the C.N.S',
                                      max_length=30,
                                      blank=True)
     occupation = models.ForeignKey(JobPosition,
                                    on_delete=models.CASCADE)
-    has_gdrive_access = models.BooleanField("Allow access to Google Drive files", default=False)
-    has_gcalendar_access = models.BooleanField("Allow access to Prestations' calendar", default=False)
+    has_gdrive_access = models.BooleanField(u"Allow access to Google Drive files", default=False)
+    has_gcalendar_access = models.BooleanField(u"Allow access to Prestations' calendar", default=False)
 
 
     def clean(self, *args, **kwargs):
@@ -45,7 +45,7 @@ class Employee(models.Model):
         is_valid = True
         message = ''
         if has_gdrive_access and not user.email:
-            message = 'User must have email to grant access'
+            message = u'User must have email to grant access'
             is_valid = False
 
         return is_valid, message
@@ -61,7 +61,7 @@ class Employee(models.Model):
 class EmployeeContractDetail(models.Model):
     start_date = models.DateField(u'Date début période')
     end_date = models.DateField(u'Date fin période', blank=True, null=True)
-    number_of_hours = models.PositiveSmallIntegerField("Nombre d'heures par semaine",
+    number_of_hours = models.PositiveSmallIntegerField(u"Nombre d'heures par semaine",
                                                        validators=[MinValueValidator(5), MaxValueValidator(40)])
     employee_link = models.ForeignKey(Employee, on_delete=models.CASCADE)
 
@@ -69,7 +69,7 @@ class EmployeeContractDetail(models.Model):
         return self.number_of_hours / 5
 
     def __str__(self):
-        return 'Du %s au %s : %d heures/semaine' % (self.start_date, self.end_date, self.number_of_hours)
+        return u'Du %s au %s : %d heures/semaine' % (self.start_date, self.end_date, self.number_of_hours)
 
 
 @receiver(pre_save, sender=User, dispatch_uid="user_pre_save_gservices_permissions")

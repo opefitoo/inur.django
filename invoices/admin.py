@@ -345,11 +345,13 @@ class PublicHolidayCalendarAdmin(admin.ModelAdmin):
 
 @admin.register(HolidayRequest)
 class HolidayRequestAdmin(admin.ModelAdmin):
+    list_filter = ('employee', )
+    ordering = ['-start_date']
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
     readonly_fields = ('request_accepted', 'validated_by', 'employee')
     actions = ['validate_or_invalidate_request', ]
-    list_display = ('employee', 'start_date', 'end_date', 'reason', 'request_accepted', 'validated_by')
+    list_display = ('employee', 'start_date', 'end_date', 'reason', 'request_accepted', 'validated_by', 'hours_taken')
 
     def validate_or_invalidate_request(self, request, queryset):
         if not request.user.is_superuser:
@@ -384,7 +386,8 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         if obj is not None:
             if (HolidayRequest.objects.get(pk=obj.id).request_accepted and not request.user.is_superuser) \
                     or HolidayRequest.objects.get(pk=obj.id).employee.employee.user.id != request.user.id:
-                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'request_accepted', 'validated_by'
+                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'request_accepted', 'validated_by', \
+                       'hours_taken'
         else:
             if request.user.is_superuser:
                 return [f for f in self.readonly_fields if f != 'employee']

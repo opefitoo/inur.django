@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import date, timedelta
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -40,6 +42,29 @@ class HolidayRequest(models.Model):
     reason = models.PositiveSmallIntegerField(
         choices=REASONS)
 
+    @property
+    def hours_taken(self):
+        import holidays
+        lu_holidays = holidays.Luxembourg()
+        counter = 1
+        delta = self.end_date - self.start_date
+        date_comp = self.start_date
+        jours_feries = 0
+        if self.reason > 1:
+            return "Non applicable"
+        for i in range(delta.days):
+            if date_comp.weekday() < 5:
+                counter += 1
+            if date_comp in lu_holidays:
+                jours_feries = jours_feries + 1
+            date_comp = date_comp + timedelta(days=1)
+        hours_jour = Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
+            start_date__lte=self.start_date).first().number_of_hours / 5
+        return [(counter - jours_feries) * hours_jour,
+                "explication: ( %d jours congés - %d jours fériés )  x %d nombre h. /j" % (counter,
+                                                                                           jours_feries,
+                                                                                           hours_jour)]
+
     def clean(self, *args, **kwargs):
         exclude = []
 
@@ -53,6 +78,9 @@ class HolidayRequest(models.Model):
         result = {}
         result.update(HolidayRequest.validate_dates(data))
         result.update(validate_date_range(instance_id, data))
+        if data['start_date'] > date.today():
+            # only if it is in the future if date is the past no intersection validation is done
+            result.update(validate_requests_from_other_employees(instance_id, data))
         result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
         return result
 
@@ -85,6 +113,22 @@ def validate_date_range(instance_id, data):
         pk=instance_id).count()
     if 0 < conflicts_count:
         messages = {'start_date': "Intersection avec d'autres demandes"}
+    return messages
+
+
+def validate_requests_from_other_employees(instance_id, data):
+    messages = {}
+    conflicts = HolidayRequest.objects.filter(
+        Q(start_date__range=(data['start_date'], data['end_date'])) |
+        Q(end_date__range=(data['start_date'], data['end_date'])) |
+        Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
+        Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
+    ).filter(request_accepted=True).filter(reason=1).exclude(
+        employee_id=data['employee_id']).exclude(
+        pk=instance_id)
+    if 0 < conflicts.count():
+        for conflict in conflicts:
+            messages = {"start_date": u"Intersection avec d'autres demandes de %s" % conflict}
     return messages
 
 
