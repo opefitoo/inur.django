@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import date, timedelta
 
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -36,6 +37,10 @@ class HolidayRequest(models.Model):
                                      null=True)
     # FIXME rename to user, not employee
     employee = CurrentUserField()
+    request_creator = CurrentUserField(related_name='holiday_request_creator')
+    force_creation = models.BooleanField(default=False, help_text=u"Si vous êtes manager vous pouvez forcer la "
+                                                                  "création de congés même si conflits avec d#autre "
+                                                                  "employés")
     start_date = models.DateField(u'Date début')
     end_date = models.DateField(u'Date fin')
     half_day = models.BooleanField(u"Demi journée")
@@ -78,7 +83,8 @@ class HolidayRequest(models.Model):
         result = {}
         result.update(HolidayRequest.validate_dates(data))
         result.update(validate_date_range(instance_id, data))
-        if data['start_date'] > date.today():
+        if data['start_date'] > date.today() and not (User.objects.get(id=data['request_creator_id']).is_superuser
+                                                      and data['force_creation']):
             # only if it is in the future if date is the past no intersection validation is done
             result.update(validate_requests_from_other_employees(instance_id, data))
         result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
@@ -118,14 +124,9 @@ def validate_date_range(instance_id, data):
 
 def validate_requests_from_other_employees(instance_id, data):
     messages = {}
-    conflicts = HolidayRequest.objects.filter(
-        Q(start_date__range=(data['start_date'], data['end_date'])) |
-        Q(end_date__range=(data['start_date'], data['end_date'])) |
-        Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
-        Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
-    ).filter(request_accepted=True).filter(reason=1).exclude(
-        employee_id=data['employee_id']).exclude(
-        pk=instance_id)
+    conflicts = HolidayRequest.objects.filter(end_date__lte=data['end_date'], end_date__gte=data['start_date']) | \
+                HolidayRequest.objects.filter(start_date__gte=data['start_date'], start_date__lte=data['end_date'])
+    conflicts = conflicts.filter(request_accepted=True).filter(reason=1).exclude(employee_id=data['employee_id']).exclude(pk=instance_id)
     if 0 < conflicts.count():
         for conflict in conflicts:
             messages = {"start_date": u"Intersection avec d'autres demandes de %s" % conflict}

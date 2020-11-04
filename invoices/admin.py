@@ -349,7 +349,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
     ordering = ['-start_date']
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
-    readonly_fields = ('request_accepted', 'validated_by', 'employee')
+    readonly_fields = ('request_accepted', 'validated_by', 'employee', 'request_creator', 'force_creation')
     actions = ['validate_or_invalidate_request', ]
     list_display = ('employee', 'start_date', 'end_date', 'reason', 'request_accepted', 'validated_by', 'hours_taken')
 
@@ -390,7 +390,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                        'hours_taken'
         else:
             if request.user.is_superuser:
-                return [f for f in self.readonly_fields if f != 'employee']
+                return [f for f in self.readonly_fields if f not in ['employee', 'force_creation']]
         return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
