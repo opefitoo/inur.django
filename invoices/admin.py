@@ -387,7 +387,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
             if (HolidayRequest.objects.get(pk=obj.id).request_accepted and not request.user.is_superuser) \
                     or HolidayRequest.objects.get(pk=obj.id).employee.employee.user.id != request.user.id:
                 return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'request_accepted', 'validated_by', \
-                       'hours_taken'
+                       'hours_taken', 'request_creator', 'force_creation'
         else:
             if request.user.is_superuser:
                 return [f for f in self.readonly_fields if f not in ['employee', 'force_creation']]
