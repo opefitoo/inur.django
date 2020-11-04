@@ -400,6 +400,13 @@ class HolidayRequestAdmin(admin.ModelAdmin):
             return False
         return self.has_delete_permission
 
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not request.user.is_superuser:
+            if 'validate_or_invalidate_request' in actions:
+                del actions['validate_or_invalidate_request']
+        return actions
+
 
 class SimplifiedTimesheetDetailInline(admin.TabularInline):
     extra = 1
