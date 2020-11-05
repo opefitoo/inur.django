@@ -384,13 +384,14 @@ class HolidayRequestAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
-            if (HolidayRequest.objects.get(pk=obj.id).request_accepted and not request.user.is_superuser) \
-                    or HolidayRequest.objects.get(pk=obj.id).employee.employee.user.id != request.user.id:
+            if obj.employee.employee.user.id != request.user.id and not obj.request_accepted and not request.user.is_superuser:
                 return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'request_accepted', 'validated_by', \
                        'hours_taken', 'request_creator', 'force_creation'
-        else:
-            if request.user.is_superuser:
-                return [f for f in self.readonly_fields if f not in ['employee', 'force_creation']]
+            elif obj.request_accepted:
+                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'request_accepted', 'validated_by', \
+                       'hours_taken', 'request_creator', 'force_creation'
+            elif request.user.is_superuser and not obj.request_accepted:
+                return [f for f in self.readonly_fields if f not in ['force_creation']]
         return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
