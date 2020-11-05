@@ -51,13 +51,13 @@ class HolidayRequest(models.Model):
     def hours_taken(self):
         import holidays
         lu_holidays = holidays.Luxembourg()
-        counter = 1
+        counter = 0
         delta = self.end_date - self.start_date
         date_comp = self.start_date
         jours_feries = 0
         if self.reason > 1:
             return "Non applicable"
-        for i in range(delta.days):
+        for i in range(delta.days + 1):
             if date_comp.weekday() < 5:
                 counter += 1
             if date_comp in lu_holidays:
