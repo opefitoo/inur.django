@@ -395,11 +395,14 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
-        if obj and obj.request_accepted \
-                and HolidayRequest.objects.get(pk=obj.id).employee.employee.user.id != request.user.id \
-                and not request.user.is_superuser:
-            return False
-        return self.has_delete_permission
+        if obj:
+            return request.user.is_superuser or (obj.employee.id == request.user.id and not obj.request_accepted)
+        else:
+            if 'object_id' in request.resolver_match:
+                object_id = request.resolver_match.kwargs['object_id']
+                holiday_request = HolidayRequest.objects.get(id=object_id)
+                return request.user.is_superuser or (
+                            holiday_request.employee.id == request.user.id and not holiday_request.request_accepted)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
