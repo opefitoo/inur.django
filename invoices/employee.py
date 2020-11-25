@@ -11,6 +11,7 @@ from invoices.storages import CustomizedGoogleDriveStorage
 class JobPosition(models.Model):
     class Meta:
         ordering = ['-id']
+
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100, blank=True,
                                    null=True)
@@ -32,7 +33,15 @@ class Employee(models.Model):
                                    on_delete=models.CASCADE)
     has_gdrive_access = models.BooleanField(u"Allow access to Google Drive files", default=False)
     has_gcalendar_access = models.BooleanField(u"Allow access to Prestations' calendar", default=False)
+    driving_licence_number = models.CharField(u'Driver Licence Number',
+                                              help_text=u'Enter the driver licence number',
+                                              max_length=20,
+                                              blank=True)
 
+    birth_place = models.CharField(u'Birth Place',
+                                   help_text=u'Enter the City / Country of Birth',
+                                   max_length=30,
+                                   blank=True)
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
