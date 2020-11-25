@@ -18,6 +18,6 @@ def send_email_notification(subject, message, to_emails):
     send_mail(
         subject,
         message,
-        'nomail@opefitoo.com',
+        'noanswer@opefitoo.com',
         to_emails,
     )
