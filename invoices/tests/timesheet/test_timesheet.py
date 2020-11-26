@@ -45,6 +45,7 @@ class TimesheetDetailTestCase(TestCase):
 
         self.user = User.objects.create_user('testuser', email='testuser@test.com', password='testing')
         self.user.save()
+        print('Current Test User ID {}: \n'.format(self.user.pk))
         jobposition = JobPosition.objects.create(name='name 0')
         jobposition.save()
         self.employee = Employee.objects.create(user=self.user,
@@ -137,6 +138,7 @@ class TimesheetDetailTestCase(TestCase):
         #     'end_date': timezone.now().replace(month=6, day=30, hour=16, minute=00),
         # }
         # create holiday request but now being validated
+        print('Current Test User ID {}: \n'.format(self.user.pk))
         holiday_request = HolidayRequest.objects.create(employee=self.user,
                                                         start_date=timezone.now().replace(month=6, day=1),
                                                         end_date=timezone.now().replace(month=6, day=30),
