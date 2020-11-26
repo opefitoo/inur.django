@@ -46,17 +46,23 @@ class TimesheetDetailTestCase(TestCase):
         self.user = User.objects.create_user('testuser', email='testuser@test.com', password='testing')
         self.user.save()
         print('Current Test User ID {}: \n'.format(self.user.pk))
-        jobposition = JobPosition.objects.create(name='name 0')
-        jobposition.save()
+        self.jobposition = JobPosition.objects.create(name='name 0')
+        self.jobposition.save()
         self.employee = Employee.objects.create(user=self.user,
                                                 start_contract=self.start_date,
                                                 occupation=jobposition)
         self.employee.save()
-        employee_detail = EmployeeContractDetail.objects.create(
+        self.employee_detail = EmployeeContractDetail.objects.create(
             start_date=timezone.now().replace(year=2018, month=6, day=1),
             number_of_hours=30,
             employee_link=self.employee)
-        employee_detail.save()
+        self.employee_detail.save()
+
+    def tearDown(self):
+        self.employee_detail.delete()
+        self.employee.delete()
+        self.jobposition.delete()
+        self.user.delete()
 
     def test_string_representation(self):
         timesheet_detail = TimesheetDetail()
