@@ -57,6 +57,10 @@ class TimesheetDetailTestCase(TestCase):
             employee_link=self.employee)
         employee_detail.save()
 
+    def tearDown(self):
+        self.employee.delete()
+        self.user.delete()
+
     def test_string_representation(self):
         timesheet_detail = TimesheetDetail()
 
