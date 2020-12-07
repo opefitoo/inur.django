@@ -392,6 +392,9 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                        'hours_taken', 'request_creator', 'force_creation'
             elif request.user.is_superuser and not obj.request_accepted:
                 return [f for f in self.readonly_fields if f not in ['force_creation', 'employee']]
+        else:
+            if request.user.is_superuser:
+                return [f for f in self.readonly_fields if f not in ['force_creation', 'employee']]
         return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
