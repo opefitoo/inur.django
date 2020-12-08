@@ -114,11 +114,18 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
 class PatientAdmin(admin.ModelAdmin):
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
+    csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
+                  'country', 'phone_number', 'email_address', 'date_of_death']
     readonly_fields = ('age',)
     search_fields = ['name', 'first_name', 'code_sn']
     form = PatientForm
     actions = []
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
+
+    def has_csv_permission(self, request):
+        """Only super users can export as CSV"""
+        if request.user.is_superuser:
+            return True
 
 
 @admin.register(Prestation)
