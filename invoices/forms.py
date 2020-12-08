@@ -29,6 +29,35 @@ def check_for_periods_intersection(cleaned_data):
             raise ValidationError('Dates periods should not intersect')
 
 
+def check_for_periods_intersection_time_based(cleaned_data):
+    for row_index, row_data in enumerate(cleaned_data):
+        is_valid = True
+        dates_on_error = set()
+        for index, data in enumerate(cleaned_data):
+            if index == row_index:
+                continue
+            if 'start_date' in row_data and 'start_date' in data and 'end_date' in row_data and 'end_date' in data:
+                if not row_data['DELETE']:
+                    if row_data['start_date'].date() == data['start_date'].date():
+                        if row_data['start_date'].time() > data['end_date']:
+                            is_valid = True
+                        elif row_data['start_date'].date() == data['start_date'].date() \
+                                and row_data['start_date'].time() < data['start_date'].time():
+                            is_valid = True
+                        else:
+                            dates_on_error.add(row_data['start_date'].date().strftime("%Y-%m-%d"))
+                            is_valid = False
+                    elif row_data['start_date'].date() == data['start_date'].date() \
+                            and row_data['start_date'].time() < data['start_date'].time():
+                        is_valid = True
+                    else:
+                        dates_on_error.add(row_data['start_date'].date().strftime("%Y-%m-%d"))
+                        is_valid = False
+
+        if not is_valid:
+            raise ValidationError('Dates periods should not intersect : %s' % dates_on_error)
+
+
 class ValidityDateFormSet(BaseInlineFormSet):
     def clean(self):
         super(ValidityDateFormSet, self).clean()
@@ -73,7 +102,7 @@ class SimplifiedTimesheetForm(ModelForm):
         fields = '__all__'
 
 
-class SimplifiedTimesheetDetailForm(ModelForm):
+class SimplifiedTimesheetDetailForm(BaseInlineFormSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if hasattr(self.instance, 'simplified_timesheet') and self.instance.simplified_timesheet.timesheet_validated:
@@ -83,6 +112,14 @@ class SimplifiedTimesheetDetailForm(ModelForm):
     class Meta:
         model = SimplifiedTimesheetDetail
         fields = '__all__'
+
+    def clean(self):
+        super(SimplifiedTimesheetDetailForm, self).clean()
+        all_clean_data = []
+        for form in self.forms:
+            all_clean_data.append(form.cleaned_data)
+        check_for_periods_intersection_time_based(all_clean_data)
+
 
 # class PrestationForm(ModelForm):
 #     carecode = ModelChoiceField(
@@ -136,8 +173,8 @@ class InvoiceItemForm(forms.ModelForm):
         help_text='Veuillez choisir une ordonnance',
         queryset=MedicalPrescription.objects.all(),
         widget=autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
-                                             attrs={'data-placeholder': '...'},
-                                             forward=['patient']),
+                                         attrs={'data-placeholder': '...'},
+                                         forward=['patient']),
         required=False,
     )
 

@@ -428,7 +428,7 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
     fields = ('start_date', 'end_date',)
     search_fields = ['patient']
     ordering = ['start_date']
-    form = SimplifiedTimesheetDetailForm
+    formset = SimplifiedTimesheetDetailForm
 
 
 @admin.register(SimplifiedTimesheet)
