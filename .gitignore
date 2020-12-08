@@ -84,3 +84,5 @@ target/
 # Google key
 .gitsecret/*.json
 .gitsecret/keys/random_seed
+
+.DS_Store
