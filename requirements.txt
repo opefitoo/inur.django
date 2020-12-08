@@ -37,7 +37,7 @@ django-currentuser==0.5.2
 rq==1.7.0
 django-cors-headers
 django-autocomplete-light==3.8.1
-APScheduler==3.6.3
+#APScheduler==3.6.3″
 google-auth-oauthlib
 google-auth-httplib2
 holidays==0.10.4
