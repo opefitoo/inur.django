@@ -50,6 +50,7 @@ INSTALLED_APPS = (
     'api',
     'corsheaders',
     # 'debug_toolbar'
+    'django_csv_exports',
 )
 
 MIDDLEWARE = (
