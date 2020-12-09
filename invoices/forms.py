@@ -30,29 +30,42 @@ def check_for_periods_intersection(cleaned_data):
 
 
 def check_for_periods_intersection_time_based(cleaned_data):
-    for row_index, row_data in enumerate(cleaned_data):
+    extra_cleaned_data = list(filter(None, cleaned_data))
+    for row_index, row_data in enumerate(extra_cleaned_data):
         is_valid = True
         dates_on_error = set()
-        for index, data in enumerate(cleaned_data):
-            if index == row_index:
-                continue
-            if 'start_date' in row_data and 'start_date' in data and 'end_date' in row_data and 'end_date' in data:
-                if not row_data['DELETE']:
-                    if row_data['start_date'].date() == data['start_date'].date():
-                        if row_data['start_date'].time() > data['end_date']:
-                            is_valid = True
-                        elif row_data['start_date'].date() == data['start_date'].date() \
-                                and row_data['start_date'].time() < data['start_date'].time():
-                            is_valid = True
-                        else:
-                            dates_on_error.add(row_data['start_date'].date().strftime("%Y-%m-%d"))
-                            is_valid = False
-                    elif row_data['start_date'].date() == data['start_date'].date() \
-                            and row_data['start_date'].time() < data['start_date'].time():
-                        is_valid = True
-                    else:
-                        dates_on_error.add(row_data['start_date'].date().strftime("%Y-%m-%d"))
-                        is_valid = False
+        # for index, data in enumerate(extra_cleaned_data):
+        #     if index == row_index:
+        #         print("* continue index %s" % row_data )
+        #         continue
+        #     elif row_data['start_date'].date() != data['start_date'].date():
+        #         print("** continue dates %s # %s" % (row_data, data))
+        #         continue
+        #     elif row_data['DELETE']:
+        #         continue
+        #     elif not (row_data['start_date'].time() >= data['end_date']):
+        #         dates_on_error.add("1 " + data['start_date'].date().strftime("%Y-%m-%d"))
+        #         is_valid = False
+        #     elif not (row_data['end_date'] <= data['start_date'].time()):
+        #         dates_on_error.add("2 " + data['start_date'].date().strftime("%Y-%m-%d"))
+        #         is_valid = False
+
+            # if not row_data['DELETE']:
+            #     if row_data['start_date'].date() == data['start_date'].date():
+            #         if row_data['start_date'].time() > data['end_date']:
+            #             is_valid = True
+            #         elif row_data['start_date'].date() == data['start_date'].date() \
+            #                 and row_data['start_date'].time() < data['start_date'].time():
+            #             is_valid = True
+            #         else:
+            #             dates_on_error.add(data['start_date'].date().strftime("%Y-%m-%d"))
+            #             is_valid = False
+            #     elif row_data['start_date'].date() == data['start_date'].date() \
+            #             and row_data['start_date'].time() < data['start_date'].time():
+            #         is_valid = True
+            #     else:
+            #         is_valid = False
+
 
         if not is_valid:
             raise ValidationError('Dates periods should not intersect : %s' % dates_on_error)
