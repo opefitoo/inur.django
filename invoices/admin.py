@@ -22,6 +22,7 @@ from invoices.invaction import make_private, \
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
 from invoices.notifications import notify_holiday_request_validation
+from invoices.resources import ExpenseCard, Car
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 from invoices.events import EventType, Event
@@ -90,6 +91,17 @@ class EmployeeAdmin(admin.ModelAdmin):
     inlines = [EmployeeContractDetailInline]
     list_display = ('user', 'start_contract', 'end_contract', 'occupation')
     search_fields = ['user', 'occupation']
+
+
+class ExpenseCardDetailInline(TabularInline):
+    extra = 0
+    model = ExpenseCard
+
+
+@admin.register(Car)
+class CarAdmin(admin.ModelAdmin):
+    inlines = [ExpenseCardDetailInline]
+    list_display = ('name', 'licence_plate')
 
 
 class HospitalizationInline(admin.TabularInline):
@@ -352,7 +364,7 @@ class PublicHolidayCalendarAdmin(admin.ModelAdmin):
 
 @admin.register(HolidayRequest)
 class HolidayRequestAdmin(admin.ModelAdmin):
-    list_filter = ('employee', )
+    list_filter = ('employee',)
     ordering = ['-start_date']
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
@@ -412,7 +424,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 object_id = request.resolver_match.kwargs['object_id']
                 holiday_request = HolidayRequest.objects.get(id=object_id)
                 return request.user.is_superuser or (
-                            holiday_request.employee.id == request.user.id and not holiday_request.request_accepted)
+                        holiday_request.employee.id == request.user.id and not holiday_request.request_accepted)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
