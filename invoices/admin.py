@@ -231,7 +231,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
     list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
-    search_fields = ['patient__name', 'patient__first_name']
+    search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient']
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
