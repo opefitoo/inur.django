@@ -1,5 +1,11 @@
 {% load i18n admin_urls %}
 <div class="submit-row">
+{% block email-row %}
+{% if show_save_and_continue %}<input id="emailprivateinvoice" style="text-indent:17px;" type="submit" value="{% trans 'Email Private Invoice' %}" name="_email_private_invoice">{% endif %}
+{% if show_save_and_continue %}<input id="emailpersonalparticipation" style="text-indent:17px;" type="submit" value="{% trans 'Email Personal participation' %}" name="_email_personal_participation">{% endif %}
+{% endblock %}
+</div>
+<div class="submit-row">
 {% block submit-row %}
 {% if show_save %}<input type="submit" value="{% trans 'Save' %}" class="default" name="_save">{% endif %}
 {% if show_delete_link and original %}

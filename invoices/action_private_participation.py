@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import decimal
+from django.core.mail import EmailMessage
+from io import BytesIO
 
 from constance import config
 from django.http import HttpResponse
@@ -15,7 +17,10 @@ from django.utils.timezone import now
 from django.utils.encoding import smart_text
 from django.utils.translation import gettext_lazy as _
 
-def pdf_private_invoice_pp(modeladmin, request, queryset):
+from invoices import settings
+
+
+def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False):
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
     # Append invoice number and invoice date
@@ -28,12 +33,18 @@ def pdf_private_invoice_pp(modeladmin, request, queryset):
         _payment_ref = "PI.%s %s" % (queryset[0].invoice_number, queryset[0].invoice_date.strftime('%d.%m.%Y'))
         _recap_date = queryset[0].invoice_date.strftime('%d-%m-%Y')
         response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s-part-personnelle.pdf"' % (
-        queryset[0].patient.name,
-        queryset[0].invoice_number,
-        queryset[0].invoice_date.strftime('%d-%m-%Y'))
+            queryset[0].patient.name,
+            queryset[0].invoice_number,
+            queryset[0].invoice_date.strftime('%d-%m-%Y'))
 
     elements = []
-    doc = SimpleDocTemplate(response, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
+    if attach_to_email:
+        io_buffer = BytesIO()
+        doc = SimpleDocTemplate(io_buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
+        # _payment_ref = "PP-MX-%s" % _file_name.replace(" ", "")[:10]
+    else:
+        doc = SimpleDocTemplate(response, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
+        # _payment_ref = "PP-%s" % _file_name.replace(" ", "")[:10]
 
     recapitulatif_data = []
 
@@ -42,7 +53,7 @@ def pdf_private_invoice_pp(modeladmin, request, queryset):
               range(0, len(qs.prestations.all()), 20)]
         for _prestations in dd:
             _inv = qs.invoice_number + (
-            ("" + str(dd.index(_prestations) + 1) + qs.invoice_date.strftime('%m%Y')) if len(dd) > 1 else "")
+                ("" + str(dd.index(_prestations) + 1) + qs.invoice_date.strftime('%m%Y')) if len(dd) > 1 else "")
             _result = _build_invoices(_prestations,
                                       _inv,
                                       qs.invoice_date,
@@ -58,6 +69,22 @@ def pdf_private_invoice_pp(modeladmin, request, queryset):
 
     elements.extend(_build_recap(_recap_date, _payment_ref, recapitulatif_data))
     doc.build(elements)
+    if attach_to_email:
+        subject = "Votre Facture %s" % _payment_ref
+        message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe. \nCordialement \n -- \n%s \n%s " \
+                  "%s\n%s\n%s" % (config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
+                                  config.NURSE_PHONE_NUMBER, config.MAIN_BANK_ACCOUNT)
+        emails = [qs.patient.email_address]
+        mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
+        mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
+
+        try:
+            mail.send(fail_silently=False)
+            return True
+        except:
+            return False
+        finally:
+            io_buffer.close()
     return response
 
 
@@ -93,9 +120,9 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                                                 patient.participation_statutaire
                                                 and patient.age > 18),
                      "%10.2f" % (decimal.Decimal(presta.carecode.gross_amount(presta.date)) -
-                                                 decimal.Decimal(presta.carecode.net_amount(presta.date,
-                                                                                            patient.is_private,
-                                                                                            patient.participation_statutaire)))))
+                                 decimal.Decimal(presta.carecode.net_amount(presta.date,
+                                                                            patient.is_private,
+                                                                            patient.participation_statutaire)))))
 
     for x in range(len(data), 22):
         data.append((x, '', '', '', '', '', ''))
@@ -155,7 +182,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     elements.append(Spacer(1, 18))
     if (prescription_date is not None):
         elements.append(Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s Ordonnance du %s " % (
-        invoice_number, invoice_date, prescription_date), styles['Heading4']))
+            invoice_number, invoice_date, prescription_date), styles['Heading4']))
     else:
         elements.append(Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s " % (invoice_number, invoice_date),
                                   styles['Heading4']))
@@ -209,8 +236,8 @@ def _build_recap(_recap_date, _recap_ref, recaps):
     elements = []
 
     _intro = Table([[
-                        u"Veuillez trouver ci-joint le récapitulatif des factures ainsi que le montant total à payer"]],
-                   [10 * cm, 5 * cm], 1 * [0.5 * cm], hAlign='LEFT')
+        u"Veuillez trouver ci-joint le récapitulatif des factures ainsi que le montant total à payer"]],
+        [10 * cm, 5 * cm], 1 * [0.5 * cm], hAlign='LEFT')
     elements.append(_intro)
     elements.append(Spacer(1, 18))
 
@@ -250,7 +277,7 @@ def _build_recap(_recap_date, _recap_ref, recaps):
     elements.append(_total_a_payer)
     elements.append(Spacer(1, 18))
 
-    _infos_iban = Table([[u"Numéro IBAN: %s" % config.MAIN_BANK_ACCOUNT]], [10*cm], 1*[0.5*cm], hAlign='LEFT')
+    _infos_iban = Table([[u"Numéro IBAN: %s" % config.MAIN_BANK_ACCOUNT]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
     elements.append(_infos_iban)
 
     return elements

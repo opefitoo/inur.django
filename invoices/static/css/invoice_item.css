@@ -19,3 +19,17 @@
     background-size: 20px
 }
 
+#emailprivateinvoice {
+    background-image:url(img/send.svg);
+    background-repeat: no-repeat;
+    background-position: 5px 8px;
+    background-size: 20px
+}
+
+#emailpersonalparticipation {
+    background-image:url(img/send.svg);
+    background-repeat: no-repeat;
+    background-position: 5px 8px;
+    background-size: 20px
+}
+

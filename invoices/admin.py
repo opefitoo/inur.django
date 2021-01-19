@@ -270,7 +270,33 @@ class InvoiceItemAdmin(admin.ModelAdmin):
             return pdf_private_invoice(self, request, queryset)
         if "_print_personal_participation" in request.POST:
             return pdf_private_invoice_pp(self, request, queryset)
-        return super().response_change(request, obj)
+        if "_email_private_invoice" in request.POST:
+            if hasattr(queryset[0].patient, 'email_address'):
+                if not queryset[0].patient.email_address:
+                    self.message_user(request, "Le patient n'a pas d'adresse email définie.",
+                                      level=messages.ERROR)
+                    return HttpResponseRedirect(request.path)
+                if pdf_private_invoice(self, request, queryset, attach_to_email=True):
+                    self.message_user(request, "La facture a bien été envoyée au client.",
+                                      level=messages.INFO)
+                else:
+                    self.message_user(request, "La facture n'a pas pu être envoyée au client.",
+                                      level=messages.ERROR)
+                return HttpResponseRedirect(request.path)
+        elif "_email_personal_participation" in request.POST:
+            if hasattr(queryset[0].patient, 'email_address'):
+                if not queryset[0].patient.email_address:
+                    self.message_user(request, "Le patient n'a pas d'adresse email définie.",
+                                      level=messages.ERROR)
+                    return HttpResponseRedirect(request.path)
+            if pdf_private_invoice_pp(self, request, queryset, attach_to_email=True):
+                self.message_user(request, "La facture a bien été envoyée au client.",
+                                  level=messages.INFO)
+            else:
+                self.message_user(request, "La facture n'a pas pu être envoyée au client.",
+                                  level=messages.ERROR)
+            return HttpResponseRedirect(request.path)
+        return HttpResponseRedirect(request.path)
 
     # def response_post_save_change(self, request, obj):
     #     """This method is called by `self.changeform_view()` when the form
