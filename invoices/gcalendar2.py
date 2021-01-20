@@ -83,15 +83,23 @@ class PrestationGoogleCalendarSurLu:
         event_id = self._get_event_id(event_id=event.id)
         descr_line = "<b>%s</b> %s<br>"
         description = descr_line % ('Patient:', event.patient)
-        description += descr_line % ('Adresse Patient:', event.patient.address)
+        if event.at_office:
+            address = event.event_address
+            location = address
+        elif not event.at_office and event.event_address:
+            address = event.event_address
+            location = address
+        else:
+            address = event.patient.address
+            location = "%s,%s %s, %s" % (event.patient.address,
+                                     event.patient.zipcode,
+                                     event.patient.city,
+                                     event.patient.country)
+        description += descr_line % (u'Adresse:', address)
         description += descr_line % (u'Tél Patient:', event.patient.phone_number)
         if len(event.notes) > 0:
             description += descr_line % ('Notes:', event.notes)
         summary = '%s %s' % (event.id, event.patient)
-        location = "%s,%s %s, %s" % (event.patient.address,
-                                     event.patient.zipcode,
-                                     event.patient.city,
-                                     event.patient.country)
 
         naive_date = datetime.datetime(event.day.year,
                                        event.day.month, event.day.day,

@@ -1,7 +1,9 @@
+from constance import config
 from django.contrib.auth.models import User, Group
 from django.core.serializers import serialize
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -10,6 +12,8 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer
+from api.utils import get_settings
+from invoices import settings
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.processors.birthdays import process_and_generate
@@ -153,3 +157,32 @@ class EventProcessorView(APIView):
         items = items_serializer.data
         response = Response(items, status=status.HTTP_200_OK)
         return response
+
+class SettingViewSet(viewsets.ViewSet):
+    permission_classes = (IsAuthenticated,)
+
+    def setting(self, request, allow_settings):
+        if request.method == 'GET':
+            # list all setting items
+            return Response(data=get_settings(allow_settings))
+        else:
+            # change all allow setting items in allow_settings
+            for key in request.data:
+                if key in allow_settings and key in getattr(settings, 'CONSTANCE_CONFIG', {}):
+                    value = request.data[key]
+                    setattr(config, key, '' if value is None else value)
+            return Response(data=get_settings(allow_settings))
+
+    # def create(self, request):
+    #     """
+    #     <p>update with POST:<code>{'Key': new_value}</code>
+    #     """
+    #     allow_settings = [key for key, options in getattr(settings, 'CONSTANCE_CONFIG', {}).items()]
+    #     return self.setting(request, allow_settings)
+
+    def list(self, request):
+        """
+        get all setting item
+        """
+        allow_settings = [key for key, options in getattr(settings, 'CONSTANCE_CONFIG', {}).items()]
+        return self.setting(request, allow_settings)

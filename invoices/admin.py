@@ -543,6 +543,9 @@ class EventAdmin(admin.ModelAdmin):
         css = {
             "all": ("css/event.css",)
         }
+        js = [
+            "js/conditional-event-address.js",
+        ]
 
     list_display = ['day', 'state', 'event_type', 'notes', 'patient']
     autocomplete_fields = ['patient']

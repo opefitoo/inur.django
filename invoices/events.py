@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from constance import config
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -68,6 +69,12 @@ class Event(models.Model):
     patient = models.ForeignKey(Patient, related_name='event_link_to_patient', blank=True, null=True,
                                 help_text=_('Please select a patient'),
                                 on_delete=models.CASCADE)
+    at_office = models.BooleanField(_('At office premises'),
+                                    help_text=_('Check the box if the event will occur at the office premises'),
+                                    default=False)
+    event_address = models.TextField(_('Event address'),
+                                     help_text=_('Enter the address where the event will occur'),
+                                     blank=True, null=True)
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
@@ -86,6 +93,8 @@ class Event(models.Model):
                                                                  % self.notes)
 
     def clean(self, *args, **kwargs):
+        if self.at_office:
+            self.event_address = "%s %s" % (config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY)
         exclude = []
         super(Event, self).clean_fields(exclude)
         messages = self.validate(self, self.id, self.__dict__)
@@ -137,4 +146,3 @@ def validate_date_range(instance_id, data):
     if 0 < conflicts_count:
         messages = {'time_start_event': _("Intersection with other %s") % Event._meta.verbose_name_plural}
     return messages
-

@@ -2,7 +2,6 @@ from django.conf.urls import include, url
 from rest_framework import routers
 from api import views
 
-
 router = routers.DefaultRouter()
 # router.register(r'users', views.UserViewSet)
 # router.register(r'groups', views.GroupViewSet)
@@ -20,6 +19,8 @@ router.register(r'hospitalizations', views.HospitalizationViewSet)
 router.register(r'validity-dates', views.ValidityDateViewSet)
 router.register(r'events-types', views.EventTypeViewSet)
 router.register(r'events', views.EventViewSet)
+router.register(r'setting', views.SettingViewSet, basename='setting')
+
 
 urlpatterns = [
     url(r'^', include(router.urls)),
