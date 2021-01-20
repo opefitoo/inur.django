@@ -15,7 +15,7 @@ from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
-    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm
+    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm, EventForm
 from invoices.holidays import HolidayRequest
 from invoices.invaction import make_private, \
     export_xml
@@ -546,6 +546,7 @@ class EventAdmin(admin.ModelAdmin):
         js = [
             "js/conditional-event-address.js",
         ]
+    form = EventForm
 
     list_display = ['day', 'state', 'event_type', 'notes', 'patient']
     autocomplete_fields = ['patient']

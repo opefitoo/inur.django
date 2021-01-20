@@ -41,7 +41,8 @@ def check_for_periods_intersection_time_based(cleaned_data):
                 continue
             elif row_data['DELETE']:
                 continue
-            elif not (row_data['start_date'].time() > data['end_date'] or row_data['end_date'] < data['start_date'].time()):
+            elif not (row_data['start_date'].time() > data['end_date'] or row_data['end_date'] < data[
+                'start_date'].time()):
                 dates_on_error.add(data['start_date'].date().strftime("%Y-%m-%d"))
                 is_valid = False
 
@@ -207,6 +208,14 @@ class PatientForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(PatientForm, self).__init__(*args, **kwargs)
+
+
+class EventForm(ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(EventForm, self).__init__(*args, **kwargs)
+        if self.instance.at_office:
+            self.fields['event_address'].disabled = True
 #
 #
 # class PrestationActionForm(forms.Form):
