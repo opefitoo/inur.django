@@ -5,9 +5,10 @@ from django.contrib.auth.models import User
 from django.core.checks import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
-from django.template.response import TemplateResponse
-from django.urls import reverse, path
+from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import format_html
+from django_csv_exports.admin import CSVExportAdmin
 
 from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
@@ -17,8 +18,6 @@ from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm, EventForm
 from invoices.holidays import HolidayRequest
-from invoices.invaction import make_private, \
-    export_xml
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
 from invoices.notifications import notify_holiday_request_validation
@@ -77,7 +76,6 @@ class ValidityDateInline(admin.TabularInline):
 class CareCodeAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
-    actions = [make_private, export_xml]
     inlines = [ValidityDateInline]
 
 
@@ -123,7 +121,7 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
 
 
 @admin.register(Patient)
-class PatientAdmin(admin.ModelAdmin):
+class PatientAdmin(CSVExportAdmin):
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
@@ -390,13 +388,133 @@ class PublicHolidayCalendarAdmin(admin.ModelAdmin):
 
 @admin.register(HolidayRequest)
 class HolidayRequestAdmin(admin.ModelAdmin):
-    list_filter = ('employee',)
+    class Media:
+        css = {
+            'all': ('css/holiday_request.css',)
+        }
+
+    list_filter = ('employee', 'request_accepted')
     ordering = ['-start_date']
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
-    readonly_fields = ('request_accepted', 'validated_by', 'employee', 'request_creator', 'force_creation')
-    actions = ['validate_or_invalidate_request', ]
-    list_display = ('employee', 'start_date', 'end_date', 'reason', 'request_accepted', 'validated_by', 'hours_taken')
+    readonly_fields = ('request_accepted', 'validated_by', 'employee', 'request_creator', 'force_creation',
+                       'request_status', 'validator_notes')
+    actions = ['validate_or_invalidate_request', 'accept_request', 'refuse_request', 'set_request_creator']
+    list_display = ('employee', 'start_date', 'end_date', 'reason', 'request_accepted', 'hours_taken', 'validated_by',
+                    'request_status', 'request_creator')
+
+    def accept_request(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de valider des %s." % self.verbose_name_plural,
+                              level=messages.WARNING)
+            return
+        rows_updated = 0
+        obj: HolidayRequest
+        for obj in queryset:
+            if obj.request_status != HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED:
+                try:
+                    employee = Employee.objects.get(user_id=request.user.id)
+                    obj.validated_by = employee
+                    obj.request_accepted = True
+                    obj.request_status = HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED
+                    if obj.validator_notes and len(obj.validator_notes) > 0:
+                        obj.validator_notes = obj.validator_notes + "\n status: %s by %s on %s" % (
+                            obj.request_status,
+                            obj.validated_by,
+                            timezone.localtime().strftime(
+                                '%Y-%m-%dT%H:%M:%S'))
+                    else:
+                        obj.validator_notes = "status: %s by %s on %s" % (
+                            obj.request_status,
+                            obj.validated_by,
+                            timezone.localtime().strftime(
+                                '%Y-%m-%dT%H:%M:%S'))
+                    obj.save()
+                    notify_holiday_request_validation(obj, request)
+                    rows_updated = rows_updated + 1
+                except Employee.DoesNotExist:
+                    self.message_user(request, "Vous n'avez de profil employé sur l'application pour valider une %s." %
+                                      self.verbose_name_plural,
+                                      level=messages.ERROR)
+                    return
+            else:
+                ## if request accepted just pass
+                pass
+        if rows_updated == 1:
+            message_bit = u"1 %s a été" % self.verbose_name
+        else:
+            message_bit = u"%s %s ont été" % (rows_updated, self.verbose_name_plural)
+        self.message_user(request, u"%s validé avec succès." % message_bit)
+
+    def refuse_request(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de refuser des %s." % self.verbose_name_plural,
+                              level=messages.WARNING)
+            return
+        rows_updated = 0
+        obj: HolidayRequest
+        for obj in queryset:
+            if obj.request_status != HolidayRequest.HolidayRequestWorkflowStatus.REFUSED:
+                try:
+                    employee = Employee.objects.get(user_id=request.user.id)
+                    obj.validated_by = employee
+                    obj.request_accepted = True
+                    obj.request_status = HolidayRequest.HolidayRequestWorkflowStatus.REFUSED
+                    obj.request_creator = request.user
+                    if len(obj.validator_notes) > 0:
+                        obj.validator_notes = obj.validator_notes + "\n status: %s by %s on %s" % (
+                            obj.request_status,
+                            obj.validated_by,
+                            timezone.localtime().strftime(
+                                '%Y-%m-%dT%H:%M:%S'))
+                    else:
+                        obj.validator_notes = "status: %s by %s on %s" % (
+                            obj.request_status,
+                            obj.validated_by,
+                            timezone.localtime().strftime(
+                                '%Y-%m-%dT%H:%M:%S'))
+                    if not obj.request_creator:
+                        obj.request_creator = obj.employee
+                    obj.save()
+                    notify_holiday_request_validation(obj, request)
+                    rows_updated = rows_updated + 1
+                except Employee.DoesNotExist:
+                    self.message_user(request,
+                                      "Vous n'avez de profil employé sur l'application pour refuser une %s." %
+                                      self.verbose_name_plural,
+                                      level=messages.ERROR)
+                    return
+            else:
+                ## if request already refused just pass
+                pass
+        if rows_updated == 1:
+            message_bit = u"1 %s a été" % self.verbose_name
+        else:
+            message_bit = u"%s %s ont été" % (rows_updated, self.verbose_name_plural)
+        self.message_user(request, u"%s refusée(s) avec succès." % message_bit)
+
+    def response_change(self, request, obj):
+        queryset = HolidayRequest.objects.filter(id=obj.id)
+        if "_accept_request" in request.POST:
+            self.accept_request(request, queryset)
+            return HttpResponseRedirect(request.path)
+        if "_refuse_request" in request.POST:
+            self.refuse_request(request, queryset)
+            return HttpResponseRedirect(request.path)
+        return HttpResponseRedirect(request.path)
+
+    # TODO remove once executed
+    def set_request_creator(self, request, queryset):
+        for obj in queryset:
+            if obj.request_creator is None:
+                if obj.reason == 2:
+                    # print(User.objects.get(id=1))
+                    obj.request_creator = User.objects.get(id=1)
+                    obj.save()
+                else:
+                    # print(User.objects.get(id=obj.employee.id))
+                    obj.request_creator = User.objects.get(id=obj.employee.id)
+                    obj.save()
 
     def validate_or_invalidate_request(self, request, queryset):
         if not request.user.is_superuser:
@@ -419,7 +537,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
             else:
                 obj.validated_by = None
             obj.save()
-            notify_holiday_request_validation(obj, request)
+            # notify_holiday_request_validation(obj, request)
             rows_updated = rows_updated + 1
         if rows_updated == 1:
             message_bit = u"1 %s a été" % self.verbose_name
@@ -429,28 +547,34 @@ class HolidayRequestAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
-            if obj.employee.employee.user.id != request.user.id and not obj.request_accepted and not request.user.is_superuser:
+            if obj.employee.employee.user.id != request.user.id and not 1 != obj.request_status and not request.user.is_superuser:
                 return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'request_accepted', 'validated_by', \
-                       'hours_taken', 'request_creator', 'force_creation'
-            elif obj.request_accepted:
+                       'hours_taken', 'request_creator'
+            elif request.user.is_superuser and not 1 != obj.request_status:
+                return [f for f in self.readonly_fields if f not in ['force_creation', 'employee', 'request_status',
+                                                                     'validator_notes']]
+            elif request.user.is_superuser:
+                return [f for f in self.readonly_fields if f not in ['force_creation', 'employee',
+                                                                     'validator_notes']]
+            elif 0 != obj.request_status:
                 return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'request_accepted', 'validated_by', \
-                       'hours_taken', 'request_creator', 'force_creation'
-            elif request.user.is_superuser and not obj.request_accepted:
-                return [f for f in self.readonly_fields if f not in ['force_creation', 'employee']]
+                       'hours_taken', 'request_creator', 'request_status', 'validator_notes', 'force_creation'
+
         else:
             if request.user.is_superuser:
-                return [f for f in self.readonly_fields if f not in ['force_creation', 'employee']]
+                return [f for f in self.readonly_fields if f not in ['force_creation', 'employee', 'request_status',
+                                                                     'validator_notes']]
         return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
         if obj:
-            return request.user.is_superuser or (obj.employee.id == request.user.id and not obj.request_accepted)
+            return request.user.is_superuser or (obj.employee.id == request.user.id and not 1 != obj.request_status)
         else:
             if 'object_id' in request.resolver_match:
                 object_id = request.resolver_match.kwargs['object_id']
                 holiday_request = HolidayRequest.objects.get(id=object_id)
                 return request.user.is_superuser or (
-                        holiday_request.employee.id == request.user.id and not holiday_request.request_accepted)
+                        holiday_request.employee.id == request.user.id and not 1 != holiday_request.request_status)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -463,16 +587,19 @@ class HolidayRequestAdmin(admin.ModelAdmin):
 class SimplifiedTimesheetDetailInline(admin.TabularInline):
     extra = 1
     model = SimplifiedTimesheetDetail
-    fields = ('start_date', 'end_date',)
-    search_fields = ['patient']
+    # fields = ('start_date', 'end_date', 'time_delta')
+    readonly_fields = ('time_delta', )
     ordering = ['start_date']
     formset = SimplifiedTimesheetDetailForm
 
 
 @admin.register(SimplifiedTimesheet)
-class SimplifiedTimesheetAdmin(admin.ModelAdmin):
+class SimplifiedTimesheetAdmin(CSVExportAdmin):
     ordering = ('-time_sheet_year', '-time_sheet_month')
     inlines = [SimplifiedTimesheetDetailInline]
+    csv_fields = ['employee', 'time_sheet_year', 'time_sheet_month',
+                  'simplifiedtimesheetdetail__start_date',
+                  'simplifiedtimesheetdetail__end_date']
     list_display = ('timesheet_owner', 'timesheet_validated', 'time_sheet_year', 'time_sheet_month')
     list_filter = ['employee', ]
     list_select_related = True
@@ -546,6 +673,7 @@ class EventAdmin(admin.ModelAdmin):
         js = [
             "js/conditional-event-address.js",
         ]
+
     form = EventForm
 
     list_display = ['day', 'state', 'event_type', 'notes', 'patient']

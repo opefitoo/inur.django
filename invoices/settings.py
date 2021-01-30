@@ -105,18 +105,6 @@ if 'CIRCLECI' in os.sys.argv:
 # DATABASES['default']['ENGINE'] = 'django_postgrespool'
 DATABASES['default']['AUTOCOMMIT'] = True
 
-# DATABASES = {
-#     'default': {        
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'django_db',
-#         'USER' : 'user_name',
-#         'PASSWORD' : 'password',
-#         'HOST' : '127.0.0.1',
-#         'PORT' : '5432',
-#     }
-# }
-
-
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -229,12 +217,18 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:4200',
 ]
 
+# Use if you want to check user level permissions only users with the can_csv_<model_label>
+# will be able to download csv files.
+# DJANGO_EXPORTS_REQUIRE_PERM = True
+# Use if you want to disable the global django admin action. This setting is set to True by default.
+DJANGO_CSV_GLOBAL_EXPORTS_ENABLED = False
+
 if 'EMAIL_HOST' in os.environ:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ['EMAIL_HOST']
-    EMAIL_USE_TLS = True
-    EMAIL_PORT = 587
-    EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-    EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
-else:
+#     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#     EMAIL_HOST = os.environ['EMAIL_HOST']
+#     EMAIL_USE_TLS = True
+#     EMAIL_PORT = 587
+#     EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+#     EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+# else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

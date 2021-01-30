@@ -14,6 +14,7 @@ from helpers.employee import get_admin_emails
 from invoices.employee import Employee
 from invoices.notifications import send_email_notification
 from invoices.validators import validators
+from django.utils.translation import gettext_lazy as _
 
 
 class HolidayRequest(models.Model):
@@ -24,14 +25,36 @@ class HolidayRequest(models.Model):
             models.UniqueConstraint(fields=['employee', 'start_date', 'end_date'],
                                     name='unique holiday request')
         ]
-
+    #FIXME replace by ENUM
     REASONS = [
         (1, u'Congés'),
         (2, u'Maladie'),
         (3, u'Formation'),
         (4, u'Desiderata')
     ]
+
+    class HolidayRequestWorkflowStatus(models.TextChoices):
+        PENDING = 'PNDG', _('Pending')
+        REFUSED = 'REF', _('Refused')
+        ACCEPTED = 'OK', _('Accepted')
+
+
+    # TODO replace by builtin enums
+    # https://stackoverflow.com/questions/54802616/how-to-use-enums-as-a-choice-field-in-django-model
+    # HOLIDAY_WORKFLOW = [
+    #     (0, u'En attente de validation'),
+    #     (1, u'Refusé'),
+    #     (2, u'Validé'),
+    # ]
+    validator_notes = models.TextField(
+        'Notes Validateur',
+        help_text='Notes', blank=True, null=True)
+
     request_accepted = models.BooleanField(u"Demande acceptée", default=False, blank=True)
+    request_status = models.CharField(
+        max_length=4,
+        choices=HolidayRequestWorkflowStatus.choices,
+        default=HolidayRequestWorkflowStatus.PENDING)
     validated_by = models.ForeignKey(Employee, related_name='validator',
                                      on_delete=models.CASCADE, blank=True,
                                      null=True)
@@ -109,16 +132,14 @@ class HolidayRequest(models.Model):
 
 def validate_date_range(instance_id, data):
     messages = {}
-    conflicts_count = HolidayRequest.objects.filter(
+    conflicts = HolidayRequest.objects.filter(
         Q(start_date__range=(data['start_date'], data['end_date'])) |
         Q(end_date__range=(data['start_date'], data['end_date'])) |
         Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
         Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
-    ).filter(
-        employee_id=data['employee_id']).exclude(
-        pk=instance_id).count()
-    if 0 < conflicts_count:
-        messages = {'start_date': "Intersection avec d'autres demandes"}
+    ).filter(reason=1, request_status=HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED).exclude(pk=instance_id)
+    if 0 < conflicts.count():
+        messages = {'start_date': "Intersection avec d'autres demandes %s " % conflicts[0]}
     return messages
 
 
@@ -126,7 +147,8 @@ def validate_requests_from_other_employees(instance_id, data):
     messages = {}
     conflicts = HolidayRequest.objects.filter(end_date__lte=data['end_date'], end_date__gte=data['start_date']) | \
                 HolidayRequest.objects.filter(start_date__gte=data['start_date'], start_date__lte=data['end_date'])
-    conflicts = conflicts.filter(request_accepted=True).filter(reason=1).exclude(employee_id=data['employee_id']).exclude(pk=instance_id)
+    conflicts = conflicts.filter(HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED).filter(reason=0).exclude(employee_id=data['employee_id']).exclude(
+        pk=instance_id)
     if 0 < conflicts.count():
         for conflict in conflicts:
             messages = {"start_date": u"Intersection avec d'autres demandes de %s" % conflict}

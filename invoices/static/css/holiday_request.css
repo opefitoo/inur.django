@@ -1,0 +1,13 @@
+#accept_request {
+    background-image:url(img/icon-yes.svg);
+    background-repeat: no-repeat;
+    background-position: 5px 8px;
+    background-size: 20px
+}
+
+#refuse_request {
+    background-image:url(img/icon-no.svg);
+    background-repeat: no-repeat;
+    background-position: 5px 8px;
+    background-size: 20px
+}

@@ -199,7 +199,8 @@ class SimplifiedTimesheet(models.Model):
                                     (self.employee.employeecontractdetail_set.filter(
                                         start_date__lte=self.get_start_date).first().number_of_hours / 5)
         balance: Union[float, Any] = calculated_hours["total"].total_seconds() + \
-                                     (calculated_hours["total_hours_holidays_taken"][0] - total_legal_working_hours) * 3600
+                                     (calculated_hours["total_hours_holidays_taken"][
+                                          0] - total_legal_working_hours) * 3600
         return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
 
     @staticmethod
@@ -300,6 +301,13 @@ class SimplifiedTimesheetDetail(models.Model):
         verbose_name = u'Détail temps de travail'
         verbose_name_plural = u'Détails temps de travail'
 
+    def time_delta(self):
+        if self.end_date:
+            return datetime.combine(timezone.now(), self.end_date) - \
+                   datetime.combine(timezone.now(), self.start_date.astimezone().time().replace(tzinfo=None))
+        else:
+            return 0
+
     def clean(self):
         exclude = []
 
@@ -396,7 +404,7 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
         Q(end_date__range=(data['start_date'], end_date_time)) |
         Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
         Q(start_date__lte=end_date_time, end_date__gte=end_date_time)
-    ).filter(employee_id=employee_id, request_accepted=True)
+    ).filter(employee_id=employee_id, request_status=HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED)
     if 1 == conflicts.count():
         msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
                                                                                           conflicts[0].end_date)}

@@ -2,7 +2,6 @@
 
 import datetime
 
-from django.core import serializers
 
 from invoices.models import Patient, InvoiceItem, CareCode, ValidityDate  # , PrivateInvoiceItem
 from django.http import HttpResponseRedirect, HttpResponse
@@ -149,26 +148,6 @@ def previous_months_invoices_april(modeladmin, request, queryset):
              invoiceitem.clean ()
              invoiceitem.save ()
              invoice_counters += 1
-
-
-def make_private(modeladmin, request, queryset):
-
-    for ccode in queryset:
-        ccode.reimbursed = False
-        ccode.clean()
-        ccode.save()
-
-def export_xml(modeladmin, request, queryset):
-    #response = HttpResponse(content_type='application/xml')
-    XMLSerializer = serializers.get_serializer("xml")
-    xml_serializer = XMLSerializer()
-    xml_serializer.serialize(queryset)
-    data = xml_serializer.getvalue()
-    with open("file.xml", "w") as out:
-        all_objects = list(ValidityDate.objects.all()) + list(CareCode.objects.all())
-        xml_serializer.serialize(all_objects, stream=out)
-    data = open("file.xml", "rb").read()
-    return HttpResponse(data, content_type="application/xml")
 
 
 def previous_months_invoices_july_2017(modeladmin, request, queryset):
