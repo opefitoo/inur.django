@@ -141,10 +141,11 @@ def validate_date_range(instance_id, data):
 
 def validate_requests_from_other_employees(instance_id, data):
     messages = {}
-    conflicts = HolidayRequest.objects.filter(end_date__lte=data['end_date'], end_date__gte=data['start_date']) | \
+    conflicts = HolidayRequest.objects.filter(
+        end_date__lte=data['end_date'], end_date__gte=data['start_date']) | \
                 HolidayRequest.objects.filter(start_date__gte=data['start_date'], start_date__lte=data['end_date'])
-    conflicts = conflicts.filter(HolidayRequestWorkflowStatus.ACCEPTED).filter(reason=0).exclude(employee_id=data['employee_id']).exclude(
-        pk=instance_id)
+    conflicts = conflicts.filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED).filter(reason=1).exclude(
+        employee_id=data['employee_id']).exclude(pk=instance_id)
     if 0 < conflicts.count():
         for conflict in conflicts:
             messages = {"start_date": u"Intersection avec d'autres demandes de %s" % conflict}

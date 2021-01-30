@@ -14,6 +14,7 @@ from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
+from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm, EventForm
@@ -410,11 +411,11 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         rows_updated = 0
         obj: HolidayRequest
         for obj in queryset:
-            if obj.request_status != HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED:
+            if obj.request_status != HolidayRequestWorkflowStatus.ACCEPTED:
                 try:
                     employee = Employee.objects.get(user_id=request.user.id)
                     obj.validated_by = employee
-                    obj.request_status = HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED
+                    obj.request_status = HolidayRequestWorkflowStatus.ACCEPTED
                     if obj.validator_notes and len(obj.validator_notes) > 0:
                         obj.validator_notes = obj.validator_notes + "\n status: %s by %s on %s" % (
                             obj.request_status,
@@ -452,11 +453,11 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         rows_updated = 0
         obj: HolidayRequest
         for obj in queryset:
-            if obj.request_status != HolidayRequest.HolidayRequestWorkflowStatus.REFUSED:
+            if obj.request_status != HolidayRequestWorkflowStatus.REFUSED:
                 try:
                     employee = Employee.objects.get(user_id=request.user.id)
                     obj.validated_by = employee
-                    obj.request_status = HolidayRequest.HolidayRequestWorkflowStatus.REFUSED
+                    obj.request_status = HolidayRequestWorkflowStatus.REFUSED
                     obj.request_creator = request.user
                     if len(obj.validator_notes) > 0:
                         obj.validator_notes = obj.validator_notes + "\n status: %s by %s on %s" % (
