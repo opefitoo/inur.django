@@ -393,14 +393,13 @@ class HolidayRequestAdmin(admin.ModelAdmin):
             'all': ('css/holiday_request.css',)
         }
 
-    list_filter = ('employee', 'request_accepted')
+    list_filter = ('employee', 'request_status')
     ordering = ['-start_date']
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
-    readonly_fields = ('request_accepted', 'validated_by', 'employee', 'request_creator', 'force_creation',
+    readonly_fields = ('validated_by', 'employee', 'request_creator', 'force_creation',
                        'request_status', 'validator_notes')
-    actions = ['validate_or_invalidate_request', 'accept_request', 'refuse_request', 'set_request_creator']
-    list_display = ('employee', 'start_date', 'end_date', 'reason', 'request_accepted', 'hours_taken', 'validated_by',
+    list_display = ('employee', 'start_date', 'end_date', 'reason', 'hours_taken', 'validated_by',
                     'request_status', 'request_creator')
 
     def accept_request(self, request, queryset):
@@ -415,7 +414,6 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 try:
                     employee = Employee.objects.get(user_id=request.user.id)
                     obj.validated_by = employee
-                    obj.request_accepted = True
                     obj.request_status = HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED
                     if obj.validator_notes and len(obj.validator_notes) > 0:
                         obj.validator_notes = obj.validator_notes + "\n status: %s by %s on %s" % (
@@ -458,7 +456,6 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 try:
                     employee = Employee.objects.get(user_id=request.user.id)
                     obj.validated_by = employee
-                    obj.request_accepted = True
                     obj.request_status = HolidayRequest.HolidayRequestWorkflowStatus.REFUSED
                     obj.request_creator = request.user
                     if len(obj.validator_notes) > 0:
@@ -503,52 +500,10 @@ class HolidayRequestAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(request.path)
         return HttpResponseRedirect(request.path)
 
-    # TODO remove once executed
-    def set_request_creator(self, request, queryset):
-        for obj in queryset:
-            if obj.request_creator is None:
-                if obj.reason == 2:
-                    # print(User.objects.get(id=1))
-                    obj.request_creator = User.objects.get(id=1)
-                    obj.save()
-                else:
-                    # print(User.objects.get(id=obj.employee.id))
-                    obj.request_creator = User.objects.get(id=obj.employee.id)
-                    obj.save()
-
-    def validate_or_invalidate_request(self, request, queryset):
-        if not request.user.is_superuser:
-            self.message_user(request, "Vous n'avez pas le droit de valider des %s." % self.verbose_name_plural,
-                              level=messages.WARNING)
-            return
-        rows_updated = 0
-        obj: HolidayRequest
-        for obj in queryset:
-            obj.request_accepted = not obj.request_accepted
-            if obj.request_accepted:
-                try:
-                    employee = Employee.objects.get(user_id=request.user.id)
-                    obj.validated_by = employee
-                except Employee.DoesNotExist:
-                    self.message_user(request, "Vous n'avez de profil employé sur l'application pour valider une %s." %
-                                      self.verbose_name_plural,
-                                      level=messages.ERROR)
-                    return
-            else:
-                obj.validated_by = None
-            obj.save()
-            # notify_holiday_request_validation(obj, request)
-            rows_updated = rows_updated + 1
-        if rows_updated == 1:
-            message_bit = u"1 %s a été" % self.verbose_name
-        else:
-            message_bit = u"%s %s ont été" % (rows_updated, self.verbose_name_plural)
-        self.message_user(request, u"%s (in)validé avec succès." % message_bit)
-
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
             if obj.employee.employee.user.id != request.user.id and not 1 != obj.request_status and not request.user.is_superuser:
-                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'request_accepted', 'validated_by', \
+                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'validated_by', \
                        'hours_taken', 'request_creator'
             elif request.user.is_superuser and not 1 != obj.request_status:
                 return [f for f in self.readonly_fields if f not in ['force_creation', 'employee', 'request_status',
@@ -557,7 +512,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 return [f for f in self.readonly_fields if f not in ['force_creation', 'employee',
                                                                      'validator_notes']]
             elif 0 != obj.request_status:
-                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'request_accepted', 'validated_by', \
+                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'validated_by', \
                        'hours_taken', 'request_creator', 'request_status', 'validator_notes', 'force_creation'
 
         else:
@@ -588,7 +543,7 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
     extra = 1
     model = SimplifiedTimesheetDetail
     # fields = ('start_date', 'end_date', 'time_delta')
-    readonly_fields = ('time_delta', )
+    readonly_fields = ('time_delta',)
     ordering = ['start_date']
     formset = SimplifiedTimesheetDetailForm
 

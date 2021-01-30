@@ -15,6 +15,7 @@ from django_currentuser.db.models import CurrentUserField
 
 from helpers.holidays import how_many_hours_taken_in_period
 from invoices.employee import Employee
+from invoices.enums.holidays import HolidayRequestWorkflowStatus
 
 
 class Timesheet(models.Model):
@@ -404,7 +405,7 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
         Q(end_date__range=(data['start_date'], end_date_time)) |
         Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
         Q(start_date__lte=end_date_time, end_date__gte=end_date_time)
-    ).filter(employee_id=employee_id, request_status=HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED)
+    ).filter(employee_id=employee_id, request_status=HolidayRequestWorkflowStatus.ACCEPTED)
     if 1 == conflicts.count():
         msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
                                                                                           conflicts[0].end_date)}

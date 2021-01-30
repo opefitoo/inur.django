@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
+from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.holidays import HolidayRequest
 from invoices.timesheet import TimesheetTask, TimesheetDetail, \
     validate_date_range_vs_holiday_requests, SimplifiedTimesheet
@@ -105,8 +106,7 @@ class TimesheetDetailTestCase(TestCase):
                                                         start_date=timezone.now().replace(month=6, day=8),
                                                         end_date=timezone.now().replace(month=6, day=12),
                                                         half_day=False,
-                                                        reason=1,
-                                                        request_accepted=False)
+                                                        reason=1)
         holiday_request.save()
         self.assertEqual(validate_date_range_vs_holiday_requests(data, self.user.id), {})
 
@@ -123,8 +123,7 @@ class TimesheetDetailTestCase(TestCase):
                                                                                                 day=12),
                                                                 half_day=False,
                                                                 reason=1,
-                                                                request_accepted=True,
-                                                                request_status=HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED)
+                                                                request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
         self.assertEqual(validate_date_range_vs_holiday_requests(data, self.user.id),
                          {'start_date': "Intersection avec des demandes d'absence de : 2020-06-10 à 2020-06-12"})
@@ -142,10 +141,11 @@ class TimesheetDetailTestCase(TestCase):
                                                                                                 day=20),
                                                                 half_day=False,
                                                                 reason=1,
-                                                                request_status=HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED)
+                                                                request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
         self.assertEqual(validate_date_range_vs_holiday_requests(data, self.user.id),
                          {'start_date': "Intersection avec des demandes d'absence de : 2020-06-08 à 2020-06-20"})
+
     #
     # def test_u1_from_22_02_21_to_26_02_21_u2_from_13_02_21_to_20_02_21(self):
     #     data = {
@@ -176,7 +176,7 @@ class TimesheetDetailTestCase(TestCase):
                                                         end_date=timezone.now().replace(day=20),
                                                         half_day=False,
                                                         reason=1,
-                                                        request_accepted=True)
+                                                        request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         holiday_request.save()
 
         simplified_timesheet = SimplifiedTimesheet.objects.create(employee=self.employee,
@@ -197,7 +197,7 @@ class TimesheetDetailTestCase(TestCase):
                                                         end_date=timezone.now().replace(month=6, day=30),
                                                         half_day=False,
                                                         reason=1,
-                                                        request_accepted=True)
+                                                        request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         holiday_request.save()
 
         simplified_timesheet = SimplifiedTimesheet.objects.create(employee=self.employee,

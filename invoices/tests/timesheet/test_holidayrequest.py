@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
+from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.holidays import HolidayRequest, validate_date_range
 
 
@@ -72,7 +73,7 @@ class HolidayRequestTestCase(TestCase):
                                                                                                 day=20),
                                                                 half_day=False,
                                                                 reason=1,
-                                                                request_status=HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED)
+                                                                request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
         self.assertEqual(validate_date_range(1234567890, data),
                          {'start_date': "Intersection avec d'autres demandes u2 - Congés du  2021-02-08 au 2021-02-20 "})
@@ -92,6 +93,6 @@ class HolidayRequestTestCase(TestCase):
                                                                                                 day=20),
                                                                 half_day=False,
                                                                 reason=1,
-                                                                request_status=HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED)
+                                                                request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
         self.assertEqual(validate_date_range(1234567890, data), {})

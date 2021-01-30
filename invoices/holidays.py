@@ -12,9 +12,9 @@ from django_currentuser.db.models import CurrentUserField
 
 from helpers.employee import get_admin_emails
 from invoices.employee import Employee
+from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.notifications import send_email_notification
 from invoices.validators import validators
-from django.utils.translation import gettext_lazy as _
 
 
 class HolidayRequest(models.Model):
@@ -33,10 +33,7 @@ class HolidayRequest(models.Model):
         (4, u'Desiderata')
     ]
 
-    class HolidayRequestWorkflowStatus(models.TextChoices):
-        PENDING = 'PNDG', _('Pending')
-        REFUSED = 'REF', _('Refused')
-        ACCEPTED = 'OK', _('Accepted')
+
 
 
     # TODO replace by builtin enums
@@ -50,7 +47,6 @@ class HolidayRequest(models.Model):
         'Notes Validateur',
         help_text='Notes', blank=True, null=True)
 
-    request_accepted = models.BooleanField(u"Demande acceptée", default=False, blank=True)
     request_status = models.CharField(
         max_length=4,
         choices=HolidayRequestWorkflowStatus.choices,
@@ -137,7 +133,7 @@ def validate_date_range(instance_id, data):
         Q(end_date__range=(data['start_date'], data['end_date'])) |
         Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
         Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
-    ).filter(reason=1, request_status=HolidayRequest.HolidayRequestWorkflowStatus.ACCEPTED).exclude(pk=instance_id)
+    ).filter(reason=1, request_status=HolidayRequestWorkflowStatus.ACCEPTED).exclude(pk=instance_id)
     if 0 < conflicts.count():
         messages = {'start_date': "Intersection avec d'autres demandes %s " % conflicts[0]}
     return messages
