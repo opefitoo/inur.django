@@ -58,6 +58,10 @@ class HolidayRequestTestCase(TestCase):
     def tearDown(self):
         self.employee.delete()
         self.user.delete()
+        self.employee_u1.delete()
+        self.u1.delete()
+        self.employee_u2.delete()
+        self.u2.delete()
 
     def test_u1_from_18_02_21_to_26_02_21_u2_from_13_02_21_to_20_02_21(self):
         data = {
