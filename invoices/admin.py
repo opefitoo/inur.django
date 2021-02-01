@@ -413,7 +413,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
     readonly_fields = ('validated_by', 'employee', 'request_creator', 'force_creation',
                        'request_status', 'validator_notes')
     list_display = ('employee', 'start_date', 'end_date', 'reason', 'hours_taken', 'validated_by',
-                    'colorized_request_status', 'request_creator')
+                    'holiday_request_status', 'request_creator')
 
     def accept_request(self, request, queryset):
         if not request.user.is_superuser:
