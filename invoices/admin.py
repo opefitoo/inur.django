@@ -398,10 +398,22 @@ class HolidayRequestAdmin(admin.ModelAdmin):
     ordering = ['-start_date']
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
+
+    def colorized_request_status(self, obj):
+        if HolidayRequestWorkflowStatus.ACCEPTED == obj.request_status:
+            return format_html(
+                '<div class="success">%s</div>' % HolidayRequestWorkflowStatus(obj.request_status).name)
+        elif HolidayRequestWorkflowStatus.REFUSED == obj.request_status:
+            return format_html(
+                '<div class="error">%s</div>' % HolidayRequestWorkflowStatus(obj.request_status).name)
+        else:
+            return format_html(
+                '<div class="warn">%s</div>' % HolidayRequestWorkflowStatus(obj.request_status).name)
+
     readonly_fields = ('validated_by', 'employee', 'request_creator', 'force_creation',
                        'request_status', 'validator_notes')
     list_display = ('employee', 'start_date', 'end_date', 'reason', 'hours_taken', 'validated_by',
-                    'request_status', 'request_creator')
+                    'colorized_request_status', 'request_creator')
 
     def accept_request(self, request, queryset):
         if not request.user.is_superuser:
