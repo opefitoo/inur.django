@@ -399,7 +399,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
 
-    def colorized_request_status(self, obj):
+    def holiday_request_status(self, obj):
         if HolidayRequestWorkflowStatus.ACCEPTED == obj.request_status:
             return format_html(
                 '<div class="success">%s</div>' % HolidayRequestWorkflowStatus(obj.request_status).name)
