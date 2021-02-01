@@ -393,8 +393,8 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         css = {
             'all': ('css/holiday_request.css',)
         }
-
-    list_filter = ('employee', 'request_status')
+    date_hierarchy = 'start_date'
+    list_filter = ('employee', 'request_status', 'reason')
     ordering = ['-start_date']
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
