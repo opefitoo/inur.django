@@ -55,8 +55,8 @@ urlpatterns += [
 ]
 
 urlpatterns += [
-    url(r'^api/v1/snippets/$', api.views.EventList.as_view()),
-    url(r'^api/v1/snippets/(?P<pk>[0-9]+)/$', api.views.EventDetail.as_view())
+    url(r'^api/v1/event_list/$', api.views.EventList.as_view()),
+    url(r'^api/v1/event_list/(?P<pk>[0-9]+)/$', api.views.EventDetail.as_view())
 ]
 # if settings.DEBUG:
 #     import debug_toolbar

@@ -10,7 +10,7 @@ from django.db.models import Q, QuerySet
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
-# from django.utils import timezone
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from invoices.employee import Employee
@@ -78,8 +78,10 @@ class Event(models.Model):
     event_address = models.TextField(_('Event address'),
                                      help_text=_('Enter the address where the event will occur'),
                                      blank=True, null=True)
-    # created_by = models.CharField(max_length=30, default="ui")
-    # created_on = models.DateTimeField(default=timezone.now)
+    created_by = models.CharField(max_length=30, default="ui")
+    created_on = models.DateTimeField(default=timezone.now)
+    calendar_url = models.URLField(blank=True, null=True, default='http://a.sur.lu')
+    calendar_id = models.CharField(blank=True, null=True, default='0', max_length=100)
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
@@ -101,6 +103,9 @@ class Event(models.Model):
         if self.at_office:
             self.event_address = "%s %s" % (config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY)
         exclude = []
+        cal = create_or_update_google_calendar(self)
+        self.calendar_id = cal.get('id')
+        self.calendar_url = cal.get('htmlLink')
         super(Event, self).clean_fields(exclude)
         messages = self.validate(self, self.id, self.__dict__)
         if messages:
@@ -109,7 +114,7 @@ class Event(models.Model):
     def delete(self, using=None, keep_parents=False):
         if "soin" == self.event_type.name:
             calendar_gcalendar = PrestationGoogleCalendarSurLu()
-            calendar_gcalendar.delete_event(self)
+            calendar_gcalendar.delete_event(self, self.calendar_id)
         super(Event, self).delete(using=None, keep_parents=False)
 
 
@@ -120,7 +125,7 @@ class Event(models.Model):
         result.update(validate_date_range(instance_id, data))
         result.update(model.event_is_unique(data))
         # result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
-        result.update(create_or_update_google_calendar(model))
+        # result.update(create_or_update_google_calendar(model))
         return result
 
     def event_is_unique(self, data):
@@ -138,11 +143,10 @@ class Event(models.Model):
     def __str__(self):  # Python 3: def __str__(self):,
         if 'soin' != self.event_type.name:
             return '%s for %s on %s' % (self.event_type, self.patient, self.day)
-        return '%s - %s' % (self.employees.user.first_name, self.patient.name)
+        return '%s - %s' % (self.employees.user, self.patient.name)
 
 
 def create_or_update_google_calendar(instance):
-    messages = {}
     print("*** Creating event")
     sys.stdout.flush()
     if "soin" == instance.event_type.name:
@@ -151,8 +155,7 @@ def create_or_update_google_calendar(instance):
             old_event = Event.objects.get(pk=instance.pk)
             if old_event.employees != instance.employees:
                 calendar_gcalendar.delete_event(old_event)
-        calendar_gcalendar.update_event(instance)
-    return messages
+        return calendar_gcalendar.update_event(instance)
 
 
 #@receiver(pre_save, sender=Event, dispatch_uid="event_update_gcalendar_event")

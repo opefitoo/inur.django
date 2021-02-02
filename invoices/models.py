@@ -930,13 +930,13 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.save()
 
 
-@receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
-def update_prestation_gcalendar_events(sender, instance, **kwargs):
-    # if config.USE_GDRIVE:
-    prestation_gcalendar.update_event(instance)
-
-
-@receiver(post_delete, sender=Prestation, dispatch_uid="delete_prestation_gcalendar_events")
-def delete_prestation_gcalendar_events(sender, instance, **kwargs):
-    # if config.USE_GDRIVE:
-    prestation_gcalendar.delete_event(instance.id)
+# @receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
+# def update_prestation_gcalendar_events(sender, instance, **kwargs):
+#     # if config.USE_GDRIVE:
+#     prestation_gcalendar.update_event(instance)
+#
+#
+# @receiver(post_delete, sender=Prestation, dispatch_uid="delete_prestation_gcalendar_events")
+# def delete_prestation_gcalendar_events(sender, instance, **kwargs):
+#     # if config.USE_GDRIVE:
+#     prestation_gcalendar.delete_event(instance.id)

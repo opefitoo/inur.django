@@ -645,6 +645,7 @@ class EventAdmin(admin.ModelAdmin):
     form = EventForm
 
     list_display = ['day', 'state', 'event_type', 'notes', 'patient']
+    readonly_fields = ['created_by', 'created_on', 'calendar_url', 'calendar_id']
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
 
