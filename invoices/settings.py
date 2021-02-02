@@ -51,6 +51,7 @@ INSTALLED_APPS = (
     'corsheaders',
     # 'debug_toolbar'
     'django_csv_exports',
+    'colorfield'
 )
 
 MIDDLEWARE = (

@@ -1,3 +1,4 @@
+from colorfield.fields import ColorField
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -37,6 +38,12 @@ class Employee(models.Model):
                                               help_text=u'Enter the driver licence number',
                                               max_length=20,
                                               blank=True)
+    abbreviation = models.CharField('Abbreviation',
+                                    help_text='Enter employee abbreviation, must be unique accross company',
+                                    max_length=3,
+                                    default='XXX')
+    color_cell = ColorField(default='#FF0000')
+    color_text = ColorField(default='#FF0000')
 
     birth_place = models.CharField(u'Birth Place',
                                    help_text=u'Enter the City / Country of Birth',
