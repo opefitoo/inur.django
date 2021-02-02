@@ -140,7 +140,7 @@ class PrestationGoogleCalendarSurLu:
 
         if 'id' in gmail_event.keys():
             logger.info("gmail event created %s",  gmail_event)
-            print("gmail event created %s" % gmail_event)
+            print("*** gmail event created %s" % gmail_event)
             sys.stdout.flush()
             return gmail_event
         else:

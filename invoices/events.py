@@ -8,6 +8,7 @@ from django.db.models import Q, QuerySet
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
+# from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from invoices.employee import Employee
@@ -75,6 +76,8 @@ class Event(models.Model):
     event_address = models.TextField(_('Event address'),
                                      help_text=_('Enter the address where the event will occur'),
                                      blank=True, null=True)
+    # created_by = models.CharField(max_length=30, default="ui")
+    # created_on = models.DateTimeField(default=timezone.now)
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
@@ -130,6 +133,9 @@ class Event(models.Model):
 
 @receiver(pre_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
 def create_or_update_google_calendar(sender, instance, **kwargs):
+    import sys
+    print("*** Creating event")
+    sys.stdout.flush()
     if "soin" == instance.event_type.name:
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         if instance.pk:
