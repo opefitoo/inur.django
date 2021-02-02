@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from constance import config
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -110,12 +110,14 @@ class Event(models.Model):
         # result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
         return result
 
-    def event_is_unique(data):
+    def event_is_unique(self, data):
         messages = {}
-        events = Event.objects.filter(event_type=data['event_type'],
-                                      state=data['state'],
-                                      day=data['day'],
-                                      patient_id=data['patient'])
+        events: QuerySet[Event] = Event.objects.filter(event_type=data["event_type_id"],
+                                                       state=data["state"],
+                                                       day=data["day"],
+                                                       patient_id=data["patient_id"],
+                                                       time_start_event=data["time_start_event"],
+                                                       time_end_event=data["time_end_event"])
         if events.count() > 0:
             messages = {'patient': 'Event already created'}
         return messages
