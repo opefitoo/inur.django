@@ -106,8 +106,19 @@ class Event(models.Model):
         result = {}
         # result.update(HolidayRequest.validate_dates(data))
         result.update(validate_date_range(instance_id, data))
+        result.update(model.event_is_unique(data))
         # result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
         return result
+
+    def event_is_unique(data):
+        messages = {}
+        events = Event.objects.filter(event_type=data['event_type'],
+                                      state=data['state'],
+                                      day=data['day'],
+                                      patient_id=data['patient'])
+        if events.count() > 0:
+            messages = {'patient': 'Event already created'}
+        return messages
 
     def __str__(self):  # Python 3: def __str__(self):,
         if 'soin' != self.event_type.name:

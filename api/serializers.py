@@ -3,6 +3,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from django_countries.serializers import CountryFieldMixin
 from rest_framework.exceptions import ValidationError
+from rest_framework.validators import UniqueTogetherValidator
 
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
@@ -178,4 +179,10 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         day = serializers.DateField(format="%Y-%m-%d")
-        fields = ('day', 'state', 'event_type', 'notes', 'patient')
+        fields = ('day', 'time_start_event', 'time_end_event', 'state', 'event_type', 'notes', 'patient', 'employees')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Event.objects.all(),
+                fields=['day', 'event_type', 'time_start_event', 'time_end_event', 'patient', 'employees']
+            )
+        ]

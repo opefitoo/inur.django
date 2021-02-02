@@ -1,8 +1,10 @@
 from constance import config
 from django.contrib.auth.models import User, Group
 from django.core.serializers import serialize
-from rest_framework import viewsets, filters, status
-from rest_framework.decorators import action
+from django.http import JsonResponse
+from rest_framework import viewsets, filters, status, generics
+from rest_framework.decorators import action, api_view
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +15,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer
 from api.utils import get_settings
+from helpers.employee import get_pks_all_active_employees, get_employee_id_by_abbreviation
 from invoices import settings
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
@@ -141,9 +144,23 @@ class EventTypeViewSet(viewsets.ModelViewSet):
     serializer_class = EventTypeSerializer
 
 
-class EventViewSet(viewsets.ModelViewSet):
+class EventList(generics.ListCreateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+
+    def post(self, request, *args, **kwargs):
+        if request.data['employees']:
+            emp_id = get_employee_id_by_abbreviation(request.data['employees'])
+            request.data['employees'] = emp_id
+        return self.create(request, *args, **kwargs)
+
+
+class EventDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
 
 class EventProcessorView(APIView):
@@ -157,6 +174,7 @@ class EventProcessorView(APIView):
         items = items_serializer.data
         response = Response(items, status=status.HTTP_200_OK)
         return response
+
 
 class SettingViewSet(viewsets.ViewSet):
     permission_classes = (IsAuthenticated,)

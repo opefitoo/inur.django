@@ -6,6 +6,7 @@ from rest_framework.authtoken import views as authtoken_views
 from django.conf import settings
 from django.urls import path
 
+import api
 from api.views import EventProcessorView
 from invoices.views import delete_prestation, MedicalPrescriptionAutocomplete
 
@@ -33,7 +34,7 @@ urlpatterns = [
     #     name='employee-autocomplete',
     # ),
     url(
-        r'^admin/delete-prestation/$',  
+        r'^admin/delete-prestation/$',
         delete_prestation,
         name='delete-prestation',
     ),
@@ -51,6 +52,11 @@ urlpatterns += [
     url(r'^media/(?P<path>.*)$', serve, {
         'document_root': settings.MEDIA_ROOT,
     }),
+]
+
+urlpatterns += [
+    url(r'^api/v1/snippets/$', api.views.EventList.as_view()),
+    url(r'^api/v1/snippets/(?P<pk>[0-9]+)/$', api.views.EventDetail.as_view())
 ]
 # if settings.DEBUG:
 #     import debug_toolbar
