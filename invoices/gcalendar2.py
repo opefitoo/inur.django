@@ -7,6 +7,7 @@ from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
 from django.conf import settings
 import logging
+import sys
 
 logger = logging.getLogger('console')
 
@@ -139,6 +140,8 @@ class PrestationGoogleCalendarSurLu:
 
         if 'id' in gmail_event.keys():
             logger.info("gmail event created %s",  gmail_event)
+            print("gmail event created %s" % gmail_event)
+            sys.stdout.flush()
             return gmail_event
         else:
             raise ValueError("error during sync with google calendar %s" % gmail_event)
