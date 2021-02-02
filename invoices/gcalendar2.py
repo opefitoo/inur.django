@@ -134,16 +134,19 @@ class PrestationGoogleCalendarSurLu:
             gmail_event = self._service.events().update(calendarId=event.employees.user.email, eventId=event_id,
                                                         body=event_body).execute()
 
-        return gmail_event
+        if 'id' in gmail_event.keys():
+            return gmail_event
+        else:
+            raise ValueError("error during sync with google calendar %s" % gmail_event)
 
     def delete_event(self, event):
         event_id = self._get_event_id(event_id=event.id)
         try:
-            event = self._service.events().delete(calendarId=event.employees.user.email, eventId=event_id).execute()
+            gmail_event = self._service.events().delete(calendarId=event.employees.user.email, eventId=event_id).execute()
         except HttpError:
-            event = None
+            raise ValueError("error during sync with google calendar %s" % gmail_event)
 
-        return event
+        return gmail_event
 
     def get_event(self, event_id, calendar_id):
         try:
