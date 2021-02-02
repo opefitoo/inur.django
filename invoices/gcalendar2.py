@@ -5,14 +5,17 @@ import pytz
 from apiclient import discovery
 from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
-from oauth2client.service_account import ServiceAccountCredentials
 from django.conf import settings
-from django.utils import timezone
+import logging
+
+logger = logging.getLogger('console')
 
 
 class PrestationGoogleCalendarSurLu:
     summary = 'Prestations'
     calendar = None
+
+
 
     def get_credentials(self):
         SCOPES = ['https://www.googleapis.com/auth/sqlservice.admin',
@@ -135,7 +138,7 @@ class PrestationGoogleCalendarSurLu:
                                                         body=event_body).execute()
 
         if 'id' in gmail_event.keys():
-            print("gmail event created %s" % gmail_event)
+            logger.info("gmail event created %s",  gmail_event)
             return gmail_event
         else:
             raise ValueError("error during sync with google calendar %s" % gmail_event)
