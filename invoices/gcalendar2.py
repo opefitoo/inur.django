@@ -135,6 +135,7 @@ class PrestationGoogleCalendarSurLu:
                                                         body=event_body).execute()
 
         if 'id' in gmail_event.keys():
+            print("gmail event created %s" % gmail_event)
             return gmail_event
         else:
             raise ValueError("error during sync with google calendar %s" % gmail_event)
