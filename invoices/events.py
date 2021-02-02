@@ -106,6 +106,13 @@ class Event(models.Model):
         if messages:
             raise ValidationError(messages)
 
+    def delete(self, using=None, keep_parents=False):
+        if "soin" == self.event_type.name:
+            calendar_gcalendar = PrestationGoogleCalendarSurLu()
+            calendar_gcalendar.delete_event(self)
+        super(Event, self).delete(using=None, keep_parents=False)
+
+
     @staticmethod
     def validate(model, instance_id, data):
         result = {}
@@ -155,11 +162,11 @@ def create_or_update_google_calendar(instance):
 #     create_or_update_google_calendar(instance)
 
 
-@receiver(post_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
-def delete_google_calendar(sender, instance, **kwargs):
-    if "soin" == instance.event_type.name:
-        calendar_gcalendar = PrestationGoogleCalendarSurLu()
-        calendar_gcalendar.delete_event(instance)
+# @receiver(post_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
+# def delete_google_calendar(sender, instance, **kwargs):
+#     if "soin" == instance.event_type.name:
+#         calendar_gcalendar = PrestationGoogleCalendarSurLu()
+#         calendar_gcalendar.delete_event(instance)
 
 
 def validate_date_range(instance_id, data):
