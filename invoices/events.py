@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import sys
+
 from constance import config
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -105,12 +107,13 @@ class Event(models.Model):
             raise ValidationError(messages)
 
     @staticmethod
-    def validate(model, instance_id, data):
+    def validate(model, instance, instance_id, data):
         result = {}
         # result.update(HolidayRequest.validate_dates(data))
         result.update(validate_date_range(instance_id, data))
-        result.update(model.event_is_unique(data))
+        result.update(Event.event_is_unique(data))
         # result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
+        result.update(create_or_update_google_calendar_callback(instance=instance))
         return result
 
     def event_is_unique(self, data):
@@ -131,9 +134,7 @@ class Event(models.Model):
         return '%s - %s' % (self.employees.user.first_name, self.patient.name)
 
 
-@receiver(pre_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
-def create_or_update_google_calendar(sender, instance, **kwargs):
-    import sys
+def create_or_update_google_calendar_callback(instance):
     print("*** Creating event")
     sys.stdout.flush()
     if "soin" == instance.event_type.name:
@@ -143,6 +144,13 @@ def create_or_update_google_calendar(sender, instance, **kwargs):
             if old_event.employees != instance.employees:
                 calendar_gcalendar.delete_event(old_event)
         calendar_gcalendar.update_event(instance)
+
+
+@receiver(pre_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
+def create_or_update_google_calendar_callback(sender, instance, **kwargs):
+    print("*** Creating event from callback")
+    sys.stdout.flush()
+    create_or_update_google_calendar_callback(instance)
 
 
 @receiver(post_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
