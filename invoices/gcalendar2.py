@@ -101,7 +101,7 @@ class PrestationGoogleCalendarSurLu:
                                      event.patient.country)
         description += descr_line % (u'Adresse:', address)
         description += descr_line % (u'Tél Patient:', event.patient.phone_number)
-        if len(event.notes) > 0:
+        if event.notes and len(event.notes) > 0:
             description += descr_line % ('Notes:', event.notes)
         summary = '%s %s' % (event.id, event.patient)
 
