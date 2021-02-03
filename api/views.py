@@ -22,7 +22,7 @@ from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physicia
 from invoices.processors.birthdays import process_and_generate
 from invoices.timesheet import Timesheet, TimesheetTask
 from invoices.employee import JobPosition
-from invoices.events import EventType, Event
+from invoices.events import EventType, Event, create_or_update_google_calendar
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -152,7 +152,20 @@ class EventList(generics.ListCreateAPIView):
         if request.data['employees']:
             emp_id = get_employee_id_by_abbreviation(request.data['employees'])
             request.data['employees'] = emp_id
-        return self.create(request, *args, **kwargs)
+        result = self.create(request, *args, **kwargs)
+        if result.status_code == status.HTTP_201_CREATED:
+            instance = Event.objects.get(pk=result.data.get('id'))
+            assert isinstance(instance, Event)
+            gmail_event = create_or_update_google_calendar(instance)
+            if gmail_event.get('id'):
+                instance.calendar_id = gmail_event.get('id')
+                instance.calendar_url = gmail_event.get('htmlLink')
+                instance.save()
+            else:
+                instance.delete()
+                return JsonResponse(result.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return result
 
 
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):
