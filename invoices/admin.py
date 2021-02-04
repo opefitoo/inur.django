@@ -693,7 +693,7 @@ class EventList(Event):
 
 @admin.register(EventList)
 class EventListAdmin(EventAdmin):
-    list_display = ['day', 'state', 'event_type', 'patient', 'employees']
+    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type', 'patient', 'employees']
     change_list_template = 'admin/change_list.html'
-    list_filter = ('employees', 'event_type', 'state', 'patient')
+    list_filter = ('employees', 'event_type', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'

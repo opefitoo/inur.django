@@ -179,8 +179,8 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         day = serializers.DateField(format="%Y-%m-%d")
-        fields = ('id', 'day', 'time_start_event', 'time_end_event', 'state', 'event_type', 'notes', 'patient', 'employees',
-                  'created_by')
+        fields = ('id', 'day', 'time_start_event', 'time_end_event', 'state', 'event_type', 'notes', 'patient',
+                  'employees', 'created_by')
         validators = [
             UniqueTogetherValidator(
                 queryset=Event.objects.all(),
