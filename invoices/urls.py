@@ -47,7 +47,7 @@ urlpatterns = [
         login_required(EventProcessorView.as_view()),
         name='event_processor_rest_view'),
     url(
-        r'^api/v1/delete_events_script_created/(?P<year>\d+)/$',
+        r'^api/v1/delete_events_script_created/(?P<year>\d+)&(?P<month>\d+)/$',
         login_required(EventCleanupView.as_view()),
         name='event_deletion_processor_rest_view'),
 
