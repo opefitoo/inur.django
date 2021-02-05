@@ -1,3 +1,5 @@
+import sys
+
 from constance import config
 from django.contrib.auth.models import User, Group
 from django.core.serializers import serialize
@@ -181,11 +183,15 @@ class EventCleanupView(APIView):
 
     def get(self, request, *args, **kw):
         """
-        Calling api this way: http://localhost:8000/api/v1/delete_events_script_created/2021&2/
+        Calling api this way: http://localhost:8000/api/v1/delete_events_script_created/2021/2/
         """
         year = int(kw['year'])
         month = int(kw['month'])
-        result = delete_events_created_by_script(year, month)
+        year2 = int(args['year'])
+        month2 = int(args['month'])
+        print("*** DELETE Events" + args)
+        sys.stdout.flush()
+        result = delete_events_created_by_script(year2, month2)
         items_serializer = EventSerializer(result, many=True)
         items = items_serializer.data
         response = Response(items, status=status.HTTP_200_OK)
