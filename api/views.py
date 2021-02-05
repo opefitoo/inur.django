@@ -176,7 +176,8 @@ def cleanup_event(request):
         sys.stdout.flush()
         deleted_events = delete_events_created_by_script(int(float(request.data.get('year'))),
                                                          int(float(request.data.get('month'))))
-        return Response(deleted_events, status=status.HTTP_200_OK)
+        event_serializer = EventSerializer(deleted_events, many=True)
+        return Response(event_serializer.data, status=status.HTTP_200_OK)
 
 
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):
