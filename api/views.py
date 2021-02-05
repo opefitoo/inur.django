@@ -187,7 +187,6 @@ class EventCleanupView(APIView):
         """
         year = int(kw['year'])
         month = int(kw['month'])
-        print("*** DELETE Events" + args)
         sys.stdout.flush()
         result = delete_events_created_by_script(year, month)
         items_serializer = EventSerializer(result, many=True)
