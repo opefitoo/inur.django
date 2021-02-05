@@ -7,7 +7,7 @@ from django.conf import settings
 from django.urls import path
 
 import api
-from api.views import EventProcessorView, EventCleanupView
+from api.views import EventProcessorView
 from invoices.views import delete_prestation, MedicalPrescriptionAutocomplete
 
 admin.autodiscover()
@@ -46,10 +46,6 @@ urlpatterns = [
         r'^api/v1/process/(?P<numdays>\d+)/$',
         login_required(EventProcessorView.as_view()),
         name='event_processor_rest_view'),
-    url(
-        r'^api/v1/delete_events_script_created/(?P<year>\d+)&(?P<month>\d+)/$',
-        login_required(EventCleanupView.as_view()),
-        name='event_deletion_processor_rest_view'),
 
 ]
 

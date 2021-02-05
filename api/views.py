@@ -179,22 +179,6 @@ class EventDetail(generics.RetrieveUpdateDestroyAPIView):
         return self.update(request, *args, **kwargs)
 
 
-class EventCleanupView(APIView):
-
-    def get(self, request, *args, **kw):
-        """
-        Calling api this way: http://localhost:8000/api/v1/delete_events_script_created/2021/2/
-        """
-        year = int(kw['year'])
-        month = int(kw['month'])
-        sys.stdout.flush()
-        result = delete_events_created_by_script(year, month)
-        items_serializer = EventSerializer(result, many=True)
-        items = items_serializer.data
-        response = Response(items, status=status.HTTP_200_OK)
-        return response
-
-
 class EventProcessorView(APIView):
 
     def get(self, request, *args, **kw):
@@ -206,6 +190,23 @@ class EventProcessorView(APIView):
         items = items_serializer.data
         response = Response(items, status=status.HTTP_200_OK)
         return response
+
+
+class EventCleanupViewSet(viewsets.ViewSet):
+    permission_classes = (IsAuthenticated,)
+
+    def cleanup_event(self, request, allow_settings):
+        """
+        Calling api this way: http://localhost:8000/api/v1/cleanup_event/
+        """
+        if request.method == 'GET':
+            deleted_events = delete_events_created_by_script(request.data.get('year'), request.data.get('month'))
+            return Response(deleted_events, status=status.HTTP_200_OK)
+
+    def list(self, request):
+        """
+        """
+        return self.cleanup_event(request)
 
 
 class SettingViewSet(viewsets.ViewSet):

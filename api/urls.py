@@ -19,7 +19,7 @@ router.register(r'hospitalizations', views.HospitalizationViewSet)
 router.register(r'validity-dates', views.ValidityDateViewSet)
 router.register(r'events-types', views.EventTypeViewSet)
 # router.register(r'events', views.EventViewSet)
-router.register(r'setting', views.SettingViewSet, basename='setting')
+router.register(r'cleanup_event', views.EventCleanupViewSet, basename='cleanup_event')
 
 
 urlpatterns = [
