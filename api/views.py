@@ -1,12 +1,9 @@
-import sys
-
 from constance import config
 from django.contrib.auth.models import User, Group
-from django.core.serializers import serialize
+
 from django.http import JsonResponse
 from rest_framework import viewsets, filters, status, generics
-from rest_framework.decorators import action, api_view
-from rest_framework.parsers import JSONParser
+
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -195,7 +192,7 @@ class EventProcessorView(APIView):
 class EventCleanupViewSet(viewsets.ViewSet):
     permission_classes = (IsAuthenticated,)
 
-    def cleanup_event(self, request, allow_settings):
+    def cleanup_event(self, request):
         """
         Calling api this way: http://localhost:8000/api/v1/cleanup_event/
         """
