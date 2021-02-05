@@ -20,6 +20,7 @@ from invoices import settings
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.processors.birthdays import process_and_generate
+from invoices.processors.events import delete_events_created_by_script
 from invoices.timesheet import Timesheet, TimesheetTask
 from invoices.employee import JobPosition
 from invoices.events import EventType, Event, create_or_update_google_calendar
@@ -174,6 +175,21 @@ class EventDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
+
+
+class EventCleanupView(APIView):
+
+    def get(self, request, *args, **kw):
+        """
+        Calling api this way: http://localhost:8000/api/v1/delete_events_script_created/2021&2/
+        """
+        year = int(kw['year'])
+        month = int(kw['month'])
+        result = delete_events_created_by_script(year, month)
+        items_serializer = EventSerializer(result, many=True)
+        items = items_serializer.data
+        response = Response(items, status=status.HTTP_200_OK)
+        return response
 
 
 class EventProcessorView(APIView):
