@@ -174,7 +174,7 @@ def cleanup_event(request):
     if 'POST' == request.method:  # user posting data
         print("Request: %s " % request.data)
         sys.stdout.flush()
-        deleted_events = delete_events_created_by_script(request.data.get('year'), request.data.get('month'))
+        deleted_events = delete_events_created_by_script(int(request.data.get('year')), int(request.data.get('month')))
         return Response(deleted_events, status=status.HTTP_200_OK)
 
 
