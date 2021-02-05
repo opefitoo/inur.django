@@ -2,10 +2,9 @@ import sys
 
 from constance import config
 from django.contrib.auth.models import User, Group
-
 from django.http import JsonResponse
 from rest_framework import viewsets, filters, status, generics
-
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,15 +15,15 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer
 from api.utils import get_settings
-from helpers.employee import get_pks_all_active_employees, get_employee_id_by_abbreviation
+from helpers.employee import get_employee_id_by_abbreviation
 from invoices import settings
+from invoices.employee import JobPosition
+from invoices.events import EventType, Event, create_or_update_google_calendar
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.processors.birthdays import process_and_generate
 from invoices.processors.events import delete_events_created_by_script
 from invoices.timesheet import Timesheet, TimesheetTask
-from invoices.employee import JobPosition
-from invoices.events import EventType, Event, create_or_update_google_calendar
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -170,6 +169,15 @@ class EventList(generics.ListCreateAPIView):
         return result
 
 
+@api_view(['POST'])
+def cleanup_event_xxx(request):
+    if 'POST' == request.method:  # user posting data
+        print("Request: %s " % request.data)
+        sys.stdout.flush()
+        deleted_events = delete_events_created_by_script(request.data.get('year'), request.data.get('month'))
+        return Response(deleted_events, status=status.HTTP_200_OK)
+
+
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
@@ -189,25 +197,6 @@ class EventProcessorView(APIView):
         items = items_serializer.data
         response = Response(items, status=status.HTTP_200_OK)
         return response
-
-
-class EventCleanupViewSet(viewsets.ViewSet):
-    permission_classes = (IsAuthenticated,)
-
-    def cleanup_event(self, request):
-        """
-        Calling api this way: http://localhost:8000/api/v1/cleanup_event/
-        """
-        if request.method == 'GET':
-            print("Request: %s " % request.data)
-            sys.stdout.flush()
-            deleted_events = delete_events_created_by_script(request.data.get('year'), request.data.get('month'))
-            return Response(deleted_events, status=status.HTTP_200_OK)
-
-    def list(self, request):
-        """
-        """
-        return self.cleanup_event(request)
 
 
 class SettingViewSet(viewsets.ViewSet):

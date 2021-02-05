@@ -7,7 +7,7 @@ from django.conf import settings
 from django.urls import path
 
 import api
-from api.views import EventProcessorView
+from api.views import EventProcessorView, cleanup_event_xxx
 from invoices.views import delete_prestation, MedicalPrescriptionAutocomplete
 
 admin.autodiscover()
@@ -37,6 +37,11 @@ urlpatterns = [
         r'^admin/delete-prestation/$',
         delete_prestation,
         name='delete-prestation',
+    ),
+    url(
+        r'^api/v1/cleanup_event_xxx/$',
+        cleanup_event_xxx,
+        name='cleanup_event_xxx',
     ),
     path('admin/', admin.site.urls),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
