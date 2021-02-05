@@ -170,7 +170,7 @@ class EventList(generics.ListCreateAPIView):
 
 
 @api_view(['POST'])
-def cleanup_event_xxx(request):
+def cleanup_event(request):
     if 'POST' == request.method:  # user posting data
         print("Request: %s " % request.data)
         sys.stdout.flush()
