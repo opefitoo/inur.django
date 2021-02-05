@@ -199,7 +199,7 @@ class EventCleanupViewSet(viewsets.ViewSet):
         Calling api this way: http://localhost:8000/api/v1/cleanup_event/
         """
         if request.method == 'GET':
-            print("Request: " + request.data)
+            print("Request: %s " % request.data)
             sys.stdout.flush()
             deleted_events = delete_events_created_by_script(request.data.get('year'), request.data.get('month'))
             return Response(deleted_events, status=status.HTTP_200_OK)
