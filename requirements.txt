@@ -23,7 +23,7 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pyparsing==2.4.7
 python-dateutil==2.8.1
-pytz==2019.3
+pytz==2021.1
 reportlab==3.5.59
 requests==2.25.1
 rsa==4.7
@@ -40,6 +40,6 @@ django-autocomplete-light==3.8.1
 #APScheduler==3.6.3″
 google-auth-oauthlib
 google-auth-httplib2
-holidays==0.10.4
+holidays==0.10.5.2
 django-csv-exports==1.0.5
 django-colorfield==0.4.1

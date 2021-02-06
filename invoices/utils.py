@@ -8,6 +8,9 @@ __author__ = 'mehdi'
 # from contextlib import contextmanager
 
 from calendar import HTMLCalendar
+
+from django.utils.datetime_safe import date
+
 from invoices.events import Event
 
 
@@ -40,6 +43,9 @@ class EventCalendar(HTMLCalendar):
         events_html += "</ul>"
         if day == 0:
             return '<td class="noday">&nbsp;</td>'  # day outside month
+        elif date.today().day == day:
+            return '<td style="background-color:B7E1CD;" class="%s">%d%s</td>' % (self.cssclasses[weekday], day,
+                                                                                  events_html)
         else:
             return '<td class="%s">%d%s</td>' % (self.cssclasses[weekday], day, events_html)
 
