@@ -86,18 +86,21 @@ class Event(models.Model):
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
         if self.time_start_event:
-            return u'<a class="eventtooltip" href="%s">%s %s</a>' % (url,
-                                                                     str(self),
-                                                                     '<span class="evttooltiptext">chez: %s @ %s '
-                                                                     '%s</span> '
-                                                                     % (
-                                                                         self.patient,
-                                                                         self.time_start_event,
-                                                                         self.notes))
-        return u'<a class="eventtooltip" href="%s">%s %s</a>' % (url,
-                                                                 str(self),
-                                                                 '<span class="evttooltiptext">%s</span> '
-                                                                 % self.notes)
+            return u'<a style="background-color:%s;color:%s;" class="eventtooltip" href="%s">%s %s</a>' % (
+                self.employees.color_cell,
+                self.employees.color_text,
+                url,
+                str(self),
+                '<span class="evttooltiptext">chez: %s @ %s '
+                '%s</span> '
+                % (
+                    self.patient,
+                    self.time_start_event,
+                    self.notes))
+        return u'<a class="eventtooltip" href="%s">&#9829;%s %s</a>' % (url,
+                                                                        str(self),
+                                                                        '<span class="evttooltiptext">%s</span> '
+                                                                        % self.notes)
 
     def clean(self, *args, **kwargs):
         if self.at_office:
@@ -116,7 +119,6 @@ class Event(models.Model):
             calendar_gcalendar = PrestationGoogleCalendarSurLu()
             calendar_gcalendar.delete_event(self, self.calendar_id)
         super(Event, self).delete(using=None, keep_parents=False)
-
 
     @staticmethod
     def validate(model, instance_id, data):
@@ -143,7 +145,7 @@ class Event(models.Model):
     def __str__(self):  # Python 3: def __str__(self):,
         if 'soin' != self.event_type.name:
             return '%s for %s on %s' % (self.event_type, self.patient, self.day)
-        return '%s - %s' % (self.employees.user, self.patient.name)
+        return '%s - %s' % (self.employees.abbreviation, self.patient.name)
 
 
 def create_or_update_google_calendar(instance):
@@ -158,7 +160,7 @@ def create_or_update_google_calendar(instance):
         return calendar_gcalendar.update_event(instance)
 
 
-#@receiver(pre_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
+# @receiver(pre_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
 # def create_or_update_google_calendar_callback(sender, instance, **kwargs):
 #     print("*** Creating event from callback")
 #     sys.stdout.flush()
