@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Optional, Dict, Any
 
 import pytz
 import os
@@ -9,7 +8,6 @@ from datetime import datetime
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-# from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
@@ -21,7 +19,6 @@ from gdstorage.storage import GoogleDriveStorage
 
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
-from invoices.managers import InvoiceItemBatchManager
 
 from django.utils.timezone import now
 
@@ -614,7 +611,7 @@ class InvoiceItem(models.Model):
         verbose_name_plural = u"Mémoires d'honoraire"
 
     PRESTATION_LIMIT_MAX = 20
-
+    # invoice_nurse_code = models.TextChoices()
     invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)
     is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
                                      help_text=u'Seuls les patients qui ne disposent pas de la prise en charge CNS '

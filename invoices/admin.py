@@ -127,11 +127,17 @@ class PatientAdmin(CSVExportAdmin):
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
                   'country', 'phone_number', 'email_address', 'date_of_death']
-    readonly_fields = ('age',)
+    readonly_fields = ('age', 'link_to_invoices')
     search_fields = ['name', 'first_name', 'code_sn']
     form = PatientForm
     actions = []
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
+
+    def link_to_invoices(self, instance):
+        url = f'{reverse("admin:invoices_invoiceitem_changelist")}?patient__id={instance.id}'
+        return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici"))
+
+    link_to_invoices.short_description = "Factures client"
 
     def has_csv_permission(self, request):
         """Only super users can export as CSV"""
@@ -393,6 +399,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         css = {
             'all': ('css/holiday_request.css',)
         }
+
     date_hierarchy = 'start_date'
     list_filter = ('employee', 'request_status', 'reason')
     ordering = ['-start_date']
