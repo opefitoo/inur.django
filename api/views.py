@@ -1,4 +1,3 @@
-import json
 import sys
 
 from constance import config
