@@ -1,8 +1,10 @@
 import sys
+from datetime import date
 
 from constance import config
 from django.contrib.auth.models import User, Group
 from django.http import JsonResponse
+from django.utils.datetime_safe import datetime
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
@@ -15,6 +17,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer
 from api.utils import get_settings
+from helpers import holidays
 from helpers.employee import get_employee_id_by_abbreviation
 from invoices import settings
 from invoices.employee import JobPosition
@@ -172,12 +175,19 @@ class EventList(generics.ListCreateAPIView):
 @api_view(['POST'])
 def cleanup_event(request):
     if 'POST' == request.method:  # user posting data
-        print("Request: %s " % request.data)
-        sys.stdout.flush()
         deleted_events = delete_events_created_by_script(int(float(request.data.get('year'))),
                                                          int(float(request.data.get('month'))))
         event_serializer = EventSerializer(deleted_events, many=True)
         return Response(event_serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def whois_off(request):
+    if 'POST' == request.method:  # user posting data
+        print("Request: %s " % request.data)
+        sys.stdout.flush()
+        reqs = holidays.whois_off(datetime.strptime(request.data["day_off"], "%Y-%m-%d"))
+        return Response(reqs, status=status.HTTP_200_OK)
 
 
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):

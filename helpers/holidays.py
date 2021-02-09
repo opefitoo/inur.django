@@ -14,7 +14,8 @@ def how_many_hours_taken_in_period(data, public_holidays):
         Q(end_date__range=(data['start_date'], data['end_date'])) |
         Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
         Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
-    ).filter(employee_id=data['user_id']).filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED).filter(reason__range=(1, 2))
+    ).filter(employee_id=data['user_id']).filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED).filter(
+        reason__range=(1, 2))
     if len(holiday_requests) > 0:
         counter = 0
         for holiday_request in holiday_requests:
@@ -33,6 +34,15 @@ def how_many_hours_taken_in_period(data, public_holidays):
             start_date__lte=data['start_date']).first().number_of_hours / 5
         return [(counter - number_of_public_holidays) * heures_jour,
                 "explication: ( %d jours congés - %d jours fériés )  x %d nombre h. /j" % (counter,
-                                                                              number_of_public_holidays,
-                                                                              heures_jour)]
+                                                                                           number_of_public_holidays,
+                                                                                           heures_jour)]
     return [0, ""]
+
+
+def whois_off(day_off):
+    reqs = HolidayRequest.objects.filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED,
+                                         start_date__lte=day_off, end_date__gte=day_off)
+    employees_abbreviations = []
+    for r in reqs:
+        employees_abbreviations.append(r.employee.employee.abbreviation)
+    return employees_abbreviations

@@ -25,16 +25,14 @@ class HolidayRequest(models.Model):
             models.UniqueConstraint(fields=['employee', 'start_date', 'end_date'],
                                     name='unique holiday request')
         ]
-    #FIXME replace by ENUM
+
+    # FIXME replace by ENUM
     REASONS = [
         (1, u'Congés'),
         (2, u'Maladie'),
         (3, u'Formation'),
         (4, u'Desiderata')
     ]
-
-
-
 
     # TODO replace by builtin enums
     # https://stackoverflow.com/questions/54802616/how-to-use-enums-as-a-choice-field-in-django-model
