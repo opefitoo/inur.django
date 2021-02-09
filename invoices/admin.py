@@ -100,7 +100,7 @@ class ExpenseCardDetailInline(TabularInline):
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
     inlines = [ExpenseCardDetailInline]
-    list_display = ('name', 'licence_plate')
+    list_display = ('name', 'licence_plate', 'pin_codes')
 
 
 class HospitalizationInline(admin.TabularInline):

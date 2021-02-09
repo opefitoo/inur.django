@@ -1,3 +1,5 @@
+from typing import List
+
 from django.db import models
 
 
@@ -7,6 +9,13 @@ class Car(models.Model):
 
     name = models.CharField(max_length=20)
     licence_plate = models.CharField(max_length=8)
+
+    @property
+    def pin_codes(self):
+        pin_codes: List[str] = []
+        for r in self.expensecard_set.all():
+            pin_codes.append("%s - %s" % (r.name, r.pin))
+        return pin_codes
 
     def __str__(self):
         return '%s - %s' % (self.name, self.licence_plate)
