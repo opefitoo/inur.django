@@ -42,7 +42,7 @@ def how_many_hours_taken_in_period(data, public_holidays):
 def whois_off(day_off):
     reqs = HolidayRequest.objects.filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED,
                                          start_date__lte=day_off, end_date__gte=day_off)
-    employees_abbreviations = []
+    employees_abbreviations = ""
     for r in reqs:
-        employees_abbreviations.append(r.employee.employee.abbreviation)
-    return employees_abbreviations
+        employees_abbreviations += r.employee.employee.abbreviation + ","
+    return employees_abbreviations[:-1]
