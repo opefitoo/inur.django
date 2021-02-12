@@ -234,6 +234,7 @@ if 'EMAIL_HOST' in os.environ:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 LOGGING = {
     'version': 1,
