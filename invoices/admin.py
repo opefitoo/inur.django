@@ -244,7 +244,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     inlines = [PrestationInline]
     fieldsets = (
         (None, {
-            'fields': ('invoice_number', 'is_private', 'patient', 'invoice_date')
+            'fields': ('invoice_number', 'is_private', 'patient', 'invoice_date', 'invoice_nurse_code')
         }),
         ('Advanced options', {
             'classes': ('collapse',),

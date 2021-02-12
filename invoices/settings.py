@@ -189,12 +189,14 @@ CONSTANCE_CONFIG = {
     'NURSE_PHONE_NUMBER':
         ('Tél: 691.30.85.84',
          'Nom et adresse du prestataire de soins (apparait sur les factures)', str),
+    'BIS_NURSE_CODE': (
+        '', "Code infirmier secondaire pour les soins", str),
     'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select')
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
     'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE'),
-    'Options de Facturation': ('MAIN_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
+    'Options de Facturation': ('MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
                                'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT'),
 }
 

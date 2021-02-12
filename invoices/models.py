@@ -17,6 +17,7 @@ from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from gdstorage.storage import GoogleDriveStorage
 
+from invoices.enums.inur import NurseCodeChoices
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
 
@@ -611,7 +612,10 @@ class InvoiceItem(models.Model):
         verbose_name_plural = u"Mémoires d'honoraire"
 
     PRESTATION_LIMIT_MAX = 20
-    # invoice_nurse_code = models.TextChoices()
+    invoice_nurse_code = models.CharField(
+        max_length=10,
+        choices=NurseCodeChoices.choices,
+        default=NurseCodeChoices.MAIN)
     invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)
     is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
                                      help_text=u'Seuls les patients qui ne disposent pas de la prise en charge CNS '
