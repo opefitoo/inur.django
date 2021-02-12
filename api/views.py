@@ -24,7 +24,7 @@ from invoices.events import EventType, Event, create_or_update_google_calendar
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.processors.birthdays import process_and_generate
-from invoices.processors.events import delete_events_created_by_script
+from invoices.processors.events import delete_events_created_by_script, async_deletion
 from invoices.timesheet import Timesheet, TimesheetTask
 
 
@@ -173,11 +173,12 @@ class EventList(generics.ListCreateAPIView):
 
 @api_view(['POST'])
 def cleanup_event(request):
-    if 'POST' == request.method:  # user posting data
-        deleted_events = delete_events_created_by_script(int(float(request.data.get('year'))),
-                                                         int(float(request.data.get('month'))))
-        event_serializer = EventSerializer(deleted_events, many=True)
-        return Response(event_serializer.data, status=status.HTTP_200_OK)
+    if 'POST' != request.method:  # user posting data
+        return
+    deleted_events = async_deletion(int(float(request.data.get('year'))),
+                                    int(float(request.data.get('month'))))
+    event_serializer = EventSerializer(deleted_events, many=True)
+    return Response(event_serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
