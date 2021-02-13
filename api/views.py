@@ -175,8 +175,8 @@ class EventList(generics.ListCreateAPIView):
 def cleanup_event(request):
     if 'POST' != request.method:  # user posting data
         return
-    deleted_events = async_deletion(int(float(request.data.get('year'))),
-                                    int(float(request.data.get('month'))))
+    deleted_events = delete_events_created_by_script(int(float(request.data.get('year'))),
+                                                     int(float(request.data.get('month'))))
     event_serializer = EventSerializer(deleted_events, many=True)
     return Response(event_serializer.data, status=status.HTTP_200_OK)
 
