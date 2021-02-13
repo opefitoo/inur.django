@@ -8,6 +8,8 @@ from googleapiclient.errors import HttpError
 from django.conf import settings
 import logging
 import sys
+from rq import Queue
+from worker import conn
 
 logger = logging.getLogger('console')
 
@@ -145,6 +147,10 @@ class PrestationGoogleCalendarSurLu:
             return gmail_event
         else:
             raise ValueError("error during sync with google calendar %s" % gmail_event)
+
+    def q_delete_event(self, evt_instance, event_id):
+        q = Queue(connection=conn)
+        q.enqueue(self.delete_event, evt_instance, event_id)
 
     def delete_event(self, evt_instance, event_id):
         try:
