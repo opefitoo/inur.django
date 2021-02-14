@@ -155,7 +155,9 @@ class PrestationGoogleCalendarSurLu:
     def delete_event(self, evt_instance, event_id):
         try:
             gmail_event = self._service.events().delete(calendarId=evt_instance.employees.user.email, eventId=event_id).execute()
-        except HttpError:
+        except HttpError as e:
+            print("An error happened when tryint to delete event %s - exception %s" % (event_id, e))
+            sys.stdout.flush()
             return None
         return gmail_event
 
