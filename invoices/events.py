@@ -138,7 +138,7 @@ class Event(models.Model):
                                                        day=data["day"],
                                                        patient_id=data["patient_id"],
                                                        time_start_event=data["time_start_event"],
-                                                       time_end_event=data["time_end_event"])
+                                                       time_end_event=data["time_end_event"]).exclude(id=self.id)
         if events.count() > 0:
             messages = {'patient': 'Event already created'}
         return messages
