@@ -145,15 +145,17 @@ class PrestationGoogleCalendarSurLu:
         else:
             raise ValueError("error during sync with google calendar %s" % gmail_event)
 
-    def q_delete_event(self, evt_instance, event_id):
+    def q_delete_event(self, evt_instance):
         q = Queue(connection=conn)
-        q.enqueue(self.delete_event, evt_instance, event_id)
+        q.enqueue(self.delete_event, evt_instance)
 
-    def delete_event(self, evt_instance, event_id):
+    def delete_event(self, evt_instance):
+        print("Trying to delete %s from %s" % (evt_instance.calendar_id, evt_instance))
         try:
-            gmail_event = self._service.events().delete(calendarId=evt_instance.employees.user.email, eventId=event_id).execute()
+            gmail_event = self._service.events().delete(calendarId=evt_instance.employees.user.email,
+                                                        eventId=evt_instance.calendar_id).execute()
         except HttpError as e:
-            print("An error happened when tryint to delete event %s - exception %s" % (event_id, e))
+            print("An error happened when tryint to delete event %s - exception %s" % (evt_instance.calendar_id, e))
             sys.stdout.flush()
             return
         print("Successfully delete GCalendar event %s" % gmail_event)
