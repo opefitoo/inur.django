@@ -158,7 +158,9 @@ class PrestationGoogleCalendarSurLu:
         except HttpError as e:
             print("An error happened when tryint to delete event %s - exception %s" % (event_id, e))
             sys.stdout.flush()
-            return None
+            return
+        print("Successfully delete GCalendar event %s" % gmail_event)
+        sys.stdout.flush()
         return gmail_event
 
     def get_event(self, event_id, calendar_id):
