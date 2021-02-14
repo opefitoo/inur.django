@@ -81,12 +81,7 @@ class PrestationGoogleCalendarSurLu:
 
         return self._service.calendars().insert(body=calendar).execute()
 
-    @staticmethod
-    def _get_event_id(event_id):
-        return str(uuid.uuid5(uuid.NAMESPACE_DNS, 'NURSE_PRESTATION_GCALENDAR' + str(event_id)).hex)
-
     def update_event(self, event):
-        event_id = self._get_event_id(event_id=event.id)
         descr_line = "<b>%s</b> %s<br>"
         description = descr_line % ('Patient:', event.patient)
         if event.at_office:
@@ -103,9 +98,11 @@ class PrestationGoogleCalendarSurLu:
                                      event.patient.country)
         description += descr_line % (u'Adresse:', address)
         description += descr_line % (u'Tél Patient:', event.patient.phone_number)
+        if event.id:
+            description += descr_line % (u'Sur LU ID:', event.id)
         if event.notes and len(event.notes) > 0:
             description += descr_line % ('Notes:', event.notes)
-        summary = '%s %s' % (event.id, event.patient)
+        summary = '%s @ %s' % (event.employees, event.patient)
 
         naive_date = datetime.datetime(event.day.year,
                                        event.day.month, event.day.day,
@@ -120,7 +117,6 @@ class PrestationGoogleCalendarSurLu:
                                            event.time_end_event.second)
 
         event_body = {
-            'id': event_id,
             'summary': summary,
             'description': description,
             'location': location,
@@ -132,12 +128,13 @@ class PrestationGoogleCalendarSurLu:
             }
         }
 
-        gmail_event = self.get_event(event_id=event_id, calendar_id=event.employees.user.email)
+        gmail_event = self.get_event(event_id=event.calendar_id, calendar_id=event.employees.user.email)
         if gmail_event is None:
             gmail_event = self._service.events().insert(calendarId=event.employees.user.email,
                                                         body=event_body).execute()
         else:
-            gmail_event = self._service.events().update(calendarId=event.employees.user.email, eventId=event_id,
+            gmail_event = self._service.events().update(calendarId=event.employees.user.email,
+                                                        eventId=event.calendar_id,
                                                         body=event_body).execute()
 
         if 'id' in gmail_event.keys():
