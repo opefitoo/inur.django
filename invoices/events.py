@@ -117,8 +117,8 @@ class Event(models.Model):
     def delete(self, using=None, keep_parents=False):
         if "soin" == self.event_type.name:
             calendar_gcalendar = PrestationGoogleCalendarSurLu()
-            calendar_gcalendar.q_delete_event(self)
-            # calendar_gcalendar.delete_event(self)
+            # calendar_gcalendar.q_delete_event(self)
+            calendar_gcalendar.delete_event(self)
         super(Event, self).delete(using=None, keep_parents=False)
 
     @staticmethod
