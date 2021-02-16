@@ -1,4 +1,4 @@
-FROM python:3.8.3-slim-buster
+FROM python:3.8-alpine
 
 ENV path="scripts:${PATH}"
 
@@ -23,4 +23,3 @@ RUN chmod -R 755 /vol/web
 USER user
 
 CMD ["entrypoint.sh"]
-
