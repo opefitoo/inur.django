@@ -1,4 +1,4 @@
-FROM python:3.8-alpine
+FROM python:python:3.8.3-slim-buster
 
 ENV path="scripts:${PATH}"
 
