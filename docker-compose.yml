@@ -8,8 +8,13 @@ services:
       - "8000:8000"
     volumes: 
       - ./invoices:/invoices
-    command: sh -c "python manage.py runserver 0.0.0.0:8000"
+    secrets:
+      - my_external_secret
+    command: sh -c "python ../manage.py runserver 0.0.0.0:8000"
     environment: 
       - DEBUG=1
+secrets:                        # top level secrets block
+  my_external_secret:
+    external: true
     
   
