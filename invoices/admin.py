@@ -13,6 +13,7 @@ from django_csv_exports.admin import CSVExportAdmin
 from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
+from invoices.actions.print_pdf import do_it
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
@@ -21,6 +22,7 @@ from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
 from invoices.holidays import HolidayRequest
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch
+from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.resources import ExpenseCard, Car
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
@@ -221,6 +223,11 @@ class PrestationInline(TabularInline):
     delete.allow_tags = True
 
 
+@admin.register(InvoicingDetails)
+class InvoicingDetailsAdmin(admin.ModelAdmin):
+    list_display = ('provider_code', 'name', 'default_invoicing')
+
+
 @admin.register(InvoiceItem)
 class InvoiceItemAdmin(admin.ModelAdmin):
     class Media:
@@ -240,11 +247,11 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient']
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
-               pdf_private_invoice, export_to_pdf2]
+               pdf_private_invoice, export_to_pdf2, do_it]
     inlines = [PrestationInline]
     fieldsets = (
         (None, {
-            'fields': ('invoice_number', 'is_private', 'patient', 'invoice_date', 'invoice_nurse_code')
+            'fields': ('invoice_number', 'is_private', 'patient', 'invoice_date', 'invoice_details')
         }),
         ('Advanced options', {
             'classes': ('collapse',),

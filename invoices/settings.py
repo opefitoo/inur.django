@@ -172,22 +172,22 @@ CONSTANCE_CONFIG = {
     'AT_HOME_CARE_CODE': (
         'NF01', "CareCode that is set to Prestation's copy which is created if at_home is checked", str),
     'MAIN_NURSE_CODE': (
-        '300744-44', "Code infirmier pour les soins", str),
+        'XXXXXX-YY', "Code infirmier pour les soins", str),
     'MAIN_BANK_ACCOUNT': (
-        'LU55 0019 4555 2516 1000 BCEELULL', "Compte bancaire IBAN pour les virement bancaire ", str),
+        'LUXX YYYY ZZZZ AAAA BBBB XXXXLULL', "Compte bancaire IBAN pour les virement bancaire ", str),
     'ALTERNATE_BANK_ACCOUNT': (
         'LUXX XXXX XXXX XXXX XXXX XXXXLULL', "Compte bancaire n.2 IBAN pour les virement bancaire ", str),
     'NURSE_NAME':
-        ('Regine SIMBA',
+        ('Josette MARCHAL',
          'Nom du prestataire de soins (apparaît sur les factures)', str),
     'NURSE_ADDRESS':
-        ('1A, rue fort wallis',
+        ('1, rue de la paix',
          'Adresse du prestataire de soins (apparait sur les factures)', str),
     'NURSE_ZIP_CODE_CITY':
-        ('L-2714 Luxembourg',
+        ('L-2512 Luxembourg',
          'Code postal et Ville du prestataire de soins (apparait sur les factures)', str),
     'NURSE_PHONE_NUMBER':
-        ('Tél: 691.30.85.84',
+        ('Tél: 691.30.40.50',
          'Nom et adresse du prestataire de soins (apparait sur les factures)', str),
     'BIS_NURSE_CODE': (
         '', "Code infirmier secondaire pour les soins", str),

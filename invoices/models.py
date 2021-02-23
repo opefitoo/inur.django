@@ -23,6 +23,8 @@ from invoices.gcalendar import PrestationGoogleCalendar
 
 from django.utils.timezone import now
 
+from invoices.modelspackage import InvoicingDetails
+from invoices.modelspackage.invoice import get_default_invoicing_details
 from invoices.storages import CustomizedGoogleDriveStorage
 from constance import config
 
@@ -275,6 +277,7 @@ class Patient(models.Model):
 class Hospitalization(models.Model):
     class Meta:
         ordering = ['-id']
+
     start_date = models.DateField(u"Début d'hospitlisation")
     end_date = models.DateField(u"Date de fin")
     description = models.TextField(max_length=50, default=None, blank=True, null=True)
@@ -612,10 +615,10 @@ class InvoiceItem(models.Model):
         verbose_name_plural = u"Mémoires d'honoraire"
 
     PRESTATION_LIMIT_MAX = 20
-    invoice_nurse_code = models.CharField(
-        max_length=10,
-        choices=NurseCodeChoices.choices,
-        default=NurseCodeChoices.MAIN)
+    invoice_details = models.ForeignKey(InvoicingDetails,
+                                        default=get_default_invoicing_details,
+                                        related_name='invoicing_details_link',
+                                        on_delete=models.PROTECT)
     invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)
     is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
                                      help_text=u'Seuls les patients qui ne disposent pas de la prise en charge CNS '
@@ -714,6 +717,7 @@ class InvoiceItem(models.Model):
 class Prestation(models.Model):
     class Meta:
         ordering = ['-date']
+
     invoice_item = models.ForeignKey(InvoiceItem,
                                      related_name='prestations',
                                      on_delete=models.CASCADE)
@@ -929,7 +933,6 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home = False
             pair.at_home_paired = instance
             pair.save()
-
 
 # @receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
 # def update_prestation_gcalendar_events(sender, instance, **kwargs):
