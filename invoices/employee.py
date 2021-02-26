@@ -1,3 +1,4 @@
+from auditlog.registry import auditlog
 from colorfield.fields import ColorField
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -150,3 +151,5 @@ def employee_revoke_gservices_permissions(sender, instance, **kwargs):
         path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
         gd_storage.update_folder_permissions_v3(path, email, has_access)
         gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
+
+auditlog.register(Employee)
