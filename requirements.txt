@@ -44,3 +44,4 @@ holidays==0.10.5.2
 django-csv-exports==1.0.5
 django-colorfield==0.4.1
 redis~=3.5.3
+git+https://github.com/jazzband/django-auditlog.git#egg=django-auditlog

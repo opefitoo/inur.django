@@ -51,7 +51,8 @@ INSTALLED_APPS = (
     'corsheaders',
     # 'debug_toolbar'
     'django_csv_exports',
-    'colorfield'
+    'colorfield',
+    'auditlog'
 )
 
 MIDDLEWARE = (
@@ -67,6 +68,7 @@ MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django_currentuser.middleware.ThreadLocalUserMiddleware',
+    'auditlog.middleware.AuditlogMiddleware',
 )
 #
 LOCALE_PATHS = (
