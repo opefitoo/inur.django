@@ -294,7 +294,9 @@ class Patient(models.Model):
         messages = {}
         patient_age = calculate_age(None, data['code_sn'])
         if 'is_private' in data and not data['is_private']:
-            if patient_age is None or patient_age < 1 or patient_age > 120:
+            if patient_age is None:
+                messages = {'code_sn': 'Code SN does not look ok, if not private patient it should follow CNS scheme'}
+            elif patient_age < 1 or patient_age > 120:
                 messages = {'code_sn': 'Code SN does not look ok, patient cannot be %d year(s) old' % patient_age}
         return messages
 
