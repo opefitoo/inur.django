@@ -450,6 +450,9 @@ class PatientAnamnesis(models.Model):
             return [p.assigned_physician for p in AssignedPhysician.objects.filter(anamnesis_id=self.id)]
         return None
 
+    def __str__(self):
+        return "Anamanèse %s " % self.patient
+
 
 class AssignedPhysician(models.Model):
     class Meta:
