@@ -14,6 +14,7 @@ from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.print_pdf import do_it
+from invoices.models import PatientAnamnesis, ContactPerson
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
@@ -21,7 +22,7 @@ from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm, EventForm
 from invoices.holidays import HolidayRequest
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
-    Hospitalization, InvoiceItemBatch
+    Hospitalization, InvoiceItemBatch, AssignedPhysician
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.resources import ExpenseCard, Car
@@ -121,6 +122,70 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
         return obj.image_preview(300, 300)
 
     scan_preview.allow_tags = True
+
+
+class AssignedPhysicianInLine(admin.TabularInline):
+    extra = 0
+    model = AssignedPhysician
+    fields = ('assigned_physician',)
+    autocomplete_fields = ['assigned_physician']
+
+
+class ContactPersonInLine(admin.TabularInline):
+    extra = 0
+    model = ContactPerson
+    fields = ('priority', 'contact_name', 'contact_relationship', 'contact_private_phone_nbr',
+              'contact_business_phone_nbr')
+
+
+@admin.register(PatientAnamnesis)
+class PatientAnamnesisAdmin(admin.ModelAdmin):
+    list_display = ('patient',)
+    autocomplete_fields = ['patient']
+
+    fieldsets = (
+        ('Patient', {
+            'fields': ('patient', 'nationality', 'external_doc_link', 'civil_status')
+        }),
+        ('Habitation', {
+            'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door'),
+        }),
+        (None, {
+            'fields': ('health_care_dossier_location', 'informal_caregiver', 'dep_insurance', 'pathologies',
+                       'medical_background', 'allergies'),
+        }),
+        ('Aides techniques', {
+            'fields': ('electrical_bed', 'walking_frame', 'cane', 'aqualift', 'remote_alarm', 'other_technical_help'),
+        }),
+        (u'Prothèses', {
+            'fields': ('dental_prosthesis', 'hearing_aid', 'glasses', 'other_prosthesis'),
+        }),
+        (u'Médicaments', {
+            'fields': ('drugs_managed_by', 'drugs_prepared_by', 'drugs_distribution', 'drugs_ordering',
+                       'pharmacy_visits'),
+        }),
+        (u'Mobilisation', {
+            'fields': ('mobilization', 'mobilization_description'),
+        }),
+        (u"Soins d'hygiène", {
+            'fields': ('hygiene_care_location', 'shower_days', 'hair_wash_days', 'bed_manager', 'bed_sheets_manager',
+                       'laundry_manager','laundry_drop_location','new_laundry_location' ),
+        }),
+        (u"Nutrition", {
+            'fields': ('weight', 'size', 'nutrition_autonomy', 'diet', 'meal_on_wheels', 'shopping_management',
+                       'shopping_management_desc', ),
+        }),
+        (u"Elimination", {
+            'fields': ('urinary_incontinence', 'faecal_incontinence', 'protection', 'day_protection',
+                       'night_protection', 'protection_ordered', 'urinary_catheter', 'crystofix_catheter',
+                       'elimination_addnl_details'),
+        }),
+        (u"Garde/ Course sortie / Foyer", {
+            'fields': ('day_care_center', 'day_care_center_activities', 'household_chores',),
+        }),
+    )
+
+    inlines = [AssignedPhysicianInLine, ContactPersonInLine]
 
 
 @admin.register(Patient)

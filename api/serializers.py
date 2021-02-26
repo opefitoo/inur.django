@@ -6,7 +6,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch
+    ValidityDate, InvoiceItemBatch, AssignedPhysician
+from invoices.models import PatientAnamnesis
 from invoices.timesheet import Timesheet, TimesheetTask
 from invoices.employee import JobPosition
 from invoices.events import EventType, Event
@@ -50,7 +51,30 @@ class CareCodeSerializer(serializers.ModelSerializer):
             'validity_dates')
 
 
+class PhysicianSerializer(CountryFieldMixin, serializers.ModelSerializer):
+    class Meta:
+        model = Physician
+        fields = '__all__'
+
+
+class PatientAnamnesisSerializer(CountryFieldMixin, serializers.ModelSerializer):
+    physicians_set = PhysicianSerializer(many=True)
+
+    class Meta:
+        model = PatientAnamnesis
+        fields = '__all__'
+
+
+class AssignedPhysician(serializers.ModelSerializer):
+    class Meta:
+        model = AssignedPhysician
+        fields = ('assigned_physician',)
+
+
 class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
+    anamnesis_set = PatientAnamnesisSerializer()
+    full_address = serializers.CharField()
+
     def validate(self, data):
         instance_id = None
         if self.instance is not None:
@@ -64,18 +88,10 @@ class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Patient
-        fields = ('code_sn', 'first_name', 'name', 'address', 'zipcode', 'city', 'country', 'phone_number',
-                  'email_address', 'participation_statutaire', 'is_private')
+        fields = '__all__'
         participation_statutaire = serializers.NullBooleanField(required=False)
         is_private = serializers.NullBooleanField(required=False)
-
-
-class PhysicianSerializer(CountryFieldMixin, serializers.ModelSerializer):
-    class Meta:
-        model = Physician
-        fields = (
-            'id', 'provider_code', 'first_name', 'name', 'address', 'zipcode', 'city', 'country', 'phone_number',
-            'fax_number', 'email_address')
+        depth = 1
 
 
 class PrestationSerializer(serializers.ModelSerializer):

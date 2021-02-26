@@ -14,7 +14,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
-    ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer
+    ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, PatientAnamnesisSerializer
 from api.utils import get_settings
 from helpers import holidays
 from helpers.employee import get_employee_id_by_abbreviation
@@ -22,7 +22,7 @@ from invoices import settings
 from invoices.employee import JobPosition
 from invoices.events import EventType, Event, create_or_update_google_calendar
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch
+    ValidityDate, InvoiceItemBatch, PatientAnamnesis
 from invoices.processors.birthdays import process_and_generate
 from invoices.processors.events import delete_events_created_by_script
 from invoices.timesheet import Timesheet, TimesheetTask
@@ -145,6 +145,11 @@ class ValidityDateViewSet(viewsets.ModelViewSet):
 class EventTypeViewSet(viewsets.ModelViewSet):
     queryset = EventType.objects.all()
     serializer_class = EventTypeSerializer
+
+
+class PatientAnamnesisViewSet(viewsets.ModelViewSet):
+    queryset = PatientAnamnesis.objects.all()
+    serializer_class = PatientAnamnesisSerializer
 
 
 class EventList(generics.ListCreateAPIView):
