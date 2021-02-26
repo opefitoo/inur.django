@@ -6,10 +6,14 @@ from apiclient import discovery
 from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
 from django.conf import settings
-# import logging
-# import sys
-#
-# logger = logging.getLogger('console')
+
+import logging
+import sys
+from rq import Queue
+from worker import conn
+
+logger = logging.getLogger('console')
+
 
 
 class PrestationGoogleCalendarSurLu:
@@ -77,12 +81,7 @@ class PrestationGoogleCalendarSurLu:
 
         return self._service.calendars().insert(body=calendar).execute()
 
-    @staticmethod
-    def _get_event_id(event_id):
-        return str(uuid.uuid5(uuid.NAMESPACE_DNS, 'NURSE_PRESTATION_GCALENDAR' + str(event_id)).hex)
-
     def update_event(self, event):
-        event_id = self._get_event_id(event_id=event.id)
         descr_line = "<b>%s</b> %s<br>"
         description = descr_line % ('Patient:', event.patient)
         if event.at_office:
@@ -99,9 +98,11 @@ class PrestationGoogleCalendarSurLu:
                                          event.patient.country)
         description += descr_line % (u'Adresse:', address)
         description += descr_line % (u'Tél Patient:', event.patient.phone_number)
+        if event.id:
+            description += descr_line % (u'Sur LU ID:', event.id)
         if event.notes and len(event.notes) > 0:
             description += descr_line % ('Notes:', event.notes)
-        summary = '%s %s' % (event.id, event.patient)
+        summary = '%s @ %s' % (event.employees, event.patient)
 
         naive_date = datetime.datetime(event.day.year,
                                        event.day.month, event.day.day,
@@ -116,7 +117,6 @@ class PrestationGoogleCalendarSurLu:
                                            event.time_end_event.second)
 
         event_body = {
-            'id': event_id,
             'summary': summary,
             'description': description,
             'location': location,
@@ -128,12 +128,13 @@ class PrestationGoogleCalendarSurLu:
             }
         }
 
-        gmail_event = self.get_event(event_id=event_id, calendar_id=event.employees.user.email)
+        gmail_event = self.get_event(event_id=event.calendar_id, calendar_id=event.employees.user.email)
         if gmail_event is None:
             gmail_event = self._service.events().insert(calendarId=event.employees.user.email,
                                                         body=event_body).execute()
         else:
-            gmail_event = self._service.events().update(calendarId=event.employees.user.email, eventId=event_id,
+            gmail_event = self._service.events().update(calendarId=event.employees.user.email,
+                                                        eventId=event.calendar_id,
                                                         body=event_body).execute()
 
         if 'id' in gmail_event.keys():
@@ -144,12 +145,25 @@ class PrestationGoogleCalendarSurLu:
         else:
             raise ValueError("error during sync with google calendar %s" % gmail_event)
 
-    def delete_event(self, evt_instance, event_id):
+    def q_delete_event(self, evt_instance):
+        q = Queue(connection=conn)
+        q_r = q.enqueue(self.delete_event, evt_instance)
+        print("Queue result %s" % q_r)
+        sys.stdout.flush()
+
+
+    def delete_event(self, evt_instance):
+        print("Trying to delete %s from %s" % (evt_instance.calendar_id, evt_instance))
+        sys.stdout.flush()
         try:
             gmail_event = self._service.events().delete(calendarId=evt_instance.employees.user.email,
-                                                        eventId=event_id).execute()
-        except HttpError:
-            return None
+                                                        eventId=evt_instance.calendar_id).execute()
+        except HttpError as e:
+            print("An error happened when tryint to delete event %s - exception %s" % (evt_instance.calendar_id, e))
+            sys.stdout.flush()
+            return
+        print("Successfully delete GCalendar event %s" % gmail_event)
+        sys.stdout.flush()
         return gmail_event
 
     def get_event(self, event_id, calendar_id):
