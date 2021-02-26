@@ -14,7 +14,7 @@ from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.print_pdf import do_it
-from invoices.models import PatientAnamnesis, ContactPerson
+from invoices.models import PatientAnamnesis, ContactPerson, OtherStakeholder, DependenceInsurance
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
@@ -138,6 +138,19 @@ class ContactPersonInLine(admin.TabularInline):
               'contact_business_phone_nbr')
 
 
+class DependenceInsuranceInLine(admin.TabularInline):
+    extra = 0
+    model = DependenceInsurance
+    fields = ('evaluation_date', 'ack_receipt_date', 'decision_date', 'rate_granted')
+
+
+class OtherStakeholdersInLine(admin.TabularInline):
+    extra = 0
+    model = OtherStakeholder
+    fields = ('contact_name', 'contact_pro_spec', 'contact_private_phone_nbr', 'contact_business_phone_nbr',
+              'contact_email')
+
+
 @admin.register(PatientAnamnesis)
 class PatientAnamnesisAdmin(admin.ModelAdmin):
     list_display = ('patient',)
@@ -151,7 +164,7 @@ class PatientAnamnesisAdmin(admin.ModelAdmin):
             'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door'),
         }),
         (None, {
-            'fields': ('health_care_dossier_location', 'informal_caregiver', 'dep_insurance', 'pathologies',
+            'fields': ('health_care_dossier_location', 'informal_caregiver', 'pathologies',
                        'medical_background', 'allergies'),
         }),
         ('Aides techniques', {
@@ -169,11 +182,11 @@ class PatientAnamnesisAdmin(admin.ModelAdmin):
         }),
         (u"Soins d'hygiène", {
             'fields': ('hygiene_care_location', 'shower_days', 'hair_wash_days', 'bed_manager', 'bed_sheets_manager',
-                       'laundry_manager','laundry_drop_location','new_laundry_location' ),
+                       'laundry_manager', 'laundry_drop_location', 'new_laundry_location'),
         }),
         (u"Nutrition", {
             'fields': ('weight', 'size', 'nutrition_autonomy', 'diet', 'meal_on_wheels', 'shopping_management',
-                       'shopping_management_desc', ),
+                       'shopping_management_desc',),
         }),
         (u"Elimination", {
             'fields': ('urinary_incontinence', 'faecal_incontinence', 'protection', 'day_protection',
@@ -185,7 +198,7 @@ class PatientAnamnesisAdmin(admin.ModelAdmin):
         }),
     )
 
-    inlines = [AssignedPhysicianInLine, ContactPersonInLine]
+    inlines = [AssignedPhysicianInLine, ContactPersonInLine, OtherStakeholdersInLine, DependenceInsuranceInLine]
 
 
 @admin.register(Patient)

@@ -27,7 +27,24 @@ class DrugManagement(models.TextChoices):
     NTWRK = 'NTWRK', _('Network')
 
 
-class NutrionAutonomyLevel(models.TextChoices):
+class DependenceInsuranceLevel(models.TextChoices):
+    REF = 'REF', _('Refused')
+    ZRO = 'ZRO', _('0')
+    ONE = 'ONE', _('1')
+    TWO = 'TWO', _('2')
+    TRE = 'TRE', _('3')
+    FOR = 'FOR', _('4')
+    FVE = 'FVE', _('5')
+    SIX = 'SIX', _('6')
+    SVN = 'SVN', _('7')
+    EGT = 'EGT', _('8')
+    NIN = 'NIN', _('9')
+    TEN = 'TEN', _('10')
+    ELV = 'ELV', _('11')
+    TWV = 'TWV', _('12')
+
+
+class NutritionAutonomyLevel(models.TextChoices):
     AUTNM = 'AUTNM', _('Autonomous')
     FML = 'FML', _('Family')
     NTWRK = 'NTWRK', _('Network')

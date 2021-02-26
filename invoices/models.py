@@ -18,7 +18,7 @@ from django_countries.fields import CountryField
 from gdstorage.storage import GoogleDriveStorage
 
 from invoices.enums.generic import HouseType, CivilStatus, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
-    MobilizationsType, NutrionAutonomyLevel
+    MobilizationsType, NutritionAutonomyLevel, DependenceInsuranceLevel
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
 
@@ -358,12 +358,15 @@ class PatientAnamnesis(models.Model):
                                   blank=True,
                                   null=True)
     # p
+    preferred_pharmacies = models.TextField("Pharmacie(s)", max_length=500, default=None, blank=True, null=True)
+    preferred_hospital = models.CharField(u"Établissement hospitalier choisi", max_length=50, default=None, blank=True,
+                                          null=True)
     health_care_dossier_location = models.CharField("Dossier de soins se trouve", max_length=50,
                                                     default=None,
                                                     blank=True,
                                                     null=True)
     informal_caregiver = models.CharField("Aidant informel", max_length=50, default=None, blank=True, null=True)
-    dep_insurance = models.BooleanField(u"Assurance dépendance", default=False)
+    # dep_insurance = models.BooleanField(u"Assurance dépendance", default=False)
     pathologies = models.TextField("Pahologies", max_length=500, default=None, blank=True, null=True)
     medical_background = models.TextField(u"Antécédents", max_length=500, default=None, blank=True,
                                           null=True)
@@ -416,7 +419,7 @@ class PatientAnamnesis(models.Model):
     # Nutrition
     weight = models.PositiveSmallIntegerField("Poids", default=None)
     size = models.PositiveSmallIntegerField("Taille en cm.", default=None)
-    nutrition_autonomy = models.CharField("Sonde PEG", choices=NutrionAutonomyLevel.choices, max_length=5,
+    nutrition_autonomy = models.CharField("Sonde PEG", choices=NutritionAutonomyLevel.choices, max_length=5,
                                           default=None, blank=True, null=True)
     diet = models.CharField(u"Régime", max_length=50, default=None, blank=True, null=True)
     meal_on_wheels = models.BooleanField("Repas sur roues", default=None, blank=True, null=True)
@@ -461,6 +464,44 @@ class AssignedPhysician(models.Model):
     anamnesis = models.ForeignKey(PatientAnamnesis, related_name='patient_anamnesis',
                                   help_text='Please enter hospitalization dates of the patient',
                                   on_delete=models.PROTECT, null=True, blank=True, default=None)
+
+
+class DependenceInsurance(models.Model):
+    class Meta:
+        ordering = ['-id']
+        verbose_name = "Décision Assurance dépendance"
+        verbose_name_plural = "Décisions Assurance dépendance"
+
+    dep_anamnesis = models.ForeignKey(PatientAnamnesis, related_name='dep_ins_to_anamnesis',
+                                      on_delete=models.PROTECT)
+    evaluation_date = models.DateField(u"Date évaluation", default=None)
+    ack_receipt_date = models.DateField(u"Accusè de réception", default=None, blank=True, null=True)
+    decision_date = models.DateField(u"Date de la décision", default=None, blank=True, null=True)
+    rate_granted = models.CharField(u"Forfait", choices=DependenceInsuranceLevel.choices, default=None, blank=True,
+                                    null=True, max_length=3)
+
+
+class OtherStakeholder(models.Model):
+    class Meta:
+        verbose_name = "Autre intervenant"
+        verbose_name_plural = "Autres intervenants"
+
+    stakeholder_anamnesis = models.ForeignKey(PatientAnamnesis, related_name='stakeholder_to_anamnesis',
+                                              on_delete=models.PROTECT)
+    contact_name = models.CharField("Nom et prénom", max_length=50)
+    contact_pro_spec = models.CharField(u"Spécialité", max_length=20,
+                                        default=None,
+                                        blank=True,
+                                        null=True)
+    contact_private_phone_nbr = models.CharField(u"Tél. privé", max_length=30)
+    contact_business_phone_nbr = models.CharField(u"Tél. bureau", max_length=30,
+                                                  default=None,
+                                                  blank=True,
+                                                  null=True)
+    contact_email = models.EmailField(u"Email", max_length=30,
+                                      default=None,
+                                      blank=True,
+                                      null=True)
 
 
 class ContactPerson(models.Model):
