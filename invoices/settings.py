@@ -68,7 +68,7 @@ MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django_currentuser.middleware.ThreadLocalUserMiddleware',
-    'auditlog.middleware.AuditlogMiddleware',
+    'auditlog.middleware.AuditlogMiddleware'
 )
 #
 LOCALE_PATHS = (
