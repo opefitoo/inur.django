@@ -366,7 +366,6 @@ class PatientAnamnesis(models.Model):
                                                     blank=True,
                                                     null=True)
     informal_caregiver = models.CharField("Aidant informel", max_length=50, default=None, blank=True, null=True)
-    # dep_insurance = models.BooleanField(u"Assurance dépendance", default=False)
     pathologies = models.TextField("Pahologies", max_length=500, default=None, blank=True, null=True)
     medical_background = models.TextField(u"Antécédents", max_length=500, default=None, blank=True,
                                           null=True)

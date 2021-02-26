@@ -158,14 +158,14 @@ class PatientAnamnesisAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Patient', {
-            'fields': ('patient', 'nationality', 'external_doc_link', 'civil_status')
+            'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link')
         }),
         ('Habitation', {
             'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door'),
         }),
         (None, {
-            'fields': ('health_care_dossier_location', 'informal_caregiver', 'pathologies',
-                       'medical_background', 'allergies'),
+            'fields': ('health_care_dossier_location', 'preferred_pharmacies', 'preferred_hospital',
+                       'informal_caregiver', 'pathologies', 'medical_background', 'allergies'),
         }),
         ('Aides techniques', {
             'fields': ('electrical_bed', 'walking_frame', 'cane', 'aqualift', 'remote_alarm', 'other_technical_help'),
