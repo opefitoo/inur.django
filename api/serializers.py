@@ -72,8 +72,8 @@ class AssignedPhysician(serializers.ModelSerializer):
 
 
 class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
-    anamnesis_set = PatientAnamnesisSerializer()
-    full_address = serializers.CharField()
+    anamnesis_set = PatientAnamnesisSerializer(required=False)
+    full_address = serializers.CharField(required=False)
 
     def validate(self, data):
         instance_id = None
