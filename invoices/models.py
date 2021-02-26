@@ -17,11 +17,15 @@ from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from gdstorage.storage import GoogleDriveStorage
 
+from invoices.enums.generic import HouseType, CivilStatus, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
+    MobilizationsType, NutrionAutonomyLevel
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
 
 from django.utils.timezone import now
 
+from invoices.modelspackage import InvoicingDetails
+from invoices.modelspackage.invoice import get_default_invoicing_details
 from invoices.storages import CustomizedGoogleDriveStorage
 from constance import config
 
@@ -175,6 +179,32 @@ def calculate_age(care_date, code_sn):
     return None
 
 
+# TODO: 1. can maybe be extending common class with Patient ?
+# TODO: 2. synchronize physician details with Google contacts
+class Physician(models.Model):
+    class Meta:
+        ordering = ['-id']
+
+    provider_code = models.CharField(max_length=30)
+    first_name = models.CharField(max_length=30)
+    name = models.CharField(max_length=30)
+    physician_speciality = models.CharField(max_length=30, blank=True, null=True, default=None)
+    address = models.TextField(max_length=30)
+    zipcode = models.CharField(max_length=10)
+    city = models.CharField(max_length=30)
+    country = CountryField(blank_label='...', blank=True, null=True)
+    phone_number = models.CharField(max_length=30)
+    fax_number = models.CharField(max_length=30, blank=True, null=True)
+    email_address = models.EmailField(default=None, blank=True, null=True)
+
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'name', 'first_name'
+
+    def __str__(self):  # Python 3: def __str__(self):
+        return '%s %s' % (self.name.strip(), self.first_name.strip())
+
+
 # TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
     class Meta:
@@ -197,6 +227,16 @@ class Patient(models.Model):
     participation_statutaire = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
     date_of_death = models.DateField(u"Date de décès", default=None, blank=True, null=True)
+
+    @property
+    def anamnesis_set(self):
+        if self.id:
+            return PatientAnamnesis.objects.get(patient_id=self.id)
+        return None
+
+    @property
+    def full_address(self):
+        return "%s %s %s" % (self.address, self.zipcode, self.city)
 
     @property
     def age(self):
@@ -254,7 +294,9 @@ class Patient(models.Model):
         messages = {}
         patient_age = calculate_age(None, data['code_sn'])
         if 'is_private' in data and not data['is_private']:
-            if patient_age is None or patient_age < 1 or patient_age > 120:
+            if patient_age is None:
+                messages = {'code_sn': 'Code SN does not look ok, if not private patient it should follow CNS scheme'}
+            elif patient_age < 1 or patient_age > 120:
                 messages = {'code_sn': 'Code SN does not look ok, patient cannot be %d year(s) old' % patient_age}
         return messages
 
@@ -271,9 +313,183 @@ class Patient(models.Model):
         return self.cleaned_data['first_name'].capitalize()
 
 
+class PatientAnamnesis(models.Model):
+    class Meta:
+        ordering = ['-id']
+        verbose_name = u"Anamnèse Patient"
+        verbose_name_plural = u"Anamnèses Patient"
+
+    # Patient
+    patient = models.ForeignKey(Patient, related_name='anamnesis_to_patient',
+                                on_delete=models.PROTECT)
+    nationality = CountryField(u'Nationalité', blank_label='...', blank=True, null=True)
+    spoken_languages = models.CharField(u'Langues parlées', max_length=40, default=None, blank=True, null=True)
+    external_doc_link = models.URLField("URL doc. externe", default=None, blank=True, null=True)
+    civil_status = models.CharField(u"État civil",
+                                    max_length=7,
+                                    choices=CivilStatus.choices,
+                                    default=None,
+                                    blank=True,
+                                    null=True
+                                    )
+    # Habitation
+    house_type = models.CharField("Type d'habitation",
+                                  max_length=5,
+                                  choices=HouseType.choices,
+                                  default=None,
+                                  blank=True,
+                                  null=True
+                                  )
+    floor_number = models.PositiveSmallIntegerField(u"Étage",
+                                                    default=None,
+                                                    blank=True,
+                                                    null=True)
+    ppl_circle = models.CharField("Entourage",
+                                  max_length=50,
+                                  default=None,
+                                  blank=True,
+                                  null=True)
+
+    door_key = models.BooleanField(u"Clé", default=None,
+                                   blank=True,
+                                   null=True)
+    entry_door = models.CharField(u"Porte d'entrée", max_length=50,
+                                  default=None,
+                                  blank=True,
+                                  null=True)
+    # p
+    health_care_dossier_location = models.CharField("Dossier de soins se trouve", max_length=50,
+                                                    default=None,
+                                                    blank=True,
+                                                    null=True)
+    informal_caregiver = models.CharField("Aidant informel", max_length=50, default=None, blank=True, null=True)
+    dep_insurance = models.BooleanField(u"Assurance dépendance", default=False)
+    pathologies = models.TextField("Pahologies", max_length=500, default=None, blank=True, null=True)
+    medical_background = models.TextField(u"Antécédents", max_length=500, default=None, blank=True,
+                                          null=True)
+    allergies = models.CharField("Allergies", max_length=50, default=None, blank=True, null=True)
+    # aides techniques
+    electrical_bed = models.BooleanField(u"Lit électrique", default=None, blank=True, null=True)
+    walking_frame = models.BooleanField(u"Cadre de marche", default=None, blank=True, null=True)
+    cane = models.BooleanField(u"Canne", default=None, blank=True, null=True)
+    aqualift = models.BooleanField(u"Aqualift", default=None, blank=True, null=True)
+    remote_alarm = models.CharField("Alarme", choices=RemoteAlarm.choices, default=None, blank=True, null=True,
+                                    max_length=4)
+    other_technical_help = models.CharField("Autres aides techniques", max_length=50, default=None, blank=True,
+                                            null=True)
+    # Protheses
+    dental_prosthesis = models.CharField("Prothèses dentaires", choices=DentalProsthesis.choices, default=None,
+                                         blank=True, null=True, max_length=5)
+    hearing_aid = models.CharField("Appareil auditif", choices=HearingAid.choices, default=None, blank=True, null=True,
+                                   max_length=4)
+    glasses = models.BooleanField("Lunettes", default=None, blank=True, null=True)
+    other_prosthesis = models.CharField("Autres", max_length=50, default=None, blank=True, null=True)
+    # Médicaments
+    drugs_managed_by = models.CharField("Prise en charge", choices=DrugManagement.choices, default=None, blank=True,
+                                        null=True, max_length=5)
+    drugs_prepared_by = models.CharField(u"Prépraration", max_length=30, default=None, blank=True, null=True)
+    drugs_distribution = models.CharField("Distribution", max_length=30, default=None, blank=True, null=True)
+    drugs_ordering = models.CharField(u"Commande des médicaments", max_length=30, default=None, blank=True, null=True)
+    pharmacy_visits = models.CharField(u"Passages en pharmacie", max_length=30, default=None, blank=True, null=True)
+    # Mobilisation
+    mobilization = models.CharField(u"Mobilisation", choices=MobilizationsType.choices, max_length=5, default=None,
+                                    blank=True,
+                                    null=True)
+    mobilization_description = models.TextField("Description", max_length=250, default=None, blank=True,
+                                                null=True)
+    # Soins d'hygiène
+    hygiene_care_location = models.CharField(u"Les soins se déroulent où?", max_length=50, default=None, blank=True,
+                                             null=True)
+    shower_days = models.CharField("Jours de douche", max_length=50, default=None, blank=True, null=True)
+    hair_wash_days = models.CharField("Lavage cheveux", max_length=50, default=None, blank=True, null=True)
+    bed_manager = models.CharField(u"Le lit est à faire par", choices=DrugManagement.choices, max_length=5,
+                                   default=None,
+                                   blank=True, null=True)
+    bed_sheets_manager = models.CharField("Changement des draps", max_length=50, default=None, blank=True, null=True)
+    laundry_manager = models.CharField("Linge est à faire par", choices=DrugManagement.choices, max_length=5,
+                                       default=None, blank=True, null=True)
+
+    laundry_drop_location = models.CharField(u"Le linge sale est à déposer où ?", max_length=50, default=None,
+                                             blank=True, null=True)
+    new_laundry_location = models.CharField(u"Les vêtements/serviettes etc. se trouvent où ?", max_length=50,
+                                            default=None, blank=True, null=True)
+    # Nutrition
+    weight = models.PositiveSmallIntegerField("Poids", default=None)
+    size = models.PositiveSmallIntegerField("Taille en cm.", default=None)
+    nutrition_autonomy = models.CharField("Sonde PEG", choices=NutrionAutonomyLevel.choices, max_length=5,
+                                          default=None, blank=True, null=True)
+    diet = models.CharField(u"Régime", max_length=50, default=None, blank=True, null=True)
+    meal_on_wheels = models.BooleanField("Repas sur roues", default=None, blank=True, null=True)
+    shopping_management = models.CharField(u"Commissions à faire par", choices=DrugManagement.choices, max_length=5,
+                                           default=None, blank=True, null=True)
+    shopping_management_desc = models.CharField(u"Description", max_length=50, default=None, blank=True, null=True)
+    # Elimination
+    urinary_incontinence = models.BooleanField("Incontinence urinaire", default=None, blank=True, null=True)
+    faecal_incontinence = models.BooleanField(u"Incontinence fécale", default=None, blank=True, null=True)
+    protection = models.BooleanField("Protection", default=None, blank=True, null=True)
+    day_protection = models.CharField(u"Protection Pendant la journée", max_length=50, default=None, blank=True,
+                                      null=True)
+    night_protection = models.CharField(u"Protection Pendant la nuit", max_length=50, default=None, blank=True,
+                                        null=True)
+    protection_ordered = models.CharField(u"Protection à commander par", max_length=50, default=None, blank=True,
+                                          null=True)
+    urinary_catheter = models.BooleanField(u"Sonde urinaire", default=None, blank=True, null=True)
+    crystofix_catheter = models.BooleanField(u"Crystofix", default=None, blank=True, null=True)
+    elimination_addnl_details = models.TextField(u"Autres détails ou remarques", max_length=500, default=None,
+                                                 blank=True, null=True)
+    # Garde/ Course sortie / Foyer
+    day_care_center = models.CharField(u"Foyer de jour", max_length=50, default=None, blank=True, null=True)
+    day_care_center_activities = models.CharField(u"Activités", max_length=50, default=None, blank=True, null=True)
+    household_chores = models.BooleanField(u"Tâches domestiques", default=None, blank=True, null=True)
+
+    @property
+    def physicians_set(self):
+        if self.id:
+            return [p.assigned_physician for p in AssignedPhysician.objects.filter(anamnesis_id=self.id)]
+        return None
+
+
+class AssignedPhysician(models.Model):
+    class Meta:
+        verbose_name = u'Médecin Traitant'
+        verbose_name_plural = u'Médecins Traitants'
+
+    assigned_physician = models.ForeignKey(Physician, related_name='assigned_physicians',
+                                           help_text='Please enter physician of the patient',
+                                           verbose_name=u"Médecin",
+                                           on_delete=models.PROTECT, null=True, blank=True, default=None)
+    anamnesis = models.ForeignKey(PatientAnamnesis, related_name='patient_anamnesis',
+                                  help_text='Please enter hospitalization dates of the patient',
+                                  on_delete=models.PROTECT, null=True, blank=True, default=None)
+
+
+class ContactPerson(models.Model):
+    class Meta:
+        verbose_name = "Personne de contact"
+        verbose_name_plural = "Personnes de contact"
+
+    patient_anamnesis = models.ForeignKey(PatientAnamnesis, related_name='contactpers_to_anamnesis',
+                                          on_delete=models.PROTECT)
+    priority = models.PositiveSmallIntegerField(u"Priorité",
+                                                default=None,
+                                                blank=True,
+                                                null=True)
+    contact_name = models.CharField("Nom", max_length=50)
+    contact_relationship = models.CharField("Relation", max_length=20,
+                                            default=None,
+                                            blank=True,
+                                            null=True)
+    contact_private_phone_nbr = models.CharField(u"Tél. privé", max_length=30)
+    contact_business_phone_nbr = models.CharField(u"Tél. bureau", max_length=30,
+                                                  default=None,
+                                                  blank=True,
+                                                  null=True)
+
+
 class Hospitalization(models.Model):
     class Meta:
         ordering = ['-id']
+
     start_date = models.DateField(u"Début d'hospitlisation")
     end_date = models.DateField(u"Date de fin", default=None, blank=True, null=True)
     description = models.TextField(max_length=50, default=None, blank=True, null=True)
@@ -375,31 +591,6 @@ class Hospitalization(models.Model):
             messages = {'end_date': "Hospitalization cannot be later than or include Patient's death date"}
 
         return messages
-
-
-# TODO: 1. can maybe be extending common class with Patient ?
-# TODO: 2. synchronize physician details with Google contacts
-class Physician(models.Model):
-    class Meta:
-        ordering = ['-id']
-
-    provider_code = models.CharField(max_length=30)
-    first_name = models.CharField(max_length=30)
-    name = models.CharField(max_length=30)
-    address = models.TextField(max_length=30)
-    zipcode = models.CharField(max_length=10)
-    city = models.CharField(max_length=30)
-    country = CountryField(blank_label='...', blank=True, null=True)
-    phone_number = models.CharField(max_length=30)
-    fax_number = models.CharField(max_length=30, blank=True, null=True)
-    email_address = models.EmailField(default=None, blank=True, null=True)
-
-    @staticmethod
-    def autocomplete_search_fields():
-        return 'name', 'first_name'
-
-    def __str__(self):  # Python 3: def __str__(self):
-        return '%s %s' % (self.name.strip(), self.first_name.strip())
 
 
 def update_medical_prescription_filename(instance, filename):
@@ -614,7 +805,10 @@ class InvoiceItem(models.Model):
         verbose_name_plural = u"Mémoires d'honoraire"
 
     PRESTATION_LIMIT_MAX = 20
-    # invoice_nurse_code = models.TextChoices()
+    invoice_details = models.ForeignKey(InvoicingDetails,
+                                        default=get_default_invoicing_details,
+                                        related_name='invoicing_details_link',
+                                        on_delete=models.PROTECT)
     invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)
     is_private = models.BooleanField('Facture pour patient non pris en charge par CNS',
                                      help_text=u'Seuls les patients qui ne disposent pas de la prise en charge CNS '
@@ -713,6 +907,7 @@ class InvoiceItem(models.Model):
 class Prestation(models.Model):
     class Meta:
         ordering = ['-date']
+
     invoice_item = models.ForeignKey(InvoiceItem,
                                      related_name='prestations',
                                      on_delete=models.CASCADE)
@@ -928,7 +1123,6 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home = False
             pair.at_home_paired = instance
             pair.save()
-
 
 # @receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
 # def update_prestation_gcalendar_events(sender, instance, **kwargs):

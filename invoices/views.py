@@ -1,8 +1,9 @@
 from dal import autocomplete
 from django.db.models import Q
 from django.http import Http404, JsonResponse
-from django.views.decorators.http import require_POST, require_GET
-from invoices.models import CareCode, Prestation, Patient, MedicalPrescription
+from django.views.decorators.http import require_POST
+
+from invoices.models import Prestation, MedicalPrescription
 
 
 def get_queryset_filter(query_str, fields):
@@ -63,6 +64,8 @@ class MedicalPrescriptionAutocomplete(autocomplete.Select2QuerySetView):
             qs = qs.filter(filter_qs)
 
         return qs
+
+
 #
 #
 # class EmployeeAutocomplete(autocomplete.Select2QuerySetView):

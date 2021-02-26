@@ -6,6 +6,7 @@ from apiclient import discovery
 from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
 from django.conf import settings
+
 import logging
 import sys
 from rq import Queue
@@ -14,11 +15,10 @@ from worker import conn
 logger = logging.getLogger('console')
 
 
+
 class PrestationGoogleCalendarSurLu:
     summary = 'Prestations'
     calendar = None
-
-
 
     def get_credentials(self):
         SCOPES = ['https://www.googleapis.com/auth/sqlservice.admin',
@@ -93,9 +93,9 @@ class PrestationGoogleCalendarSurLu:
         else:
             address = event.patient.address
             location = "%s,%s %s, %s" % (event.patient.address,
-                                     event.patient.zipcode,
-                                     event.patient.city,
-                                     event.patient.country)
+                                         event.patient.zipcode,
+                                         event.patient.city,
+                                         event.patient.country)
         description += descr_line % (u'Adresse:', address)
         description += descr_line % (u'Tél Patient:', event.patient.phone_number)
         if event.id:
@@ -138,9 +138,9 @@ class PrestationGoogleCalendarSurLu:
                                                         body=event_body).execute()
 
         if 'id' in gmail_event.keys():
-            logger.info("gmail event created %s",  gmail_event)
-            print("*** gmail event created %s" % gmail_event)
-            sys.stdout.flush()
+            # logger.info("gmail event created %s", gmail_event)
+            # print("*** gmail event created %s" % gmail_event)
+            # sys.stdout.flush()
             return gmail_event
         else:
             raise ValueError("error during sync with google calendar %s" % gmail_event)

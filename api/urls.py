@@ -17,6 +17,7 @@ router.register(r'timesheet-tasks', views.TimesheetTaskViewSet)
 router.register(r'medical-prescriptions', views.MedicalPrescriptionViewSet)
 router.register(r'hospitalizations', views.HospitalizationViewSet)
 router.register(r'validity-dates', views.ValidityDateViewSet)
+router.register(r'patient-anamnesis', views.PatientAnamnesisViewSet)
 router.register(r'events-types', views.EventTypeViewSet)
 # router.register(r'events', views.EventViewSet)
 
