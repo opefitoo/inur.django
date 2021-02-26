@@ -776,3 +776,11 @@ class EventListAdmin(EventAdmin):
     change_list_template = 'admin/change_list.html'
     list_filter = ('employees', 'event_type', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'
+
+    actions = ['safe_delete', ]
+
+    def safe_delete(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        for e in queryset:
+            e.delete()

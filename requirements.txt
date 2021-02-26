@@ -44,3 +44,4 @@ holidays==0.10.5.2
 django-csv-exports==1.0.5
 django-colorfield==0.4.1
 # django-fieldsets-with-inlines==0.6
+redis~=3.5.3

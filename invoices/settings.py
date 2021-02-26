@@ -236,7 +236,6 @@ if 'EMAIL_HOST' in os.environ:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

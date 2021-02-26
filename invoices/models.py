@@ -489,7 +489,7 @@ class Hospitalization(models.Model):
         ordering = ['-id']
 
     start_date = models.DateField(u"Début d'hospitlisation")
-    end_date = models.DateField(u"Date de fin")
+    end_date = models.DateField(u"Date de fin", default=None, blank=True, null=True)
     description = models.TextField(max_length=50, default=None, blank=True, null=True)
     patient = models.ForeignKey(Patient, related_name='hospitalizations',
                                 help_text='Please enter hospitalization dates of the patient',
@@ -545,7 +545,10 @@ class Hospitalization(models.Model):
             messages = {'patient': 'Please fill Patient field'}
 
         start_date = datetime.combine(data['start_date'], datetime.min.time()).replace(tzinfo=pytz.utc)
-        end_date = datetime.combine(data['end_date'], datetime.max.time()).replace(tzinfo=pytz.utc)
+        if data['end_date']:
+            end_date = datetime.combine(data['end_date'], datetime.max.time()).replace(tzinfo=pytz.utc)
+        else:
+            end_date = None
 
         conflicts_cnt = Prestation.objects.filter(Q(date__range=(start_date, end_date))).filter(
             invoice_item__patient_id=patient_id).count()
