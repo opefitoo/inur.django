@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+from collections import OrderedDict
 
 import pytz
 from django.utils.datetime_safe import datetime
@@ -77,7 +78,7 @@ class NurseDetails(AbstractDetails):
                 'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(self.provider_code)]
 
 
-class RowDict(typing.OrderedDict):
+class RowDict(OrderedDict):
     def __init__(self):
         self._dict = {}
 
