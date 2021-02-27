@@ -1,3 +1,7 @@
+from auditlog.models import AuditlogHistoryField
+from auditlog.registry import auditlog
+from django.utils.timezone import now
+from django.db import models
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
@@ -61,7 +65,6 @@ class EmployeeInline(admin.StackedInline):
 # Define a new User admin
 class UserAdmin(BaseUserAdmin):
     inlines = (EmployeeInline,)
-
 
 # Re-register UserAdmin
 admin.site.unregister(User)
@@ -784,3 +787,4 @@ class EventListAdmin(EventAdmin):
             return
         for e in queryset:
             e.delete()
+

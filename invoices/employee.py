@@ -1,3 +1,4 @@
+from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
 from colorfield.fields import ColorField
 from django.contrib.auth.models import User
@@ -23,6 +24,7 @@ class JobPosition(models.Model):
 
 
 class Employee(models.Model):
+    history = AuditlogHistoryField()
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_contract = models.DateField(u'start date')
     end_contract = models.DateField(u'end date', blank=True,
@@ -50,6 +52,7 @@ class Employee(models.Model):
                                    help_text=u'Enter the City / Country of Birth',
                                    max_length=30,
                                    blank=True)
+    login_time = models.DateTimeField( null=True)
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
@@ -152,4 +155,3 @@ def employee_revoke_gservices_permissions(sender, instance, **kwargs):
         gd_storage.update_folder_permissions_v3(path, email, has_access)
         gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
 
-auditlog.register(Employee)

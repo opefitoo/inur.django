@@ -5,6 +5,9 @@ import os
 from copy import deepcopy
 from datetime import datetime
 from auditlog.registry import auditlog
+from django.contrib.auth.signals import user_logged_in
+from auditlog.models import LogEntry
+from django.contrib.auth.models import User
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -1134,6 +1137,4 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
 # def delete_prestation_gcalendar_events(sender, instance, **kwargs):
 #     # if config.USE_GDRIVE:
 #     prestation_gcalendar.delete_event(instance.id)
-
-
-auditlog.register(Physician)
+auditlog.register(User)
