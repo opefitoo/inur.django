@@ -5,7 +5,6 @@ import os
 from copy import deepcopy
 from datetime import datetime
 from auditlog.registry import auditlog
-from django.contrib.auth.signals import user_logged_in
 from auditlog.models import LogEntry
 from django.contrib.auth.models import User
 

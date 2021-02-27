@@ -1,5 +1,3 @@
-from auditlog.models import AuditlogHistoryField
-from auditlog.registry import auditlog
 from colorfield.fields import ColorField
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -24,7 +22,6 @@ class JobPosition(models.Model):
 
 
 class Employee(models.Model):
-    history = AuditlogHistoryField()
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_contract = models.DateField(u'start date')
     end_contract = models.DateField(u'end date', blank=True,
@@ -52,7 +49,6 @@ class Employee(models.Model):
                                    help_text=u'Enter the City / Country of Birth',
                                    max_length=30,
                                    blank=True)
-    login_time = models.DateTimeField( null=True)
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
