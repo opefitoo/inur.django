@@ -6,6 +6,7 @@ import os
 from copy import deepcopy
 from datetime import datetime
 
+from cloudinary import models as _modelscloudinary
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -670,6 +671,9 @@ class MedicalPrescription(models.Model):
     file = models.ImageField(storage=gd_storage, blank=True,
                              upload_to=update_medical_prescription_filename,
                              validators=[validate_image])
+    image_file = _modelscloudinary.CloudinaryField('Scan or picture', default=None,
+                                                   blank=True,
+                                                   null=True)
     _original_file = None
 
     @property
