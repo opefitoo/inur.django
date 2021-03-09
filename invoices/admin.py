@@ -280,7 +280,7 @@ def migrate_from_g_to_cl(modeladmin, request, queryset):
 @admin.register(MedicalPrescription)
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
-    list_display = ('date', 'prescriptor', 'patient', 'file', 'image_file')
+    list_display = ('date', 'prescriptor', 'patient', 'image_file')
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
     autocomplete_fields = ['prescriptor', 'patient']
