@@ -264,7 +264,7 @@ class PhysicianAdmin(admin.ModelAdmin):
 def migrate_from_g_to_cl(modeladmin, request, queryset):
     ps = MedicalPrescription.objects.all()
     for p in ps:
-        if p.file:
+        if p.file and not p.image_file:
             print(p.file)
             local_storage = FileSystemStorage()
             newfile = ContentFile(p.file.read())
@@ -274,7 +274,7 @@ def migrate_from_g_to_cl(modeladmin, request, queryset):
             up = uploader.upload(local_storage.location + "/" + relative_path)
             p.image_file = up.get('public_id')
             p.save()
-            break
+            # break
 
 
 @admin.register(MedicalPrescription)
