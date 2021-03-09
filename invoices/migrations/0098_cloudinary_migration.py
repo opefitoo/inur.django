@@ -12,15 +12,16 @@ class Migration(migrations.Migration):
     def migrate_from_gdrive_to_cloudinary(apps, schema_editor):
         _MedicalPrescription = apps.get_model('invoices', 'MedicalPrescription')
         for medical_prescription in _MedicalPrescription.objects.all():
-            local_storage = FileSystemStorage()
-            newfile = ContentFile(medical_prescription.file.read())
-            relative_path = local_storage.save(medical_prescription.file.name, newfile)
+            if medical_prescription.file:
+                local_storage = FileSystemStorage()
+                newfile = ContentFile(medical_prescription.file.read())
+                relative_path = local_storage.save(medical_prescription.file.name, newfile)
 
-            print("relative path %s" % relative_path)
-            up = uploader.upload(local_storage.location + "/" + relative_path)
-            medical_prescription.image_file = up.get('public_id')
-            medical_prescription.save()
-            print("migrating %s to : %s" % (medical_prescription.file, medical_prescription.image_file))
+                print("relative path %s" % relative_path)
+                up = uploader.upload(local_storage.location + "/" + relative_path)
+                medical_prescription.image_file = up.get('public_id')
+                medical_prescription.save()
+                print("migrating %s to : %s" % (medical_prescription.file, medical_prescription.image_file))
 
 
     dependencies = [
