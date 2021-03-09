@@ -191,7 +191,8 @@ CONSTANCE_CONFIG = {
          'Nom et adresse du prestataire de soins (apparait sur les factures)', str),
     'BIS_NURSE_CODE': (
         '', "Code infirmier secondaire pour les soins", str),
-    'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select')
+    'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select'),
+    'USE_GSERVICES': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select')
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {

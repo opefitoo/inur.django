@@ -115,7 +115,7 @@ class Event(models.Model):
             raise ValidationError(messages)
 
     def delete(self, using=None, keep_parents=False):
-        if "soin" == self.event_type.name:
+        if config.USE_GSERVICES and "soin" == self.event_type.name:
             calendar_gcalendar = PrestationGoogleCalendarSurLu()
             # calendar_gcalendar.q_delete_event(self)
             calendar_gcalendar.delete_event(self)
@@ -152,7 +152,7 @@ class Event(models.Model):
 def create_or_update_google_calendar(instance):
     print("*** Creating event")
     sys.stdout.flush()
-    if "soin" == instance.event_type.name:
+    if config.config.USE_GSERVICES and "soin" == instance.event_type.name:
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         if instance.pk:
             old_event = Event.objects.get(pk=instance.pk)

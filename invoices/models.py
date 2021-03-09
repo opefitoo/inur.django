@@ -426,6 +426,7 @@ class PatientAnamnesis(models.Model):
                                            default=None, blank=True, null=True)
     shopping_management_desc = models.CharField(u"Description", max_length=50, default=None, blank=True, null=True)
     # Elimination
+    # TODO continuer ici sur google sheet
     urinary_incontinence = models.BooleanField("Incontinence urinaire", default=None, blank=True, null=True)
     faecal_incontinence = models.BooleanField(u"Incontinence fécale", default=None, blank=True, null=True)
     protection = models.BooleanField("Protection", default=None, blank=True, null=True)

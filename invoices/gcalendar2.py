@@ -15,7 +15,6 @@ from worker import conn
 logger = logging.getLogger('console')
 
 
-
 class PrestationGoogleCalendarSurLu:
     summary = 'Prestations'
     calendar = None
@@ -150,7 +149,6 @@ class PrestationGoogleCalendarSurLu:
         q_r = q.enqueue(self.delete_event, evt_instance)
         print("Queue result %s" % q_r)
         sys.stdout.flush()
-
 
     def delete_event(self, evt_instance):
         print("Trying to delete %s from %s" % (evt_instance.calendar_id, evt_instance))
