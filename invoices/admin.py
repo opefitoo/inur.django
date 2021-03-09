@@ -1,9 +1,12 @@
+from cloudinary import uploader
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
 from django.contrib.auth.models import User
 from django.core.checks import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.base import ContentFile
+from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import timezone
@@ -258,6 +261,22 @@ class PhysicianAdmin(admin.ModelAdmin):
     search_fields = ['name', 'first_name', 'code_sn']
 
 
+def migrate_from_g_to_cl(modeladmin, request, queryset):
+    ps = MedicalPrescription.objects.all()
+    for p in ps:
+        if p.file:
+            print(p.file)
+            local_storage = FileSystemStorage()
+            newfile = ContentFile(p.file.read())
+            relative_path = local_storage.save(p.file.name, newfile)
+
+            print("relative path %s" % relative_path)
+            up = uploader.upload(local_storage.location + "/" + relative_path)
+            p.image_file = up.get('public_id')
+            p.save()
+            break
+
+
 @admin.register(MedicalPrescription)
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
@@ -265,6 +284,7 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
     autocomplete_fields = ['prescriptor', 'patient']
+    actions = [migrate_from_g_to_cl]
 
 
 class PrestationInline(TabularInline):
