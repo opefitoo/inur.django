@@ -264,14 +264,14 @@ class PhysicianAdmin(admin.ModelAdmin):
 def migrate_from_g_to_cl(modeladmin, request, queryset):
     ps = MedicalPrescription.objects.all()
     for p in ps:
-        if p.file and not p.image_file:
+        if p.file and p.file.url and not p.image_file:
             print(p.file)
             local_storage = FileSystemStorage()
             newfile = ContentFile(p.file.read())
             relative_path = local_storage.save(p.file.name, newfile)
 
             print("relative path %s" % relative_path)
-            up = uploader.upload(local_storage.location + "/" + relative_path)
+            up = uploader.upload(local_storage.location + "/" + relative_path, folder="medical_prescriptions/")
             p.image_file = up.get('public_id')
             p.save()
             # break
@@ -280,7 +280,7 @@ def migrate_from_g_to_cl(modeladmin, request, queryset):
 @admin.register(MedicalPrescription)
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
-    list_display = ('date', 'prescriptor', 'patient', 'file')
+    list_display = ('date', 'prescriptor', 'patient', 'file', 'image_file')
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
     autocomplete_fields = ['prescriptor', 'patient']
