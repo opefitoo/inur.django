@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     def migrate_from_gdrive_to_cloudinary(apps, schema_editor):
         _MedicalPrescription = apps.get_model('invoices', 'MedicalPrescription')
         for medical_prescription in _MedicalPrescription.objects.all():
-            if medical_prescription.file:
+            if medical_prescription.file and medical_prescription.file.url and not medical_prescription.image_file:
                 local_storage = FileSystemStorage()
                 newfile = ContentFile(medical_prescription.file.read())
                 relative_path = local_storage.save(medical_prescription.file.name, newfile)
@@ -45,5 +45,5 @@ class Migration(migrations.Migration):
             field=models.PositiveSmallIntegerField(choices=[(1, 'Janvier'), (2, 'Février'), (3, 'Mars'), (4, 'Avril'), (5, 'Mai'), (6, 'Juin'), (7, 'Juillet'), (8, 'Août'), (9, 'Septembre'), (10, 'Octobre'), (11, 'Novembre'), (12, 'Décembre')], default=3),
         ),
 
-        # migrations.RunPython(migrate_from_gdrive_to_cloudinary),
+        migrations.RunPython(migrate_from_gdrive_to_cloudinary),
     ]
