@@ -671,9 +671,11 @@ class MedicalPrescription(models.Model):
     file = models.ImageField(storage=gd_storage, blank=True,
                              upload_to=update_medical_prescription_filename,
                              validators=[validate_image])
-    image_file = _modelscloudinary.CloudinaryField('Scan or picture', default=None,
-                                                   blank=True,
-                                                   null=True)
+    # image_file = _modelscloudinary.CloudinaryField('Scan or picture', default=None,
+    #                                                blank=True,
+    #                                                null=True, folder="medical_prescription/")
+    p_file = models.ImageField('Scan or picture', default=None, blank=True, null=True,
+                               upload_to="prescriptions")
     _original_file = None
 
     @property
@@ -717,7 +719,8 @@ class MedicalPrescription(models.Model):
         if max_height is None:
             max_height = '800'
         # used in the admin site model as a "thumbnail"
-        link = self.file.storage.get_thumbnail_link(getattr(self.file, 'name', None))
+        link = self.p_file.url
+        # link = self.file.storage.get_thumbnail_link(getattr(self.file, 'name', None))
         styles = "max-width: %spx; max-height: %spx;" % (max_width, max_height)
         tag = '<img src="{}" style="{}"/>'.format(link, styles)
 

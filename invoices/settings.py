@@ -270,8 +270,3 @@ LOGGING = {
     }
 }
 
-from dotenv import load_dotenv
-
-load_dotenv(verbose=True)
-
-CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")

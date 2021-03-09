@@ -23,7 +23,6 @@ class Migration(migrations.Migration):
                 medical_prescription.save()
                 print("migrating %s to : %s" % (medical_prescription.file, medical_prescription.image_file))
 
-
     dependencies = [
         ('invoices', '0097_add_ins_dep_decision_dates'),
     ]
@@ -32,7 +31,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='medicalprescription',
             name='image_file',
-            field=cloudinary.models.CloudinaryField(blank=True, default=None, max_length=255, null=True, verbose_name='Scan or picture'),
+            field=cloudinary.models.CloudinaryField(blank=True, default=None, max_length=255, null=True,
+                                                    verbose_name='Scan or picture'),
         ),
         migrations.AlterField(
             model_name='patientanamnesis',
@@ -42,7 +42,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='simplifiedtimesheet',
             name='time_sheet_month',
-            field=models.PositiveSmallIntegerField(choices=[(1, 'Janvier'), (2, 'Février'), (3, 'Mars'), (4, 'Avril'), (5, 'Mai'), (6, 'Juin'), (7, 'Juillet'), (8, 'Août'), (9, 'Septembre'), (10, 'Octobre'), (11, 'Novembre'), (12, 'Décembre')], default=3),
+            field=models.PositiveSmallIntegerField(
+                choices=[(1, 'Janvier'), (2, 'Février'), (3, 'Mars'), (4, 'Avril'), (5, 'Mai'), (6, 'Juin'),
+                         (7, 'Juillet'), (8, 'Août'), (9, 'Septembre'), (10, 'Octobre'), (11, 'Novembre'),
+                         (12, 'Décembre')], default=3),
         ),
 
         migrations.RunPython(migrate_from_gdrive_to_cloudinary),
