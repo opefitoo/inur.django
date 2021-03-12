@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import logging
 
 import pytz
@@ -650,6 +651,12 @@ class InvoiceItem(models.Model):
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
+
+    @property
+    def number_of_prestations(self):
+        if self.prestations:
+            return self.prestations.count()
+        return "-"
 
     @staticmethod
     def validate(instance_id, data):
