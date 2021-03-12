@@ -1,16 +1,14 @@
 import copy
 
-import pytz
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
-import typing
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, PageBreak
 
 from invoices.actions.elements import CnsNursingCareDetail, NurseDetails, InvoiceHeaderData, PatientAbstractDetails, \
     InvoiceNumberDate, MedicalCareBodyPage, RowDict, build_cns_bottom_elements, SummaryData, SummaryDataTable, \
     CnsFinalPage
-from invoices.models import Prestation, InvoiceItem
+from invoices.models import InvoiceItem
 
 
 def do_it(modeladmin, request, queryset):

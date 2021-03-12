@@ -3,10 +3,10 @@ from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
 from django.contrib.auth.models import User
 from django.core.checks import messages
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
@@ -125,6 +125,82 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
 
     scan_preview.allow_tags = True
 
+class AssignedPhysicianInLine(admin.TabularInline):
+    extra = 0
+    model = AssignedPhysician
+    fields = ('assigned_physician',)
+    autocomplete_fields = ['assigned_physician']
+
+
+class ContactPersonInLine(admin.TabularInline):
+    extra = 0
+    model = ContactPerson
+    fields = ('priority', 'contact_name', 'contact_relationship', 'contact_private_phone_nbr',
+              'contact_business_phone_nbr')
+
+
+class DependenceInsuranceInLine(admin.TabularInline):
+    extra = 0
+    model = DependenceInsurance
+    fields = ('evaluation_date', 'ack_receipt_date', 'decision_date', 'rate_granted')
+
+
+class OtherStakeholdersInLine(admin.TabularInline):
+    extra = 0
+    model = OtherStakeholder
+    fields = ('contact_name', 'contact_pro_spec', 'contact_private_phone_nbr', 'contact_business_phone_nbr',
+              'contact_email')
+
+
+@admin.register(PatientAnamnesis)
+class PatientAnamnesisAdmin(admin.ModelAdmin):
+    list_display = ('patient',)
+    autocomplete_fields = ['patient']
+
+    fieldsets = (
+        ('Patient', {
+            'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link')
+        }),
+        ('Habitation', {
+            'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door'),
+        }),
+        (None, {
+            'fields': ('health_care_dossier_location', 'preferred_pharmacies', 'preferred_hospital',
+                       'informal_caregiver', 'pathologies', 'medical_background', 'allergies'),
+        }),
+        ('Aides techniques', {
+            'fields': ('electrical_bed', 'walking_frame', 'cane', 'aqualift', 'remote_alarm', 'other_technical_help'),
+        }),
+        (u'Prothèses', {
+            'fields': ('dental_prosthesis', 'hearing_aid', 'glasses', 'other_prosthesis'),
+        }),
+        (u'Médicaments', {
+            'fields': ('drugs_managed_by', 'drugs_prepared_by', 'drugs_distribution', 'drugs_ordering',
+                       'pharmacy_visits'),
+        }),
+        (u'Mobilisation', {
+            'fields': ('mobilization', 'mobilization_description'),
+        }),
+        (u"Soins d'hygiène", {
+            'fields': ('hygiene_care_location', 'shower_days', 'hair_wash_days', 'bed_manager', 'bed_sheets_manager',
+                       'laundry_manager', 'laundry_drop_location', 'new_laundry_location'),
+        }),
+        (u"Nutrition", {
+            'fields': ('weight', 'size', 'nutrition_autonomy', 'diet', 'meal_on_wheels', 'shopping_management',
+                       'shopping_management_desc',),
+        }),
+        (u"Elimination", {
+            'fields': ('urinary_incontinence', 'faecal_incontinence', 'protection', 'day_protection',
+                       'night_protection', 'protection_ordered', 'urinary_catheter', 'crystofix_catheter',
+                       'elimination_addnl_details'),
+        }),
+        (u"Garde/ Course sortie / Foyer", {
+            'fields': ('day_care_center', 'day_care_center_activities', 'household_chores',),
+        }),
+    )
+
+    inlines = [AssignedPhysicianInLine, ContactPersonInLine, OtherStakeholdersInLine, DependenceInsuranceInLine]
+
 
 @admin.register(Patient)
 class PatientAdmin(CSVExportAdmin):
@@ -183,20 +259,20 @@ class PhysicianAdmin(admin.ModelAdmin):
     search_fields = ['name', 'first_name', 'code_sn']
 
 
-def migrate_from_g_to_cl(modeladmin, request, queryset):
-    ps = MedicalPrescription.objects.all()
-    for p in ps:
-        if p.file and p.file.url and not p.image_file:
-            print(p.file)
-            local_storage = FileSystemStorage()
-            newfile = ContentFile(p.file.read())
-            relative_path = local_storage.save(p.file.name, newfile)
-
-            print("relative path %s" % relative_path)
-            up = uploader.upload(local_storage.location + "/" + relative_path, folder="medical_prescriptions/")
-            p.image_file = up.get('public_id')
-            p.save()
-            # break
+# def migrate_from_g_to_cl(modeladmin, request, queryset):
+#     ps = MedicalPrescription.objects.all()
+#     for p in ps:
+#         if p.file and p.file.url and not p.image_file:
+#             print(p.file)
+#             local_storage = FileSystemStorage()
+#             newfile = ContentFile(p.file.read())
+#             relative_path = local_storage.save(p.file.name, newfile)
+#
+#             print("relative path %s" % relative_path)
+#             up = uploader.upload(local_storage.location + "/" + relative_path, folder="medical_prescriptions/")
+#             p.image_file = up.get('public_id')
+#             p.save()
+#             # break
 
 
 @admin.register(MedicalPrescription)
@@ -206,7 +282,7 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
     autocomplete_fields = ['prescriptor', 'patient']
-    actions = [migrate_from_g_to_cl]
+    # actions = [migrate_from_g_to_cl]
 
 
 class PrestationInline(TabularInline):
@@ -261,13 +337,23 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     from invoices.action_depinsurance import export_to_pdf2
     form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
-    list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
-    list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
+    list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
+                    'number_of_prestations', 'invoice_details')
+    list_filter = ['invoice_date', 'patient__name', 'invoice_sent', 'invoice_paid', 'invoice_details']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient']
+
+    def do_it_bis(self, request, queryset):
+        try:
+            return do_it(self, request, queryset)
+        except ValidationError:
+            self.message_user(request, "Le patient n'a pas d'adresse email définie.",
+                              level=messages.ERROR)
+    do_it_bis.short_description = "CNS Invoice (new)"
+
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
-               pdf_private_invoice, export_to_pdf2, do_it]
+               pdf_private_invoice, export_to_pdf2, do_it_bis]
     inlines = [PrestationInline]
     fieldsets = (
         (None, {
