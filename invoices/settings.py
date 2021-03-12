@@ -196,8 +196,9 @@ CONSTANCE_CONFIG = {
 
 CONSTANCE_CONFIG_FIELDSETS = {
     'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE'),
-    'Options de Facturation': ('MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
-                               'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT'),
+    'Options de Facturation': (
+        'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
+        'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT'),
 }
 
 GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
@@ -236,7 +237,6 @@ if 'EMAIL_HOST' in os.environ:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -269,3 +269,9 @@ LOGGING = {
         }
     }
 }
+
+from dotenv import load_dotenv
+
+load_dotenv(verbose=True)
+
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")

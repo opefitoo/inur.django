@@ -117,7 +117,8 @@ class Event(models.Model):
     def delete(self, using=None, keep_parents=False):
         if "soin" == self.event_type.name:
             calendar_gcalendar = PrestationGoogleCalendarSurLu()
-            calendar_gcalendar.delete_event(self, self.calendar_id)
+            # calendar_gcalendar.q_delete_event(self)
+            calendar_gcalendar.delete_event(self)
         super(Event, self).delete(using=None, keep_parents=False)
 
     @staticmethod
@@ -137,7 +138,7 @@ class Event(models.Model):
                                                        day=data["day"],
                                                        patient_id=data["patient_id"],
                                                        time_start_event=data["time_start_event"],
-                                                       time_end_event=data["time_end_event"])
+                                                       time_end_event=data["time_end_event"]).exclude(id=self.id)
         if events.count() > 0:
             messages = {'patient': 'Event already created'}
         return messages

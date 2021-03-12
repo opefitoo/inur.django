@@ -14,7 +14,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
-    ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer
+    ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, PatientAnamnesisSerializer
 from api.utils import get_settings
 from helpers import holidays
 from helpers.employee import get_employee_id_by_abbreviation
@@ -22,9 +22,9 @@ from invoices import settings
 from invoices.employee import JobPosition
 from invoices.events import EventType, Event, create_or_update_google_calendar
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch
+    ValidityDate, InvoiceItemBatch, PatientAnamnesis
 from invoices.processors.birthdays import process_and_generate
-from invoices.processors.events import delete_events_created_by_script
+from invoices.processors.events import delete_events_created_by_script, async_deletion
 from invoices.timesheet import Timesheet, TimesheetTask
 
 
@@ -147,6 +147,11 @@ class EventTypeViewSet(viewsets.ModelViewSet):
     serializer_class = EventTypeSerializer
 
 
+class PatientAnamnesisViewSet(viewsets.ModelViewSet):
+    queryset = PatientAnamnesis.objects.all()
+    serializer_class = PatientAnamnesisSerializer
+
+
 class EventList(generics.ListCreateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
@@ -173,11 +178,12 @@ class EventList(generics.ListCreateAPIView):
 
 @api_view(['POST'])
 def cleanup_event(request):
-    if 'POST' == request.method:  # user posting data
-        deleted_events = delete_events_created_by_script(int(float(request.data.get('year'))),
-                                                         int(float(request.data.get('month'))))
-        event_serializer = EventSerializer(deleted_events, many=True)
-        return Response(event_serializer.data, status=status.HTTP_200_OK)
+    if 'POST' != request.method:  # user posting data
+        return
+    deleted_events = delete_events_created_by_script(int(float(request.data.get('year'))),
+                                                     int(float(request.data.get('month'))))
+    event_serializer = EventSerializer(deleted_events, many=True)
+    return Response(event_serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
