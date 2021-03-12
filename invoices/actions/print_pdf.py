@@ -1,13 +1,14 @@
-import pytz
+import copy
+
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
-import typing
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, PageBreak
 
-
 from invoices.actions.elements import CnsNursingCareDetail, NurseDetails, InvoiceHeaderData, PatientAbstractDetails, \
-    InvoiceNumberDate, AnotherBodyPage, RowDict
-from invoices.models import Prestation, InvoiceItem
+    InvoiceNumberDate, MedicalCareBodyPage, RowDict, build_cns_bottom_elements, SummaryData, SummaryDataTable, \
+    CnsFinalPage
+from invoices.models import InvoiceItem
 
 
 def do_it(modeladmin, request, queryset):
@@ -32,14 +33,58 @@ def do_it(modeladmin, request, queryset):
 
 
 def get_doc_elements(queryset, med_p=False):
-    elements = []
+    pdf_elements = []
     summary_data = []
     already_added_images = []
+    invoice_item: InvoiceItem
+    order_number = 1
+    previous_invoice: InvoiceItem = None
     for invoice_item in queryset.order_by("invoice_number"):
-        elements.extend(get_invoice_hdr(invoice_item))
-        elements.append(get_body_elements(invoice_item))
-        elements.append(PageBreak())
-    return elements
+        if previous_invoice and previous_invoice.invoice_details.id != invoice_item.invoice_details.id:
+            raise ValidationError(
+                "%s has a different provider code then %s, cannot print CNS batch with "
+                "different provider codes " % (previous_invoice, invoice_item))
+        previous_invoice = invoice_item
+        if invoice_item.prestations.count() <= 20:
+            pdf_elements.extend(get_invoice_hdr(invoice_item))
+            body_elements = get_body_elements(invoice_item)
+            pdf_elements.append(body_elements.get_table())
+            pdf_elements += build_cns_bottom_elements()
+            pdf_elements.append(PageBreak())
+            summary_data.append(SummaryData(order_number=order_number,
+                                            invoice_num=invoice_item.invoice_number,
+                                            patient_name=invoice_item.patient,
+                                            total_amount=body_elements.fst_gross_sub_total +
+                                                         body_elements.snd_gross_sub_total))
+            order_number += 1
+
+        else:
+            prestations_splits = [invoice_item.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
+                                  range(0, len(invoice_item.prestations.all()), 20)]
+            i = 1
+            for ps in prestations_splits:
+                v_invoice: InvoiceItem = copy.copy(invoice_item)
+                v_invoice.invoice_number = "%s - %s" % (invoice_item.invoice_number, i)
+                i += 1
+                pdf_elements.extend(get_invoice_hdr(v_invoice))
+                body_elements = get_body_elements(v_invoice, [p for p in ps])
+                pdf_elements.append(body_elements.get_table())
+                print("%s %s" % (v_invoice, v_invoice.number_of_prestations))
+                pdf_elements += build_cns_bottom_elements()
+                pdf_elements.append(PageBreak())
+                summary_data.append(SummaryData(order_number=order_number,
+                                                invoice_num=v_invoice.invoice_number,
+                                                patient_name=invoice_item.patient,
+                                                total_amount=body_elements.fst_gross_sub_total +
+                                                             body_elements.snd_gross_sub_total))
+                order_number += 1
+    summary_data_table: SummaryDataTable = SummaryDataTable(summary_data)
+    pdf_elements += summary_data_table.get_table()
+    pdf_elements.append(PageBreak())
+    pdf_elements += CnsFinalPage(total_summary=summary_data_table.total_summary,
+                                 order_number=len(summary_data_table.summary_data_list),
+                                 invoicing_details=previous_invoice.invoice_details).get_table()
+    return pdf_elements
 
 
 def get_invoice_hdr(invoice: InvoiceItem) -> [object]:
@@ -57,117 +102,22 @@ def get_invoice_hdr(invoice: InvoiceItem) -> [object]:
     return invoice_hdr_data.build_element()
 
 
-def get_body_elements(invoice: InvoiceItem):
-    # Splitting the invoice given cares by group of max 20
-    dd = [invoice.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
-          range(0, len(invoice.prestations.all()), 20)]
-    data = []
-
-    for prestations in dd:
-        _inv = invoice.invoice_number + (
-            ("" + str(dd.index(prestations) + 1) + invoice.invoice_date.strftime('%m%Y')) if len(dd) > 1 else "")
-        data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers', 'Executant'))
-        pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
-        care_details = [CnsNursingCareDetail]
-        my_dict = RowDict()
-        for idx, presta in enumerate(prestations):
-            if presta.carecode.reimbursed:
-                __nursing_care_dtl = CnsNursingCareDetail(code=presta.carecode.code, care_datetime=presta.date,
-                                                          quantity=1,
-                                                          net_price=presta.carecode.net_amount(presta.date,
-                                                                                               invoice.patient.is_private,
-                                                                                               (
-                                                                                                       invoice.patient.participation_statutaire
-                                                                                                       and invoice.patient.age > 18)),
-                                                          provider_code=presta.employee.provider_code,
-                                                          gross_price=presta.carecode.gross_amount(presta.date))
-                my_dict.add(idx+1, __nursing_care_dtl)
-                care_details.append(__nursing_care_dtl)
-        another_b = AnotherBodyPage(rows=my_dict)
-        # S = another_b.to_array()
-        # body_detail_page = BodyDetailsPage(nursing_cares=care_details)
-        return another_b.get_table()
-
-
-def _build_invoices(invoice: InvoiceItem, prestations: [Prestation], invoice_number, invoice_date, accident_id,
-                    accident_date):
-    # Draw things on the PDF. Here's where the PDF generation happens.
-    # See the ReportLab documentation for the full list of functionality.
-    # import pydevd; pydevd.settrace()
-    elements = []
-    i = 0
-    data = []
-
-    data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers', 'Executant'))
-    pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
-    for presta in prestations:
+def get_body_elements(invoice: InvoiceItem, splitted_prestations=None):
+    care_details = [CnsNursingCareDetail]
+    my_dict = RowDict()
+    for idx, presta in enumerate(splitted_prestations if splitted_prestations else invoice.prestations.all()):
         if presta.carecode.reimbursed:
-            __nursing_care_dtl = CnsNursingCareDetail()
-            __nursing_care_dtl.code = presta.carecode.code
-            __nursing_care_dtl.care_datetime = presta.date
-            __nursing_care_dtl.quantity = 1
-            __nursing_care_dtl.net_price = presta.carecode.net_amount(presta.date, invoice.patient.is_private,
-                                                                      (invoice.patient.participation_statutaire
-                                                                       and invoice.patient.age > 18))
-            __nursing_care_dtl.provider_code = presta.employee.provider_code
-
-            i += 1
-            data.append((i, presta.carecode.code,
-                         (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
-                         '1',
-                         presta.carecode.gross_amount(presta.date),
-                         presta.carecode.net_amount(presta.date, presta.patient.is_private,
-                                                    (presta.patient.participation_statutaire
-                                                     and presta.patient.age > 18)),
-                         (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
-                         "",
-                         presta.employee.provider_code))
-
-    for x in range(len(data), 22):
-        data.append((x, '', '', '', '', '', '', '', ''))
-
-    newData = []
-    for y in range(0, len(data) - 1):
-        newData.append(data[y])
-        if (y % 10 == 0 and y != 0):
-            _gross_sum = _compute_sum(data[y - 9:y + 1], 4)
-            _net_sum = _compute_sum(data[y - 9:y + 1], 5)
-            newData.append(('', '', '', 'Sous-Total', _gross_sum, _net_sum, '', '', ''))
-    newData.append(('', '', '', 'Total', _compute_sum(data[1:], 4), _compute_sum(data[1:], 5), '', '', ''))
-
-    elements.append(invoice_hdr_tbl)
-    styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
-    elements.append(Spacer(1, 18))
-    elements.append(
-        Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s" % (invoice_number, invoice_date), styles['Center']))
-    elements.append(Spacer(1, 18))
-
-    _2derniers_cases = Table([["", "Paiement Direct"]], [1 * cm, 4 * cm], 1 * [0.5 * cm], hAlign='LEFT')
-    _2derniers_cases.setStyle(TableStyle([('ALIGN', (1, 1), (-2, -2), 'RIGHT'),
-                                          ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-                                          ('FONTSIZE', (0, 0), (-1, -1), 9),
-                                          ('BOX', (0, 0), (0, 0), 0.75, colors.black),
-                                          ('SPAN', (1, 1), (1, 2)),
-                                          ]))
-
-    elements.append(Spacer(1, 18))
-
-    elements.append(_2derniers_cases)
-    _2derniers_cases = Table([["", "Tiers payant"]], [1 * cm, 4 * cm], 1 * [0.5 * cm], hAlign='LEFT')
-    _2derniers_cases.setStyle(TableStyle([('ALIGN', (1, 1), (-2, -2), 'RIGHT'),
-                                          ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-                                          ('FONTSIZE', (0, 0), (-1, -1), 9),
-                                          ('BOX', (0, 0), (0, 0), 0.75, colors.black),
-                                          ('SPAN', (1, 1), (1, 2)),
-                                          ]))
-    elements.append(Spacer(1, 18))
-    elements.append(_2derniers_cases)
-    elements.append(Spacer(1, 18))
-
-    _pouracquit_signature = Table([["Pour acquit, le:", "Signature et cachet"]], [10 * cm, 10 * cm], 1 * [0.5 * cm],
-                                  hAlign='LEFT')
-
-    elements.append(_pouracquit_signature)
-    return {"elements": elements, "invoice_number": invoice_number,
-            "patient_name": patientName + " " + patientFirstName, "invoice_amount": newData[23][5]}
+            __nursing_care_dtl = CnsNursingCareDetail(code=presta.carecode.code, care_datetime=presta.date,
+                                                      quantity=1,
+                                                      net_price=presta.carecode.net_amount(presta.date,
+                                                                                           invoice.patient.is_private,
+                                                                                           (
+                                                                                                   invoice.patient.participation_statutaire
+                                                                                                   and invoice.patient.age > 18)),
+                                                      provider_code=presta.employee.provider_code if presta.employee
+                                                      else presta.invoice_item.invoice_details.provider_code,
+                                                      gross_price=presta.carecode.gross_amount(presta.date))
+            my_dict.add(idx + 1, __nursing_care_dtl)
+            care_details.append(__nursing_care_dtl)
+    return MedicalCareBodyPage(rows=my_dict)
+    # return medical_care_body.get_table()
