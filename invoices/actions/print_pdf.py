@@ -51,7 +51,7 @@ class PdfActionSwitcher:
                 body_elements = get_body_elements(invoice_item, PdfActionType.PERSONAL_PARTICIPATION)
                 pdf_elements.append(body_elements.get_table())
                 summary_data = SummaryData(order_number=order_number,
-                                           invoice_num=invoice_item.invoice_number,
+                                           invoice_num="PP%s" % invoice_item.invoice_number,
                                            patient_name=invoice_item.patient,
                                            total_amount=body_elements.fst_pp_sub_total +
                                                         body_elements.snd_pp_sub_total,
@@ -72,7 +72,7 @@ class PdfActionSwitcher:
                     body_elements = get_body_elements(v_invoice, PdfActionType.PERSONAL_PARTICIPATION, [p for p in ps])
                     pdf_elements.append(body_elements.get_table())
                     summary_data = SummaryData(order_number=order_number,
-                                               invoice_num=invoice_item.invoice_number,
+                                               invoice_num="PP%s" % invoice_item.invoice_number,
                                                patient_name=invoice_item.patient,
                                                total_amount=body_elements.fst_pp_sub_total +
                                                             body_elements.snd_pp_sub_total,
