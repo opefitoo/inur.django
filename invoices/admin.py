@@ -340,7 +340,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
                     'number_of_prestations', 'invoice_details')
-    list_filter = ['invoice_date', 'patient__name', 'invoice_sent', 'invoice_paid', 'invoice_details']
+    list_filter = ['invoice_date', 'invoice_details','invoice_sent', 'invoice_paid', 'patient__name']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient']
