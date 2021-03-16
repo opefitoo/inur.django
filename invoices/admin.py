@@ -15,7 +15,7 @@ from django_csv_exports.admin import CSVExportAdmin
 from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
-from invoices.actions.print_pdf import do_it
+from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.models import PatientAnamnesis, ContactPerson, OtherStakeholder, DependenceInsurance
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
@@ -124,6 +124,7 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
         return obj.image_preview(300, 300)
 
     scan_preview.allow_tags = True
+
 
 class AssignedPhysicianInLine(admin.TabularInline):
     extra = 0
@@ -344,16 +345,26 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient']
 
-    def do_it_bis(self, request, queryset):
+    def cns_invoice_bis(self, request, queryset):
         try:
-            return do_it(self, request, queryset)
-        except ValidationError:
-            self.message_user(request, "Le patient n'a pas d'adresse email définie.",
+            return do_it(queryset, action=PdfActionType.CNS)
+        except ValidationError as ve:
+            self.message_user(request, ve.message,
                               level=messages.ERROR)
-    do_it_bis.short_description = "CNS Invoice (new)"
+
+    cns_invoice_bis.short_description = "CNS Invoice (new)"
+
+    def pdf_private_invoice_pp_bis(self, request, queryset):
+        try:
+            return do_it(queryset, action=PdfActionType.PERSONAL_PARTICIPATION)
+        except ValidationError as ve:
+            self.message_user(request, ve.message,
+                              level=messages.ERROR)
+
+    pdf_private_invoice_pp_bis.short_description = "Facture client participation personnelle (new)"
 
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
-               pdf_private_invoice, export_to_pdf2, do_it_bis]
+               pdf_private_invoice, export_to_pdf2, cns_invoice_bis, pdf_private_invoice_pp_bis]
     inlines = [PrestationInline]
     fieldsets = (
         (None, {
