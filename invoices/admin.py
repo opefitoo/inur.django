@@ -227,30 +227,36 @@ class PatientAdmin(CSVExportAdmin):
             return True
 
 
-@admin.register(Prestation)
-class PrestationAdmin(admin.ModelAdmin):
-    from invoices.invaction import create_invoice_for_health_insurance
-
-    list_filter = ('invoice_item__patient', 'invoice_item', 'carecode')
-    date_hierarchy = 'date'
-    list_display = ('carecode', 'date')
-    search_fields = ['carecode__code', 'carecode__name']
-    actions = [create_invoice_for_health_insurance]
-
-    def get_changeform_initial_data(self, request):
-        initial = {}
-        user = request.user
-        try:
-            employee = user.employee
-            initial['employee'] = employee.id
-        except ObjectDoesNotExist:
-            pass
-
-        return initial
-
-    def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
-        initial = {}
-        print(initial)
+# @admin.register(Prestation)
+# class PrestationAdmin(admin.ModelAdmin):
+#     # from invoices.invaction import create_invoice_for_health_insurance
+#     def formfield_for_foreignkey(self, db_field, request, **kwargs):
+#         if db_field.name == "employee":
+#             kwargs["queryset"] = Employee.objects.filter(owner=request.user)
+#         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+#
+#     list_filter = ('invoice_item__patient', 'invoice_item', 'carecode')
+#     date_hierarchy = 'date'
+#     list_display = ('carecode', 'date')
+#     search_fields = ['carecode__code', 'carecode__name']
+#     # actions = [create_invoice_for_health_insurance]
+#
+#
+#
+#     def get_changeform_initial_data(self, request):
+#         initial = {}
+#         user = request.user
+#         try:
+#             employee = user.employee
+#             initial['employee'] = employee.id
+#         except ObjectDoesNotExist:
+#             pass
+#
+#         return initial
+#
+#     def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
+#         initial = {}
+#         print(initial)
 
 
 @admin.register(Physician)
@@ -316,6 +322,11 @@ class PrestationInline(TabularInline):
         url = reverse('delete-prestation')
         return format_html("<a href='%s' class='deletelink' data-prestation_id='%s'>Delete</a>" % (url, obj.id))
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "employee":
+            kwargs["queryset"] = Employee.objects.all().order_by("-end_contract", "abbreviation")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     copy.allow_tags = True
     delete.allow_tags = True
 
@@ -340,7 +351,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
                     'number_of_prestations', 'invoice_details')
-    list_filter = ['invoice_date', 'invoice_details','invoice_sent', 'invoice_paid', 'patient__name']
+    list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', 'patient__name']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient']
