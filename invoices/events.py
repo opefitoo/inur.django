@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import sys
 
 from constance import config
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, QuerySet
@@ -86,9 +87,14 @@ class Event(models.Model):
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
         if self.time_start_event:
+            event_id = self.id
+            cached_employees = cache.get('event_employees_cache_%s' % event_id)
+            if not cached_employees:
+                cache.set('event_employees_cache_%s' % event_id, self.employees)
+                cached_employees = cache.get('event_employees_cache_%s' % event_id)
             return u'<a style="background-color:%s;color:%s;" class="eventtooltip" href="%s">%s %s</a>' % (
-                self.employees.color_cell,
-                self.employees.color_text,
+                cached_employees.color_cell,
+                cached_employees.color_text,
                 url,
                 str(self),
                 '<span class="evttooltiptext">chez: %s @ %s '
@@ -144,9 +150,18 @@ class Event(models.Model):
         return messages
 
     def __str__(self):  # Python 3: def __str__(self):,
-        if 'soin' != self.event_type.name:
-            return '%s for %s on %s' % (self.event_type, self.patient, self.day)
-        return '%s - %s' % (self.employees.abbreviation, self.patient.name)
+        event_type = self.event_type
+        cached_patient = cache.get('cached_patient_%s' % self.patient.id)
+        if not cached_patient:
+            cache.set('cached_patient_%s' % self.patient.id, self.patient)
+            cached_patient = cache.get('cached_patient_%s' % self.patient.id)
+        if 'soin' != event_type.name:
+            return '%s for %s on %s' % (event_type, cached_patient, self.day)
+        cached_employees = cache.get('event_employees_cache_%s' % self.employees.id)
+        if not cached_employees:
+            cache.set('event_employees_cache_%s' % self.employees.id, self.employees)
+            cached_employees = cache.get('event_employees_cache_%s' % self.employees.id)
+        return '%s - %s' % (cached_employees.abbreviation, cached_patient.name)
 
 
 def create_or_update_google_calendar(instance):
