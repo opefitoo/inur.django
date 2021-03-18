@@ -28,7 +28,7 @@ from invoices.events import Event
 
 
 class EventCalendar(HTMLCalendar):
-    def __init__(self, events=None):
+    def __init__(self, events=None) -> HTMLCalendar:
         super(EventCalendar, self).__init__()
         self.events = events
 
@@ -61,7 +61,7 @@ class EventCalendar(HTMLCalendar):
         Return a formatted month as a table.
         """
 
-        events = Event.objects.filter(day__month=themonth).order_by('-day').order_by('time_start_event')
+        events = Event.objects.filter(day__year=theyear, day__month=themonth).order_by('-day', 'time_start_event')
 
         v = []
         a = v.append
