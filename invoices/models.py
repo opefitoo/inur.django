@@ -371,7 +371,7 @@ class PatientAnamnesis(models.Model):
     pathologies = models.TextField("Pathologies", max_length=500, default=None, blank=True, null=True)
     medical_background = models.TextField(u"Antécédents", max_length=500, default=None, blank=True,
                                           null=True)
-    allergies = models.CharField("Allergies", max_length=50, default=None, blank=True, null=True)
+    allergies = models.TextField("Allergies", max_length=250, default=None, blank=True, null=True)
     # aides techniques
     electrical_bed = models.BooleanField(u"Lit électrique", default=None, blank=True, null=True)
     walking_frame = models.BooleanField(u"Cadre de marche", default=None, blank=True, null=True)
@@ -426,7 +426,7 @@ class PatientAnamnesis(models.Model):
     meal_on_wheels = models.BooleanField("Repas sur roues", default=None, blank=True, null=True)
     shopping_management = models.CharField(u"Commissions à faire par", choices=DrugManagement.choices, max_length=5,
                                            default=None, blank=True, null=True)
-    shopping_management_desc = models.CharField(u"Description", max_length=50, default=None, blank=True, null=True)
+    shopping_management_desc = models.TextField(u"Description", max_length=250, default=None, blank=True, null=True)
     # Elimination
     urinary_incontinence = models.BooleanField("Incontinence urinaire", default=None, blank=True, null=True)
     faecal_incontinence = models.BooleanField(u"Incontinence fécale", default=None, blank=True, null=True)
