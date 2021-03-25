@@ -156,7 +156,7 @@ def get_invoice_hdr(invoice: InvoiceItem) -> [object]:
 def get_body_elements(invoice: InvoiceItem, action, splitted_prestations=None) -> MedicalCareBodyPage:
     care_details = [CnsNursingCareDetail]
     my_dict = RowDict()
-    for idx, presta in enumerate(splitted_prestations if splitted_prestations else invoice.prestations.all()):
+    for idx, presta in enumerate(splitted_prestations if splitted_prestations else invoice.prestations.all().order_by("date", "carecode__name")):
         if presta.carecode.reimbursed:
             __nursing_care_dtl = CnsNursingCareDetail(code=presta.carecode.code, care_datetime=presta.date,
                                                       quantity=1,
