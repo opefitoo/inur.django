@@ -10,6 +10,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus import Table, TableStyle, Spacer, Paragraph
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 
+from invoices.actions import helpers
 from invoices.enums.pdf import PdfActionType
 from invoices.modelspackage import InvoicingDetails
 
@@ -267,6 +268,47 @@ class SummaryData(AbstractDetails):
         self.iban = iban
 
 
+class PersonalParticipationSummaryDataTable:
+    def __init__(self, summary_data_list: [SummaryData]):
+        self.summary_data_list = summary_data_list
+        self.total_summary = 0.0
+
+    def get_table(self):
+        elements = [Table([[
+            u"Veuillez trouver ci-joint le récapitulatif des factures ainsi que le montant total à payer"]],
+            [10 * cm, 5 * cm], 1 * [0.5 * cm], hAlign='LEFT'), Spacer(1, 18)]
+        data = [("No d'ordre", u"Note no°", u"Nom et prénom", "Montant")]
+        total = 0.0
+        for recap in self.summary_data_list:
+            data.append(recap.attributes_as_array(except_attrs=['iban']))
+            total = decimal.Decimal(total) + decimal.Decimal(recap.total_amount)
+        self.total_summary = round(total, 2)
+        data.append(("", "", u"À reporter", self.total_summary, ""))
+        table = Table(data, [2 * cm, 3 * cm, 7 * cm, 3 * cm], (len(self.summary_data_list) + 2) * [0.75 * cm])
+        table.setStyle(TableStyle([('ALIGN', (1, 1), (-2, -2), 'LEFT'),
+                                   ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                                   ('FONTSIZE', (0, 0), (-1, -1), 9),
+                                   ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                                   ]))
+
+        # _date_infos = Table([["Date facture : %s " % self.summary_data_list]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
+        elements.append(table)
+        elements.append(Spacer(1, 18))
+        elements.append(Table(
+            [[u"Lors du virement, veuillez indiquer la référence: %s " % helpers.generate_payment_reference([i.invoice_num for i in self.summary_data_list])]],
+            [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
+
+        elements.append(Spacer(1, 18))
+        elements.append(Table([["Total à payer:", "%10.2f Euros" % self.total_summary]], [10 * cm, 5 * cm],
+                          1 * [0.5 * cm],
+                          hAlign='LEFT'))
+        elements.append(Spacer(1, 18))
+        elements.append(Table([[u"Numéro IBAN: %s" % self.summary_data_list[0].iban]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
+
+
+        return elements
+
+
 class SummaryDataTable:
     def __init__(self, summary_data_list: [SummaryData]):
         self.summary_data_list = summary_data_list
@@ -402,7 +444,7 @@ def build_cns_bottom_elements() -> []:
 def build_pp_bottom_elements(summary_data: SummaryData) -> []:
     elements = [Spacer(1, 18),
                 Table([["Total participation personnelle:", "%10.2f Euros" % summary_data.total_amount]],
-                                     [10 * cm, 5 * cm], 1 * [0.5 * cm], hAlign='LEFT'),
+                      [10 * cm, 5 * cm], 1 * [0.5 * cm], hAlign='LEFT'),
                 Spacer(1, 18),
                 Table([[u"Lors du virement, veuillez indiquer la référence: %s " % summary_data.invoice_num]],
                       [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'),

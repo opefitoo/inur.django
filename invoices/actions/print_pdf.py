@@ -1,4 +1,5 @@
 import copy
+from typing import List
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
@@ -7,7 +8,7 @@ from reportlab.platypus import SimpleDocTemplate, PageBreak
 
 from invoices.actions.elements import CnsNursingCareDetail, NurseDetails, InvoiceHeaderData, PatientAbstractDetails, \
     InvoiceNumberDate, MedicalCareBodyPage, RowDict, build_cns_bottom_elements, SummaryData, SummaryDataTable, \
-    CnsFinalPage, build_pp_bottom_elements
+    CnsFinalPage, build_pp_bottom_elements, PersonalParticipationSummaryDataTable
 from invoices.enums.pdf import PdfActionType
 from invoices.models import InvoiceItem
 
@@ -50,13 +51,13 @@ class PdfActionSwitcher:
                 pdf_elements.extend(get_invoice_hdr(invoice_item))
                 body_elements = get_body_elements(invoice_item, PdfActionType.PERSONAL_PARTICIPATION)
                 pdf_elements.append(body_elements.get_table())
-                summary_data = SummaryData(order_number=order_number,
-                                           invoice_num="PP%s" % invoice_item.invoice_number,
-                                           patient_name=invoice_item.patient,
-                                           total_amount=body_elements.fst_pp_sub_total +
-                                                        body_elements.snd_pp_sub_total,
-                                           iban=invoice_item.invoice_details.bank_account)
-                pdf_elements += build_pp_bottom_elements(summary_data=summary_data)
+                summary_data.append(SummaryData(order_number=order_number,
+                                                invoice_num=invoice_item.invoice_number,
+                                                patient_name=invoice_item.patient,
+                                                total_amount=body_elements.fst_pp_sub_total +
+                                                             body_elements.snd_pp_sub_total,
+                                                iban=invoice_item.invoice_details.bank_account))
+                # pdf_elements += build_pp_bottom_elements(summary_data=summary_data)
                 pdf_elements.append(PageBreak())
                 order_number += 1
             else:
@@ -71,20 +72,23 @@ class PdfActionSwitcher:
                     pdf_elements.extend(get_invoice_hdr(v_invoice))
                     body_elements = get_body_elements(v_invoice, PdfActionType.PERSONAL_PARTICIPATION, [p for p in ps])
                     pdf_elements.append(body_elements.get_table())
-                    summary_data = SummaryData(order_number=order_number,
-                                               invoice_num="PP%s" % invoice_item.invoice_number,
-                                               patient_name=invoice_item.patient,
-                                               total_amount=body_elements.fst_pp_sub_total +
-                                                            body_elements.snd_pp_sub_total,
-                                               iban=invoice_item.invoice_details.bank_account)
-                    pdf_elements += build_pp_bottom_elements(summary_data=summary_data)
+                    summary_data.append(SummaryData(order_number=order_number,
+                                                    invoice_num=invoice_item.invoice_number,
+                                                    patient_name=invoice_item.patient,
+                                                    total_amount=body_elements.fst_pp_sub_total +
+                                                                 body_elements.snd_pp_sub_total,
+                                                    iban=invoice_item.invoice_details.bank_account))
+                    # FIXME: remove this
+                    # pdf_elements += build_pp_bottom_elements(summary_data=summary_data)
                     pdf_elements.append(PageBreak())
                 order_number += 1
+        summary_data_table: PersonalParticipationSummaryDataTable = PersonalParticipationSummaryDataTable(summary_data)
+        pdf_elements += summary_data_table.get_table()
         return pdf_elements
 
     def pdf_cns(self):
         pdf_elements = []
-        summary_data = []
+        summary_data: List[SummaryData] = []
         invoice_item: InvoiceItem
         order_number = 1
         previous_invoice: InvoiceItem = None
@@ -156,7 +160,9 @@ def get_invoice_hdr(invoice: InvoiceItem) -> [object]:
 def get_body_elements(invoice: InvoiceItem, action, splitted_prestations=None) -> MedicalCareBodyPage:
     care_details = [CnsNursingCareDetail]
     my_dict = RowDict()
-    for idx, presta in enumerate(splitted_prestations if splitted_prestations else invoice.prestations.all().order_by("date", "carecode__name")):
+    for idx, presta in enumerate(
+            splitted_prestations if splitted_prestations else invoice.prestations.all().order_by("date",
+                                                                                                 "carecode__name")):
         if presta.carecode.reimbursed:
             __nursing_care_dtl = CnsNursingCareDetail(code=presta.carecode.code, care_datetime=presta.date,
                                                       quantity=1,

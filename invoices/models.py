@@ -846,6 +846,16 @@ def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
         gd_storage.delete(instance.file.name)
 
 
+class PaymentReference(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    paid_at = models.DateField(blank=True, null=True, default=None)
+    invoice_list = models.CharField(max_length=200)
+
+    def __str__(self):
+        return "%s" % self.invoice_list
+
+
 class InvoiceItem(models.Model):
     class Meta(object):
         ordering = ['-id']
