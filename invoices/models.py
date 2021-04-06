@@ -651,7 +651,10 @@ def update_medical_prescription_filename(instance, filename):
 
 
 def validate_image(image):
-    file_size = image.file.size
+    try:
+        file_size = image.file.size
+    except:
+        return
     limit_kb = 1024
     if file_size > limit_kb * 1024:
         raise ValidationError("Taille maximale du fichier est %s KO" % limit_kb)
@@ -672,9 +675,9 @@ class MedicalPrescription(models.Model):
     file = models.ImageField(storage=gd_storage, blank=True,
                              upload_to=update_medical_prescription_filename,
                              validators=[validate_image])
-    image_file = _modelscloudinary.CloudinaryField('Scan or picture', default=None,
-                                                   blank=True,
-                                                   null=True)
+    # image_file = _modelscloudinary.CloudinaryField('Scan or picture', default=None,
+    #                                                blank=True,
+    #                                                null=True)
     _original_file = None
 
     @property

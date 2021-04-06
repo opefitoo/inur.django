@@ -3,10 +3,8 @@ from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
 from django.contrib.auth.models import User
 from django.core.checks import messages
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.core.files.base import ContentFile
-from django.core.files.storage import FileSystemStorage
-from django.http import HttpResponseRedirect, HttpResponse
+from django.core.exceptions import ValidationError
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
@@ -212,6 +210,7 @@ class PatientAdmin(CSVExportAdmin):
     readonly_fields = ('age', 'link_to_invoices')
     search_fields = ['name', 'first_name', 'code_sn']
     form = PatientForm
+    # actions = [generate_road_book_2019_mehdi]
     actions = []
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
 
@@ -285,7 +284,7 @@ class PhysicianAdmin(admin.ModelAdmin):
 @admin.register(MedicalPrescription)
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
-    list_display = ('date', 'prescriptor', 'patient', 'image_file')
+    list_display = ('date', 'prescriptor', 'patient',)
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview',)
     autocomplete_fields = ['prescriptor', 'patient']
@@ -355,6 +354,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient']
+    # search_form = InvoiceItemSearchForm
 
     def cns_invoice_bis(self, request, queryset):
         try:
@@ -821,7 +821,7 @@ class EventAdmin(admin.ModelAdmin):
             previous_month)
         extra_context['next_month'] = reverse('admin:invoices_event_changelist') + '?day__gte=' + str(next_month)
 
-        cal = EventCalendar()
+        cal: EventCalendar = EventCalendar()
         html_calendar = cal.formatmonth(d.year, d.month, withyear=True)
         html_calendar = html_calendar.replace('<td ', '<td  width="150" height="150"')
         extra_context['calendar'] = mark_safe(html_calendar)
