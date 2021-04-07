@@ -1,6 +1,7 @@
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
+from django.views.generic import RedirectView
 from django.views.static import serve
 from rest_framework.authtoken import views as authtoken_views
 from django.conf import settings
@@ -67,12 +68,16 @@ urlpatterns += [
 
 urlpatterns += [
     url(r'^api/v1/event_list/$', api.views.EventList.as_view()),
-    url(r'^api/v1/event_list/(?P<pk>[0-9]+)/$', api.views.EventDetail.as_view())
+    url(r'^api/v1/event_list/(?P<pk>[0-9]+)/$', api.views.EventDetail.as_view()),
+]
+urlpatterns += [
+    url(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
 ]
 # if settings.DEBUG:
 #     import debug_toolbar
+#
 #     urlpatterns += [
-#         url(r'^__debug__/', include(debug_toolbar.urls)),
+#         path('__debug__/', include(debug_toolbar.urls)),
 #     ]
 admin.site.site_header = "Invoice for Nurses Admin (inur)"
 admin.site.site_title = "INUR Admin Portal"
