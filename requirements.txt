@@ -1,7 +1,7 @@
 appdirs==1.4.4
 dj-database-url==0.5.0
 dj-static==0.0.6
-django==3.1.7
+django==3.1.8
 django-appconf==1.0.4
 django-constance==2.8.0
 django-countries==7.0
