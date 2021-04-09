@@ -14,6 +14,7 @@ from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.print_pdf import do_it, PdfActionType
+from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, EventCalendarPeriodFilter
 from invoices.models import PatientAnamnesis, ContactPerson, OtherStakeholder, DependenceInsurance
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
@@ -782,6 +783,7 @@ class EventAdmin(admin.ModelAdmin):
         }
         js = [
             "js/conditional-event-address.js",
+            "js/toggle-period.js",
         ]
 
     form = EventForm
@@ -790,11 +792,14 @@ class EventAdmin(admin.ModelAdmin):
     readonly_fields = ['created_by', 'created_on', 'calendar_url', 'calendar_id']
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
+    list_filter = (SmartEmployeeFilter, )
 
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):
         after_day = request.GET.get('day__gte', None)
         extra_context = extra_context or {}
+        employee_id = request.GET.get('employee', None)
+        # period = request.GET.get('period', None)
 
         if not after_day:
             d = datetime.date.today()
@@ -822,7 +827,11 @@ class EventAdmin(admin.ModelAdmin):
         extra_context['next_month'] = reverse('admin:invoices_event_changelist') + '?day__gte=' + str(next_month)
 
         cal: EventCalendar = EventCalendar()
-        html_calendar = cal.formatmonth(d.year, d.month, withyear=True)
+        # if "month" == period:
+        html_calendar = cal.formatmonth(d.year, d.month, withyear=True, employee_id=employee_id)
+        # else:
+        #     # html_calendar = cal.formatweek(d.year, d.month, withyear=True, employee_id=employee_id)
+        #     html_calendar = cal.formatmonth(d.year, d.month, withyear=True, employee_id=employee_id)
         html_calendar = html_calendar.replace('<td ', '<td  width="150" height="150"')
         extra_context['calendar'] = mark_safe(html_calendar)
         return super(EventAdmin, self).changelist_view(request, extra_context)
