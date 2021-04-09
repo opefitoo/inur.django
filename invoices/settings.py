@@ -274,6 +274,4 @@ from dotenv import load_dotenv
 
 load_dotenv(verbose=True)
 
-CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
-
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
