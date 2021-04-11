@@ -1,0 +1,972 @@
+{% load static %}
+<head>
+    <title>Print Anamnesis</title>
+    <style>
+        html,
+        body {
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+
+        }
+
+        .main {
+
+            margin: 50px auto;
+            height: 100%;
+            width: 1200px;
+            display: grid;
+            grid-template-rows: 45px 259px 215px 341px 181px 50px 68px 149px 360px 149px 25px;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-gap: 18px;
+        }
+
+        .div1 {
+            background-color: rgb(255, 255, 255);
+        }
+
+        .div2 {
+            background-color: #ffffff;
+        }
+
+        .div3 {
+            background-color: rgb(255, 255, 255);
+
+        }
+
+        .div4 {
+            background-color: rgb(255, 255, 255);
+            border: 1px solid black;
+            padding: 3px 0 0 6px;
+
+        }
+
+        .div5 {
+            background-color: rgb(255, 255, 255);
+            border: 1px solid black;
+            padding: 3px 0 0 6px;
+        }
+
+        .div6 {
+            background-color: rgb(255, 255, 255);
+            border: 1px solid black;
+            padding: 3px 0 0 6px;
+        }
+
+        .div7 {
+            background-color: rgb(255, 255, 255);
+            grid-column: 1/-1;
+        }
+
+        .div8 {
+            background-color: rgb(255, 255, 255);
+        }
+
+        .div9 {
+            background-color: rgb(255, 255, 255);
+            grid-column: 2/4;
+        }
+
+        .div10 {
+            background-color: rgb(255, 255, 255);
+        }
+
+        .div11 {
+            background-color: rgb(255, 255, 255);
+            grid-column: 2/3;
+        }
+
+        .div12 {
+            background-color: rgb(255, 255, 255);
+            border: 1px solid black;
+        }
+
+        .div13 {
+            background-color: rgb(255, 255, 255);
+        }
+
+        .div14 {
+            background-color: rgb(255, 255, 255);
+        }
+
+        .div15 {
+            background-color: rgb(255, 255, 255);
+            grid-row: 6/8;
+            grid-column: 3/4;
+        }
+
+        .div16 {
+            background-color: rgb(255, 255, 255);
+        }
+
+        .div17 {
+            background-color: rgb(255, 255, 255);
+            border: 1px dotted rgb(180, 180, 180);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .div18 {
+            background-color: rgb(255, 255, 255);
+            grid-column: 1/-1;
+        }
+
+        .div19 {
+            background-color: rgb(255, 255, 255);
+        }
+
+        .div20 {
+            background-color: rgb(255, 255, 255);
+            grid-column: 2/4;
+            grid-row: 9/11;
+        }
+
+        .div21 {
+            background-color: rgb(255, 255, 255);
+        }
+
+        p {
+            grid-column: 1/-1;
+        }
+
+
+        .div1 img,
+        .div13 img {
+            height: 45px;
+        }
+
+        form div input,
+        textarea {
+            border: 0 dotted;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table td,
+        .table th {
+            padding: 12px 15px;
+            border: 1px solid rgb(0, 0, 0);
+            text-align: center;
+        }
+
+        h3 {
+            text-align: center;
+            background-color: rgb(238, 238, 238);
+            border: 1px solid black;
+
+        }
+
+        .photo {
+            border: 1px dotted black;
+            width: 230px;
+            height: 130px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+
+        .th {
+            background-color: rgb(228, 228, 228);
+        }
+
+        .heading {
+            width: 85%;
+            border: 1px dotted black;
+            border-bottom: 2px dotted black;
+        }
+
+        input, textarea {
+            margin: 1px;
+        }
+
+        @media print {
+            .pb {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="main">
+    <div class="div1">
+        <img src="{% static 'patientanamnesis/images/xyz.png' %}" alt="">
+    </div>
+    <div class="div2">
+        <div class="head">
+            <h2>Données de Base du Client</h2>
+        </div>
+    </div>
+    <div class="div3">
+        <form action="">
+            <label for="">Date de la prise en charge : </label>
+            <input type="date">
+        </form>
+    </div>
+    <div class="div4">
+        <form action="">
+            <div>
+                Nom <em>(+marital)</em> : <input type="text" name="myName" value={{ obj.patient.name }}>
+            </div>
+            <div>
+                Prénom : <input type="text" name="myName" value={{ obj.patient.first_name }}>
+            </div>
+            <div>
+                Date et lieu de naissance : <input type="text" name="myName" value={{ obj.patient.birth_date }}>
+            </div>
+            <div>
+                Matricule : <input type="text" name="myName" value={{ obj.patient.code_sn }}>
+            </div>
+            <div>
+                Caisse : <input type="text" name="myName" value="CNS">
+            </div>
+            <div>
+                Tél. : <input type="text" name="myName" value={{ obj.patient.clean_phone_number }}>
+            </div>
+            <div>
+                Adresse : <br> <textarea name="mytext" id="" cols="48"
+                                         rows="2"> {{ obj.patient.full_address }} </textarea>
+            </div>
+            <div>
+                Étage : <input type="text" name="myName">
+            </div>
+            <div>
+                Porte : <input type="text" name="myName">
+            </div>
+            <div>
+                Clés : <input type="radio" name="mygender"> Oui <input type="radio" name="mygender"> Non
+
+            </div>
+            <div>
+                Nombre : <input type="text" name="myName">
+            </div>
+        </form>
+    </div>
+    <div class="div5">
+        <form action="">
+            <div>
+                Plan de partage : <input type="radio" name="mygender"> Oui <input type="radio" name="mygender"> Non
+            </div>
+            <div>
+                Nom de l’aidant : <input type="text" name="myName">
+            </div>
+            <div>
+                Aide ménage : SUR.LU <input type="radio" name="mygender"> Privée<input type="radio"
+                                                                                       name="mygender">
+            </div>
+            <div>
+                Autres prestations : <input type="radio" name="mygender"> Oui <input type="radio" name="mygender">
+                Non
+            </div>
+            <div>
+                Hôpital choisi : <input type="text" name="myName">
+            </div>
+            <div>
+                Pharmacie choisi : <input type="text" name="myName">
+            </div>
+            <div>
+                Repas sur roues : <input type="text" name="myName">
+            </div>
+            <div>
+                Tél. : <input type="number" name="myName">
+            </div>
+            <div>
+                Foyer de jour : <input type="text" name="myName">
+            </div>
+            <div>
+                Tél. : <input type="number" name="myName">
+            </div>
+            <div>
+                Raison de prise en charge : <input type="text" name="myName">
+            </div>
+        </form>
+    </div>
+    <div class="div6">
+        <form action="">
+            <div>
+                Directive anticipée : <input type="radio" name="mygender"> Oui <input type="radio"
+                                                                                      name="mygender"> Non
+            </div>
+            <div>
+                Copie dans le dossier : <input type="radio" name="mygender"> Oui <input type="radio"
+                                                                                        name="mygender"> Non
+            </div>
+            <div>
+                Langues parlées : <input type="text" name="myName">
+            </div>
+            <div>
+                Langues comprises : <input type="text" name="myName">
+            </div>
+            <div>
+                Ou rangée dans : <input type="text" name="myName">
+            </div>
+            <div>
+                Religion : <input type="text" name="myName">
+            </div>
+            <div>
+                Animaux domestiques : <input type="radio" name="mygender"> Oui <input type="radio"
+                                                                                      name="mygender"> Non
+            </div>
+            <div>
+                Chiens : <input type="text" name="myName">
+            </div>
+            <div>
+                Chats : <input type="text" name="myName">
+            </div>
+            <div>
+                Oiseaux : <input type="text" name="myName">
+            </div>
+        </form>
+    </div>
+    <div class="div7">
+        <h3>Personnes de contact</h3>
+        <table class="table">
+            <Thead>
+            <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Tél.</th>
+                <th>Adresse</th>
+                <th>Lien / parenté</th>
+                <th>Priorité</th>
+            </tr>
+
+            </Thead>
+            <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            </tbody>
+        </Table>
+    </div>
+    <div class="div8">
+        <h3>Assurance dépendance</h3>
+        <table class="table">
+            <Thead>
+            <tr>
+                <th>Évaluations</th>
+                <th>Date
+                    envoi
+                </th>
+                <th>Date réception</th>
+                <th>Accord / Refus</th>
+
+
+            </Thead>
+            <tbody>
+            <tr>
+                <td>1 <sup>ère</sup> demande</td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td>Réévaluation</td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Demande aide technique</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            </tbody>
+        </Table>
+    </div>
+    <div class="div9">
+        <h3>Médecins</h3>
+        <table class="table">
+            <Thead>
+            <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Tél./Fax</th>
+                <th>Ville</th>
+                <th>Hôpital</th>
+            </tr>
+
+            </Thead>
+            <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            </tbody>
+        </Table>
+    </div>
+    <div class="div10">
+        <h3>Tarif social</h3>
+        <table class="table">
+            <Thead>
+            <tr>
+                <th>Date demande</th>
+                <th>Date réception</th>
+                <th>Accord / Refus</th>
+            </tr>
+
+            </Thead>
+            <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+
+            </tbody>
+        </Table>
+    </div>
+    <div class="div11">
+        <h3>Autres intervenants</h3>
+        <table class="table">
+            <Thead>
+            <tr>
+                <th>Nom</th>
+                <th>Spécialité</th>
+                <th>Tél./Fax</th>
+                <th>Ville</th>
+
+
+            </Thead>
+            <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+
+            </tbody>
+        </Table>
+    </div>
+    <div class="div12">
+        <form action="">
+            <label for="">Mise à jour : </label>
+            <input type="date">
+        </form>
+        <div>
+            Paraphe : <textarea name="mytext" id="" cols="15" rows="3"></textarea>
+        </div>
+    </div>
+    <div class="div13">
+        <img src="{% static 'patientanamnesis/images/xyz.png' %}" alt="">
+    </div>
+    <div class="pb"></div>
+    <div class="div14">
+        <div class="heading">
+            <h2>Informations Médicales</h2>
+        </div>
+    </div>
+    <div class="div15">
+        <div class="photo">Étiquette client</div>
+    </div>
+    <div class="div16">
+        <form action="">
+            <label for="">Mise à jour le : </label>
+            <input type="date">
+        </form>
+    </div>
+    <div class="div17">
+        <form action="">
+            <div>
+                Médecin - Nom : <input type="text" name="myName">
+
+            </div>
+            <div>
+                Tél. : <input type="number" name="myName">
+            </div>
+        </form>
+    </div>
+    <div class="div18">
+        <table class="table">
+            <Thead class="th">
+            <tr>
+                <th>Diagnostic médical</th>
+                <th>Nom du médecin</th>
+                <th>N° Réf.</th>
+            </tr>
+
+            </Thead>
+            <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            </tbody>
+        </Table>
+    </div>
+    <div class="div19">
+        <table class="table">
+            <Thead class="th">
+            <tr>
+                <th>Antécédents:</th>
+                <th>Nom du médecin</th>
+                <th>N° Réf.</th>
+            </tr>
+
+            </Thead>
+            <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+
+            </tbody>
+        </Table>
+    </div>
+    <div class="div20">
+        <table class="table">
+            <Thead class="th">
+            <tr>
+                <th>Traitement:</th>
+                <th>Nom du médecin</th>
+                <th>Date</th>
+                <th>N° Réf.</th>
+            </tr>
+
+            </Thead>
+            <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            </tbody>
+        </Table>
+    </div>
+    <div class="div21">
+        <table class="table">
+            <Thead class="th">
+            <tr>
+                <th>Allergies:</th>
+
+            </tr>
+
+            </Thead>
+            <tbody>
+            <tr>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+
+            </tr>
+            <tr>
+                <td></td>
+
+            </tr>
+
+            </tbody>
+        </Table>
+    </div>
+    <p>Les informations doivent être communiquées par le(s) médecin(s).</p>
+</div>
+
+
+</body>
+
+</html>

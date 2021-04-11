@@ -28,7 +28,7 @@ reportlab==3.5.66
 requests==2.25.1
 rsa==4.7.2
 six==1.15.0
-SQLAlchemy==1.4.6
+SQLAlchemy==1.4.7
 sqlparse==0.4.1
 static3==0.7.0
 uritemplate==3.0.1
@@ -50,3 +50,4 @@ python-dotenv==0.17.0
 django-admin-search==0.3.6
 # django-debug-toolbar
 # googlemaps
+django-admin-object-actions

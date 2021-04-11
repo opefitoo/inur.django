@@ -1,3 +1,4 @@
+from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
@@ -153,13 +154,27 @@ class OtherStakeholdersInLine(admin.TabularInline):
 
 
 @admin.register(PatientAnamnesis)
-class PatientAnamnesisAdmin(admin.ModelAdmin):
-    list_display = ('patient',)
+class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
+    list_display = ('patient', 'display_object_actions_list',)
     autocomplete_fields = ['patient']
+
+    object_actions = [
+        {
+            'slug': 'print',
+            'verbose_name': 'Print',
+            'form_method': 'GET',
+            'view': 'print_view',
+        },
+    ]
+
+    readonly_fields = (
+        'display_object_actions_detail',
+    )
 
     fieldsets = (
         ('Patient', {
-            'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link')
+            'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link',
+                       'display_object_actions_detail')
         }),
         ('Habitation', {
             'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door'),
@@ -200,6 +215,11 @@ class PatientAnamnesisAdmin(admin.ModelAdmin):
     )
 
     inlines = [AssignedPhysicianInLine, ContactPersonInLine, OtherStakeholdersInLine, DependenceInsuranceInLine]
+
+    def print_view(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'patientanamnesis/print_anamnesis.html', {'obj': obj})
 
 
 @admin.register(Patient)
