@@ -254,10 +254,10 @@
                                     rows="2"> {{ obj.patient.full_address }} </textarea>
             </div>
             <div>
-                Étage : <input type="text" name="myName" value="{{ obj.floor_number }}">
+                Étage : <input type="text" name="myName" value="{{ obj.floor_number|default_if_none:"-" }}">
             </div>
             <div>
-                Porte : <input type="text" name="myName" value="{{ obj.entry_door }}">
+                Porte : <input type="text" name="myName" value="{{ obj.entry_door|default_if_none:"-" }}">
             </div>
             <div>
                 Clés : <input type="radio" name="mygender"> Oui <input type="radio" name="mygender"> Non
