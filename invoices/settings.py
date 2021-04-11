@@ -54,6 +54,9 @@ INSTALLED_APPS = (
     'colorfield'
 )
 
+INSTALLED_APPS += ('admin_object_actions',)
+
+
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -68,6 +71,9 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django_currentuser.middleware.ThreadLocalUserMiddleware',
 )
+
+MIDDLEWARE += ('crum.CurrentRequestUserMiddleware',)
+
 #
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
