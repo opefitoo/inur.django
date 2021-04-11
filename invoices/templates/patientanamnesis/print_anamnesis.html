@@ -2,197 +2,214 @@
 <head>
     <title>Print Anamnesis</title>
     <style>
-        html,
-        body {
-            font-family: 'Open Sans', sans-serif;
+        @page {
+            size: A4 landscape;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        @media screen, print {
+            html,
+            body {
+                font-size: 10pt;
+                font-family: sans-serif;
+            }
 
-        }
+            table {
+                font-size: 10pt;
+            }
 
-        .main {
+            header, footer, aside, nav {
+                display: none;
+            }
 
-            margin: 50px auto;
-            height: 100%;
-            width: 1200px;
-            display: grid;
-            grid-template-rows: 45px 259px 215px 341px 181px 50px 68px 149px 360px 149px 25px;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-gap: 18px;
-        }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
 
-        .div1 {
-            background-color: rgb(255, 255, 255);
-        }
+            }
 
-        .div2 {
-            background-color: #ffffff;
-        }
+            .main {
 
-        .div3 {
-            background-color: rgb(255, 255, 255);
+                margin: 50px auto;
+                height: 100%;
+                width: 1200px;
+                display: grid;
+            {#grid-template-rows: 45px 249px 205px 341px 181px 50px 68px 149px 360px 149px 25px;#} grid-template-columns: 1fr 1fr 1fr;
+                grid-gap: 10px;
+            }
 
-        }
+            .div1 {
+                background-color: rgb(255, 255, 255);
+            }
 
-        .div4 {
-            background-color: rgb(255, 255, 255);
-            border: 1px solid black;
-            padding: 3px 0 0 6px;
+            .div2 {
+                background-color: #ffffff;
+            }
 
-        }
+            .div3 {
+                background-color: rgb(255, 255, 255);
 
-        .div5 {
-            background-color: rgb(255, 255, 255);
-            border: 1px solid black;
-            padding: 3px 0 0 6px;
-        }
+            }
 
-        .div6 {
-            background-color: rgb(255, 255, 255);
-            border: 1px solid black;
-            padding: 3px 0 0 6px;
-        }
+            .div4 {
+                background-color: rgb(255, 255, 255);
+                border: 1px solid black;
+                padding: 3px 0 0 6px;
 
-        .div7 {
-            background-color: rgb(255, 255, 255);
-            grid-column: 1/-1;
-        }
+            }
 
-        .div8 {
-            background-color: rgb(255, 255, 255);
-        }
+            .div5 {
+                background-color: rgb(255, 255, 255);
+                border: 1px solid black;
+                padding: 3px 0 0 6px;
+            }
 
-        .div9 {
-            background-color: rgb(255, 255, 255);
-            grid-column: 2/4;
-        }
+            .div6 {
+                background-color: rgb(255, 255, 255);
+                border: 1px solid black;
+                padding: 3px 0 0 6px;
+            }
 
-        .div10 {
-            background-color: rgb(255, 255, 255);
-        }
+            .div7 {
+                background-color: rgb(255, 255, 255);
+                grid-column: 1/-1;
+            }
 
-        .div11 {
-            background-color: rgb(255, 255, 255);
-            grid-column: 2/3;
-        }
+            .div8 {
+                background-color: rgb(255, 255, 255);
+            }
 
-        .div12 {
-            background-color: rgb(255, 255, 255);
-            border: 1px solid black;
-        }
+            .div9 {
+                background-color: rgb(255, 255, 255);
+                grid-column: 2/4;
+            }
 
-        .div13 {
-            background-color: rgb(255, 255, 255);
-        }
+            .div10 {
+                background-color: rgb(255, 255, 255);
+            }
 
-        .div14 {
-            background-color: rgb(255, 255, 255);
-        }
+            .div11 {
+                background-color: rgb(255, 255, 255);
+                grid-column: 2/3;
+            }
 
-        .div15 {
-            background-color: rgb(255, 255, 255);
-            grid-row: 6/8;
-            grid-column: 3/4;
-        }
+            .div12 {
+                background-color: rgb(255, 255, 255);
+                border: 1px solid black;
+            }
 
-        .div16 {
-            background-color: rgb(255, 255, 255);
-        }
+            .div13 {
+                background-color: rgb(255, 255, 255);
+            }
 
-        .div17 {
-            background-color: rgb(255, 255, 255);
-            border: 1px dotted rgb(180, 180, 180);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+            .div14 {
+                background-color: rgb(255, 255, 255);
+            }
 
-        .div18 {
-            background-color: rgb(255, 255, 255);
-            grid-column: 1/-1;
-        }
+            .div15 {
+                background-color: rgb(255, 255, 255);
+                grid-row: 6/8;
+                grid-column: 3/4;
+            }
 
-        .div19 {
-            background-color: rgb(255, 255, 255);
-        }
+            .div16 {
+                background-color: rgb(255, 255, 255);
+            }
 
-        .div20 {
-            background-color: rgb(255, 255, 255);
-            grid-column: 2/4;
-            grid-row: 9/11;
-        }
+            .div17 {
+                background-color: rgb(255, 255, 255);
+                border: 1px dotted black;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
 
-        .div21 {
-            background-color: rgb(255, 255, 255);
-        }
+            .div18 {
+                background-color: rgb(255, 255, 255);
+                grid-column: 1/-1;
+            }
 
-        p {
-            grid-column: 1/-1;
-        }
+            .div19 {
+                background-color: rgb(255, 255, 255);
+            }
 
+            .div20 {
+                background-color: rgb(255, 255, 255);
+                grid-column: 2/4;
+                grid-row: 9/11;
+            }
 
-        .div1 img,
-        .div13 img {
-            height: 45px;
-        }
+            .div21 {
+                background-color: rgb(255, 255, 255);
+            }
 
-        form div input,
-        textarea {
-            border: 0 dotted;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .table td,
-        .table th {
-            padding: 12px 15px;
-            border: 1px solid rgb(0, 0, 0);
-            text-align: center;
-        }
-
-        h3 {
-            text-align: center;
-            background-color: rgb(238, 238, 238);
-            border: 1px solid black;
-
-        }
-
-        .photo {
-            border: 1px dotted black;
-            width: 230px;
-            height: 130px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+            p {
+                grid-column: 1/-1;
+            }
 
 
-        .th {
-            background-color: rgb(228, 228, 228);
-        }
+            .div1 img,
+            .div13 img {
+                height: 45px;
+            }
 
-        .heading {
-            width: 85%;
-            border: 1px dotted black;
-            border-bottom: 2px dotted black;
-        }
+            form div input,
+            textarea {
+                border: 0 dotted;
+            }
 
-        input, textarea {
-            margin: 1px;
-        }
+            .table {
+                width: 100%;
+                border-collapse: collapse;
+            }
 
-        @media print {
+            .table td,
+            .table th {
+                padding: 12px 15px;
+                border: 1px solid rgb(0, 0, 0);
+                text-align: center;
+            }
+
+            h3 {
+                text-align: center;
+                background-color: rgb(238, 238, 238);
+                border: 1px solid black;
+
+            }
+
+            .photo {
+                border: 1px dotted black;
+                width: 230px;
+                height: 130px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+
+            .th {
+                background-color: rgb(228, 228, 228);
+            }
+
+            .heading {
+                width: 85%;
+                border: 1px dotted black;
+                border-bottom: 2px dotted black;
+            }
+
+            input, textarea {
+                margin: 1px;
+            }
+
             .pb {
                 page-break-before: always;
             }
+
+            table, figure {
+                page-break-inside: avoid;
+            }
         }
+
     </style>
 </head>
 
@@ -233,14 +250,14 @@
                 Tél. : <input type="text" name="myName" value={{ obj.patient.clean_phone_number }}>
             </div>
             <div>
-                Adresse : <br> <textarea name="mytext" id="" cols="48"
-                                         rows="2"> {{ obj.patient.full_address }} </textarea>
+                Adresse : <textarea name="mytext" id="" cols="48"
+                                    rows="2"> {{ obj.patient.full_address }} </textarea>
             </div>
             <div>
-                Étage : <input type="text" name="myName">
+                Étage : <input type="text" name="myName" value="{{ obj.floor_number }}">
             </div>
             <div>
-                Porte : <input type="text" name="myName">
+                Porte : <input type="text" name="myName" value="{{ obj.entry_door }}">
             </div>
             <div>
                 Clés : <input type="radio" name="mygender"> Oui <input type="radio" name="mygender"> Non
@@ -328,68 +345,25 @@
         </form>
     </div>
     <div class="div7">
-        <h3>Personnes de contact</h3>
+        <h3>Personnes de Contact</h3>
         <table class="table">
             <Thead>
             <tr>
                 <th>Nom</th>
-                <th>Prénom</th>
-                <th>Tél.</th>
-                <th>Adresse</th>
+                <th>Tél. Perso.</th>
+                <th>Tél. Pro.</th>
                 <th>Lien / parenté</th>
-                <th>Priorité</th>
             </tr>
-
             </Thead>
             <tbody>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
+            {% for c in obj.contactpers_to_anamnesis.all %}
+                <tr>
+                    <td>{{ c.contact_name }}</td>
+                    <td>{{ c.contact_private_phone_nbr }}</td>
+                    <td>{{ c.contact_business_phone_nbr|default_if_none:"-" }}</td>
+                    <td>{{ c.contact_relationship }}</td>
+                </tr>
+            {% endfor %}
             </tbody>
         </Table>
     </div>
@@ -462,89 +436,17 @@
                 <th>Ville</th>
                 <th>Hôpital</th>
             </tr>
-
             </Thead>
             <tbody>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-            </tr>
+            {% for m in obj.physicians_set %}
+                <tr>
+                    <td>{{ m.name }}</td>
+                    <td>{{ m.first_name }}</td>
+                    <td>{{ m.phone_number }} / {{ m.fax_number }}</td>
+                    <td>{{ m.city }}</td>
+                    <td></td>
+                </tr>
+            {% endfor %}
             </tbody>
         </Table>
     </div>
