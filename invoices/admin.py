@@ -10,13 +10,15 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from django_csv_exports.admin import CSVExportAdmin
+from fieldsets_with_inlines import FieldsetsInlineMixin
 
 from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, EventCalendarPeriodFilter
-from invoices.models import PatientAnamnesis, ContactPerson, OtherStakeholder, DependenceInsurance
+from invoices.models import PatientAnamnesis, ContactPerson, OtherStakeholder, DependenceInsurance,  \
+    BiographyHabits
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
@@ -153,8 +155,16 @@ class OtherStakeholdersInLine(admin.TabularInline):
               'contact_email')
 
 
+class BiographyHabitsInLine(admin.TabularInline):
+    extra = 0
+    model = BiographyHabits
+    fields = ('habit_type', 'habit_time', 'habit_ritual', 'habit_preferences')
+    # autocomplete_fields = ['assigned_physician']
+    # fk_name = 'biography'
+
+
 @admin.register(PatientAnamnesis)
-class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
+class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, admin.ModelAdmin):
     list_display = ('patient', 'display_object_actions_list',)
     autocomplete_fields = ['patient']
 
@@ -177,7 +187,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         'display_object_actions_detail',
     )
 
-    fieldsets = (
+    fieldsets_with_inlines = [
         ('Patient', {
             'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link',
                        'display_object_actions_detail')
@@ -218,9 +228,70 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         (u"Garde/ Course sortie / Foyer", {
             'fields': ('day_care_center', 'day_care_center_activities', 'household_chores',),
         }),
-    )
+        (u"Biographie", {
+            'fields': ['preferred_drinks']
+         }),
+        BiographyHabitsInLine,
+        (u"Activités", {
+            'fields': ['shower_habits', 'dressing_habits', 'occupation_habits', 'general_wishes']
+         }),
+                             (u"Social", {
+                                 'fields': ['family_ties', 'friend_ties', 'important_persons_ties',]
+                             }),
+                             (u"Important", {
+                                 'fields': ['bio_highlights',]
+                             }),
+        AssignedPhysicianInLine,
+        ContactPersonInLine,
+        OtherStakeholdersInLine,
+        DependenceInsuranceInLine
+        ]
 
-    inlines = [AssignedPhysicianInLine, ContactPersonInLine, OtherStakeholdersInLine, DependenceInsuranceInLine]
+    # fieldsets = (
+    #     ('Patient', {
+    #         'fields': ('patient', 'biography', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link',
+    #                    'display_object_actions_detail')
+    #     }),
+    #     ('Habitation', {
+    #         'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door'),
+    #     }),
+    #     (None, {
+    #         'fields': ('health_care_dossier_location', 'preferred_pharmacies', 'preferred_hospital',
+    #                    'informal_caregiver', 'pathologies', 'medical_background', 'allergies'),
+    #     }),
+    #     ('Aides techniques', {
+    #         'fields': ('electrical_bed', 'walking_frame', 'cane', 'aqualift', 'remote_alarm', 'other_technical_help'),
+    #     }),
+    #     (u'Prothèses', {
+    #         'fields': ('dental_prosthesis', 'hearing_aid', 'glasses', 'other_prosthesis'),
+    #     }),
+    #     (u'Médicaments', {
+    #         'fields': ('drugs_managed_by', 'drugs_prepared_by', 'drugs_distribution', 'drugs_ordering',
+    #                    'pharmacy_visits'),
+    #     }),
+    #     (u'Mobilisation', {
+    #         'fields': ('mobilization', 'mobilization_description'),
+    #     }),
+    #     (u"Soins d'hygiène", {
+    #         'fields': ('hygiene_care_location', 'shower_days', 'hair_wash_days', 'bed_manager', 'bed_sheets_manager',
+    #                    'laundry_manager', 'laundry_drop_location', 'new_laundry_location'),
+    #     }),
+    #     (u"Nutrition", {
+    #         'fields': ('weight', 'size', 'nutrition_autonomy', 'diet', 'meal_on_wheels', 'shopping_management',
+    #                    'shopping_management_desc',),
+    #     }),
+    #     (u"Elimination", {
+    #         'fields': ('urinary_incontinence', 'faecal_incontinence', 'protection', 'day_protection',
+    #                    'night_protection', 'protection_ordered', 'urinary_catheter', 'crystofix_catheter',
+    #                    'elimination_addnl_details'),
+    #     }),
+    #     (u"Garde/ Course sortie / Foyer", {
+    #         'fields': ('day_care_center', 'day_care_center_activities', 'household_chores',),
+    #     }),
+    # )
+
+    # inlines = [BiographyHabitsInLine, AssignedPhysicianInLine, ContactPersonInLine, OtherStakeholdersInLine,
+    #            DependenceInsuranceInLine]
 
     def print_view(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse

@@ -55,6 +55,7 @@ INSTALLED_APPS = (
 )
 
 INSTALLED_APPS += ('admin_object_actions',)
+INSTALLED_APPS += ('fieldsets_with_inlines',)
 
 
 MIDDLEWARE = (

@@ -73,3 +73,11 @@ class GenderType(models.TextChoices):
     gender_male = "MAL", _("Male")
     gender_female = "FEM", _("Female")
     gender_other = "OTH", _("Other")
+
+
+class HabitType(models.TextChoices):
+    habit_morning = "MORNING", _(u"Levé")
+    habit_sleep = "SLEEP", _("Coucher")
+    habit_brk_fast = "BRK_FST", _(u"Petit Déjeuner")
+    habit_lunch = "LNCH", _(u"Déjeuner")
+    habit_dinner = "DNR", _(u"Diner")

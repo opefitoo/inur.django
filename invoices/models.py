@@ -19,7 +19,7 @@ from django_countries.fields import CountryField
 from gdstorage.storage import GoogleDriveStorage
 
 from invoices.enums.generic import HouseType, CivilStatus, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
-    MobilizationsType, NutritionAutonomyLevel, DependenceInsuranceLevel, GenderType
+    MobilizationsType, NutritionAutonomyLevel, DependenceInsuranceLevel, GenderType, HabitType
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
 
@@ -350,6 +350,24 @@ class PatientAnamnesis(models.Model):
                                     blank=True,
                                     null=True
                                     )
+    # habitudes
+    preferred_drinks = models.TextField("Boissons préfèrées", max_length=250, default=None, blank=True, null=True)
+    shower_habits = models.TextField("Se soigner", help_text=u"douche, lavé, bain",
+                                     max_length=100, default=None, blank=True, null=True)
+    dressing_habits = models.TextField("Habillements", help_text="Goûts vestimentaires",
+                                       max_length=100, default=None, blank=True, null=True)
+    occupation_habits = models.TextField("Occupations", help_text="Profession, loisirs, sports, lecture, TV, musique, "
+                                                                  "cinéma, sorties...",
+                                         max_length=250, default=None, blank=True, null=True)
+    general_wishes = models.TextField("Souhaits", max_length=250, default=None, blank=True, null=True)
+    family_ties = models.TextField("Famille", max_length=200, default=None, blank=True, null=True)
+    friend_ties = models.TextField("Amis", max_length=200, default=None, blank=True, null=True)
+    important_persons_ties = models.TextField("Personnes importantes", max_length=200, default=None, blank=True, null=True)
+    bio_highlights = models.TextField("Important",
+                                              help_text=u"Quelles sont les éléments marquants de votre vie, "
+                                                        "qui sont importants pour bien vous soigner ?", max_length=200,
+                                              default=None, blank=True, null=True)
+
     # Habitation
     house_type = models.CharField("Type d'habitation",
                                   max_length=5,
@@ -470,6 +488,27 @@ class PatientAnamnesis(models.Model):
 
     def __str__(self):
         return "Anamanèse %s " % self.patient
+
+
+class BiographyHabits(models.Model):
+    class Meta:
+        ordering = ['-id']
+        verbose_name = u"Habitudes"
+        verbose_name_plural = u"Habitudes"
+
+    habit_type = models.CharField('Type',
+                                  max_length=7,
+                                  choices=HabitType.choices,
+                                  default=None,
+                                  blank=True,
+                                  null=True
+                                  )
+    habit_time = models.TimeField("Heure")
+    habit_ritual = models.CharField("Rite", max_length=50)
+    habit_preferences = models.CharField(u"Préférences", max_length=50)
+    biography = models.ForeignKey(PatientAnamnesis, related_name='habit_patient_biography',
+                                  help_text='Veuillez saisir les habitudes du bénéficiaire',
+                                  on_delete=models.PROTECT, null=True, blank=True, default=None)
 
 
 class AssignedPhysician(models.Model):
