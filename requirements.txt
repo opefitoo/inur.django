@@ -45,7 +45,7 @@ django-csv-exports==1.0.5
 django-colorfield==0.4.1
 # django-fieldsets-with-inlines==0.6
 # redis~=3.5.3
-# cloudinary==1.24.0
+cloudinary==1.25.0
 python-dotenv==0.17.0
 django-admin-search==0.3.6
 # django-debug-toolbar

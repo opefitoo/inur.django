@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('invoices', '0097_cloudinary_migration'),
+        ('invoices', '0098_cloudinary_migration'),
     ]
 
     operations = [
