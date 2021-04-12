@@ -115,7 +115,8 @@
         <div class="head">
             <h1>{% if obj.patient.gender == 'MAL' %} Monsieur {% elif obj.patient.gender == 'FEM'%} Madame {% else %} {% endif %} {{ obj.patient }}</h1>
             <h2>{{ obj.patient.code_sn }}</h2>
-            <h2>{{ obj.patient.full_address }}</h2>
+            <h2>{{ obj.patient.address }}</h2>
+            <h2>{{ obj.patient.zipcode }} {{ obj.patient.city }}</h2>
             <h2>Tél.: {{ obj.patient.clean_phone_number }}</h2>
         </div>
     </div>
