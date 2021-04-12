@@ -125,8 +125,8 @@
             <Thead>
             <tr>
                 <th>Nom</th>
-                <th>Tél. Perso.</th>
-                <th>Tél. Pro.</th>
+                <th>Téléphone</th>
+{#                <th>Tél. Pro.</th>#}
                 <th>Lien / parenté</th>
             </tr>
             </Thead>
@@ -135,7 +135,7 @@
                 <tr>
                     <td>{{ c.contact_name }}</td>
                     <td>{{ c.contact_private_phone_nbr }}</td>
-                    <td>{{ c.contact_business_phone_nbr|default_if_none:"-" }}</td>
+{#                    <td>{{ c.contact_business_phone_nbr|default_if_none:"-" }}</td>#}
                     <td>{{ c.contact_relationship }}</td>
                 </tr>
             {% endfor %}
