@@ -19,7 +19,7 @@ from django_countries.fields import CountryField
 from gdstorage.storage import GoogleDriveStorage
 
 from invoices.enums.generic import HouseType, CivilStatus, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
-    MobilizationsType, NutritionAutonomyLevel, DependenceInsuranceLevel
+    MobilizationsType, NutritionAutonomyLevel, DependenceInsuranceLevel, GenderType
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
 
@@ -223,6 +223,13 @@ class Patient(models.Model):
     ])
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
+    gender = models.CharField("Sex",
+                              max_length=5,
+                              choices=GenderType.choices,
+                              default=None,
+                              blank=True,
+                              null=True
+                              )
     address = models.TextField(max_length=255)
     zipcode = models.CharField(max_length=10)
     city = models.CharField(max_length=30)

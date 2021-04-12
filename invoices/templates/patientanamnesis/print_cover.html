@@ -1,0 +1,160 @@
+{% load static %}
+<head>
+    <title>Patient Cover</title>
+    <style>
+        @page {
+            size: A4 portrait;
+        }
+
+        @media screen, print {
+            html,
+            body {
+                font-size: 10pt;
+                font-family: sans-serif;
+            }
+
+            table {
+                font-size: 10pt;
+            }
+
+            header, footer, aside, nav {
+                display: none;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+
+            }
+
+            .main {
+                margin: 3cm;
+                width: 210mm;
+                height: 297mm;
+                display: grid;
+                {#grid-template-rows: 45px 249px 205px 341px 181px 50px 68px 149px 360px 149px 25px; #}
+                grid-template-columns: 4cm 14cm;
+                grid-gap: 50px;
+            }
+
+            .div1 {
+                background-color: rgb(255, 255, 255);
+            }
+
+            .div2 {
+                background-color: #ffffff;
+            }
+
+
+
+            .div7 {
+                background-color: rgb(255, 255, 255);
+                grid-column: 1/-1;
+            }
+
+
+            .div9 {
+                background-color: rgb(255, 255, 255);
+                grid-column: 2/4;
+            }
+
+            p {
+                grid-column: 1/-1;
+            }
+
+
+            .div1 img,
+            .div13 img {
+                height: 75px;
+            }
+
+            form div input,
+            textarea {
+                border: 0 dotted;
+            }
+
+            .table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .table td,
+            .table th {
+                padding: 12px 15px;
+                border: 1px solid rgb(0, 0, 0);
+                text-align: center;
+            }
+
+            h3 {
+                text-align: center;
+                background-color: rgb(238, 238, 238);
+                border: 1px solid black;
+
+            }
+
+
+            input, textarea {
+                margin: 1px;
+            }
+
+            table, figure {
+                page-break-inside: avoid;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+<div class="main">
+    <div class="div1">
+        <img src="{% static 'patientanamnesis/images/xyz.png' %}" alt="">
+    </div>
+    <div class="div2">
+        <div class="head">
+            <h1>{% if obj.patient.gender == 'MAL' %} Monsieur {% elif obj.patient.gender == 'FEM'%} Madame {% else %} {% endif %} {{ obj.patient }}</h1>
+            <h2>{{ obj.patient.code_sn }}</h2>
+            <h2>{{ obj.patient.full_address }}</h2>
+            <h2>Tél.: {{ obj.patient.clean_phone_number }}</h2>
+        </div>
+    </div>
+    <div class="div7">
+        <h3>Personnes de Contact</h3>
+        <table class="table">
+            <Thead>
+            <tr>
+                <th>Nom</th>
+                <th>Tél. Perso.</th>
+                <th>Tél. Pro.</th>
+                <th>Lien / parenté</th>
+            </tr>
+            </Thead>
+            <tbody>
+            {% for c in obj.contactpers_to_anamnesis.all %}
+                <tr>
+                    <td>{{ c.contact_name }}</td>
+                    <td>{{ c.contact_private_phone_nbr }}</td>
+                    <td>{{ c.contact_business_phone_nbr|default_if_none:"-" }}</td>
+                    <td>{{ c.contact_relationship }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </Table>
+    </div>
+
+    <div class="div9">
+        <h2>Médecin Traitant</h2>
+    {% with obj.physicians_set|first as first_doc %}
+        <h2>Dr. {{ first_doc.name }} {{ first_doc.first_name }} Tél.: {{ first_doc.phone_number }}</h2>
+    {% endwith %}
+    </div>
+    <div class="div9">
+        <h2>Réseau d'Aides et de Soins: HomeCare - Tél.: 26552073</h2>
+        <h2>Infirmière Libérale : SIMBA Régine - Tél.: 691308072</h2>
+    </div>
+</div>
+
+</body>
+
+</html>

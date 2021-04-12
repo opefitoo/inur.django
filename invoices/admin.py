@@ -165,6 +165,12 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
             'form_method': 'GET',
             'view': 'print_view',
         },
+        {
+            'slug': 'cover',
+            'verbose_name': 'Cover Page',
+            'form_method': 'GET',
+            'view': 'print_cover',
+        },
     ]
 
     readonly_fields = (
@@ -221,6 +227,11 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'patientanamnesis/print_anamnesis.html', {'obj': obj})
 
+    def print_cover(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'patientanamnesis/print_cover.html', {'obj': obj})
+
 
 @admin.register(Patient)
 class PatientAdmin(CSVExportAdmin):
@@ -232,7 +243,6 @@ class PatientAdmin(CSVExportAdmin):
     search_fields = ['name', 'first_name', 'code_sn']
     form = PatientForm
     # actions = [generate_road_book_2019_mehdi]
-    actions = []
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
 
     def link_to_invoices(self, instance):

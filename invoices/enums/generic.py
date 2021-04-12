@@ -67,3 +67,9 @@ class HearingAid(models.TextChoices):
 class HouseType(models.TextChoices):
     FLAT = 'FLAT', _('Flat')
     HOUSE = 'HOUSE', _('House')
+
+
+class GenderType(models.TextChoices):
+    gender_male = "MAL", _("Male")
+    gender_female = "FEM", _("Female")
+    gender_other = "OTH", _("Other")
