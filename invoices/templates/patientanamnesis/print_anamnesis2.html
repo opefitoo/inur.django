@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Données de base du client</title>
+
+    <style>
+        body {
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        .flex {
+            display: flex;
+
+        }
+
+        .gap {
+            gap: 10px;
+        }
+
+        .space-b {
+            justify-content: space-between;
+        }
+
+        .align-c {
+            align-items: center;
+        }
+
+        .border {
+            border: 1px solid black;
+        }
+
+        .no-border {
+            border: none;
+
+        }
+
+        .s-p {
+            padding: 8px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .m-1 {
+            margin: 1rem 0px;
+        }
+
+        .m-s {
+            margin: 5px 0px;
+        }
+
+        .w-33 {
+            width: 33%;
+        }
+
+        .col {
+            flex-direction: column;
+        }
+
+        .border-t {
+            padding: 20px;
+            border: 1px black dashed;
+            text-align: center;
+        }
+
+        /* Custom Styling */
+        .logo {
+            width: 50px;
+        }
+
+        input[type="text"] {
+            border: none;
+            border-bottom: 1px solid rgb(85, 85, 85);
+            border-style: dotted;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            margin: 5px 0px;
+            margin-top: -2px;
+            width: 100%;
+        }
+
+        /* input[type="checkbox"] {
+    
+            width: 10px;
+        } */
+
+        label {
+            width: 200px;
+        }
+
+        .f-table {
+            width: 100%;
+            text-align: center;
+            border-collapse: collapse;
+        }
+
+        .f-table,
+        .f-table td,
+        .f-table th {
+            border: 1px solid black;
+        }
+
+        .f-table th {
+            font-weight: lighter;
+        }
+
+        .f-table td {
+            padding: 8px;
+        }
+
+        .t-r {
+            text-align: left;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="flex space-b align-c">
+    <div style="width: 20%;">
+        <img src="./logo.png" class="logo" alt="" srcset="">
+    </div>
+    <div style="width: 40%;">
+        <h2 class="text-center">Données de base du client</h2>
+
+    </div>
+
+    <div>
+        <p class="s-p border">
+            Date de la prise en charge : ..... / ….. / 20…..
+
+    </div>
+
+
+</div>
+
+<div class="flex m-1 gap">
+    <div class="border s-p w-33">
+
+        <div class="flex align-c m-s">
+            <label for=""> Nom (+marital) : </label>
+            <input type="text" value="{{ obj.patient.name }}">
+        </div>
+
+        <div class="flex align-c m-s">
+            <label for=""> Prénom : </label>
+            <input type="text" value="{{ obj.patient.first_name }}">
+        </div>
+
+        <div class="flex align-c m-s ">
+            <label for=""> Date et lieu de naissance : </label>
+            <input type="text" value="{{ obj.patient.birth_date }}">
+        </div>
+
+        <div class="flex align-c m-s">
+            <label for=""> Matricule : </label>
+            <input type="text" value="{{ obj.patient.code_sn }}">
+        </div>
+
+        <div class="flex align-c m-s">
+            <label for=""> Caisse : </label>
+            <input type="text" value="CNS">
+        </div>
+
+        <div class="flex align-c m-s">
+            <label for=""> Adresse : </label>
+            <input type="text" value="{{ obj.patient.full_address }}">
+        </div>
+        <div class="flex align-c m-s gap">
+            <div class="flex">
+                <label for=""> Étage : </label>
+                <input type="text" value="{{ obj.floor_number|default_if_none:"-" }}">
+            </div>
+            <div class="flex">
+                <label style="width:100px"> Porte : </label>
+                <input type="text" value="{{ obj.entry_door|default_if_none:"-" }}">
+            </div>
+
+
+        </div>
+
+        <div class="flex align-c m-s gap">
+            <label style="width: 200px;"> Clés : </label>
+            <input type="checkbox"> Oui
+            <input type="checkbox">Non
+        </div>
+        <div class="flex align-c m-s">
+            <label for=""> Nombre : </label>
+            <input type="text">
+        </div>
+
+    </div>
+
+
+    <div class="border s-p w-33">
+        <div class="flex align-c m-s gap">
+            <label style="width: 200px;"> Plan de partage : </label>
+            <input type="checkbox"> Oui
+            <input type="checkbox">Non
+        </div>
+
+
+        <div class="flex align-c m-s">
+            <label style="width: 300px;"> Nom de l’aidant : </label>
+            <input type="text">
+        </div>
+
+
+        <div class="flex align-c m-s gap">
+            <label style="width: 300px;"> Aide ménage : </label>
+            <input type="checkbox"> <label style="width: 300px;"> SUR.LU </label>
+            <input type="checkbox"><label for=""> Privée</label>
+        </div>
+
+        <div class="flex align-c m-s gap">
+            <label style="width: 300px;"> Plan de partage : </label>
+
+
+            <input type="checkbox"> <label for="">Oui</label>
+
+
+            <input type="checkbox"><label for="">Non</label>
+
+        </div>
+
+
+        <div class="flex align-c m-s">
+            <label for=""> Nom (+marital) : </label>
+            <input type="text">
+        </div>
+
+        <div class="flex align-c m-s">
+            <label for=""> Hôpital choisi : </label>
+            <input type="text">
+        </div>
+
+        <div class="flex align-c m-s ">
+            <label for="">Pharmacie choisi : </label>
+            <input type="text">
+        </div>
+
+
+        <div class="flex align-c m-s gap">
+            <div class="flex">
+                <label style="width:120px;" for=""> Repas sur roues : </label>
+                <input type="text" style="width: 100px;">
+            </div>
+            <div class="flex">
+                <label style="width:100px"> Tél. : </label>
+                <input type="text">
+            </div>
+
+
+        </div>
+
+        <div class="flex align-c m-s gap">
+            <div class="flex">
+                <label for=""> Foyer de jour : </label>
+                <input type="text">
+            </div>
+            <div class="flex">
+                <label style="width:100px"> Tél. : </label>
+                <input type="text">
+            </div>
+
+
+        </div>
+
+
+        <div class="flex align-c m-s">
+            <label for="" style="width: 400px;"> Raison de prise en charge : </label>
+            <input type="text">
+        </div>
+
+    </div>
+
+    <div class="border s-p w-33">
+        <div class="flex align-c m-s gap">
+            <label style="width: 400px;">Directive anticipée :</label>
+
+
+            <input type="checkbox"> <label for="">Oui</label>
+
+
+            <input type="checkbox"><label for="">Non</label>
+
+        </div>
+
+        <div class="flex align-c m-s gap">
+            <label style="width: 200px;">Copie dans le dossier :</label>
+
+
+            <input type="checkbox"> <label for="">Oui</label>
+
+
+            <input type="checkbox"><label for="">Non</label>
+
+        </div>
+
+
+        <div class="flex align-c m-s">
+            <label for=""> Langues parlées : </label>
+            <input type="text">
+        </div>
+        <div class="flex align-c m-s">
+            <label for="" style="width: 300px;"> Langues comprises : </label>
+            <input type="text">
+        </div>
+
+        <div class="flex align-c m-s">
+            <label for=""> Religion : </label>
+            <input type="text">
+        </div>
+
+        <div class="flex align-c m-s gap">
+            <label style="width: 400px;">Animaux domestiques :</label>
+
+
+            <input type="checkbox"> <label for="">Oui</label>
+
+
+            <input type="checkbox"><label for="">Non</label>
+
+        </div>
+
+
+        <div class="flex align-c m-s gap">
+            <div class="flex ">
+                <label for=""> Chiens : </label>
+                <input type="text">
+            </div>
+            <div class="flex ">
+                <label style="width:100px"> Chats : </label>
+                <input type="text">
+            </div>
+
+
+        </div>
+        <div>
+            <div class="flex ">
+                <label> Oiseaux : </label>
+                <input type="text">
+            </div>
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+<table class="f-table">
+    <tbody>
+    <tr>
+        <th style="background-color: #F2F2F2;" colspan="6">
+
+            <strong>Personnes de contact</strong>
+
+        </th>
+    </tr>
+    <tr>
+        <th>
+
+            Nom
+
+        </th>
+        <th>
+
+            Tél.
+
+        </th>
+        <th>
+            Tél. Pro.
+        </th>
+        <th>
+            Lien / parenté
+        </th>
+    </tr>
+    {% for c in obj.contactpers_to_anamnesis.all %}
+        <tr>
+            <td>{{ c.contact_name }}</td>
+            <td>{{ c.contact_private_phone_nbr }}</td>
+            <td>{{ c.contact_business_phone_nbr|default_if_none:"-" }}</td>
+            <td>{{ c.contact_relationship }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="flex gap " style="margin-top: 5px;">
+    <div class="flex col " style="width: 50%;">
+        <table class="f-table">
+            <thead>
+            <tr>
+                <th colspan="4" style="background-color: #F2F2F2;">Assurance dépendance</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <th class="t-r" style="width: 200px;">Évaluations</th>
+                <th>Date envoi</th>
+                <th>Date réception</th>
+                <th>Accord / Refus</th>
+            </tr>
+
+            <tr>
+                <th class="t-r">1ère demande</th>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+            </tr>
+            <tr>
+                <th class="t-r">Réévaluation</th>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+            </tr>
+            <tr>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+            </tr>
+            <tr>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+            </tr>
+            <tr>
+                <th class="t-r">Demande aide technique</th>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+            </tr>
+            <tr>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+            </tr>
+
+            </tbody>
+        </table>
+
+        <table class="f-table" style="margin-top: 5px;">
+            <tr class="no-border">
+                <th colspan="4" style="background-color: #F2F2F2;" style="border:none;">Tarif social</th>
+
+            </tr>
+            <tr>
+                <th>Date demande</th>
+                <th colspan="2">Date réception</th>
+                <th>Accord / Refus</th>
+            </tr>
+            <tr>
+                <td>
+
+                </td>
+                <td colspan="2"></td>
+                <td>
+
+                </td>
+            </tr>
+            <tr>
+                <td>
+
+                </td>
+                <td colspan="2"></td>
+                <td>
+
+                </td>
+            </tr>
+
+        </table>
+    </div>
+
+    <div class="flex col " style="width: 50%;">
+        <div>
+            <table class="f-table">
+                <tbody>
+                <tr>
+                    <th colspan="5" style="background-color: #F2F2F2;">
+                        <strong>Médecins</strong>
+                    </th>
+                </tr>
+                <tr>
+                    <th>
+                        Nom
+                    </th>
+                    <th>
+                        Prénom
+                    </th>
+                    <th>
+                        Tél. / Fax
+                    </th>
+                    <th>
+                        Ville
+                    </th>
+
+                </tr>
+                {% for m in obj.physicians_set %}
+                    <tr>
+                        <td>{{ m.name }}</td>
+                        <td>{{ m.first_name }}</td>
+                        <td>{{ m.phone_number }} / {{ m.fax_number }}</td>
+                        <td>{{ m.city }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+
+        <div>
+            <table class="f-table " style="margin-top:5px">
+                <thead>
+                <tr class="">
+                    <th colspan="5" style="background-color: #F2F2F2;">Autres intervenants</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr>
+                    <th>Nom</th>
+                    <th>Spécialité</th>
+                    <th>Tél. / Fax</th>
+                    <th>Ville</th>
+                    <th rowspan="6">
+                        <p style="text-align: left; padding: 5px;">
+
+                            Mise à jour : …. / …. /202…
+                            <br>
+                            <br>
+                            Paraphe :
+                        </p>
+
+                    </th>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+<hr>
+<div class="flex space-b align-c">
+    <div style="width: 20%; " class="flex col gap ">
+        <img src="./logo.png" class="logo" alt="" srcset="">
+
+    </div>
+    <div style="width:60%;" class="flex col gap align-c">
+        <h2 class="text-center">Informations médicales</h2>
+
+    </div>
+
+    <div>
+        <p class=" border-t">
+            Étiquette client
+
+    </div>
+
+
+</div>
+
+<div>
+    <p>Mise à jour le : ……/………/20...</p>
+    <p> Médecin - Nom : …………</p>
+    <p>Tél : ……………………………</p>
+</div>
+
+<table class="f-table">
+    <thead>
+    <tr style="background-color: #F2F2F2;">
+        <th>Diagnostic médical</th>
+        <th>Nom du médecin</th>
+        <th>N° Réf.</th>
+
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+
+    </tr>
+    </tbody>
+</table>
+
+
+<div class="flex gap " style="margin-top:5px">
+    <div class="flex gap col" style="width: 50%;">
+        <div>
+            <table class="f-table">
+                <thead>
+                <tr style="background-color: #F2F2F2;">
+                    <th>Antécédents:</th>
+                    <th>Nom du médecin</th>
+                    <th>N° Réf.</th>
+
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                    <td></td>
+                    <td></td>
+
+
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                    <td></td>
+
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                    <td></td>
+
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                    <td></td>
+
+                    <td></td>
+                </tr>
+
+                <tr>
+                    <th class="t-r">-</th>
+                    <td></td>
+
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                    <td></td>
+
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                    <td></td>
+
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                    <td></td>
+
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                    <td></td>
+
+                    <td></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <table class="f-table" style="margin-top: 5px;">
+                <tr>
+                    <th colspan="3" style="background-color: #F2F2F2;">Allergies:</th>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                </tr>
+                <tr>
+                    <th class="t-r">-</th>
+                </tr>
+            </table>
+
+        </div>
+
+    </div>
+    <div style="width: 50%;">
+        <table class="f-table">
+            <thead>
+            <tr style="background-color: #F2F2F2;">
+                <th>Traitement:</th>
+                <th>Nom du médecin</th>
+                <th>Date</th>
+                <th>N° Réf.</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            <tr>
+                <th class="t-r">-</th>
+                <td></td>
+                <td></td>
+                <td></td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<small>
+    Les informations doivent être communiquées par le(s) médecin(s).
+</small>
+</body>
+
+</html>

@@ -296,7 +296,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
     def print_view(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
-        return TemplateResponse(request, 'patientanamnesis/print_anamnesis.html', {'obj': obj})
+        return TemplateResponse(request, 'patientanamnesis/print_anamnesis2.html', {'obj': obj})
 
     def print_cover(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
