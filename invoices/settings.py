@@ -51,7 +51,8 @@ INSTALLED_APPS = (
     'corsheaders',
     # 'debug_toolbar'
     'django_csv_exports',
-    'colorfield'
+    'colorfield',
+    'dependence'
 )
 
 INSTALLED_APPS += ('admin_object_actions',)

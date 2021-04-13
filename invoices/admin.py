@@ -1,3 +1,5 @@
+import copy
+
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from django.contrib import admin
 from django.contrib.admin import TabularInline
@@ -12,12 +14,15 @@ from django.utils.html import format_html
 from django_csv_exports.admin import CSVExportAdmin
 from fieldsets_with_inlines import FieldsetsInlineMixin
 
+import dependence
+import invoices
+from invoices import models
 from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, EventCalendarPeriodFilter
-from invoices.models import PatientAnamnesis, ContactPerson, OtherStakeholder, DependenceInsurance,  \
+from invoices.models import PatientAnamnesis, ContactPerson, OtherStakeholder, DependenceInsurance, \
     BiographyHabits
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
@@ -163,10 +168,89 @@ class BiographyHabitsInLine(admin.TabularInline):
     # fk_name = 'biography'
 
 
+def copy_to_new(modeladmin, request, queryset):
+    olds = PatientAnamnesis.objects.all()
+    for old in olds:
+        new = dependence.models.PatientAnamnesis()
+        for k, v in old.__dict__.items():
+            new.__dict__[k] = copy.deepcopy(v)
+        # new = copy.deepcopy(old)
+        new.id = None
+        new.save()
+    # # AssignedPhysician
+    # olds = AssignedPhysician.objects.all()
+    # for old in olds:
+    #     new = dependence.models.AssignedPhysician(old.__dict__)
+    #     for k, v in old.__dict__.items():
+    #         new.__dict__[k] = copy.deepcopy(v)
+    #         new = copy.deepcopy(old)
+    #         new.save()
+
+
+
+def duplicate(obj, value=None, field=None, duplicate_order=None):
+    """
+    Duplicate all related objects of obj setting
+    field to value. If one of the duplicate
+    objects has an FK to another duplicate object
+    update that as well. Return the duplicate copy
+    of obj.
+    duplicate_order is a list of models which specify how
+    the duplicate objects are saved. For complex objects
+    this can matter. Check to save if objects are being
+    saved correctly and if not just pass in related objects
+    in the order that they should be saved.
+    """
+    from django.db.models.deletion import Collector
+    from django.db.models.fields.related import ForeignKey
+
+    collector = Collector(using='default')
+    collector.collect([obj])
+    collector.sort()
+    related_models = collector.data.keys()
+    data_snapshot = {}
+    for key in collector.data.keys():
+        data_snapshot.update(
+            {key: dict(zip([item.pk for item in collector.data[key]], [item for item in collector.data[key]]))})
+    root_obj = None
+
+    # Sometimes it's good enough just to save in reverse deletion order.
+    if duplicate_order is None:
+        duplicate_order = reversed(related_models)
+
+    for model in duplicate_order:
+        # Find all FKs on model that point to a related_model.
+        fks = []
+        for f in model._meta.fields:
+            if isinstance(f, ForeignKey) and f.remote_field.related_model in related_models:
+                fks.append(f)
+        # Replace each `sub_obj` with a duplicate.
+        if model not in collector.data:
+            continue
+        sub_objects = collector.data[model]
+        for obj in sub_objects:
+            for fk in fks:
+                fk_value = getattr(obj, "%s_id" % fk.name)
+                # If this FK has been duplicated then point to the duplicate.
+                fk_rel_to = data_snapshot[fk.remote_field.related_model]
+                if fk_value in fk_rel_to:
+                    dupe_obj = fk_rel_to[fk_value]
+                    setattr(obj, fk.name, dupe_obj)
+            # Duplicate the object and save it.
+            obj.id = None
+            if field is not None:
+                setattr(obj, field, value)
+            obj.save()
+            if root_obj is None:
+                root_obj = obj
+    return root_obj
+
 @admin.register(PatientAnamnesis)
 class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, admin.ModelAdmin):
     list_display = ('patient', 'display_object_actions_list',)
     autocomplete_fields = ['patient']
+
+    actions = [copy_to_new]
 
     object_actions = [
         {
@@ -230,22 +314,22 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         }),
         (u"Biographie", {
             'fields': ['preferred_drinks']
-         }),
+        }),
         BiographyHabitsInLine,
         (u"Activités", {
             'fields': ['shower_habits', 'dressing_habits', 'occupation_habits', 'general_wishes']
-         }),
-                             (u"Social", {
-                                 'fields': ['family_ties', 'friend_ties', 'important_persons_ties',]
-                             }),
-                             (u"Important", {
-                                 'fields': ['bio_highlights',]
-                             }),
+        }),
+        (u"Social", {
+            'fields': ['family_ties', 'friend_ties', 'important_persons_ties', ]
+        }),
+        (u"Important", {
+            'fields': ['bio_highlights', ]
+        }),
         AssignedPhysicianInLine,
         ContactPersonInLine,
         OtherStakeholdersInLine,
         DependenceInsuranceInLine
-        ]
+    ]
 
     # fieldsets = (
     #     ('Patient', {
@@ -456,6 +540,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient']
+
     # search_form = InvoiceItemSearchForm
 
     def cns_invoice_bis(self, request, queryset):
@@ -893,7 +978,7 @@ class EventAdmin(admin.ModelAdmin):
     readonly_fields = ['created_by', 'created_on', 'calendar_url', 'calendar_id']
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
-    list_filter = (SmartEmployeeFilter, )
+    list_filter = (SmartEmployeeFilter,)
 
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):
