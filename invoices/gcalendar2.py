@@ -92,7 +92,7 @@ class PrestationGoogleCalendarSurLu:
             location = address
         else:
             address = event.patient.address
-            location = "%s,%s %s, %s" % (event.patient.address,
+            location = "%s, %s %s, %s" % (event.patient.address,
                                          event.patient.zipcode,
                                          event.patient.city,
                                          event.patient.country)
@@ -102,7 +102,7 @@ class PrestationGoogleCalendarSurLu:
             description += descr_line % (u'Sur LU ID:', event.id)
         if event.notes and len(event.notes) > 0:
             description += descr_line % ('Notes:', event.notes)
-        summary = '%s @ %s' % (event.employees, event.patient)
+        summary = '%s - %s' % (event.patient, event.employees.abbreviation)
 
         naive_date = datetime.datetime(event.day.year,
                                        event.day.month, event.day.day,
