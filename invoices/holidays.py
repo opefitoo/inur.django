@@ -99,7 +99,8 @@ class HolidayRequest(models.Model):
     def validate(instance_id, data):
         result = {}
         result.update(HolidayRequest.validate_dates(data))
-        result.update(validate_date_range(instance_id, data))
+        if not (User.objects.get(id=data['request_creator_id']).is_superuser and data['force_creation']):
+            result.update(validate_date_range(instance_id, data))
         if data['start_date'] > date.today() and not (User.objects.get(id=data['request_creator_id']).is_superuser
                                                       and data['force_creation']):
             # only if it is in the future if date is the past no intersection validation is done
@@ -133,7 +134,7 @@ def validate_date_range(instance_id, data):
         Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
     ).filter(reason=1, request_status=HolidayRequestWorkflowStatus.ACCEPTED).exclude(pk=instance_id)
     if 0 < conflicts.count():
-        messages = {'start_date': "Intersection avec d'autres demandes %s " % conflicts[0]}
+        messages = {'start_date': "136 Intersection avec d'autres demandes %s " % conflicts[0]}
     return messages
 
 
@@ -146,7 +147,7 @@ def validate_requests_from_other_employees(instance_id, data):
         employee_id=data['employee_id']).exclude(pk=instance_id)
     if 0 < conflicts.count():
         for conflict in conflicts:
-            messages = {"start_date": u"Intersection avec d'autres demandes de %s" % conflict}
+            messages = {"start_date": u"149 Intersection avec d'autres demandes de %s" % conflict}
     return messages
 
 
