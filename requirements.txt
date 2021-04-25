@@ -28,12 +28,12 @@ reportlab==3.5.67
 requests==2.25.1
 rsa==4.7.2
 six==1.15.0
-SQLAlchemy==1.4.7
+SQLAlchemy==1.4.11
 sqlparse==0.4.1
 static3==0.7.0
 uritemplate==3.0.1
 whitenoise==5.2.0
-django-currentuser==0.5.2
+django-currentuser==0.5.3
 rq==1.8.0
 django-cors-headers==3.7.0
 django-autocomplete-light==3.8.2
