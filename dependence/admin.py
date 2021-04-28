@@ -1,5 +1,6 @@
+from dependence.forms import TypeDescriptionGenericInlineFormset
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
-    PatientAnamnesis
+    PatientAnamnesis, ActivityHabits, SocialHabits
 from django.contrib import admin
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from fieldsets_with_inlines import FieldsetsInlineMixin
@@ -36,8 +37,21 @@ class BiographyHabitsInLine(admin.TabularInline):
     extra = 0
     model = BiographyHabits
     fields = ('habit_type', 'habit_time', 'habit_ritual', 'habit_preferences')
-    # autocomplete_fields = ['assigned_physician']
-    # fk_name = 'biography'
+    formset = TypeDescriptionGenericInlineFormset
+
+
+class ActivityHabitsInLine(admin.TabularInline):
+    extra = 0
+    model = ActivityHabits
+    fields = ('habit_type', 'habit_description')
+    formset = TypeDescriptionGenericInlineFormset
+
+
+class SocialHabitsInLine(admin.TabularInline):
+    extra = 0
+    model = SocialHabits
+    fields = ('habit_type', 'habit_description')
+    formset = TypeDescriptionGenericInlineFormset
 
 
 @admin.register(PatientAnamnesis)
@@ -60,14 +74,14 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         },
     ]
 
-    readonly_fields = (
-        'display_object_actions_detail',
-    )
+    readonly_fields = ("created_on", "updated_on",
+                       'display_object_actions_detail',
+                       )
 
     fieldsets_with_inlines = [
         ('Patient', {
             'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link',
-                       'display_object_actions_detail')
+                       'created_on', 'updated_on', 'display_object_actions_detail')
         }),
         ('Habitation', {
             'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door'),
@@ -107,22 +121,24 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         }),
         (u"Biographie", {
             'fields': ['preferred_drinks']
-         }),
+        }),
         BiographyHabitsInLine,
-        (u"Activités", {
-            'fields': ['shower_habits', 'dressing_habits', 'occupation_habits', 'general_wishes']
-         }),
-                             (u"Social", {
-                                 'fields': ['family_ties', 'friend_ties', 'important_persons_ties',]
-                             }),
-                             (u"Important", {
-                                 'fields': ['bio_highlights',]
-                             }),
+        ActivityHabitsInLine,
+        # (u"Activités", {
+        #     'fields': ['shower_habits', 'dressing_habits', 'occupation_habits', 'general_wishes']
+        # }),
+        SocialHabitsInLine,
+        # (u"Social", {
+        #     'fields': ['family_ties', 'friend_ties', 'important_persons_ties', ]
+        # }),
+        (u"Important", {
+            'fields': ['bio_highlights', ]
+        }),
         AssignedPhysicianInLine,
         ContactPersonInLine,
         OtherStakeholdersInLine,
         DependenceInsuranceInLine
-        ]
+    ]
 
     # fieldsets = (
     #     ('Patient', {

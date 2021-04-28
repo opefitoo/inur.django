@@ -81,3 +81,16 @@ class HabitType(models.TextChoices):
     habit_brk_fast = "BRK_FST", _(u"Petit Déjeuner")
     habit_lunch = "LNCH", _(u"Déjeuner")
     habit_dinner = "DNR", _(u"Diner")
+
+
+class ActivityType(models.TextChoices):
+    habit_morning = "WASH", _(u"Se soigner")
+    habit_sleep = "DRESS", _("Habillements")
+    habit_brk_fast = "OCCUP", _(u"Occupations")
+    habit_lunch = "DSRS", _(u"Souhaits")
+
+
+class SocialHabitType(models.TextChoices):
+    habit_morning = "FML", _(u"Famille")
+    habit_sleep = "FRND", _("Amis")
+    habit_brk_fast = "IMP", _(u"Personnes importantes")

@@ -1,8 +1,9 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django_countries.fields import CountryField
 
 from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
-    MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel
+    MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType
 from invoices.models import Patient, Physician
 
 
@@ -12,6 +13,9 @@ class PatientAnamnesis(models.Model):
         verbose_name = u"Anamnèse Patient"
         verbose_name_plural = u"Anamnèses Patient"
 
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
     # Patient
     patient = models.ForeignKey(Patient, related_name='dep_anamnesis_to_patient',
                                 on_delete=models.PROTECT)
@@ -27,21 +31,22 @@ class PatientAnamnesis(models.Model):
                                     )
     # habitudes
     preferred_drinks = models.TextField("Boissons préfèrées", max_length=250, default=None, blank=True, null=True)
-    shower_habits = models.TextField("Se soigner", help_text=u"douche, lavé, bain",
-                                     max_length=100, default=None, blank=True, null=True)
-    dressing_habits = models.TextField("Habillements", help_text="Goûts vestimentaires",
-                                       max_length=100, default=None, blank=True, null=True)
-    occupation_habits = models.TextField("Occupations", help_text="Profession, loisirs, sports, lecture, TV, musique, "
-                                                                  "cinéma, sorties...",
-                                         max_length=250, default=None, blank=True, null=True)
-    general_wishes = models.TextField("Souhaits", max_length=250, default=None, blank=True, null=True)
-    family_ties = models.TextField("Famille", max_length=200, default=None, blank=True, null=True)
-    friend_ties = models.TextField("Amis", max_length=200, default=None, blank=True, null=True)
-    important_persons_ties = models.TextField("Personnes importantes", max_length=200, default=None, blank=True, null=True)
+    # shower_habits = models.TextField("Se soigner", help_text=u"douche, lavé, bain",
+    #                                  max_length=100, default=None, blank=True, null=True)
+    # dressing_habits = models.TextField("Habillements", help_text="Goûts vestimentaires",
+    #                                    max_length=100, default=None, blank=True, null=True)
+    # occupation_habits = models.TextField("Occupations", help_text="Profession, loisirs, sports, lecture, TV, musique, "
+    #                                                               "cinéma, sorties...",
+    #                                      max_length=250, default=None, blank=True, null=True)
+    # general_wishes = models.TextField("Souhaits", max_length=250, default=None, blank=True, null=True)
+    # family_ties = models.TextField("Famille", max_length=200, default=None, blank=True, null=True)
+    # friend_ties = models.TextField("Amis", max_length=200, default=None, blank=True, null=True)
+    # important_persons_ties = models.TextField("Personnes importantes", max_length=200, default=None, blank=True,
+    #                                           null=True)
     bio_highlights = models.TextField("Important",
-                                              help_text=u"Quelles sont les éléments marquants de votre vie, "
-                                                        "qui sont importants pour bien vous soigner ?", max_length=200,
-                                              default=None, blank=True, null=True)
+                                      help_text=u"Quelles sont les éléments marquants de votre vie, "
+                                                "qui sont importants pour bien vous soigner ?", max_length=200,
+                                      default=None, blank=True, null=True)
 
     # Habitation
     house_type = models.CharField("Type d'habitation",
@@ -161,6 +166,27 @@ class PatientAnamnesis(models.Model):
             return [p.assigned_physician for p in AssignedPhysician.objects.filter(anamnesis_id=self.id)]
         return None
 
+    def clean(self, *args, **kwargs):
+        super(PatientAnamnesis, self).clean_fields()
+        messages = self.validate(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance_id, data):
+        result = {}
+        # result.update(PatientAnamnesis.validate_only_one_type_for_inlines(instance_id, data))
+        return result
+
+    @staticmethod
+    def validate_only_one_type_for_inlines(instance_id, data):
+        messages = {}
+        if 'is_private' in data and not data['is_private']:
+            code_sn = data['code_sn'].replace(" ", "")
+            if Patient.objects.filter(code_sn=code_sn).exclude(pk=instance_id).count() > 0:
+                messages = {'code_sn': 'Code SN must be unique'}
+        return messages
+
     def __str__(self):
         return "Anamanèse %s " % self.patient
 
@@ -184,6 +210,57 @@ class BiographyHabits(models.Model):
     biography = models.ForeignKey(PatientAnamnesis, related_name='dep_habit_patient_biography',
                                   help_text='Veuillez saisir les habitudes du bénéficiaire',
                                   on_delete=models.PROTECT, null=True, blank=True, default=None)
+
+    def __str__(self):
+        return self.habit_type
+
+
+class ActivityHabits(models.Model):
+    class Meta:
+        ordering = ['-id']
+        verbose_name = u"Habitude d'Activités"
+        verbose_name_plural = u"Habitudes d'Activités"
+
+    habit_type = models.CharField('Type',
+                                  max_length=5,
+                                  choices=ActivityType.choices,
+                                  default=None,
+                                  blank=True,
+                                  null=True
+                                  )
+    habit_description = models.TextField("Description",
+                                         help_text="Veuillez décrire les habitudes en fonction du type",
+                                         max_length=200, default=None, blank=True, null=True)
+    biography = models.ForeignKey(PatientAnamnesis, related_name='activity_habit_patient_biography',
+                                  help_text='Veuillez saisir les habitudes du bénéficiaire',
+                                  on_delete=models.PROTECT, null=True, blank=True, default=None)
+
+    def __str__(self):
+        return self.habit_type
+
+
+class SocialHabits(models.Model):
+    class Meta:
+        ordering = ['-id']
+        verbose_name = u"Habitude Sociale"
+        verbose_name_plural = u"Habitudes Sociales"
+
+    habit_type = models.CharField('Type',
+                                  max_length=4,
+                                  choices=SocialHabitType.choices,
+                                  default=None,
+                                  blank=True,
+                                  null=True
+                                  )
+    habit_description = models.TextField("Description",
+                                         help_text="Veuillez décrire les habitudes sociales",
+                                         max_length=200, default=None, blank=True, null=True)
+    biography = models.ForeignKey(PatientAnamnesis, related_name='social_habit_patient_biography',
+                                  help_text='Veuillez saisir les habitudes du bénéficiaire',
+                                  on_delete=models.PROTECT, null=True, blank=True, default=None)
+
+    def __str__(self):
+        return self.habit_type
 
 
 class AssignedPhysician(models.Model):
@@ -259,4 +336,3 @@ class ContactPerson(models.Model):
                                                   default=None,
                                                   blank=True,
                                                   null=True)
-
