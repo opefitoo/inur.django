@@ -5,9 +5,9 @@ from django_countries.serializers import CountryFieldMixin
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
+from dependence.models import PatientAnamnesis, AssignedPhysician
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch, AssignedPhysician
-from invoices.models import PatientAnamnesis
+    ValidityDate, InvoiceItemBatch
 from invoices.timesheet import Timesheet, TimesheetTask
 from invoices.employee import JobPosition
 from invoices.events import EventType, Event

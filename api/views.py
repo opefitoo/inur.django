@@ -16,13 +16,14 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, PatientAnamnesisSerializer
 from api.utils import get_settings
+from dependence.models import PatientAnamnesis
 from helpers import holidays
 from helpers.employee import get_employee_id_by_abbreviation
 from invoices import settings
 from invoices.employee import JobPosition
 from invoices.events import EventType, Event, create_or_update_google_calendar
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch, PatientAnamnesis
+    ValidityDate, InvoiceItemBatch
 from invoices.processors.birthdays import process_and_generate
 from invoices.processors.events import delete_events_created_by_script, async_deletion
 from invoices.timesheet import Timesheet, TimesheetTask
