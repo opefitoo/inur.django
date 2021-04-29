@@ -12,6 +12,7 @@ from django_currentuser.db.models import CurrentUserField
 
 from helpers.employee import get_admin_emails
 from invoices.employee import Employee
+from invoices.enums.generic import HolidayRequestChoice
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.notifications import send_email_notification
 from invoices.validators import validators
@@ -60,7 +61,10 @@ class HolidayRequest(models.Model):
                                                                   "employés")
     start_date = models.DateField(u'Date début')
     end_date = models.DateField(u'Date fin')
-    half_day = models.BooleanField(u"Demi journée")
+    requested_period = models.CharField("Période",
+                                        max_length=4,
+                                        choices=HolidayRequestChoice.choices,
+                                        default=HolidayRequestChoice.req_full_day)
     reason = models.PositiveSmallIntegerField(
         choices=REASONS)
 
@@ -75,7 +79,9 @@ class HolidayRequest(models.Model):
         if self.reason > 1:
             return "Non applicable"
         for i in range(delta.days + 1):
-            if date_comp.weekday() < 5:
+            if date_comp.weekday() < 5 and self.requested_period != HolidayRequestChoice.req_full_day:
+                counter += 0.5
+            elif date_comp.weekday() < 5 and self.requested_period == HolidayRequestChoice.req_full_day:
                 counter += 1
             if date_comp in lu_holidays:
                 jours_feries = jours_feries + 1
@@ -83,7 +89,7 @@ class HolidayRequest(models.Model):
         hours_jour = Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
             start_date__lte=self.start_date).first().number_of_hours / 5
         return [(counter - jours_feries) * hours_jour,
-                "explication: ( %d jours congés - %d jours fériés )  x %d nombre h. /j" % (counter,
+                "explication: ( %.2f jours congés - %d jours fériés )  x %d nombre h. /j" % (counter,
                                                                                            jours_feries,
                                                                                            hours_jour)]
 
@@ -106,6 +112,7 @@ class HolidayRequest(models.Model):
             # only if it is in the future if date is the past no intersection validation is done
             result.update(validate_requests_from_other_employees(instance_id, data))
         result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
+        result.update(validators.validate_full_day_request(data))
         return result
 
     @staticmethod

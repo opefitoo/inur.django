@@ -84,13 +84,19 @@ class HabitType(models.TextChoices):
 
 
 class ActivityType(models.TextChoices):
-    habit_morning = "WASH", _(u"Se soigner")
-    habit_sleep = "DRESS", _("Habillements")
-    habit_brk_fast = "OCCUP", _(u"Occupations")
-    habit_lunch = "DSRS", _(u"Souhaits")
+    act_wash = "WASH", _(u"Se soigner")
+    act_dress = "DRESS", _("Habillements")
+    act_occupation = "OCCUP", _(u"Occupations")
+    act_desires = "DSRS", _(u"Souhaits")
 
 
 class SocialHabitType(models.TextChoices):
-    habit_morning = "FML", _(u"Famille")
-    habit_sleep = "FRND", _("Amis")
-    habit_brk_fast = "IMP", _(u"Personnes importantes")
+    social_family = "FML", _(u"Famille")
+    social_friend = "FRND", _("Amis")
+    social_important = "IMP", _(u"Personnes importantes")
+
+
+class HolidayRequestChoice(models.TextChoices):
+    req_morning = "MRNG", _(u"Matin")
+    req_evening = "EVNG", _("Soir")
+    req_full_day = "FULL", _(u"Journée entière")

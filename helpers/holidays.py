@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.db.models import Q
 
 from invoices.employee import Employee
+from invoices.enums.generic import HolidayRequestChoice
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.holidays import HolidayRequest
 
@@ -22,7 +23,9 @@ def how_many_hours_taken_in_period(data, public_holidays):
             delta = holiday_request.end_date - holiday_request.start_date
             date = holiday_request.start_date
             for i in range(delta.days):
-                if date.weekday() < 5:
+                if date.weekday() < 5 and holiday_request.requested_period != HolidayRequestChoice.req_full_day:
+                    counter += 0.5
+                elif date.weekday() < 5 and holiday_request.requested_period == HolidayRequestChoice.req_full_day:
                     counter += 1
                 date = date + timedelta(days=1)
             number_of_public_holidays = 0
@@ -33,9 +36,9 @@ def how_many_hours_taken_in_period(data, public_holidays):
         heures_jour = Employee.objects.get(user_id=data['user_id']).employeecontractdetail_set.filter(
             start_date__lte=data['start_date']).first().number_of_hours / 5
         return [(counter - number_of_public_holidays) * heures_jour,
-                "explication: ( %d jours congés - %d jours fériés )  x %d nombre h. /j" % (counter,
-                                                                                           number_of_public_holidays,
-                                                                                           heures_jour)]
+                "explication: ( %.2f jours congés - %d jours fériés )  x %d nombre h. /j" % (counter,
+                                                                                             number_of_public_holidays,
+                                                                                             heures_jour)]
     return [0, ""]
 
 

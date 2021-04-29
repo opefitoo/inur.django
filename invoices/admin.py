@@ -625,7 +625,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
             if obj.employee.employee.user.id != request.user.id and not 1 != obj.request_status and not request.user.is_superuser:
-                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'validated_by', \
+                return 'employee', 'start_date', 'end_date', 'requested_period', 'reason', 'validated_by', \
                        'hours_taken', 'request_creator'
             elif request.user.is_superuser and not 1 != obj.request_status:
                 return [f for f in self.readonly_fields if f not in ['force_creation', 'employee', 'request_status',
@@ -634,8 +634,8 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 return [f for f in self.readonly_fields if f not in ['force_creation', 'employee',
                                                                      'validator_notes']]
             elif 0 != obj.request_status:
-                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'validated_by', \
-                       'hours_taken', 'request_creator', 'request_status', 'validator_notes', 'force_creation'
+                return 'employee', 'start_date', 'end_date', 'requested_period', 'reason', 'validated_by', \
+                       'hours_taken', 'request_creator', 'request_status', 'validator_notes', 'force_creation',
 
         else:
             if request.user.is_superuser:
