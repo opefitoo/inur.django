@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
+from invoices.enums.generic import HolidayRequestChoice
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.holidays import HolidayRequest, validate_date_range
 
@@ -75,7 +76,7 @@ class HolidayRequestTestCase(TestCase):
                                                                                                   day=8),
                                                                 end_date=timezone.now().replace(year=2021, month=2,
                                                                                                 day=20),
-                                                                half_day=False,
+                                                                requested_period=HolidayRequestChoice.req_full_day,
                                                                 reason=1,
                                                                 request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
@@ -95,7 +96,7 @@ class HolidayRequestTestCase(TestCase):
                                                                                                   day=8),
                                                                 end_date=timezone.now().replace(year=2021, month=2,
                                                                                                 day=20),
-                                                                half_day=False,
+                                                                requested_period=HolidayRequestChoice.req_full_day,
                                                                 reason=1,
                                                                 request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
