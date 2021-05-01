@@ -141,7 +141,7 @@ def validate_date_range(instance_id, data):
         Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
     ).filter(reason=1, request_status=HolidayRequestWorkflowStatus.ACCEPTED).exclude(pk=instance_id)
     if 0 < conflicts.count():
-        messages = {'start_date': "136 Intersection avec d'autres demandes %s " % conflicts[0]}
+        messages = {'start_date': "Intersection avec d'autres demandes %s " % conflicts[0]}
     return messages
 
 
