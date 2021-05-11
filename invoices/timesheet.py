@@ -15,6 +15,7 @@ from django_currentuser.db.models import CurrentUserField
 
 from helpers.holidays import how_many_hours_taken_in_period
 from invoices.employee import Employee
+from invoices.enums.generic import HolidayRequestChoice
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 
 
@@ -407,8 +408,18 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
         Q(start_date__lte=end_date_time, end_date__gte=end_date_time)
     ).filter(employee_id=employee_id, request_status=HolidayRequestWorkflowStatus.ACCEPTED)
     if 1 == conflicts.count():
-        msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
+        conflict = conflicts[0]
+        if conflict.requested_period == HolidayRequestChoice.req_full_day:
+            msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
                                                                                           conflicts[0].end_date)}
+        elif (conflict.requested_period == HolidayRequestChoice.req_morning
+              and data['start_date'].time() < data['start_date'].time().replace(hour=12, minute=0, second=0)) \
+                or (conflict.requested_period == HolidayRequestChoice.req_evening
+                    and data['end_date'] > data['start_date'].time().replace(hour=12, minute=0, second=0)):
+            msgs = {
+                'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
+                                                                                              conflicts[0].end_date)}
+
     elif 1 < conflicts.count():
         msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s et %d autres conflits"
                               % (conflicts[0].start_date, conflicts[0].end_date, conflicts.count() - 1)}

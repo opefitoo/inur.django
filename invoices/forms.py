@@ -41,8 +41,8 @@ def check_for_periods_intersection_time_based(cleaned_data):
                 continue
             elif row_data['DELETE']:
                 continue
-            elif not (row_data['start_date'].time() > data['end_date'] or row_data['end_date'] < data[
-                'start_date'].time()):
+            elif not (row_data['start_date'].time() > data['end_date']
+                      or row_data['end_date'] < data['start_date'].time()):
                 dates_on_error.add(data['start_date'].date().strftime("%Y-%m-%d"))
                 is_valid = False
 
@@ -109,7 +109,8 @@ class SimplifiedTimesheetDetailForm(BaseInlineFormSet):
         super(SimplifiedTimesheetDetailForm, self).clean()
         all_clean_data = []
         for form in self.forms:
-            all_clean_data.append(form.cleaned_data)
+            if len(form.errors) == 0:
+                all_clean_data.append(form.cleaned_data)
         check_for_periods_intersection_time_based(all_clean_data)
 
 
