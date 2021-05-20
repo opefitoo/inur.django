@@ -21,6 +21,7 @@ from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.print_pdf import do_it, PdfActionType
+from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, EventCalendarPeriodFilter
 from invoices.models import PatientAnamnesis, ContactPerson, OtherStakeholder, DependenceInsurance, \
     BiographyHabits
@@ -503,7 +504,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         }
 
     date_hierarchy = 'start_date'
-    list_filter = ('employee', 'request_status', 'reason')
+    list_filter = ('employee', FilteringYears, FilteringMonths, 'request_status', 'reason')
     ordering = ['-start_date']
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
