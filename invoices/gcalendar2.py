@@ -153,17 +153,17 @@ class PrestationGoogleCalendarSurLu:
 
 
     def delete_event(self, evt_instance):
-        print("Trying to delete %s from %s" % (evt_instance.calendar_id, evt_instance))
-        sys.stdout.flush()
+        # print("Trying to delete %s from %s" % (evt_instance.calendar_id, evt_instance))
+        # sys.stdout.flush()
         try:
             gmail_event = self._service.events().delete(calendarId=evt_instance.employees.user.email,
                                                         eventId=evt_instance.calendar_id).execute()
         except HttpError as e:
-            print("An error happened when tryint to delete event %s - exception %s" % (evt_instance.calendar_id, e))
-            sys.stdout.flush()
+            # print("An error happened when trying to delete event %s - exception %s" % (evt_instance.calendar_id, e))
+            # sys.stdout.flush()
             return
-        print("Successfully delete GCalendar event %s" % gmail_event)
-        sys.stdout.flush()
+        # print("Successfully delete GCalendar event %s" % gmail_event)
+        # sys.stdout.flush()
         return gmail_event
 
     def get_event(self, event_id, calendar_id):
