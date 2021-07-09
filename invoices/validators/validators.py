@@ -37,9 +37,9 @@ def validate_date_range_vs_timesheet(instance_id, data):
 
 def validate_full_day_request(data):
     messages = {}
-    is_valid = data['requested_period'] != HolidayRequestChoice.req_full_day and data['start_date'] == data[
+    is_invalid = data['requested_period'] != HolidayRequestChoice.req_full_day and data['start_date'] != data[
         'end_date']
-    if not is_valid:
+    if is_invalid:
         messages = {
             'requested_period': "Vous ne pouvez demander une demi journée que sur une période d'une journée seulement",
             'start_date': "Vous ne pouvez demander une demi journée que sur une période d'une journée seulement",
