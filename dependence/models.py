@@ -1,10 +1,123 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django_countries.fields import CountryField
+from django_currentuser.db.models import CurrentUserField
 
 from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
-    MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType
+    MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType, \
+    MonthsNames, StoolsQty
 from invoices.models import Patient, Physician
+from datetime import date, datetime
+
+
+def current_year():
+    return date.today().year
+
+
+def current_month():
+    return date.today().month
+
+
+class MonthlyParameters(models.Model):
+    class Meta:
+        ordering = ['-id']
+        verbose_name = u"Paramètre Patient"
+        verbose_name_plural = u"Paramètres Patient"
+
+    params_year = models.PositiveIntegerField(
+        default=current_year())
+
+    params_month = models.IntegerField(
+        choices=MonthsNames.choices,
+        default=current_month(),
+    )
+    # Patient
+    patient = models.ForeignKey(Patient, related_name='health_params_to_patient',
+                                on_delete=models.PROTECT)
+    weight = models.PositiveSmallIntegerField("Poids (KG)")
+
+    def clean(self):
+        exclude = []
+
+        super(MonthlyParameters, self).clean_fields(exclude)
+        messages = self.validate(self, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance, data):
+        result = {}
+        result.update(MonthlyParameters.validate_one_per_year_month(instance, data))
+        return result
+
+    @staticmethod
+    def validate_one_per_year_month(instance, data):
+        messages = {}
+        conflicts_count = MonthlyParameters.objects.filter(
+            params_year=data['params_year']). \
+            filter(params_month=data['params_month']). \
+            filter(patient_id=data['patient_id']). \
+            exclude(pk=instance.id).count()
+        if 0 < conflicts_count:
+            messages.update({'params_year':
+                                 "Il existe déjà des paramètres pour le mois %s et ce patient dans le système" % data[
+                                     'params_month']})
+            messages.update({'params_month':
+                                 "Il existe déjà des paramètres pour le mois %s et ce patient dans le système" % data[
+                                     'params_month']})
+            messages.update({'patient':
+                                 "Il existe déjà des paramètres pour le mois %s et ce patient dans le système" % data[
+                                     'params_month']})
+        return messages
+
+    def __str__(self):
+        return "Paramètres de %s - %s/%s" % (self.patient, self.params_month, self.params_year)
+
+
+class TensionAndTemperatureParameters(models.Model):
+    class Meta:
+        ordering = ['-id']
+        verbose_name = u"Paramètre"
+        verbose_name_plural = u"Paramètres"
+
+    params_date_time = models.DateTimeField("Date", default=datetime.now)
+    systolic_blood_press = models.PositiveSmallIntegerField("Tension min.", default=0)
+    diastolic_blood_press = models.PositiveSmallIntegerField("Tension max.", default=0)
+    temperature = models.PositiveSmallIntegerField(default=0)
+    stools = models.PositiveSmallIntegerField("Selles", choices=StoolsQty.choices, default=0)
+    weight = models.PositiveSmallIntegerField("Poids (KG)", default=None, blank=True, null=True)
+    general_remarks = models.TextField("Remarques générales", max_length=25, default=None, blank=True, null=True)
+    monthly_params = models.ForeignKey(MonthlyParameters, related_name='health_params_to_monthly_params',
+                                       on_delete=models.CASCADE, default=None)
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+    @staticmethod
+    def validate_periods(month, year, data):
+        messages = {}
+        is_valid = data['params_date_time'].month == month and data['params_date_time'].year == year
+        if not is_valid:
+            messages = {'params_date_time': u"Date doit être dans le mois %d de l'année %s" % (month, year)}
+
+        return messages
+    user = CurrentUserField()
+
+    @staticmethod
+    def validate(instance, data):
+        result = {}
+        result.update(TensionAndTemperatureParameters.validate_periods(instance.monthly_params.params_month,
+                                                         instance.monthly_params.params_year,
+                                                         data))
+        return result
+
+    def clean(self):
+        exclude = []
+
+        super(TensionAndTemperatureParameters, self).clean_fields(exclude)
+        messages = self.validate(self, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
 
 
 class PatientAnamnesis(models.Model):

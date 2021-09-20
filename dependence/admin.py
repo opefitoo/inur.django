@@ -1,6 +1,6 @@
 from dependence.forms import TypeDescriptionGenericInlineFormset
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
-    PatientAnamnesis, ActivityHabits, SocialHabits
+    PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from django.contrib import admin
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from fieldsets_with_inlines import FieldsetsInlineMixin
@@ -52,6 +52,21 @@ class SocialHabitsInLine(admin.TabularInline):
     model = SocialHabits
     fields = ('habit_type', 'habit_description')
     formset = TypeDescriptionGenericInlineFormset
+
+
+class TensionAndTemperatureParametersInLine(admin.TabularInline):
+    extra = 0
+    model = TensionAndTemperatureParameters
+    fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'temperature', 'stools', 'weight',
+              'general_remarks', 'user', 'created_on', 'updated_on')
+    readonly_fields = ('user', 'created_on', 'updated_on')
+
+
+@admin.register(MonthlyParameters)
+class PatientParameters(admin.ModelAdmin):
+    fields = ('patient', 'params_year', 'params_month', 'weight')
+    inlines = [TensionAndTemperatureParametersInLine]
+    autocomplete_fields = ['patient']
 
 
 @admin.register(PatientAnamnesis)

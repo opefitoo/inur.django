@@ -52,11 +52,11 @@ INSTALLED_APPS = (
     # 'debug_toolbar'
     'django_csv_exports',
     'colorfield',
-    'dependence'
+    'dependence',
+    'fieldsets_with_inlines'
 )
 
 INSTALLED_APPS += ('admin_object_actions',)
-INSTALLED_APPS += ('fieldsets_with_inlines',)
 
 
 MIDDLEWARE = (

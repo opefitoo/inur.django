@@ -100,3 +100,25 @@ class HolidayRequestChoice(models.TextChoices):
     req_morning = "MRNG", _(u"Matin")
     req_evening = "EVNG", _("Soir")
     req_full_day = "FULL", _(u"Journée entière")
+
+
+class MonthsNames(models.IntegerChoices):
+    jan = 1, _("Janvier")
+    feb = 2, _(u'Février')
+    mar = 3, _(u'Mars')
+    apr = 4, _(u'Avril')
+    may = 5, _(u'Mai')
+    jun = 6, _(u'Juin'),
+    jul = 7, _(u'Juillet')
+    aug = 8, _(u'Août')
+    sep = 9, _(u'Septembre')
+    oct = 10, _(u'Octobre')
+    nov = 11, _(u'Novembre')
+    dec = 12, _(u'Décembre')
+
+
+class StoolsQty(models.IntegerChoices):
+    none = 0, "-"
+    little = 1, "+"
+    medium = 2, "++"
+    lot = 3, "+++"
