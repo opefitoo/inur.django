@@ -3,7 +3,6 @@ from django.db import models
 from django_countries.fields import CountryField
 from django_currentuser.db.models import CurrentUserField
 
-from dependence.forms import PercentageField
 from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
     MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType, \
     MonthsNames, StoolsQty
