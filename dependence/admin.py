@@ -57,8 +57,8 @@ class SocialHabitsInLine(admin.TabularInline):
 class TensionAndTemperatureParametersInLine(admin.TabularInline):
     extra = 0
     model = TensionAndTemperatureParameters
-    fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'temperature', 'stools', 'weight',
-              'general_remarks', 'user', 'created_on', 'updated_on')
+    fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'temperature', 'stools',
+              'oximeter_saturation', 'weight', 'general_remarks', 'user', 'created_on', 'updated_on')
     readonly_fields = ('user', 'created_on', 'updated_on')
 
 

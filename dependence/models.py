@@ -3,6 +3,7 @@ from django.db import models
 from django_countries.fields import CountryField
 from django_currentuser.db.models import CurrentUserField
 
+from dependence.forms import PercentageField
 from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
     MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType, \
     MonthsNames, StoolsQty
@@ -34,7 +35,7 @@ class MonthlyParameters(models.Model):
     # Patient
     patient = models.ForeignKey(Patient, related_name='health_params_to_patient',
                                 on_delete=models.PROTECT)
-    weight = models.PositiveSmallIntegerField("Poids (KG)")
+    weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1)
 
     def clean(self):
         exclude = []
@@ -81,17 +82,27 @@ class TensionAndTemperatureParameters(models.Model):
         verbose_name_plural = u"Paramètres"
 
     params_date_time = models.DateTimeField("Date", default=datetime.now)
-    systolic_blood_press = models.PositiveSmallIntegerField("Tension min.", default=0)
-    diastolic_blood_press = models.PositiveSmallIntegerField("Tension max.", default=0)
-    temperature = models.PositiveSmallIntegerField(default=0)
+    systolic_blood_press = models.PositiveSmallIntegerField("Tension max.", default=0)
+    diastolic_blood_press = models.PositiveSmallIntegerField("Tension min.", default=0)
+    temperature = models.DecimalField(max_digits=3, decimal_places=1, default=0)
     stools = models.PositiveSmallIntegerField("Selles", choices=StoolsQty.choices, default=0)
-    weight = models.PositiveSmallIntegerField("Poids (KG)", default=None, blank=True, null=True)
+    weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1, default=None, blank=True, null=True)
+    oximeter_saturation = models.PositiveSmallIntegerField("Saturation O2 %", default=None, blank=True, null=True)
     general_remarks = models.TextField("Remarques générales", max_length=25, default=None, blank=True, null=True)
     monthly_params = models.ForeignKey(MonthlyParameters, related_name='health_params_to_monthly_params',
                                        on_delete=models.CASCADE, default=None)
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+    user = CurrentUserField()
+
+    @staticmethod
+    def validate_saturation(data):
+        messages = {}
+        is_valid = (100 >= data['oximeter_saturation'] > 0) or data['oximeter_saturation'] is None
+        if not is_valid:
+            messages = {'oximeter_saturation': u"Valeure incorrecte pour la saturation"}
+        return messages
 
     @staticmethod
     def validate_periods(month, year, data):
@@ -101,14 +112,14 @@ class TensionAndTemperatureParameters(models.Model):
             messages = {'params_date_time': u"Date doit être dans le mois %d de l'année %s" % (month, year)}
 
         return messages
-    user = CurrentUserField()
 
     @staticmethod
     def validate(instance, data):
         result = {}
         result.update(TensionAndTemperatureParameters.validate_periods(instance.monthly_params.params_month,
-                                                         instance.monthly_params.params_year,
-                                                         data))
+                                                                       instance.monthly_params.params_year,
+                                                                       data))
+        result.update(TensionAndTemperatureParameters.validate_saturation(data))
         return result
 
     def clean(self):
