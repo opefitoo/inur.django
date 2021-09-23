@@ -24,9 +24,9 @@ class TensionAndTemperatureParametersFormset(BaseInlineFormSet):
             rowindex = 0
             for row in self.cleaned_data:
                 rowindex += 1
-                if 'oximeter_saturation' in row and row['oximeter_saturation']:
+                if 'oximeter_saturation' in row and row['oximeter_saturation'] and not row['DELETE']:
                     self.validate_saturation(rowindex, row)
-                if 'params_date_time' in row and row['params_date_time']:
+                if 'params_date_time' in row and row['params_date_time'] and not row['DELETE']:
                     self.validate_periods(rowindex, self.data['params_month'], self.data['params_year'], row)
 
 
