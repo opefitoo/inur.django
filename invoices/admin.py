@@ -20,6 +20,7 @@ from invoices import models
 from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
+from invoices.actions.certificates import generate_pdf
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, EventCalendarPeriodFilter
@@ -103,6 +104,17 @@ class EmployeeAdmin(admin.ModelAdmin):
     inlines = [EmployeeContractDetailInline]
     list_display = ('user', 'start_contract', 'end_contract', 'occupation')
     search_fields = ['user', 'occupation']
+
+    def work_certificate(self, request, queryset):
+        try:
+            return generate_pdf(queryset)
+        except ValidationError as ve:
+            self.message_user(request, ve.message,
+                              level=messages.ERROR)
+
+    work_certificate.short_description = "Certificat de travail"
+
+    actions = [work_certificate]
 
 
 class ExpenseCardDetailInline(TabularInline):

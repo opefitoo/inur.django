@@ -42,6 +42,7 @@ class Employee(models.Model):
                                     help_text='Enter employee abbreviation, must be unique accross company',
                                     max_length=3,
                                     default='XXX')
+    address = models.CharField("Adresse", max_length=50, blank=True, null=True)
     color_cell = ColorField(default='#FF0000')
     color_text = ColorField(default='#FF0000')
 
