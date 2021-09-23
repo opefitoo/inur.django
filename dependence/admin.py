@@ -1,4 +1,4 @@
-from dependence.forms import TypeDescriptionGenericInlineFormset
+from dependence.forms import TypeDescriptionGenericInlineFormset, TensionAndTemperatureParametersFormset
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from django.contrib import admin
@@ -57,6 +57,7 @@ class SocialHabitsInLine(admin.TabularInline):
 class TensionAndTemperatureParametersInLine(admin.TabularInline):
     extra = 0
     model = TensionAndTemperatureParameters
+    formset = TensionAndTemperatureParametersFormset
     fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'temperature', 'stools',
               'oximeter_saturation', 'weight', 'general_remarks', 'user', 'created_on', 'updated_on')
     readonly_fields = ('user', 'created_on', 'updated_on')

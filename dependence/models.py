@@ -95,39 +95,7 @@ class TensionAndTemperatureParameters(models.Model):
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
     user = CurrentUserField()
 
-    @staticmethod
-    def validate_saturation(data):
-        messages = {}
-        is_valid = (100 >= data['oximeter_saturation'] > 0) or data['oximeter_saturation'] is None
-        if not is_valid:
-            messages = {'oximeter_saturation': u"Valeure incorrecte pour la saturation"}
-        return messages
 
-    @staticmethod
-    def validate_periods(month, year, data):
-        messages = {}
-        is_valid = data['params_date_time'].month == month and data['params_date_time'].year == year
-        if not is_valid:
-            messages = {'params_date_time': u"Date doit être dans le mois %d de l'année %s" % (month, year)}
-
-        return messages
-
-    @staticmethod
-    def validate(instance, data):
-        result = {}
-        result.update(TensionAndTemperatureParameters.validate_periods(instance.monthly_params.params_month,
-                                                                       instance.monthly_params.params_year,
-                                                                       data))
-        result.update(TensionAndTemperatureParameters.validate_saturation(data))
-        return result
-
-    def clean(self):
-        exclude = []
-
-        super(TensionAndTemperatureParameters, self).clean_fields(exclude)
-        messages = self.validate(self, self.__dict__)
-        if messages:
-            raise ValidationError(messages)
 
 
 class PatientAnamnesis(models.Model):
