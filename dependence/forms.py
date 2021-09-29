@@ -38,6 +38,6 @@ class TensionAndTemperatureParametersFormset(BaseInlineFormSet):
 
     @staticmethod
     def validate_periods(rowindex, month, year, data):
-        is_valid = data['params_date_time'].month == month and data['params_date_time'].year == year
+        is_valid = data['params_date_time'].month == int(month) and data['params_date_time'].year == int(year)
         if not is_valid:
             raise ValidationError("Ligne %d : Date doit être dans le mois %s de l'année %s" % (rowindex, month, year))
