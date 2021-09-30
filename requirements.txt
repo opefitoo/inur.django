@@ -2,10 +2,10 @@ appdirs==1.4.4
 dj-database-url==0.5.0
 dj-static==0.0.6
 django==3.2.7
-django-appconf==1.0.4
+django-appconf==1.0.5
 django-constance==2.8.0
 django-countries==7.2.1
-django-filter==2.4.0
+django-filter==21.1
 django-googledrive-storage==1.5.2
 django-picklefield==3.0.1
 djangorestframework==3.12.4
@@ -28,19 +28,19 @@ reportlab==3.6.1
 requests==2.26.0
 rsa==4.7.2
 six==1.16.0
-SQLAlchemy==1.4.23
+SQLAlchemy==1.4.25
 sqlparse==0.4.2
 static3==0.7.0
 uritemplate==3.0.1
 whitenoise==5.3.0
 django-currentuser==0.5.3
 rq==1.10.0
-django-cors-headers==3.8.0
+django-cors-headers==3.9.0
 django-autocomplete-light==3.8.2
 #APScheduler==3.6.3″
 google-auth-oauthlib==0.4.4
 google-auth-httplib2
-holidays==0.11.2
+holidays==0.11.3.1
 django-csv-exports==1.0.5
 django-colorfield==0.4.3
 django-fieldsets-with-inlines==0.6
@@ -52,3 +52,5 @@ django-admin-search==0.3.7
 # googlemaps
 django-admin-object-actions
 # django-crispy-forms==1.11.2
+googlemaps~=4.4.5
+redis~=3.5.3
