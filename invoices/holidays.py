@@ -86,12 +86,15 @@ class HolidayRequest(models.Model):
             if date_comp in lu_holidays:
                 jours_feries = jours_feries + 1
             date_comp = date_comp + timedelta(days=1)
+        if Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
+                start_date__lte=self.start_date).first() is None:
+            return "définir les heures de travail contractuels svp."
         hours_jour = Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
             start_date__lte=self.start_date).first().number_of_hours / 5
         return [(counter - jours_feries) * hours_jour,
                 "explication: ( %.2f jours congés - %d jours fériés )  x %d nombre h. /j" % (counter,
-                                                                                           jours_feries,
-                                                                                           hours_jour)]
+                                                                                             jours_feries,
+                                                                                             hours_jour)]
 
     def clean(self, *args, **kwargs):
         exclude = []
