@@ -39,7 +39,7 @@ from invoices.notifications import notify_holiday_request_validation
 from invoices.resources import ExpenseCard, Car
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
-from invoices.events import EventType, Event
+from invoices.events import EventType, Event, AssignedAdditionalEmployee
 
 import datetime
 import calendar
@@ -754,6 +754,13 @@ class EventTypeAdmin(admin.ModelAdmin):
     list_display = ['name']
 
 
+class AssignedAdditionalEmployeeInLine(admin.StackedInline):
+    extra = 0
+    model = AssignedAdditionalEmployee
+    fields = ('assigned_additional_employee',)
+    autocomplete_fields = ['assigned_additional_employee']
+
+
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     class Media:
@@ -772,6 +779,7 @@ class EventAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
     list_filter = (SmartEmployeeFilter,)
+    inlines = (AssignedAdditionalEmployeeInLine, )
 
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):

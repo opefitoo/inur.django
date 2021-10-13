@@ -1,9 +1,13 @@
 from datetime import datetime
 
+from constance import config
 from dal import autocomplete
 from django import forms
-from django.forms import BaseInlineFormSet, ValidationError, ModelForm
+from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.forms import BaseInlineFormSet, ValidationError, ModelForm, ModelMultipleChoiceField
 
+from invoices.employee import Employee
+from invoices.events import Event, create_or_update_google_calendar
 from invoices.models import InvoiceItem, MedicalPrescription
 from invoices.timesheet import SimplifiedTimesheet, SimplifiedTimesheetDetail
 from invoices.widgets import CodeSnWidget
@@ -211,49 +215,40 @@ class PatientForm(ModelForm):
         super(PatientForm, self).__init__(*args, **kwargs)
 
 
+class EmployeeSelect(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if value:
+            option['attrs']['data-abbreviation'] = value.instance.abbreviation
+        return option
+
+
 class EventForm(ModelForm):
+    # event_employees = ModelMultipleChoiceField(
+    #     Employee.objects.filter(end_contract__isnull=True).exclude(abbreviation="XXX").order_by('-abbreviation'),
+    #     widget=FilteredSelectMultiple("employees", is_stacked=True, ))
+
+    class Meta:
+        model = Event
+        exclude = []
 
     def __init__(self, *args, **kwargs):
         super(EventForm, self).__init__(*args, **kwargs)
         if self.instance.at_office:
             self.fields['event_address'].disabled = True
-#
-#
-# class PrestationActionForm(forms.Form):
-#     comment = forms.CharField(
-#         required=False,
-#         widget=forms.Textarea,
-#     )
-#
-#     def form_action(self, prestation, user):
-#         raise NotImplementedError()
-#
-#     def save(self, prestation, user):
-#         try:
-#             prestation, action = self.form_action(prestation, user)
-#
-#         except exceptions as e:
-#             error_message = str(e)
-#             self.add_error(None, error_message)
-#             raise
-#         return prestation, action
-#
-#
-# class WithdrawForm(PrestationActionForm):
-#     prestation = forms.IntegerField(
-#         required=True,
-#         help_text='How much to withdraw?',
-#     )
-#     field_order = (
-#         'comment'
-#     )
-#
-#     def form_action(self, prestation, user):
-#         return Prestation.copy(
-#             id=prestation.pk,
-#             user=prestation.user,
-#             amount=self.cleaned_data['amount'],
-#             withdrawn_by=user,
-#             comment=self.cleaned_data['comment'],
-#             asof=timezone.now(),
-#         )
+
+    #
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     if cleaned_data.get('event_employees'):
+    #         self.instance.event_employees.set(cleaned_data.get('event_employees').all())
+    #         self.instance.save
+
+    #     if cleaned_data.get('at_office'):
+    #         cleaned_data['event_address'] = "%s %s" % (config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY)
+    #     cal = create_or_update_google_calendar(cleaned_data)
+    #     self.calendar_id = cal.get('id')
+    #     self.calendar_url = cal.get('htmlLink')
+    #     messages = self.validate(self, self.id, self.__dict__)
+    #     if messages:
+    #         raise ValidationError(messages)

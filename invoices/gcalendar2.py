@@ -15,7 +15,6 @@ from worker import conn
 logger = logging.getLogger('console')
 
 
-
 class PrestationGoogleCalendarSurLu:
     summary = 'Prestations'
     calendar = None
@@ -81,6 +80,79 @@ class PrestationGoogleCalendarSurLu:
 
         return self._service.calendars().insert(body=calendar).execute()
 
+    def update_event_through_data(self, data):
+        descr_line = "<b>%s</b> %s<br>"
+
+        description = descr_line % ('Patient:', data.get('patient'))
+        if data.get('at_office'):
+            address = data.get('event_address')
+            location = address
+        elif not data.get('at_office') and data.get('event_address'):
+            address = data.get('event_address')
+            location = address
+        else:
+            address = data.get('patient').address
+            location = "%s, %s %s, %s" % (data.get('patient').address,
+                                          data.get('patient').zipcode,
+                                          data.get('patient').city,
+                                          data.get('patient').country)
+        description += descr_line % (u'Adresse:', address)
+        description += descr_line % (u'Tél Patient:', data.get('patient').phone_number)
+        if data.get('id'):
+            description += descr_line % (u'Sur LU ID:', data.get('id'))
+        if data.get('notes') and len(data.get('notes')) > 0:
+            description += descr_line % ('Notes:', data.get('notes'))
+        summary = '%s - %s' % (data.get('patient'), ','.join(u.abbreviation for u in data.get('event_employees')))
+
+        naive_date = datetime.datetime(data.get('day').year,
+                                       data.get('day').month, data.get('day').day,
+                                       data.get('time_start_event').hour,
+                                       data.get('time_start_event').minute,
+                                       data.get('time_start_event').second)
+        localized = pytz.timezone('Europe/Luxembourg').localize(naive_date)
+        naive_end_date = datetime.datetime(data.get('day').year,
+                                           data.get('day').month, data.get('day').day,
+                                           data.get('time_end_event').hour,
+                                           data.get('time_end_event').minute,
+                                           data.get('time_end_event').second)
+
+        attendees_list = []
+        if len(data.get('event_employees')) > 0:
+            for u in data.get('event_employees'):
+                attendees_list.append({'email': '%s' % u.user.email})
+        event_body = {
+            'summary': summary,
+            'description': description,
+            'location': location,
+            'start': {
+                'dateTime': localized.isoformat(),
+            },
+            'end': {
+                'dateTime': pytz.timezone('Europe/Luxembourg').localize(naive_end_date).isoformat(),
+            },
+            'attendees': attendees_list
+        }
+
+        gmail_event = None
+        if data.get('calendar_id'):
+            gmail_event = self.get_event(event_id=data.get('calendar_id'),
+                                         calendarId=data.get('event_employees')[0].user.email)
+        if gmail_event is None:
+            gmail_event = self._service.events().insert(calendarId=data.get('event_employees')[0].user.email,
+                                                        body=event_body).execute()
+        else:
+            gmail_event = self._service.events().update(calendarId=data.get('event_employees')[0],
+                                                        eventId=data.get('calendar_id'),
+                                                        body=event_body).execute()
+
+        if 'id' in gmail_event.keys():
+            # logger.info("gmail event created %s", gmail_event)
+            # print("*** gmail event created %s" % gmail_event)
+            # sys.stdout.flush()
+            return gmail_event
+        else:
+            raise ValueError("error during sync with google calendar %s" % gmail_event)
+
     def update_event(self, event):
         descr_line = "<b>%s</b> %s<br>"
         description = descr_line % ('Patient:', event.patient)
@@ -93,9 +165,9 @@ class PrestationGoogleCalendarSurLu:
         else:
             address = event.patient.address
             location = "%s, %s %s, %s" % (event.patient.address,
-                                         event.patient.zipcode,
-                                         event.patient.city,
-                                         event.patient.country)
+                                          event.patient.zipcode,
+                                          event.patient.city,
+                                          event.patient.country)
         description += descr_line % (u'Adresse:', address)
         description += descr_line % (u'Tél Patient:', event.patient.phone_number)
         if event.id:
@@ -116,6 +188,11 @@ class PrestationGoogleCalendarSurLu:
                                            event.time_end_event.minute,
                                            event.time_end_event.second)
 
+        attendees_list = []
+        if event.event_assigned.count() > 1:
+            for u in event.event_assigned.all():
+                attendees_list.append({'email': '%s' % u.assigned_additional_employee.user.email})
+
         event_body = {
             'summary': summary,
             'description': description,
@@ -125,7 +202,8 @@ class PrestationGoogleCalendarSurLu:
             },
             'end': {
                 'dateTime': pytz.timezone('Europe/Luxembourg').localize(naive_end_date).isoformat(),
-            }
+            },
+            'attendees': attendees_list
         }
 
         gmail_event = self.get_event(event_id=event.calendar_id, calendar_id=event.employees.user.email)
@@ -150,7 +228,6 @@ class PrestationGoogleCalendarSurLu:
         q_r = q.enqueue(self.delete_event, evt_instance)
         print("Queue result %s" % q_r)
         sys.stdout.flush()
-
 
     def delete_event(self, evt_instance):
         # print("Trying to delete %s from %s" % (evt_instance.calendar_id, evt_instance))

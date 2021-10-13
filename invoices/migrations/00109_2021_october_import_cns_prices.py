@@ -29,7 +29,6 @@ def process_codes(apps, schema_editor):
                 validity_date = apps.get_model("invoices", "ValidityDate")
                 try:
                     care_code = apps.get_model("invoices", "CareCode")
-                    print("** Code is %s", code)
                     care_code_to_updt = care_code.objects.get(code=code)
                     care_code_to_updt.name = row[0][0:49]
                     care_code_to_updt.description = row[0]

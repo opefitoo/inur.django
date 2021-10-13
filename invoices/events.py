@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, QuerySet
-from django.db.models.signals import post_delete, pre_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
@@ -109,16 +109,16 @@ class Event(models.Model):
                                                                         % self.notes)
 
     def clean(self, *args, **kwargs):
-        if self.at_office:
-            self.event_address = "%s %s" % (config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY)
         exclude = []
-        cal = create_or_update_google_calendar(self)
-        self.calendar_id = cal.get('id')
-        self.calendar_url = cal.get('htmlLink')
         super(Event, self).clean_fields(exclude)
         messages = self.validate(self, self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
+        if self.at_office:
+            self.event_address = "%s %s" % (config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY)
+        cal = create_or_update_google_calendar(self)
+        self.calendar_id = cal.get('id')
+        self.calendar_url = cal.get('htmlLink')
 
     def delete(self, using=None, keep_parents=False):
         if "soin" == self.event_type.name:
@@ -161,7 +161,26 @@ class Event(models.Model):
         if not cached_employees:
             cache.set('event_employees_cache_%s' % self.employees.id, self.employees)
             cached_employees = cache.get('event_employees_cache_%s' % self.employees.id)
+        if self.event_assigned.count() > 1:
+            return '%s ++ %s' % (",".join(a.assigned_additional_employee.abbreviation for a in self.event_assigned.all()), cached_patient.name)
         return '%s - %s' % (cached_employees.abbreviation, cached_patient.name)
+
+
+class AssignedAdditionalEmployee(models.Model):
+    class Meta:
+        verbose_name = u'Invité Traitant'
+        verbose_name_plural = u'Invités Traitant'
+
+    assigned_additional_employee = models.ForeignKey(Employee, related_name='assigned_employees_to_event',
+                                                      help_text='Please enter employee',
+                                                      verbose_name=u"Soignant",
+                                                      on_delete=models.CASCADE, null=True, blank=True, default=None)
+    event_assigned_to = models.ForeignKey(Event, related_name='event_assigned',
+                                          help_text='Please enter xxx',
+                                          on_delete=models.CASCADE, null=True, blank=True, default=None)
+
+    def __str__(self):
+        return "%s - %s" % (self.assigned_additional_employee.abbreviation, self.event_assigned_to_id)
 
 
 def create_or_update_google_calendar(instance):
@@ -176,18 +195,18 @@ def create_or_update_google_calendar(instance):
         return calendar_gcalendar.update_event(instance)
 
 
-# @receiver(pre_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
-# def create_or_update_google_calendar_callback(sender, instance, **kwargs):
-#     print("*** Creating event from callback")
-#     sys.stdout.flush()
-#     create_or_update_google_calendar(instance)
+@receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
+def create_or_update_google_calendar_callback(sender, instance, **kwargs):
+    print("*** Creating event from callback")
+    sys.stdout.flush()
+    create_or_update_google_calendar(instance)
 
 
-# @receiver(post_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
-# def delete_google_calendar(sender, instance, **kwargs):
-#     if "soin" == instance.event_type.name:
-#         calendar_gcalendar = PrestationGoogleCalendarSurLu()
-#         calendar_gcalendar.delete_event(instance)
+@receiver(post_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
+def delete_google_calendar(sender, instance, **kwargs):
+    if "soin" == instance.event_type.name:
+        calendar_gcalendar = PrestationGoogleCalendarSurLu()
+        calendar_gcalendar.delete_event(instance)
 
 
 def validate_date_range(instance_id, data):
