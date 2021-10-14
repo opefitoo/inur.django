@@ -102,6 +102,17 @@ class HolidayRequestChoice(models.TextChoices):
     req_full_day = "FULL", _(u"Journée entière")
 
 
+class WeekDayNames(models.IntegerChoices):
+    all = 0, _("Tous")
+    mon = 1, _(u'Lundi')
+    tue = 2, _(u'Mardi')
+    wed = 3, _(u'Mercredi')
+    thu = 4, _(u'Jeudi')
+    fri = 5, _(u'Vendredi'),
+    sat = 6, _(u'Samedi')
+    sun = 7, _(u'Dimanche')
+
+
 class MonthsNames(models.IntegerChoices):
     jan = 1, _("Janvier")
     feb = 2, _(u'Février')

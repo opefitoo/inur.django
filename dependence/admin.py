@@ -1,9 +1,38 @@
+from django.core.checks import messages
+from django.core.exceptions import ValidationError
+
+from dependence.careplan import CarePlanDetail, CarePlanMaster
+from dependence.careplan_pdf import generate_pdf
 from dependence.forms import TypeDescriptionGenericInlineFormset, TensionAndTemperatureParametersFormset
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from django.contrib import admin
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from fieldsets_with_inlines import FieldsetsInlineMixin
+
+
+class CarePlanDetailInLine(admin.TabularInline):
+    extra = 0
+    model = CarePlanDetail
+    fields = ('params_day_of_week',
+              'time_start', 'time_end', 'care_actions')
+
+
+@admin.register(CarePlanMaster)
+class CarePlanMasterAdmin(admin.ModelAdmin):
+    inlines = [CarePlanDetailInLine]
+    autocomplete_fields = ['patient']
+
+    def pdf_action(self, request, queryset):
+        try:
+            return generate_pdf(queryset)
+        except ValidationError as ve:
+            self.message_user(request, ve.message,
+                              level=messages.ERROR)
+
+    pdf_action.short_description = "Imprimer"
+
+    actions = [pdf_action]
 
 
 class AssignedPhysicianInLine(admin.TabularInline):

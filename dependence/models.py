@@ -96,8 +96,6 @@ class TensionAndTemperatureParameters(models.Model):
     user = CurrentUserField()
 
 
-
-
 class PatientAnamnesis(models.Model):
     class Meta:
         ordering = ['-id']
