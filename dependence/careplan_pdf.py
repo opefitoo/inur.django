@@ -1,12 +1,11 @@
 import locale
-from datetime import datetime
 
 from django.http import HttpResponse
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm, mm
+from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, PageBreak, Table, TableStyle, Image
 
 from dependence.careplan import CarePlanMaster, CarePlanDetail
@@ -74,7 +73,7 @@ def build_doc_per_care_plan(care_plan: CarePlanMaster):
     elements.append(Paragraph(
         u"Plan de Soins Détaillé Conclu avec le Patient",
         titlist))
-    locale.setlocale(locale.LC_ALL, 'fr_FR.utf-8')
+    locale.setlocale(locale.LC_ALL, 'fr_FR')
     elements.append(Paragraph(
         u"Plan N°: %s - Dès le: %s" % (care_plan.plan_number, care_plan.plan_start_date.strftime("%d %B %Y")),
         normalstyle))
