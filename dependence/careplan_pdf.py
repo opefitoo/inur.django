@@ -73,7 +73,7 @@ def build_doc_per_care_plan(care_plan: CarePlanMaster):
     elements.append(Paragraph(
         u"Plan de Soins Détaillé Conclu avec le Patient",
         titlist))
-    locale.setlocale(locale.LC_ALL, 'fr_FR')
+    locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
     elements.append(Paragraph(
         u"Plan N°: %s - Dès le: %s" % (care_plan.plan_number, care_plan.plan_start_date.strftime("%d %B %Y")),
         normalstyle))
