@@ -1,7 +1,7 @@
-
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from django_currentuser.db.models import CurrentUserField
 
 from invoices.enums.generic import WeekDayNames
 from invoices.models import Patient
@@ -20,6 +20,14 @@ class CarePlanMaster(models.Model):
     replace_plan_number = models.PositiveSmallIntegerField("Remplce Num.", blank=True, null=True)
     plan_start_date = models.DateField(u"À partir de:", help_text=u"Date du début d'application du plan des soins",
                                        default=timezone.now)
+    plan_decision_date = models.DateField(u"Date décision:", help_text=u"Date de la décision de l'assurance dépendance",
+                                          blank=True, null=True)
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+    user = CurrentUserField()
+    # Logical fields
+    last_valid_plan = models.BooleanField("Dernier plan valide", default=False)
 
     def clean(self):
         exclude = []
@@ -34,6 +42,7 @@ class CarePlanMaster(models.Model):
         result = {}
         result.update(CarePlanMaster.unique_care_plan_number(instance, data))
         result.update(CarePlanMaster.replace_plan_number_check(instance, data))
+        result.update(CarePlanMaster.validate_only_one_valid_plan_per_patient(instance, data))
         return result
 
     @staticmethod
@@ -62,6 +71,18 @@ class CarePlanMaster(models.Model):
             messages.update({'replace_plan_number':
                                  "il n'y a pas de plan avec le numéro %s dans le système" % data[
                                      'replace_plan_number']})
+        return messages
+
+    @staticmethod
+    def validate_only_one_valid_plan_per_patient(instance, data):
+        messages = {}
+        conflicts = CarePlanMaster.objects.filter(
+            last_valid_plan=True). \
+            filter(patient_id=data['patient_id']). \
+            exclude(pk=instance.id)
+        if 0 == conflicts.count():
+            messages.update({'last_valid_plan':
+                                 "il y a déjà au moins un plan valide dans le système %s" % conflicts[0]})
         return messages
 
     def __str__(self):

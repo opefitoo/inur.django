@@ -1,5 +1,7 @@
+from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
+from django.db.models import Count
 
 from dependence.careplan import CarePlanDetail, CarePlanMaster
 from dependence.careplan_pdf import generate_pdf
@@ -10,6 +12,8 @@ from django.contrib import admin
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from fieldsets_with_inlines import FieldsetsInlineMixin
 
+from invoices.models import Patient
+
 
 class CarePlanDetailInLine(admin.TabularInline):
     extra = 0
@@ -18,8 +22,29 @@ class CarePlanDetailInLine(admin.TabularInline):
               'time_start', 'time_end', 'care_actions')
 
 
+class FilteringPatients(SimpleListFilter):
+    title = 'Patient'
+    parameter_name = 'patient'
+
+    def lookups(self, request, model_admin):
+        years = CarePlanMaster.objects.values('patient').annotate(dcount=Count('patient')).order_by()
+        years_tuple = []
+        for year in years:
+            years_tuple.append(
+                (year['patient'], "%s (%s)" % (Patient.objects.get(pk=year['patient']), str(year['dcount']))))
+        return tuple(years_tuple)
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value is not None:
+            return queryset.filter(patient__id=value)
+        return queryset
+
+
 @admin.register(CarePlanMaster)
 class CarePlanMasterAdmin(admin.ModelAdmin):
+    list_display = ("patient", "plan_number", "plan_start_date", "last_valid_plan")
+    list_filter = (FilteringPatients,)
     inlines = [CarePlanDetailInLine]
     autocomplete_fields = ['patient']
 
@@ -33,6 +58,7 @@ class CarePlanMasterAdmin(admin.ModelAdmin):
     pdf_action.short_description = "Imprimer"
 
     actions = [pdf_action]
+    readonly_fields = ('user', 'created_on', 'updated_on')
 
 
 class AssignedPhysicianInLine(admin.TabularInline):
