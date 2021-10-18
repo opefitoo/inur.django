@@ -47,7 +47,7 @@ django-fieldsets-with-inlines==0.6
 # redis~=3.5.3
 cloudinary==1.25.0
 python-dotenv==0.19.1
-django-admin-search==0.3.8
+django-admin-search==0.3.7
 # django-debug-toolbar
 # googlemaps
 django-admin-object-actions
