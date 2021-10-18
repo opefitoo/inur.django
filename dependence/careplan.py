@@ -104,3 +104,6 @@ class CarePlanDetail(models.Model):
     care_actions = models.TextField(u"Actions à prévoir", max_length=500)
     care_plan_to_master = models.ForeignKey(CarePlanMaster, related_name="care_plan_detail_to_master",
                                             on_delete=models.CASCADE, null=True, blank=True, default=None)
+
+    def __str__(self):
+        return "%s de %s à %s" % (self.params_day_of_week, self.time_start, self.time_end)
