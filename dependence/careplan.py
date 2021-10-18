@@ -80,7 +80,7 @@ class CarePlanMaster(models.Model):
             last_valid_plan=True). \
             filter(patient_id=data['patient_id']). \
             exclude(pk=instance.id)
-        if 0 == conflicts.count():
+        if conflicts.count() > 0:
             messages.update({'last_valid_plan':
                                  "il y a déjà au moins un plan valide dans le système %s" % conflicts[0]})
         return messages
