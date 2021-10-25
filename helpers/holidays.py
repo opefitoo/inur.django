@@ -20,8 +20,16 @@ def how_many_hours_taken_in_period(data, public_holidays):
     if len(holiday_requests) > 0:
         counter = 0
         for holiday_request in holiday_requests:
-            delta = holiday_request.end_date - holiday_request.start_date
-            date = holiday_request.start_date
+            if holiday_request.end_date > data['end_date'].date():
+                period_end_date = data['end_date'].date()
+            else:
+                period_end_date = holiday_request.end_date
+            if holiday_request.start_date < data['start_date'].date():
+                period_start_date = data['start_date'].date()
+            else:
+                period_start_date = holiday_request.start_date
+            delta = period_end_date - period_start_date
+            date = period_start_date
             for i in range(delta.days):
                 if date.weekday() < 5 and holiday_request.requested_period != HolidayRequestChoice.req_full_day:
                     counter += 0.5
