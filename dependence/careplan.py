@@ -89,6 +89,13 @@ class CarePlanMaster(models.Model):
         return "Plan de %s - num. %s" % (self.patient, self.plan_number)
 
 
+class CareOccurrence(models.Model):
+    str_name = models.CharField('Nom', max_length=50)
+
+    def __str__(self):
+        return self.str_name
+
+
 class CarePlanDetail(models.Model):
     class Meta:
         ordering = ['id']
@@ -98,6 +105,7 @@ class CarePlanDetail(models.Model):
     params_day_of_week = models.IntegerField("Jour",
                                              choices=WeekDayNames.choices
                                              )
+    params_occurrence = models.ManyToManyField(CareOccurrence, verbose_name="Occurence")
 
     time_start = models.TimeField("De")
     time_end = models.TimeField("A")

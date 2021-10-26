@@ -98,14 +98,13 @@ def build_doc_per_care_plan(care_plan: CarePlanMaster):
         elements.append(Paragraph(
             u"En remplacement du plan N°: %s" % care_plan.replace_plan_number,
             normalstyle))
-    data = [(Paragraph("<strong>Période de la journée</strong>", smallstyle),
+    data = [(Paragraph("<strong>Périodicité</strong>", smallstyle),
              Paragraph("<strong>Actions à prévoir</strong>", smallstyle))]
     i = 0
     for detail in CarePlanDetail.objects.filter(care_plan_to_master_id=care_plan.pk).order_by("id").all():
         i += 1
         data.append(
-            (u"%s de %s à %s" % (detail.get_params_day_of_week_display(), detail.time_start.strftime("%H:%M"),
-                                 detail.time_end.strftime("%H:%M")),
+            (Paragraph(u"%s de %s à %s" % (','.join(str(o).upper() for o in detail.params_occurrence.all()), detail.time_start.strftime("%H:%M"), detail.time_end.strftime("%H:%M")), smallstyle),
              Paragraph(str(detail.care_actions).replace('\n', '<br />\n'), smallstyle)))
 
     elements.append(Spacer(1, 18))

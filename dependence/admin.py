@@ -1,9 +1,10 @@
 from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Count
+from django.db.models import Count, ManyToManyField
+from django.forms import ModelMultipleChoiceField, CheckboxSelectMultiple
 
-from dependence.careplan import CarePlanDetail, CarePlanMaster
+from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
 from dependence.forms import TypeDescriptionGenericInlineFormset, TensionAndTemperatureParametersFormset
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
@@ -15,11 +16,22 @@ from fieldsets_with_inlines import FieldsetsInlineMixin
 from invoices.models import Patient
 
 
+@admin.register(CareOccurrence)
+class CareOccurrenceAdmin(admin.ModelAdmin):
+    model = CareOccurrence
+
+
 class CarePlanDetailInLine(admin.TabularInline):
     extra = 0
     model = CarePlanDetail
-    fields = ('params_day_of_week',
-              'time_start', 'time_end', 'care_actions')
+    params_occurrence = ModelMultipleChoiceField(widget=CheckboxSelectMultiple(), queryset=CareOccurrence.objects.all(),
+                                                 required=True)
+    formfield_overrides = {
+        ManyToManyField: {'widget': CheckboxSelectMultiple},
+    }
+
+    # fields = ('params_day_of_week',
+    #           'time_start', 'time_end', 'care_actions')
 
 
 class FilteringPatients(SimpleListFilter):
