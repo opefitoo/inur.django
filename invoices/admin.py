@@ -24,6 +24,7 @@ from invoices.actions.certificates import generate_pdf
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, EventCalendarPeriodFilter
+from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.models import PatientAnamnesis, ContactPerson, OtherStakeholder, DependenceInsurance, \
     BiographyHabits
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
@@ -114,7 +115,19 @@ class EmployeeAdmin(admin.ModelAdmin):
 
     work_certificate.short_description = "Certificat de travail"
 
+    # actions = [work_certificate, 'delete_in_google_calendar']
     actions = [work_certificate]
+
+    def delete_in_google_calendar(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        counter = 0
+        for e in queryset:
+            calendar_gcalendar = PrestationGoogleCalendarSurLu()
+            counter = calendar_gcalendar.delete_all_events_from_calendar(e.user.email)
+        self.message_user(request, "%s évenements supprimés." % counter,
+                          level=messages.INFO)
+
 
 
 class ExpenseCardDetailInline(TabularInline):
@@ -836,7 +849,7 @@ class EventListAdmin(EventAdmin):
     list_filter = ('employees', 'event_type', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'
 
-    actions = ['safe_delete', ]
+    actions = ['safe_delete', 'delete_in_google_calendar']
 
     def safe_delete(self, request, queryset):
         if not request.user.is_superuser:

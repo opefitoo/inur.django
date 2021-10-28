@@ -243,6 +243,16 @@ class PrestationGoogleCalendarSurLu:
         # sys.stdout.flush()
         return gmail_event
 
+    def delete_all_events_from_calendar(self, calendar_id):
+        # FIXME: hardcoded date to be replaced
+        events = self._service.events().list(calendarId=calendar_id, timeMin='2021-11-01T10:00:00-00:00').execute()
+        counter = 0
+        for event in events['items']:
+            self._service.events().delete(calendarId=calendar_id,
+                                          eventId=event['id']).execute()
+            counter += 1
+        return counter
+
     def get_event(self, event_id, calendar_id):
         try:
             event = self._service.events().get(calendarId=calendar_id, eventId=event_id).execute()
