@@ -195,11 +195,11 @@ def create_or_update_google_calendar(instance):
         return calendar_gcalendar.update_event(instance)
 
 
-@receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
-def create_or_update_google_calendar_callback(sender, instance, **kwargs):
-    print("*** Creating event from callback")
-    sys.stdout.flush()
-    create_or_update_google_calendar(instance)
+# @receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
+# def create_or_update_google_calendar_callback(sender, instance, **kwargs):
+#     print("*** Creating event from callback")
+#     sys.stdout.flush()
+#     create_or_update_google_calendar(instance)
 
 
 @receiver(post_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
