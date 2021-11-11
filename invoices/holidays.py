@@ -70,31 +70,75 @@ class HolidayRequest(models.Model):
 
     @property
     def hours_taken(self):
+        # import holidays
+        # lu_holidays = holidays.Luxembourg()
+        # counter = 0
+        # delta = self.end_date - self.start_date
+        # date_comp = self.start_date
+        # jours_feries = 0
+        # if self.reason > 1:
+        #     return "Non applicable"
+        # for i in range(delta.days + 1):
+        #     if date_comp.weekday() < 5 and self.requested_period != HolidayRequestChoice.req_full_day:
+        #         counter += 0.5
+        #     elif date_comp.weekday() < 5 and self.requested_period == HolidayRequestChoice.req_full_day:
+        #         counter += 1
+        #     if date_comp in lu_holidays:
+        #         jours_feries = jours_feries + 1
+        #     date_comp = date_comp + timedelta(days=1)
+        # if Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
+        #         start_date__lte=self.start_date).first() is None:
+        #     return "définir les heures de travail contractuels svp."
+        # hours_jour = Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
+        #     start_date__lte=self.start_date).first().number_of_hours / 5
+        computation = self.hours_calculations(holiday_request=self)
+        if "Non applicable" == computation:
+            return computation
+        return [(computation.num_days - computation.jours_feries) * computation.hours_jour,
+                "explication: ( %.2f jours congés - %d jours fériés )  x %d nombre h. /j" % (computation.num_days,
+                                                                                             computation.jours_feries,
+                                                                                             computation.hours_jour)]
+
+    def hours_calculations(self, same_year_only=False, holiday_request=None):
         import holidays
         lu_holidays = holidays.Luxembourg()
         counter = 0
-        delta = self.end_date - self.start_date
-        date_comp = self.start_date
+        if same_year_only and holiday_request.end_date.year != holiday_request.start_date.year:
+            delta = holiday_request.end_date.replace(month=12, day=31) - holiday_request.start_date
+        else:
+            delta = holiday_request.end_date - holiday_request.start_date
+        date_comp = holiday_request.start_date
         jours_feries = 0
-        if self.reason > 1:
+        if holiday_request.reason > 1:
             return "Non applicable"
         for i in range(delta.days + 1):
-            if date_comp.weekday() < 5 and self.requested_period != HolidayRequestChoice.req_full_day:
+            if date_comp.weekday() < 5 and holiday_request.requested_period != HolidayRequestChoice.req_full_day:
                 counter += 0.5
-            elif date_comp.weekday() < 5 and self.requested_period == HolidayRequestChoice.req_full_day:
+            elif date_comp.weekday() < 5 and holiday_request.requested_period == HolidayRequestChoice.req_full_day:
                 counter += 1
             if date_comp in lu_holidays:
                 jours_feries = jours_feries + 1
             date_comp = date_comp + timedelta(days=1)
-        if Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
-                start_date__lte=self.start_date).first() is None:
+        if Employee.objects.get(user_id=holiday_request.employee.id).employeecontractdetail_set.filter(
+                start_date__lte=holiday_request.start_date).first() is None:
             return "définir les heures de travail contractuels svp."
-        hours_jour = Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
-            start_date__lte=self.start_date).first().number_of_hours / 5
-        return [(counter - jours_feries) * hours_jour,
-                "explication: ( %.2f jours congés - %d jours fériés )  x %d nombre h. /j" % (counter,
-                                                                                             jours_feries,
-                                                                                             hours_jour)]
+        hours_jour = Employee.objects.get(user_id=holiday_request.employee.id).employeecontractdetail_set.filter(
+            start_date__lte=holiday_request.start_date).first().number_of_hours / 5
+        from collections import namedtuple
+        Computation = namedtuple('Computation', 'num_days hours_jour jours_feries')
+        computation = Computation(counter, hours_jour, jours_feries)
+        return computation
+
+    @property
+    def total_days_in_current_year(self):
+        holidays_taken_same_year = HolidayRequest.objects.filter(start_date__year=self.start_date.year,
+                                                                 request_status=HolidayRequestWorkflowStatus.ACCEPTED,
+                                                                 employee=self.employee,
+                                                                 reason=self.REASONS[0][0])
+        calculation = 0
+        for holiday_req in holidays_taken_same_year:
+            calculation += holiday_req.hours_calculations(same_year_only=True, holiday_request=holiday_req).num_days
+        return calculation
 
     def clean(self, *args, **kwargs):
         exclude = []

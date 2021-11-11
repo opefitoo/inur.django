@@ -546,9 +546,9 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 '<div class="warn">%s</div>' % HolidayRequestWorkflowStatus(obj.request_status).name)
 
     readonly_fields = ('validated_by', 'employee', 'request_creator', 'force_creation',
-                       'request_status', 'validator_notes')
+                       'request_status', 'validator_notes', 'total_days_in_current_year')
     list_display = ('employee', 'start_date', 'end_date', 'reason', 'hours_taken', 'validated_by',
-                    'holiday_request_status', 'request_creator')
+                    'holiday_request_status', 'request_creator', 'total_days_in_current_year')
 
     def accept_request(self, request, queryset):
         if not request.user.is_superuser:
