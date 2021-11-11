@@ -238,6 +238,7 @@ class Patient(models.Model):
     email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
+    is_under_dependence_insurance = models.BooleanField(u"Assurance dépendance", default=False)
     date_of_death = models.DateField(u"Date de décès", default=None, blank=True, null=True)
 
     @property

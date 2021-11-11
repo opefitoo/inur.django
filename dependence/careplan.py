@@ -14,8 +14,11 @@ class CarePlanMaster(models.Model):
         verbose_name_plural = u"Plans de Soins Détaillé"
 
     # Patient
-    patient = models.ForeignKey(Patient, related_name='care_plan_to_patient',
-                                on_delete=models.CASCADE)
+    patient = models.ForeignKey(Patient,
+                                help_text=u"Ne recheche que les patients pris en charge par l'assurance dépendance, vérifiez que la checkbox est validé si vous ne trouvez pas votre patient",
+                                related_name='care_plan_to_patient',
+                                on_delete=models.CASCADE,
+                                limit_choices_to={'is_under_dependence_insurance': True})
     plan_number = models.PositiveSmallIntegerField("Num.")
     replace_plan_number = models.PositiveSmallIntegerField("Remplce Num.", blank=True, null=True)
     plan_start_date = models.DateField(u"À partir de:", help_text=u"Date du début d'application du plan des soins",

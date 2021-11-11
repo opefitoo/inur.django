@@ -33,7 +33,8 @@ class MonthlyParameters(models.Model):
     )
     # Patient
     patient = models.ForeignKey(Patient, related_name='health_params_to_patient',
-                                on_delete=models.PROTECT)
+                                on_delete=models.PROTECT,
+                                limit_choices_to={'is_under_dependence_insurance': True})
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1)
 
     def clean(self):
@@ -83,6 +84,7 @@ class TensionAndTemperatureParameters(models.Model):
     params_date_time = models.DateTimeField("Date", default=datetime.now)
     systolic_blood_press = models.PositiveSmallIntegerField("Tension max.", default=0)
     diastolic_blood_press = models.PositiveSmallIntegerField("Tension min.", default=0)
+    heart_pulse = models.PositiveSmallIntegerField("Pouls", default=0)
     temperature = models.DecimalField(max_digits=3, decimal_places=1, default=0)
     stools = models.PositiveSmallIntegerField("Selles", choices=StoolsQty.choices, default=0)
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1, default=None, blank=True, null=True)
@@ -107,7 +109,8 @@ class PatientAnamnesis(models.Model):
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
     # Patient
     patient = models.ForeignKey(Patient, related_name='dep_anamnesis_to_patient',
-                                on_delete=models.PROTECT)
+                                on_delete=models.PROTECT,
+                                limit_choices_to={'is_under_dependence_insurance': True})
     nationality = CountryField(u'Nationalité', blank_label='...', blank=True, null=True)
     spoken_languages = models.CharField(u'Langues parlées', max_length=40, default=None, blank=True, null=True)
     external_doc_link = models.URLField("URL doc. externe", default=None, blank=True, null=True)

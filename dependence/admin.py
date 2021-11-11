@@ -53,6 +53,25 @@ class FilteringPatients(SimpleListFilter):
         return queryset
 
 
+class FilteringPatientsLinkedToParameters(SimpleListFilter):
+    title = 'Patient'
+    parameter_name = 'patient'
+
+    def lookups(self, request, model_admin):
+        years = MonthlyParameters.objects.values('patient').annotate(dcount=Count('patient')).order_by()
+        years_tuple = []
+        for year in years:
+            years_tuple.append(
+                (year['patient'], "%s (%s)" % (Patient.objects.get(pk=year['patient']), str(year['dcount']))))
+        return tuple(years_tuple)
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value is not None:
+            return queryset.filter(patient__id=value)
+        return queryset
+
+
 @admin.register(CarePlanMaster)
 class CarePlanMasterAdmin(admin.ModelAdmin):
     list_display = ("patient", "plan_number", "plan_start_date", "last_valid_plan")
@@ -133,6 +152,8 @@ class TensionAndTemperatureParametersInLine(admin.TabularInline):
 @admin.register(MonthlyParameters)
 class PatientParameters(admin.ModelAdmin):
     fields = ('patient', 'params_year', 'params_month', 'weight')
+    list_filter = ('params_month', 'params_year', FilteringPatientsLinkedToParameters)
+    list_display = ('patient', 'params_month', 'params_year')
     inlines = [TensionAndTemperatureParametersInLine]
     autocomplete_fields = ['patient']
 
