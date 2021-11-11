@@ -104,7 +104,7 @@ class EmployeeContractDetailInline(TabularInline):
 class EmployeeAdmin(admin.ModelAdmin):
     inlines = [EmployeeContractDetailInline]
     list_display = ('user', 'start_contract', 'end_contract', 'occupation')
-    search_fields = ['user', 'occupation']
+    search_fields = ['user__last_name', 'user__first_name', 'user__email']
 
     def work_certificate(self, request, queryset):
         try:
