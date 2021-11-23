@@ -92,7 +92,7 @@ class HolidayRequest(models.Model):
         # hours_jour = Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
         #     start_date__lte=self.start_date).first().number_of_hours / 5
         computation = self.hours_calculations(holiday_request=self)
-        if "Non applicable" == computation:
+        if isinstance(computation, str) or "Non applicable" == computation:
             return computation
         return [(computation.num_days - computation.jours_feries) * computation.hours_jour,
                 "explication: ( %.2f jours congés - %d jours fériés )  x %d nombre h. /j" % (computation.num_days,
