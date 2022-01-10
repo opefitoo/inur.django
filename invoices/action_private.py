@@ -54,8 +54,9 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
         _payment_ref = "PR-%s" % _file_name.replace(" ", "")[:10]
 
     recapitulatif_data = []
-
+    _recap_dates = []
     for qs in queryset.order_by("invoice_number"):
+        _recap_dates.append(qs.invoice_date)
         dd = [qs.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
               range(0, len(qs.prestations.all()), 20)]
         for _prestations in dd:
@@ -72,8 +73,10 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
 
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
-
-    _recap_date = now().date().strftime('%d-%m-%Y')
+    if len(_recap_dates) > 0:
+        _recap_date = _recap_dates[-1].strftime('%d-%m-%Y')
+    else:
+        _recap_date = now().date().strftime('%d-%m-%Y')
     elements.extend(_build_recap(_recap_date, _payment_ref, recapitulatif_data))
     doc.build(elements)
 
