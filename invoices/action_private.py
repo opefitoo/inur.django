@@ -279,7 +279,7 @@ def _build_recap(_recap_date, _recap_ref, recaps):
     elements.append(Spacer(1, 18))
 
     elements.append(Spacer(1, 18))
-    _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence: %s " % _recap_ref]], [10 * cm],
+    _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence suivante: %s " % _recap_ref]], [10 * cm],
                         1 * [0.5 * cm], hAlign='LEFT')
     _date_infos = Table([["Date facture : %s " % _recap_date]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
 
