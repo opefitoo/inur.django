@@ -1,8 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
-from django_currentuser.db.models import CurrentUserField
 
+from invoices.db.fields import CurrentUserField
 from invoices.enums.generic import WeekDayNames
 from invoices.models import Patient
 

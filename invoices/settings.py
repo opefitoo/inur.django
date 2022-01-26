@@ -71,7 +71,7 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
-    'django_currentuser.middleware.ThreadLocalUserMiddleware',
+    'invoices.middleware.ThreadLocalUserMiddleware',
 )
 
 MIDDLEWARE += ('crum.CurrentRequestUserMiddleware',)
