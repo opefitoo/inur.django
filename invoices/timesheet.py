@@ -11,9 +11,9 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django_currentuser.db.models import CurrentUserField
 
 from helpers.holidays import how_many_hours_taken_in_period
+from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
 from invoices.enums.generic import HolidayRequestChoice
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
