@@ -34,8 +34,6 @@ CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 # Application definition
 INSTALLED_APPS = (
     'django.contrib.admin',
-    'dal',
-    'dal_select2',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
