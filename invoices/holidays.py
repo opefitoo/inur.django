@@ -8,9 +8,8 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
-from django_currentuser.db.models import CurrentUserField
-
 from helpers.employee import get_admin_emails
+from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
 from invoices.enums.generic import HolidayRequestChoice
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
