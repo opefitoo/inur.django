@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from constance import config
-from dal import autocomplete
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import BaseInlineFormSet, ValidationError, ModelForm, ModelMultipleChoiceField
@@ -165,30 +164,30 @@ class SimplifiedTimesheetDetailForm(BaseInlineFormSet):
 #         fields = '__all__'
 
 
-class InvoiceItemForm(forms.ModelForm):
-    medical_prescription = forms.ModelChoiceField(
-        help_text='Veuillez choisir une ordonnance',
-        queryset=MedicalPrescription.objects.all(),
-        widget=autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
-                                         attrs={'data-placeholder': '...'},
-                                         forward=['patient']),
-        required=False,
-    )
-
-    #
-    # def __init__(self, *args, **kwargs):
-    #     super(InvoiceItemForm, self).__init__(*args, **kwargs)
-    #     if self.instance.has_patient():
-    #         self.fields['medical_prescription'].queryset = MedicalPrescription.objects.filter(patient=self.instance.patient)
-    class Meta:
-        model = InvoiceItem
-        fields = '__all__'
-        # widgets = {
-        #     'medical_prescription': dal.autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
-        #                                                           attrs={'data-placeholder': '...',
-        #                                                                  'data-minimum-input-length': 3},
-        #                                                           forward=['patient'])
-        # }
+# class InvoiceItemForm(forms.ModelForm):
+#     medical_prescription = forms.ModelChoiceField(
+#         help_text='Veuillez choisir une ordonnance',
+#         queryset=MedicalPrescription.objects.all(),
+#         widget=autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
+#                                          attrs={'data-placeholder': '...'},
+#                                          forward=['patient']),
+#         required=False,
+#     )
+#
+#     #
+#     # def __init__(self, *args, **kwargs):
+#     #     super(InvoiceItemForm, self).__init__(*args, **kwargs)
+#     #     if self.instance.has_patient():
+#     #         self.fields['medical_prescription'].queryset = MedicalPrescription.objects.filter(patient=self.instance.patient)
+#     class Meta:
+#         model = InvoiceItem
+#         fields = '__all__'
+#         # widgets = {
+#         #     'medical_prescription': dal.autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
+#         #                                                           attrs={'data-placeholder': '...',
+#         #                                                                  'data-minimum-input-length': 3},
+#         #                                                           forward=['patient'])
+#         # }
 
 
 class HospitalizationFormSet(BaseInlineFormSet):

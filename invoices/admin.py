@@ -31,7 +31,7 @@ from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
-    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm, EventForm
+    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm
 from invoices.holidays import HolidayRequest
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, AssignedPhysician
@@ -338,7 +338,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     from invoices.action_private import pdf_private_invoice
     from invoices.action_private_participation import pdf_private_invoice_pp
     from invoices.action_depinsurance import export_to_pdf2
-    form = InvoiceItemForm
+    #form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
                     'number_of_prestations', 'invoice_details')

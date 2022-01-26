@@ -1,4 +1,4 @@
-from dal import autocomplete
+#from dal import autocomplete
 from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
@@ -49,21 +49,21 @@ def get_queryset_filter(query_str, fields):
 #         return qs
 #
 #
-class MedicalPrescriptionAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        if not self.request.user.is_authenticated:
-            return MedicalPrescription.objects.none()
-
-        qs = MedicalPrescription.objects.all()
-        patient = self.forwarded.get('patient', False)
-        if patient:
-            qs = qs.filter(patient=patient)
-
-        if self.q:
-            filter_qs = get_queryset_filter(self.q, MedicalPrescription.autocomplete_search_fields())
-            qs = qs.filter(filter_qs)
-
-        return qs
+# class MedicalPrescriptionAutocomplete(autocomplete.Select2QuerySetView):
+#     def get_queryset(self):
+#         if not self.request.user.is_authenticated:
+#             return MedicalPrescription.objects.none()
+#
+#         qs = MedicalPrescription.objects.all()
+#         patient = self.forwarded.get('patient', False)
+#         if patient:
+#             qs = qs.filter(patient=patient)
+#
+#         if self.q:
+#             filter_qs = get_queryset_filter(self.q, MedicalPrescription.autocomplete_search_fields())
+#             qs = qs.filter(filter_qs)
+#
+#         return qs
 
 
 #

@@ -14,7 +14,6 @@ from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from django.utils.timezone import now
-from django.utils.encoding import smart_text
 from django.utils.translation import gettext_lazy as _
 
 from invoices import settings
@@ -147,13 +146,13 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                                                  config.NURSE_PHONE_NUMBER),
                    'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
                    ],
-                  [u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n"
-                   + u'Nom et Pr' + smart_text("e") + u'nom du patient: %s' % smart_text(patientNameAndFirstName),
-                   u'Nom: %s' % smart_text(patientName.strip()) + '\n'
-                   + u'Pr' + smart_text(u"é") + u'nom: %s' % smart_text(patient_first_name.strip()) + '\n'
+                  [u'Matricule patient: %s' % patientSocNumber.strip() + "\n"
+                   + u'Nom et Prénom du patient: %s' % patientNameAndFirstName,
+                   u'Nom: %s' % patientName.strip() + '\n'
+                   + u'Prénom: %s' % patient_first_name.strip() + '\n'
                    + u'Rue: %s' % patient_address.strip() + '\n'
-                   + u'Code postal: %s' % smart_text(patientZipCode.strip()) + '\n'
-                   + u'Ville: %s' % smart_text(patientCity.strip())],
+                   + u'Code postal: %s' % patientZipCode.strip() + '\n'
+                   + u'Ville: %s' % patientCity.strip()],
                   [u'Date accident: %s\n' % (accident_date if accident_date else "")
                    + u'Num. accident: %s' % (accident_id if accident_id else "")]]
 
@@ -203,13 +202,9 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
 
     if patient_invoice_date is not None:
         from utils import setlocale
-        with setlocale('en_GB.utf8'):
-            if isinstance(patient_invoice_date, unicode):
+        with setlocale('fr_FR.utf8'):
                 elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
                     '%d %B %Y').encode('utf-8')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
-            else:
-                elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
-                    '%d %B %Y').decode('utf-8')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
         elements.append(Spacer(1, 10))
 
     return {"elements": elements

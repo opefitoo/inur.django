@@ -15,7 +15,6 @@ from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.platypus.doctemplate import SimpleDocTemplate
 import pytz
-from django.utils.encoding import smart_text
 import decimal
 
 
@@ -149,13 +148,13 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
                                                   config.NURSE_PHONE_NUMBER),
                     'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
                    ],
-                  [u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n"
-                   + u'Nom et Pr' + smart_text("e") + u'nom du patient: %s' % smart_text(patientNameAndFirstName),
-                   u'Nom: %s' % smart_text(patientName.strip()) + '\n'
-                   + u'Pr' + smart_text(u"é") + u'nom: %s' % smart_text(patientFirstName.strip()) + '\n'
+                  [u'Matricule patient: %s' % patientSocNumber.strip() + "\n"
+                   + u'Nom et Prénom du patient: %s' % patientNameAndFirstName,
+                   u'Nom: %s' % patientName.strip() + '\n'
+                   + u'Prénom: %s' % patientFirstName.strip() + '\n'
                    + u'Rue: %s' % patientAddress.strip() + '\n'
-                   + u'Code postal: %s' % smart_text(patientZipCode.strip()) + '\n'
-                   + u'Ville: %s' % smart_text(patientCity.strip())],
+                   + u'Code postal: %s' % patientZipCode.strip() + '\n'
+                   + u'Ville: %s' % patientCity.strip()],
                   [u'Date accident: %s\n' % (accident_date if accident_date else "")
                    + u'Num. accident: %s' % (accident_id if accident_id else "")]]
 
