@@ -199,7 +199,7 @@ class PrestationGoogleCalendarSurLu:
                 'dateTime': localized.isoformat(),
             },
             'end': {
-                'dateTime': naive_end_date.astimezone(localized).isoformat(),
+                'dateTime': naive_end_date.astimezone(ZoneInfo("Europe/Luxembourg")).isoformat(),
             },
             'attendees': attendees_list
         }
