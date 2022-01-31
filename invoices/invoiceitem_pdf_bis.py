@@ -3,6 +3,7 @@ import sys
 import os
 
 from io import BytesIO
+from zoneinfo import ZoneInfo
 
 from constance import config
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -14,7 +15,6 @@ from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.platypus.doctemplate import SimpleDocTemplate
-import pytz
 import decimal
 
 
@@ -106,7 +106,6 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     patientAddress = ''
 
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers', 'Executant'))
-    pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
     for presta in prestations:
         patient = presta.invoice_item.patient
         patientSocNumber = patient.code_sn
@@ -119,11 +118,11 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
         if presta.carecode.reimbursed:
             i += 1
             data.append((i, presta.carecode.code,
-                         (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
+                         (presta.date.astimezone(ZoneInfo("Europe/Luxembourg"))).strftime('%d/%m/%Y'),
                          '1',
                          presta.carecode.gross_amount(presta.date),
                          presta.carecode.gross_amount(presta.date),
-                         (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
+                         (presta.date.astimezone(ZoneInfo("Europe/Luxembourg"))).strftime('%H:%M'),
                          "",
                          #TODO : replace with Global setting
                          "300744-44"))

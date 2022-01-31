@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 from io import BytesIO
+from zoneinfo import ZoneInfo
 
 from django.core.mail import EmailMessage
 from django.http import HttpResponse
@@ -13,7 +14,6 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-import pytz
 import decimal
 from constance import config
 from django.utils.translation import gettext_lazy as _
@@ -112,7 +112,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     patientAddress = ''
 
     data.append(('Num. titre', 'Prestation', 'Date', 'Heure', 'Nombre', 'Brut', 'P. CNS', 'P. Pers', 'Executant'))
-    pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
+    zoneinfo = ZoneInfo("Europe/Luxembourg")
     for presta in prestations:
         i += 1
         patientSocNumber = patient.code_sn
@@ -123,8 +123,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         patientZipCode = patient.zipcode
         patientCity = patient.city
         data.append((i, presta.carecode.code,
-                     (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
-                     (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
+                     (presta.date.astimezone(zoneinfo)).strftime('%d/%m/%Y'),
+                     (presta.date.astimezone(zoneinfo)).strftime('%H:%M'),
                      presta.quantity,
                      presta.carecode.gross_amount(presta.date) * presta.quantity,
                      presta.carecode.net_amount(presta.date,

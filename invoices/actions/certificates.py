@@ -1,6 +1,6 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
-import pytz
 from django.http import HttpResponse
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -52,9 +52,7 @@ def generate_pdf(queryset):
                 u"du %s jusqu´à présent en qualité de : %s" % (w_position.start_date, queryset[0].occupation),
                 styles['Justify']))
         elements.append(Spacer(1, 20))
-    dt_now_naive = datetime.now()  # 1
-    localized_tz = pytz.timezone('Europe/Luxembourg')  # 2
-    dt_now_aware = localized_tz.localize(dt_now_naive)
+    dt_now_aware = datetime.now().astimezone(ZoneInfo("Europe/Luxembourg"))  # 1
     elements.append(Paragraph(
         u"Etabli à Luxembourg, le %s" % dt_now_aware.strftime('%d/%m/%Y'),
         styles['Justify']))

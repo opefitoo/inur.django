@@ -2,10 +2,10 @@
 import copy
 import logging
 
-import pytz
 import os
 from copy import deepcopy
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -647,9 +647,9 @@ class Hospitalization(models.Model):
         else:
             messages = {'patient': 'Please fill Patient field'}
 
-        start_date = datetime.combine(data['start_date'], datetime.min.time()).replace(tzinfo=pytz.utc)
+        start_date = datetime.combine(data['start_date'], datetime.min.time()).astimezone(ZoneInfo("Europe/Luxembourg"))
         if data['end_date']:
-            end_date = datetime.combine(data['end_date'], datetime.max.time()).replace(tzinfo=pytz.utc)
+            end_date = datetime.combine(data['end_date'], datetime.max.time()).astimezone(ZoneInfo("Europe/Luxembourg"))
         else:
             end_date = None
 

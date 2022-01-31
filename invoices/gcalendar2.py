@@ -1,7 +1,7 @@
 import uuid
 import datetime
+from zoneinfo import ZoneInfo
 
-import pytz
 from apiclient import discovery
 from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
@@ -104,12 +104,11 @@ class PrestationGoogleCalendarSurLu:
             description += descr_line % ('Notes:', data.get('notes'))
         summary = '%s - %s' % (data.get('patient'), ','.join(u.abbreviation for u in data.get('event_employees')))
 
-        naive_date = datetime.datetime(data.get('day').year,
+        localized = datetime.datetime(data.get('day').year,
                                        data.get('day').month, data.get('day').day,
                                        data.get('time_start_event').hour,
                                        data.get('time_start_event').minute,
-                                       data.get('time_start_event').second)
-        localized = pytz.timezone('Europe/Luxembourg').localize(naive_date)
+                                       data.get('time_start_event').second).astimezone(ZoneInfo("Europe/Luxembourg"))
         naive_end_date = datetime.datetime(data.get('day').year,
                                            data.get('day').month, data.get('day').day,
                                            data.get('time_end_event').hour,
@@ -128,7 +127,7 @@ class PrestationGoogleCalendarSurLu:
                 'dateTime': localized.isoformat(),
             },
             'end': {
-                'dateTime': pytz.timezone('Europe/Luxembourg').localize(naive_end_date).isoformat(),
+                'dateTime': naive_end_date.astimezone(ZoneInfo("Europe/Luxembourg")).isoformat(),
             },
             'attendees': attendees_list
         }
@@ -176,12 +175,11 @@ class PrestationGoogleCalendarSurLu:
             description += descr_line % ('Notes:', event.notes)
         summary = '%s - %s' % (event.patient, event.employees.abbreviation)
 
-        naive_date = datetime.datetime(event.day.year,
+        localized = datetime.datetime(event.day.year,
                                        event.day.month, event.day.day,
                                        event.time_start_event.hour,
                                        event.time_start_event.minute,
-                                       event.time_start_event.second)
-        localized = pytz.timezone('Europe/Luxembourg').localize(naive_date)
+                                       event.time_start_event.second).astimezone(ZoneInfo("Europe/Luxembourg"))
         naive_end_date = datetime.datetime(event.day.year,
                                            event.day.month, event.day.day,
                                            event.time_end_event.hour,
@@ -201,7 +199,7 @@ class PrestationGoogleCalendarSurLu:
                 'dateTime': localized.isoformat(),
             },
             'end': {
-                'dateTime': pytz.timezone('Europe/Luxembourg').localize(naive_end_date).isoformat(),
+                'dateTime': naive_end_date.astimezone(localized).isoformat(),
             },
             'attendees': attendees_list
         }

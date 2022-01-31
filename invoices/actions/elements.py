@@ -1,8 +1,8 @@
 import decimal
 from abc import ABC
 from collections import OrderedDict
+from zoneinfo import ZoneInfo
 
-import pytz
 from django.utils.datetime_safe import datetime
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -14,11 +14,11 @@ from invoices.actions import helpers
 from invoices.enums.pdf import PdfActionType
 from invoices.modelspackage import InvoicingDetails
 
-__pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
 
 
 class AbstractDetails(ABC):
-    __pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
+
+    __zoneinfo = ZoneInfo("Europe/Luxembourg")
 
     def attributes_as_array(self, count=None, except_attrs=[]) -> [str]:
         rs = []
@@ -31,10 +31,10 @@ class AbstractDetails(ABC):
         return rs
 
     def transform_datetime_to_localized_date_str(self, datetime_param):
-        return self.__pytz_luxembourg.normalize(datetime_param).strftime('%d/%m/%Y')
+        return datetime_param.astimezone(self.__zoneinfo).strftime('%d/%m/%Y')
 
     def transform_datetime_to_localized_time_str(self, datetime_param):
-        return self.__pytz_luxembourg.normalize(datetime_param).strftime("%H:%M")
+        return datetime_param.astimezone(self.__zoneinfo).strftime("%H:%M")
 
 
 class CnsNursingCareDetail(AbstractDetails):
@@ -54,7 +54,6 @@ class CnsNursingCareDetail(AbstractDetails):
         self.provider_code = provider_code
 
     def to_array_string(self):
-        _pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
         return ""
 
 

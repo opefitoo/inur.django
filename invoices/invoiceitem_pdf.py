@@ -3,6 +3,8 @@ import sys
 import os
 
 from io import BytesIO
+from zoneinfo import ZoneInfo
+
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
@@ -12,7 +14,6 @@ from reportlab.platypus.flowables import Spacer, PageBreak, Image
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.platypus.doctemplate import SimpleDocTemplate
-import pytz
 import decimal
 from constance import config
 
@@ -153,7 +154,6 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     patientAddress = ''
 
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers', 'Executant'))
-    pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
     for presta in prestations:
         patient = presta.invoice_item.patient
         patientSocNumber = patient.code_sn
@@ -166,12 +166,12 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
         if presta.carecode.reimbursed:
             i += 1
             data.append((i, presta.carecode.code,
-                         (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
+                         (presta.date.astimezone(ZoneInfo("Europe/Luxembourg"))).strftime('%d/%m/%Y'),
                          '1',
                          presta.carecode.gross_amount(presta.date),
                          presta.carecode.net_amount(presta.date, patient.is_private, (patient.participation_statutaire
                                                                                       and patient.age > 18)),
-                         (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
+                         (presta.date.astimezone(ZoneInfo("Europe/Luxembourg"))).strftime('%H:%M'),
                          "",
                          presta.employee.provider_code))
 
