@@ -1,4 +1,5 @@
 import copy
+from decimal import Decimal
 
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from django.contrib import admin
@@ -127,7 +128,6 @@ class EmployeeAdmin(admin.ModelAdmin):
             counter = calendar_gcalendar.delete_all_events_from_calendar(e.user.email)
         self.message_user(request, "%s évenements supprimés." % counter,
                           level=messages.INFO)
-
 
 
 class ExpenseCardDetailInline(TabularInline):
@@ -338,7 +338,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     from invoices.action_private import pdf_private_invoice
     from invoices.action_private_participation import pdf_private_invoice_pp
     from invoices.action_depinsurance import export_to_pdf2
-    #form = InvoiceItemForm
+    # form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
                     'number_of_prestations', 'invoice_details')
@@ -696,6 +696,20 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
     formset = SimplifiedTimesheetDetailForm
 
 
+def calculate_balance_for_previous_months(month, year, user_id):
+    today = datetime.date.today()
+    first = today.replace(month=month, year=year).replace(day=1)
+    lastMonth = first - datetime.timedelta(days=1)
+    previous_timsheets = SimplifiedTimesheet.objects.filter(time_sheet_month=lastMonth.month,
+                                                            time_sheet_year=lastMonth.year,
+                                                            employee__user_id=user_id)
+    for prev_months_tsheet in previous_timsheets:
+        return Decimal(round(prev_months_tsheet.hours_should_work_gross_in_sec / 3600, 2)) \
+               - prev_months_tsheet.extra_hours_paid_current_month \
+               + prev_months_tsheet.extra_hours_balance
+    return 0
+
+
 @admin.register(SimplifiedTimesheet)
 class SimplifiedTimesheetAdmin(CSVExportAdmin):
     ordering = ('-time_sheet_year', '-time_sheet_month')
@@ -703,16 +717,27 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
     csv_fields = ['employee', 'time_sheet_year', 'time_sheet_month',
                   'simplifiedtimesheetdetail__start_date',
                   'simplifiedtimesheetdetail__end_date']
-    list_display = ('timesheet_owner', 'timesheet_validated', 'time_sheet_year', 'time_sheet_month')
+    list_display = ('timesheet_owner', 'timesheet_validated', 'time_sheet_year', 'time_sheet_month',
+                    'extra_hours_balance')
     list_filter = ['employee', ]
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
                        'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days',
-                       'total_hours_holidays_taken', 'hours_should_work',)
+                       'total_hours_holidays_taken', 'hours_should_work', 'extra_hours_balance',
+                       'extra_hours_paid_current_month')
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
     actions = ['validate_time_sheets', ]
     form = SimplifiedTimesheetForm
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            if obj.timesheet_validated:
+                return self.readonly_fields
+            elif request.user.is_superuser and not obj.timesheet_validated:
+                return tuple(x for x in self.readonly_fields if x not in ('extra_hours_paid_current_month',
+                                                                          'extra_hours_balance'))
+        return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -737,8 +762,12 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
         obj: SimplifiedTimesheet
         for obj in queryset:
             obj.timesheet_validated = not obj.timesheet_validated
-            obj.save()
             rows_updated = rows_updated + 1
+            obj.extra_hours_balance = calculate_balance_for_previous_months(month=obj.time_sheet_month,
+                                                                            year=obj.time_sheet_year,
+                                                                            user_id=obj.employee.user.id)
+            obj.save()
+
         if rows_updated == 1:
             message_bit = u"1 time sheet a été"
         else:
@@ -792,7 +821,7 @@ class EventAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
     list_filter = (SmartEmployeeFilter,)
-    inlines = (AssignedAdditionalEmployeeInLine, )
+    inlines = (AssignedAdditionalEmployeeInLine,)
 
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):

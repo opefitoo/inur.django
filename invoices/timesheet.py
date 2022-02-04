@@ -12,6 +12,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
+import invoices
 from helpers.holidays import how_many_hours_taken_in_period
 from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
@@ -131,6 +132,18 @@ class SimplifiedTimesheet(models.Model):
         default=current_year())
     user = CurrentUserField()
     user.visible = False
+    extra_hours_paid_current_month = models.DecimalField(u"Heures supp. payées ou récupérées pour le mois courant",
+                                                         default=0,
+                                                         max_digits=4,
+                                                         decimal_places=1
+                                                         )
+    extra_hours_balance = models.DecimalField(u"Balance des heures supp. non soldées",
+                                              help_text="Ce champ est calculé mais vous pouvez quand même écraser la valeur si vous êtes admin.\n"
+                                                        "Il reporte le total des heures suppl. (ou déficit) du mois M - 1.\n"
+                                                        "Il est (re)calculé à chaque fois que l'on valide un Temps de Travail et la formule : Hours should work TS(M-1) + Balance des heures supp. non soldées - Heures supp. payées ou récupérées pour le mois courant",
+                                              default=0,
+                                              max_digits=5,
+                                              decimal_places=2)
 
     YEARS_MONTHS = [
         (1, u'Janvier'),
@@ -192,18 +205,34 @@ class SimplifiedTimesheet(models.Model):
         return self.__calculate_total_hours()["total_hours_holidays_taken"]
 
     @property
+    def hours_should_work_gross_in_sec(self):
+        calculated_hours = self.__calculate_total_hours()
+        total_legal_working_hours = self.date_range(self.get_start_date, self.get_end_date) * \
+                                    ((self.employee.employeecontractdetail_set.filter(Q(
+                                        end_date__gte=self.get_end_date, start_date__lte=self.get_start_date) | Q(
+                                        end_date__isnull=True,
+                                        start_date__lte=self.get_start_date)).first().number_of_hours / 5))
+        balance: Union[float, Any] = calculated_hours["total"].total_seconds() + \
+                                     (calculated_hours["total_hours_holidays_taken"][
+                                          0] - total_legal_working_hours) * 3600
+        return balance
+
+    @property
     def hours_should_work(self):
         if self.id:
             calculated_hours = cache.get('total_hours_dictionary%s' % self.id)
             if calculated_hours is None:
                 calculated_hours = self.__calculate_total_hours()
         total_legal_working_hours = self.date_range(self.get_start_date, self.get_end_date) * \
-                                    (self.employee.employeecontractdetail_set.filter(
-                                        start_date__lte=self.get_start_date).first().number_of_hours / 5)
+                                    ((self.employee.employeecontractdetail_set.filter(Q(
+                                        end_date__gte=self.get_end_date, start_date__lte=self.get_start_date) | Q(
+                                        end_date__isnull=True,
+                                        start_date__lte=self.get_start_date)).first().number_of_hours / 5))
         balance: Union[float, Any] = calculated_hours["total"].total_seconds() + \
                                      (calculated_hours["total_hours_holidays_taken"][
                                           0] - total_legal_working_hours) * 3600
-        return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
+        # return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
+        return "%.2f heures(s)" % round(balance / 3600, 2)
 
     @staticmethod
     def date_range(start_date, end_date):
@@ -221,7 +250,11 @@ class SimplifiedTimesheet(models.Model):
 
     @property
     def total_working_days(self):
-        return self.date_range(self.get_start_date, self.get_end_date)
+        return "Jours ouvrables %d, Heures contractuelles %d (h/semaine)" % (self.date_range(self.get_start_date, self.get_end_date),
+                                                                 (self.employee.employeecontractdetail_set.filter(Q(
+                                        end_date__gte=self.get_end_date, start_date__lte=self.get_start_date) | Q(
+                                        end_date__isnull=True,
+                                        start_date__lte=self.get_start_date)).first().number_of_hours))
 
     @property
     def total_hours(self):
@@ -411,14 +444,14 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
         conflict = conflicts[0]
         if conflict.requested_period == HolidayRequestChoice.req_full_day:
             msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
-                                                                                          conflicts[0].end_date)}
+                                                                                              conflicts[0].end_date)}
         elif (conflict.requested_period == HolidayRequestChoice.req_morning
               and data['start_date'].time() < data['start_date'].time().replace(hour=12, minute=0, second=0)) \
                 or (conflict.requested_period == HolidayRequestChoice.req_evening
                     and data['end_date'] > data['start_date'].time().replace(hour=12, minute=0, second=0)):
             msgs = {
                 'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
-                                                                                              conflicts[0].end_date)}
+                                                                                          conflicts[0].end_date)}
 
     elif 1 < conflicts.count():
         msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s et %d autres conflits"
@@ -430,3 +463,4 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
 @receiver(post_save, sender=SimplifiedTimesheet, dispatch_uid="notify_timesheet_refresh_cache")
 def notify_timesheet_refresh_cache(sender, instance, created, **kwargs):
     cache.clear()
+    print(cache)
