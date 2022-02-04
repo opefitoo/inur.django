@@ -8,7 +8,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
 from django.contrib.auth.models import User
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
@@ -114,10 +114,27 @@ class EmployeeAdmin(admin.ModelAdmin):
             self.message_user(request, ve.message,
                               level=messages.ERROR)
 
+    def contracts_situation_certificate(self, request, queryset):
+        counter = 1
+        file_data = ""
+        for emp in queryset:
+            file_data += "%d - %s %s Occupation: %s Temps de travail: %s\n" % (counter,
+                                                                                         emp.user.last_name.upper(),
+                                                                                         emp.user.first_name,
+                                                                                         emp.occupation,
+                                                                                         emp.employeecontractdetail_set.filter(
+                                                                                             end_date__isnull=True)
+                                                                                         .first())
+            counter += 1
+        response = HttpResponse(file_data, content_type='application/text charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="contract_situation.txt"'
+        return response
+
     work_certificate.short_description = "Certificat de travail"
+    contracts_situation_certificate.short_description = "Situation des contrats"
 
     # actions = [work_certificate, 'delete_in_google_calendar']
-    actions = [work_certificate]
+    actions = [work_certificate, contracts_situation_certificate]
 
     def delete_in_google_calendar(self, request, queryset):
         if not request.user.is_superuser:

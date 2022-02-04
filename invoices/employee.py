@@ -88,7 +88,9 @@ class EmployeeContractDetail(models.Model):
         return self.number_of_hours / 5
 
     def __str__(self):
-        return u'Du %s au %s : %d heures/semaine' % (self.start_date, self.end_date, self.number_of_hours)
+        if self.end_date:
+            return u'Du %s au %s : %d heures/semaine' % (self.start_date, self.end_date, self.number_of_hours)
+        return u'Du %s : %d heures/semaine' % (self.start_date, self.number_of_hours)
 
 
 @receiver(pre_save, sender=User, dispatch_uid="user_pre_save_gservices_permissions")
