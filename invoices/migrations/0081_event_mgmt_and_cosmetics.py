@@ -3,8 +3,6 @@
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import django_currentuser.db.models.fields
-import django_currentuser.middleware
 import gdstorage.storage
 import invoices.models
 import invoices.storages
@@ -71,7 +69,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='holidayrequest',
             name='employee',
-            field=django_currentuser.db.models.fields.CurrentUserField(default=django_currentuser.middleware.get_current_authenticated_user, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            field=invoices.db.fields.CurrentUserField(default=invoices.middleware.get_current_authenticated_user, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
             model_name='holidayrequest',
