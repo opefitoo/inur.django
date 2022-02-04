@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
                 ('created_on', models.DateTimeField(auto_now_add=True, verbose_name='Date création')),
                 ('updated_on', models.DateTimeField(auto_now=True, verbose_name='Dernière mise à jour')),
                 ('monthly_params', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, related_name='health_params_to_monthly_params', to='dependence.monthlyparameters')),
-                ('user', invoices.db.models.fields.CurrentUserField(default=invoices.middleware.get_current_authenticated_user, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('user', invoices.db.fields.CurrentUserField(default=invoices.middleware.get_current_authenticated_user, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'ordering': ['-id'],
