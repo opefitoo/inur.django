@@ -119,9 +119,9 @@ class EmployeeAdmin(admin.ModelAdmin):
         file_data = ""
         for emp in queryset:
             if emp.end_contract:
-                file_data += "%d - %s %s FIN DE CONTRAT LE: %s" % (counter, emp.user.last_name.upper(),
-                                                                   emp.user.first_name,
-                                                                   emp.end_contract.strftime("%d %B %Y"))
+                file_data += "%d - %s %s FIN DE CONTRAT LE: %s \n" % (counter, emp.user.last_name.upper(),
+                                                                      emp.user.first_name,
+                                                                      emp.end_contract.strftime("%d/%m/%Y"))
             else:
                 file_data += "%d - %s %s Occupation: %s Temps de travail: %s\n" % (counter,
                                                                                    emp.user.last_name.upper(),
