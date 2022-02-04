@@ -4,8 +4,8 @@ import datetime
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import django_currentuser.db.models.fields
-import django_currentuser.middleware
+
+import invoices
 
 
 class Migration(migrations.Migration):
@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
                 ('created_on', models.DateTimeField(auto_now_add=True, verbose_name='Date création')),
                 ('updated_on', models.DateTimeField(auto_now=True, verbose_name='Dernière mise à jour')),
                 ('monthly_params', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, related_name='health_params_to_monthly_params', to='dependence.monthlyparameters')),
-                ('user', django_currentuser.db.models.fields.CurrentUserField(default=django_currentuser.middleware.get_current_authenticated_user, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('user', invoices.db.models.fields.CurrentUserField(default=invoices.middleware.get_current_authenticated_user, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'ordering': ['-id'],
