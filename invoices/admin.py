@@ -104,7 +104,7 @@ class EmployeeContractDetailInline(TabularInline):
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     inlines = [EmployeeContractDetailInline]
-    list_display = ('user', 'start_contract', 'end_contract', 'occupation')
+    list_display = ('user', 'start_contract', 'end_contract', 'occupation', 'abbreviation')
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
 
     def work_certificate(self, request, queryset):
@@ -118,13 +118,18 @@ class EmployeeAdmin(admin.ModelAdmin):
         counter = 1
         file_data = ""
         for emp in queryset:
-            file_data += "%d - %s %s Occupation: %s Temps de travail: %s\n" % (counter,
-                                                                                         emp.user.last_name.upper(),
-                                                                                         emp.user.first_name,
-                                                                                         emp.occupation,
-                                                                                         emp.employeecontractdetail_set.filter(
-                                                                                             end_date__isnull=True)
-                                                                                         .first())
+            if emp.end_contract:
+                file_data += "%d - %s %s FIN DE CONTRAT LE: %s" % (counter, emp.user.last_name.upper(),
+                                                                   emp.user.first_name,
+                                                                   emp.end_contract.strftime("%d %B %Y"))
+            else:
+                file_data += "%d - %s %s Occupation: %s Temps de travail: %s\n" % (counter,
+                                                                                   emp.user.last_name.upper(),
+                                                                                   emp.user.first_name,
+                                                                                   emp.occupation,
+                                                                                   emp.employeecontractdetail_set.filter(
+                                                                                       end_date__isnull=True)
+                                                                                   .first())
             counter += 1
         response = HttpResponse(file_data, content_type='application/text charset=utf-8')
         response['Content-Disposition'] = 'attachment; filename="contract_situation.txt"'

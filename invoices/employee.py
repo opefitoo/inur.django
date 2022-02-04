@@ -74,7 +74,7 @@ class Employee(models.Model):
 
     def __str__(self):
         # return '%s (%s)' % (self.user.username.strip().capitalize(), self.abbreviation)
-        return '- '.join([self.user.username.strip().capitalize(), self.abbreviation])
+        return ' - '.join([self.user.username.strip().capitalize(), self.abbreviation])
 
 
 class EmployeeContractDetail(models.Model):
