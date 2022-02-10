@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.db.models import Q
 
+from helpers.models import SicknessHolidayDaysCalculations
 from invoices.employee import Employee
 from invoices.enums.generic import HolidayRequestChoice
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
@@ -58,11 +59,12 @@ def how_many_hours_taken_in_period(data, public_holidays):
 
         heures_jour = Employee.objects.get(user_id=data['user_id']).employeecontractdetail_set.filter(
             start_date__lte=data['start_date']).first().number_of_hours / 5
-        return [((counter + counter_sickness) - number_of_public_holidays) * heures_jour,
-                "explication: ( (%.2f jours congés + %.2f jours maladie) - %d jours fériés )  x %d nombre h. /j" % (counter,
-                                                                                                                    counter_sickness,
-                                                                                             number_of_public_holidays,
-                                                                                             heures_jour)]
+        sh_object = SicknessHolidayDaysCalculations(holidays_count=counter,
+                                                    sickness_days_count=counter_sickness,
+                                                    number_of_public_holidays=number_of_public_holidays,
+                                                    daily_working_hours=heures_jour)
+        return [sh_object.compute_total_hours(),
+                sh_object]
     return [0, ""]
 
 

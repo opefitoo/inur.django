@@ -724,7 +724,8 @@ def calculate_balance_for_previous_months(month, year, user_id):
     lastMonth = first - datetime.timedelta(days=1)
     previous_timsheets = SimplifiedTimesheet.objects.filter(time_sheet_month=lastMonth.month,
                                                             time_sheet_year=lastMonth.year,
-                                                            employee__user_id=user_id)
+                                                            employee__user_id=user_id,
+                                                            timesheet_validated=True)
     for prev_months_tsheet in previous_timsheets:
         return Decimal(round(prev_months_tsheet.hours_should_work_gross_in_sec / 3600, 2)) \
                - prev_months_tsheet.extra_hours_paid_current_month \
@@ -749,8 +750,53 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                        'extra_hours_paid_current_month')
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
-    actions = ['validate_time_sheets', ]
+    actions = ['validate_time_sheets', 'timesheet_situation']
     form = SimplifiedTimesheetForm
+
+    def timesheet_situation(self, request, queryset):
+        _counter = 1
+        file_data = ""
+        for tsheet in queryset:
+            if not tsheet.timesheet_validated:
+                self.message_user(request,
+                                  "Timesheet %s n'est pas validée, vous devez la valider avant de pouvoir exporter le "
+                                  "rapport" % tsheet,
+                                  level=messages.ERROR)
+                return
+            else:
+                # take previous months timesheet
+                today = datetime.date.today()
+                first = today.replace(day=1)
+                lastMonth = first - datetime.timedelta(days=1)
+                previous_timsheets = SimplifiedTimesheet.objects.filter(time_sheet_month=lastMonth.month,
+                                                                        time_sheet_year=lastMonth.year,
+                                                                        employee__user_id=tsheet.user.id,
+                                                                        timesheet_validated=True)
+                if len(previous_timsheets) == 0:
+                    if tsheet.extra_hours_paid_current_month:
+                        file_data += "A travaillé {total_extra} heures supplémentaires.\n".format(total_extra=tsheet.extra_hours_paid_current_month)
+                    if tsheet.total_hours_holidays_taken:
+                        file_data += "A pris {total_hours_holidays_taken} jours de {request_type}.\n".format(total_extra=tsheet.total_hours_holidays_taken)
+                else:
+                    previous_month_tsheet = previous_timsheets.first()
+                    file_data += "{counter} - {last_name}:\n".format(counter=_counter,
+                                                                 last_name=previous_month_tsheet.user.last_name.upper())
+                    if previous_month_tsheet.total_hours_sundays:
+                        file_data += "A travaillé {hours_sunday} heures des Dimanche \n".format(hours_sunday=previous_month_tsheet.total_hours_sundays)
+                    if previous_month_tsheet.total_hours_public_holidays:
+                        file_data += "A travaillé {total_hours_public_holidays} heures des Jours fériés.\n".format(total_hours_public_holidays=previous_month_tsheet.total_hours_sundays)
+                    if tsheet.extra_hours_paid_current_month:
+                        file_data += "A travaillé {total_extra} heures supplémentaires.\n".format(total_extra=tsheet.extra_hours_paid_current_month)
+                    if tsheet.total_hours_holidays_taken:
+                        holiday_sickness_explanation = tsheet.total_hours_holidays_and_sickness_taken[1].beautiful_explanation()
+                        if len(holiday_sickness_explanation) > 0:
+                            file_data += holiday_sickness_explanation
+                    print(tsheet)
+
+            _counter += 1
+        response = HttpResponse(file_data, content_type='application/text charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="timesheet_situation.txt"'
+        return response
 
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:

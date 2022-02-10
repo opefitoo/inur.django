@@ -12,7 +12,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-import invoices
 from helpers.holidays import how_many_hours_taken_in_period
 from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
@@ -186,6 +185,8 @@ class SimplifiedTimesheet(models.Model):
                     calendar_date__exact=v.start_date.astimezone()).first() is not None:
                 total_public_holidays = total_public_holidays + delta
         calculated_hours["total_hours_holidays_taken"] = self.absence_hours_taken()
+        calculated_hours["total_hours_holidays_taken_verbose"] = "%d heure(s) --> %s" % (calculated_hours["total_hours_holidays_taken"][0],
+                                                                            str(calculated_hours["total_hours_holidays_taken"][1]))
         calculated_hours["total"] = total
         calculated_hours["total_sundays"] = total_sundays
         calculated_hours["total_public_holidays"] = total_public_holidays
@@ -202,6 +203,11 @@ class SimplifiedTimesheet(models.Model):
 
     @property
     def total_hours_holidays_taken(self):
+        print(self)
+        return self.__calculate_total_hours()["total_hours_holidays_taken_verbose"]
+
+    @property
+    def total_hours_holidays_and_sickness_taken(self):
         return self.__calculate_total_hours()["total_hours_holidays_taken"]
 
     @property
