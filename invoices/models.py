@@ -47,7 +47,7 @@ class CareCode(models.Model):
         ordering = ['-id']
 
     code = models.CharField(max_length=30, unique=True)
-    name = models.CharField(max_length=50)
+    name = models.TextField(max_length=320)
     description = models.TextField(max_length=400)
     reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
     contribution_undue = models.BooleanField(u"Participation forfaitaire non dûe",
