@@ -3,7 +3,7 @@ from abc import ABC
 
 class SicknessHolidayDaysCalculations(ABC):
     def __init__(self, holidays_count: int, sickness_days_count: int, number_of_public_holidays: int,
-                 daily_working_hours: int):
+                 daily_working_hours: int, holiday_sickness_requests_dates: [str]):
         """
         @param holidays_count:
         @param sickness_days_count:
@@ -14,6 +14,7 @@ class SicknessHolidayDaysCalculations(ABC):
         self.sickness_days_count = sickness_days_count
         self.number_of_public_holidays = number_of_public_holidays
         self.daily_working_hours = daily_working_hours
+        self.holiday_sickness_requests_dates = holiday_sickness_requests_dates
 
     def __str__(self):
         return "Explication: ( (%.2f jours congés + %.2f jours maladie) - %d jours fériés )  x %d nombre h. /j" % (
@@ -28,8 +29,11 @@ class SicknessHolidayDaysCalculations(ABC):
     def beautiful_explanation(self):
         _explanation = ""
         if self.sickness_days_count > 0:
-            _explanation += "A été %d jour(s) en maladie. " % self.sickness_days_count
+            _explanation += "\nA été %d jour(s) en maladie. " % self.sickness_days_count
         if self.holidays_count > 0:
-            _explanation += "A pris %d jour(s) de congés." % self.holidays_count
+            _explanation += "\nA pris %d jour(s) de congés." % self.holidays_count
+        if len(self.holiday_sickness_requests_dates) > 0:
+            for holiday_sickness_r_date in self.holiday_sickness_requests_dates:
+                _explanation += "\n %s" % holiday_sickness_r_date
         return _explanation
 

@@ -19,6 +19,11 @@ def how_many_hours_taken_in_period(data, public_holidays):
     ).filter(employee_id=data['user_id']).filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED).filter(
         reason__range=(1, 2))
     if len(holiday_requests) > 0:
+        sh_object = SicknessHolidayDaysCalculations(holidays_count=0,
+                                                    sickness_days_count=0,
+                                                    number_of_public_holidays=0,
+                                                    daily_working_hours=0,
+                                                    holiday_sickness_requests_dates=holiday_requests)
         counter = 0
         counter_sickness = 0
         for holiday_request in holiday_requests:
@@ -59,10 +64,10 @@ def how_many_hours_taken_in_period(data, public_holidays):
 
         heures_jour = Employee.objects.get(user_id=data['user_id']).employeecontractdetail_set.filter(
             start_date__lte=data['start_date']).first().number_of_hours / 5
-        sh_object = SicknessHolidayDaysCalculations(holidays_count=counter,
-                                                    sickness_days_count=counter_sickness,
-                                                    number_of_public_holidays=number_of_public_holidays,
-                                                    daily_working_hours=heures_jour)
+        sh_object.holidays_count = counter
+        sh_object.sickness_days_count = counter_sickness
+        sh_object.number_of_public_holidays = number_of_public_holidays
+        sh_object.daily_working_hours = heures_jour
         return [sh_object.compute_total_hours(),
                 sh_object]
     return [0, ""]
