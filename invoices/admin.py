@@ -774,24 +774,25 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                                                                         timesheet_validated=True)
                 if len(previous_timsheets) == 0:
                     if tsheet.extra_hours_paid_current_month:
-                        file_data += "A travaillé {total_extra} heures supplémentaires.\n".format(total_extra=tsheet.extra_hours_paid_current_month)
+                        file_data += "\nA travaillé {total_extra} heures supplémentaires.".format(total_extra=tsheet.extra_hours_paid_current_month)
                     if tsheet.total_hours_holidays_taken:
-                        file_data += "A pris {total_hours_holidays_taken} jours de {request_type}.\n".format(total_extra=tsheet.total_hours_holidays_taken)
+                        file_data += "\nA pris {total_hours_holidays_taken} jours de {request_type}.".format(total_extra=tsheet.total_hours_holidays_taken)
                 else:
                     previous_month_tsheet = previous_timsheets.first()
-                    file_data += "{counter} - {last_name}:\n".format(counter=_counter,
+                    file_data += "\n {counter} - {last_name}:\n".format(counter=_counter,
                                                                  last_name=previous_month_tsheet.user.last_name.upper())
                     if previous_month_tsheet.total_hours_sundays:
-                        file_data += "A travaillé {hours_sunday} heures des Dimanche \n".format(hours_sunday=previous_month_tsheet.total_hours_sundays)
+                        file_data += " \nA travaillé {hours_sunday} heures des Dimanche".format(hours_sunday=previous_month_tsheet.total_hours_sundays)
                     if previous_month_tsheet.total_hours_public_holidays:
-                        file_data += "A travaillé {total_hours_public_holidays} heures des Jours fériés.\n".format(total_hours_public_holidays=previous_month_tsheet.total_hours_sundays)
+                        file_data += " \nA travaillé {total_hours_public_holidays} heures des Jours fériés.".format(total_hours_public_holidays=previous_month_tsheet.total_hours_public_holidays)
                     if tsheet.extra_hours_paid_current_month:
-                        file_data += "A travaillé {total_extra} heures supplémentaires.\n".format(total_extra=tsheet.extra_hours_paid_current_month)
-                    if tsheet.total_hours_holidays_taken:
-                        holiday_sickness_explanation = tsheet.total_hours_holidays_and_sickness_taken[1].beautiful_explanation()
+                        file_data += " \nA travaillé {total_extra} heures supplémentaires.".format(total_extra=tsheet.extra_hours_paid_current_month)
+                    if tsheet.absence_hours_taken()[0] > 0:
+                        holiday_sickness_explanation = tsheet.absence_hours_taken()[1].beautiful_explanation()
                         if len(holiday_sickness_explanation) > 0:
                             file_data += holiday_sickness_explanation
-                    print(tsheet)
+                    if tsheet.hours_should_work_gross_in_sec > 0:
+                        file_data += "\nA travaillé %s d'heures supplémentaires." % tsheet.hours_should_work
 
             _counter += 1
         response = HttpResponse(file_data, content_type='application/text charset=utf-8')
