@@ -791,8 +791,6 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                         holiday_sickness_explanation = tsheet.absence_hours_taken()[1].beautiful_explanation()
                         if len(holiday_sickness_explanation) > 0:
                             file_data += holiday_sickness_explanation
-                    if tsheet.hours_should_work_gross_in_sec > 0:
-                        file_data += "\nA travaillé %s d'heures supplémentaires." % tsheet.hours_should_work
 
             _counter += 1
         response = HttpResponse(file_data, content_type='application/text charset=utf-8')
