@@ -1,10 +1,10 @@
 appdirs==1.4.4
 dj-database-url==0.5.0
 dj-static==0.0.6
-django==4.0.2
+django==4.0.3
 django-appconf==1.0.5
 django-constance==2.8.0
-django-countries==7.2.1
+django-countries==7.3.2
 django-filter==21.1
 django-googledrive-storage==1.5.2
 django-picklefield==3.0.1
@@ -23,11 +23,11 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pyparsing==3.0.7
 python-dateutil==2.8.2
-reportlab==3.6.6
+reportlab==3.6.8
 requests==2.27.1
 rsa==4.8
 six==1.16.0
-SQLAlchemy==1.4.31
+SQLAlchemy==1.4.32
 sqlparse==0.4.2
 static3==0.7.0
 uritemplate==4.1.1
@@ -39,7 +39,7 @@ django-cors-headers==3.11.0
 #APScheduler==3.6.3″
 google-auth-oauthlib==0.4.6
 google-auth-httplib2
-holidays==0.12
+holidays==0.13
 django-csv-exports==1.0.5
 django-colorfield==0.6.3
 django-fieldsets-with-inlines==0.6
