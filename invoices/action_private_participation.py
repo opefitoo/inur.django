@@ -203,10 +203,10 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     elements.append(Spacer(1, 10))
 
     if patient_invoice_date is not None:
-        from utils import setlocale
-        with setlocale('fr_FR.utf8'):
-                elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
-                    '%d %B %Y').encode('utf-8')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
+        import locale
+        locale.setlocale(locale.LC_ALL, "fr_FR.UTF-8")
+        elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
+                    '%d %B %Y')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
         elements.append(Spacer(1, 10))
 
     return {"elements": elements
