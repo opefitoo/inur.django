@@ -197,14 +197,15 @@ CONSTANCE_CONFIG = {
          'Nom et adresse du prestataire de soins (apparait sur les factures)', str),
     'BIS_NURSE_CODE': (
         '', "Code infirmier secondaire pour les soins", str),
-    'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select')
+    'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select'),
+    'CC_EMAIL_SENT': ("", "Lors de l'envoi d'un email au client, envoi à cette adresse en CC (pour en mettre plusieurs veuillez les séparer d'une virgule ',')", str)
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
     'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE'),
     'Options de Facturation': (
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
-        'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT'),
+        'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT'),
 }
 
 GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')

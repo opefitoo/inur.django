@@ -74,6 +74,8 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False)
                   "%s\n%s\n%s" % (config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
                                   config.NURSE_PHONE_NUMBER, config.MAIN_BANK_ACCOUNT)
         emails = [qs.patient.email_address]
+        if config.CC_EMAIL_SENT:
+            emails += config.CC_EMAIL_SENT.split(",")
         mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
         mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
 
