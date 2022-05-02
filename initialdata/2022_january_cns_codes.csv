@@ -38,14 +38,14 @@ Mise en place dun étui pénien auto-adhésif pour incontinence, maximum 3 séan
 Section 5 - Actes concernant l'appareil digestif;
 Mise en place ou changement dune sonde gastrique;N501;3.93;29.08
 Changement ou vidange de matériel de stomie de lappareil digestif;N502;3.05;22.57
-Lavement évacuateur pour constipation neurogène ou mégacôlon; maximum 2 séances par semaine;N503;3.82;28.26
+Lavement évacuateur pour constipation neurogène ou mégacôlon, maximum 2 séances par semaine;N503;3.82;28.26
 Evacuation manuelle pour fécalome y compris lavement, maximum une fois par semaine;N504;6.36;47.06
 Lavement évacuateur pour préparation à un examen du rectum, lavement médicamenteux non laxatif;N505;3.82;28.26
 Branchement, débranchement et surveillance dune nutrition entérale (forfait journalier);N506;3.82;28.26
 Section 6 - Lavage vaginal;
 Lavage vaginal avec solution médicamenteuse en cas de pathologie infectieuse ou post-radique;N601;2.55;18.87
 Section 7 - Actes concernant les voies respiratoires;
-Traitement par aérosols; par séance;N701;3.82;28.26
+Traitement par aérosols, par séance;N701;3.82;28.26
 Aspiration pour encombrement trachéo-bronchique chez le patient trachéotomisé;N702;2.55;18.87
 Expectoration dirigée;N703;2.55;18.87
 Oxygénothérapie: branchement, débranchement et surveillance (forfait par jour);N704;3.82;28.26
@@ -60,5 +60,5 @@ Forfait de 1-2 passages par jour;N901;1.27;9.4
 Forfait de 3-4 passages par jour;N902;2.55;18.87
 Forfait pour un minimum de 5 passages par jour;N903;3.82;28.26
 Section 10 - Mesures de décontamination;
-Forfait unique pour procédure de décontamination pour patient atteint de gale (y compris masques, surblouses; surchaussures et gants);ND01;20;147.98
+Forfait unique pour procédure de décontamination pour patient atteint de gale (y compris masques, surblouses, surchaussures et gants);ND01;20;147.98
 Forfait déplacement;NF01;1.11;8.21
