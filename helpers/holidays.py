@@ -1,3 +1,4 @@
+import sys
 from datetime import timedelta
 
 from django.db.models import Q
@@ -88,5 +89,7 @@ def whois_available(working_day):
     employees_on_leave = [x.employee for x in
                           HolidayRequest.objects.filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED,
                                                         start_date__lte=working_day, end_date__gte=working_day)]
+    print("Emp. on leave *** %s" % employees_on_leave)
+    sys.stdout.flush()
     available_employees = [x for x in Employee.objects.filter(end_contract__isnull=True) if x not in employees_on_leave]
     return [x.abbreviation for x in available_employees]
