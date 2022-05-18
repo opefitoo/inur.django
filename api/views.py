@@ -193,12 +193,12 @@ def whois_off(request):
         reqs = holidays.whois_off(datetime.strptime(request.data["day_off"], "%Y-%m-%d"))
         return Response(reqs, status=status.HTTP_200_OK)
 
+
 @api_view(['POST'])
 def whois_available(request):
     if 'POST' == request.method:  # user posting data
         reqs = holidays.whois_available(datetime.strptime(request.data["day_off"], "%Y-%m-%d"))
         return Response(reqs, status=status.HTTP_200_OK)
-
 
 
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):

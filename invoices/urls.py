@@ -50,6 +50,11 @@ urlpatterns = [
         whois_off,
         name='whois_off',
     ),
+    re_path(
+        r'^api/v1/whois_available/$',
+        whois_off,
+        name='whois_available',
+    ),
     re_path('admin/', admin.site.urls),
     re_path(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     re_path(r'^api-token-auth/', authtoken_views.obtain_auth_token),
