@@ -197,7 +197,7 @@ def whois_off(request):
 @api_view(['POST'])
 def whois_available(request):
     if 'POST' == request.method:  # user posting data
-        reqs = holidays.whois_available(datetime.strptime(request.data["day_off"], "%Y-%m-%d"))
+        reqs = holidays.whois_available(datetime.strptime(request.data["working_day"], "%Y-%m-%d"))
         return Response(reqs, status=status.HTTP_200_OK)
 
 
