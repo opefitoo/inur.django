@@ -8,7 +8,7 @@ from django.conf import settings
 from django.urls import path
 
 import api
-from api.views import EventProcessorView, cleanup_event, whois_off
+from api.views import EventProcessorView, cleanup_event, whois_off, whois_available
 from invoices.views import delete_prestation
 
 admin.autodiscover()
@@ -52,7 +52,7 @@ urlpatterns = [
     ),
     re_path(
         r'^api/v1/whois_available/$',
-        whois_off,
+        whois_available,
         name='whois_available',
     ),
     re_path('admin/', admin.site.urls),
