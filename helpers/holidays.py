@@ -86,7 +86,7 @@ def whois_off(day_off):
 
 
 def whois_available(working_day):
-    employees_on_leave = [x.employee for x in
+    employees_on_leave = [x.employee.employee for x in
                           HolidayRequest.objects.filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED,
                                                         start_date__lte=working_day, end_date__gte=working_day)]
     print("Emp. on leave *** %s" % employees_on_leave)
