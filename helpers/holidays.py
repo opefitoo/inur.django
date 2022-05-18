@@ -63,9 +63,9 @@ def how_many_hours_taken_in_period(data, public_holidays):
                 counter_sickness = counter_sickness - number_of_public_holidays
 
         heures_jour = Employee.objects.get(user_id=data['user_id']).employeecontractdetail_set.filter(Q(
-                                        end_date__gte=data['end_date'], start_date__lte=data['start_date']) | Q(
-                                        end_date__isnull=True,
-                                        start_date__lte=data['start_date'])).first().number_of_hours / 5
+            end_date__gte=data['end_date'], start_date__lte=data['start_date']) | Q(
+            end_date__isnull=True,
+            start_date__lte=data['start_date'])).first().number_of_hours / 5
         sh_object.holidays_count = counter
         sh_object.sickness_days_count = counter_sickness
         sh_object.number_of_public_holidays = number_of_public_holidays
@@ -82,3 +82,11 @@ def whois_off(day_off):
     for r in reqs:
         employees_abbreviations += r.employee.employee.abbreviation + ","
     return employees_abbreviations[:-1]
+
+
+def whois_available(working_day):
+    employees_on_leave = [x.employee for x in
+                          HolidayRequest.objects.filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED,
+                                                        start_date__lte=working_day, end_date__gte=working_day)]
+    available_employees = [x for x in Employee.objects.filter(end_contract__isnull=True) if x not in employees_on_leave]
+    return [x.employee.abbreviation for x in available_employees]
