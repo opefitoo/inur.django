@@ -89,9 +89,4 @@ def whois_available(working_day):
     employees_on_leave = [x.employee.employee for x in
                           HolidayRequest.objects.filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED,
                                                         start_date__lte=working_day, end_date__gte=working_day)]
-    print("Emp. on leave *** %s" % employees_on_leave)
-    sys.stdout.flush()
-    available_employees = [x for x in Employee.objects.filter(end_contract__isnull=True) if x not in employees_on_leave]
-    print("Emp. dispo *** %s" % available_employees)
-    sys.stdout.flush()
-    return [x.abbreviation for x in available_employees]
+    return [x.abbreviation for x in Employee.objects.filter(end_contract__isnull=True) if x not in employees_on_leave]
