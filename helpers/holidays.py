@@ -1,5 +1,6 @@
 import sys
-from datetime import timedelta
+from datetime import timedelta, date
+from calendar import monthrange
 
 from django.db.models import Q
 
@@ -92,8 +93,10 @@ def whois_available(working_day):
     return [x.abbreviation for x in Employee.objects.filter(end_contract__isnull=True) if x not in employees_on_leave]
 
 
-def get_bank_holidays():
+def get_bank_holidays(y, m):
     import holidays
     lu_holidays = holidays.Luxembourg()
+    year = int(y)
+    month = int(m)
+    return [date(year, month, d) for d in range(1, monthrange(year, month)[1] + 1) if date(year, month, d) in lu_holidays]
 
-    return lu_holidays

@@ -204,7 +204,7 @@ def whois_available(request):
 @api_view(['GET'])
 def get_bank_holidays(request):
     if 'GET' == request.method:  # user posting data
-        reqs = holidays.get_bank_holidays()
+        reqs = holidays.get_bank_holidays(request.GET.get("year"), request.GET.get("month"))
         return Response(reqs, status=status.HTTP_200_OK)
 
 
