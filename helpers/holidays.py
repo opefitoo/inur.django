@@ -90,3 +90,10 @@ def whois_available(working_day):
                           HolidayRequest.objects.filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED,
                                                         start_date__lte=working_day, end_date__gte=working_day)]
     return [x.abbreviation for x in Employee.objects.filter(end_contract__isnull=True) if x not in employees_on_leave]
+
+
+def get_bank_holidays():
+    import holidays
+    lu_holidays = holidays.Luxembourg()
+
+    return lu_holidays

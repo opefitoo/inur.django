@@ -201,6 +201,13 @@ def whois_available(request):
         return Response(reqs, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+def get_bank_holidays(request):
+    if 'GET' == request.method:  # user posting data
+        reqs = holidays.get_bank_holidays()
+        return Response(reqs, status=status.HTTP_200_OK)
+
+
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer

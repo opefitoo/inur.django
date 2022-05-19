@@ -5,10 +5,9 @@ from django.views.generic import RedirectView
 from django.views.static import serve
 from rest_framework.authtoken import views as authtoken_views
 from django.conf import settings
-from django.urls import path
 
 import api
-from api.views import EventProcessorView, cleanup_event, whois_off, whois_available
+from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays
 from invoices.views import delete_prestation
 
 admin.autodiscover()
@@ -54,6 +53,11 @@ urlpatterns = [
         r'^api/v1/whois_available/$',
         whois_available,
         name='whois_available',
+    ),
+    re_path(
+        r'^api/v1/get_bank_holidays/$',
+        get_bank_holidays,
+        name='get_bank_holidays',
     ),
     re_path('admin/', admin.site.urls),
     re_path(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
