@@ -23,6 +23,9 @@ class CarePlanMaster(models.Model):
     replace_plan_number = models.PositiveSmallIntegerField("Remplce Num.", blank=True, null=True)
     plan_start_date = models.DateField(u"À partir de:", help_text=u"Date du début d'application du plan des soins",
                                        default=timezone.now)
+    plan_end_date = models.DateField(u"Jusqu'à:",
+                                       help_text=u"Date de la fin d'application du plan des soins",
+                                       null=True, blank=True, default=None)
     plan_decision_date = models.DateField(u"Date décision:", help_text=u"Date de la décision de l'assurance dépendance",
                                           blank=True, null=True)
     # Technical Fields

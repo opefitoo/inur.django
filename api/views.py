@@ -14,10 +14,11 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
-    ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, PatientAnamnesisSerializer
+    ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
+    PatientAnamnesisSerializer, CarePlanMasterSerializer
 from api.utils import get_settings
 from dependence.models import PatientAnamnesis
-from helpers import holidays
+from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation
 from invoices import settings
 from invoices.employee import JobPosition
@@ -206,6 +207,13 @@ def get_bank_holidays(request):
     if 'GET' == request.method:  # user posting data
         reqs = holidays.get_bank_holidays(request.GET.get("year"), request.GET.get("month"))
         return Response(reqs, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_active_care_plans(request):
+    if 'GET' == request.method:  # user posting data
+        care_plans = careplan.get_active_care_plans()
+        return Response(CarePlanMasterSerializer(care_plans, many=True).data, status=status.HTTP_200_OK)
 
 
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):

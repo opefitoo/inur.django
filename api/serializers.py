@@ -5,6 +5,7 @@ from django_countries.serializers import CountryFieldMixin
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
+from dependence.careplan import CarePlanMaster, CarePlanDetail
 from dependence.models import PatientAnamnesis, AssignedPhysician
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
@@ -203,3 +204,18 @@ class EventSerializer(serializers.ModelSerializer):
                 fields=['day', 'event_type', 'time_start_event', 'time_end_event', 'patient', 'employees']
             )
         ]
+
+class CarePlanDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CarePlanDetail
+        fields = '__all__'
+
+class CarePlanMasterSerializer(serializers.ModelSerializer):
+    care_plan_detail_to_master = CarePlanDetailSerializer(many=True)
+
+    class Meta:
+        model = CarePlanMaster
+        fields = ['patient', 'plan_number', 'plan_start_date', 'care_plan_detail_to_master']
+
+
+
