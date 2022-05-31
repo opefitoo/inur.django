@@ -108,9 +108,6 @@ class CarePlanDetail(models.Model):
         verbose_name = u"Détail"
         verbose_name_plural = u"Détails"
 
-    params_day_of_week = models.IntegerField("Jour",
-                                             choices=WeekDayNames.choices
-                                             )
     params_occurrence = models.ManyToManyField(CareOccurrence, verbose_name="Occurence")
 
     time_start = models.TimeField("De")
@@ -120,4 +117,4 @@ class CarePlanDetail(models.Model):
                                             on_delete=models.CASCADE, null=True, blank=True, default=None)
 
     def __str__(self):
-        return "%s de %s à %s" % (self.params_day_of_week, self.time_start, self.time_end)
+        return "%s à %s" % (self.time_start, self.time_end)
