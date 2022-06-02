@@ -112,10 +112,9 @@
                         <td class="title">
                             <img src="{% static 'patientanamnesis/images/xyz.png' %}"
                                  style="width: 100%; max-width: 50px"/>
-                            <div class="information">{{ obj.header_details.0 }} - {{ obj.header_details.1 }} <br />
-                            {{ obj.header_details.2 }} - {{ obj.header_details.3 }} <br />
-                            {{ obj.header_details.4 }}</div>
-                        </td>
+                            <div class="information">{{ obj.header_details.0 }} - {{ obj.header_details.1 }} <br/>
+                                {{ obj.header_details.2 }} - {{ obj.header_details.3 }} <br/>
+                                {{ obj.header_details.4 }}</div>
                         <td>
 
                             {% if obj.patient.gender == 'MAL' %} Monsieur {% elif obj.patient.gender == 'FEM' %}
@@ -142,7 +141,7 @@
                         </td>
 
                         <td>
-                            Paramètres paramédicaux pour {{ obj.display_month }} / {{ obj.params_year }}<br/>
+                            Fiche de Suivi Glycémique pour {{ obj.display_month }} / {{ obj.params_year }}<br/>
                         </td>
                     </tr>
                 </table>
@@ -151,24 +150,16 @@
 
         <tr class="heading">
             <td>Date/heure</td>
+            <td>Glycémie</td>
             <td>Tension</td>
             <td>Pouls</td>
-            <td>Temp.</td>
-            <td>Selles</td>
-            <td>Poids</td>
-            <td>Satur. O2</td>
-            <td>Glycémie</td>
         </tr>
         {% for param in obj.parameters_set %}
             <tr class="item">
                 <td>{{ param.params_date_time }}</td>
+                <td>{% if param.blood_glucose %} {{ param.blood_glucose }} {% else %} - {% endif %}</td>
                 <td>{{ param.systolic_blood_press }}/{{ param.diastolic_blood_press }}</td>
                 <td>{% if param.heart_pulse > 0 %} {{ param.heart_pulse }} {% else %} - {% endif %}</td>
-                <td>{% if param.temperature > 0 %} {{ param.temperature }} {% else %} - {% endif %}</td>
-                <td>{% if param.stools %} {{ param.stools }} {% else %} - {% endif %}</td>
-                <td>{% if param.weight > 0 %} {{ param.weight }} {% else %} - {% endif %}</td>
-                <td>{% if param.oximeter_saturation %} {{ param.oximeter_saturation }} {% else %} - {% endif %}</td>
-                <td>{% if param.blood_glucose %} {{ param.blood_glucose }} {% else %} - {% endif %}</td>
             </tr>
         {% endfor %}
 

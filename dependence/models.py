@@ -8,6 +8,7 @@ from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalPr
     MonthsNames, StoolsQty
 from invoices.models import Patient, Physician
 from datetime import date, datetime
+from constance import config
 
 
 def current_year():
@@ -74,13 +75,33 @@ class MonthlyParameters(models.Model):
     def display_month(self):
         return MonthsNames(self.params_month).label
 
+    @property
+    def physicians_set(self):
+        if self.id:
+            return [p.assigned_physician for p in AssignedPhysician.objects.filter(anamnesis_id=self.id)]
+        return None
+
+    @property
+    def parameters_set(self):
+        if self.id:
+            return TensionAndTemperatureParameters.objects.filter(monthly_params_id=self.id).order_by(
+                'params_date_time')
+        return None
+
+    @property
+    def header_details(self):
+        return [config.NURSE_NAME, config.MAIN_NURSE_CODE,
+                config.NURSE_ADDRESS,
+                config.NURSE_ZIP_CODE_CITY,
+                config.NURSE_PHONE_NUMBER]
+
     def __str__(self):
         return "Paramètres de %s - %s/%s" % (self.patient, self.params_month, self.params_year)
 
 
 class TensionAndTemperatureParameters(models.Model):
     class Meta:
-        ordering = ['-id']
+        ordering = ['params_date_time']
         verbose_name = u"Paramètre"
         verbose_name_plural = u"Paramètres"
 
@@ -88,12 +109,13 @@ class TensionAndTemperatureParameters(models.Model):
     systolic_blood_press = models.PositiveSmallIntegerField("Tension max.", default=0)
     diastolic_blood_press = models.PositiveSmallIntegerField("Tension min.", default=0)
     heart_pulse = models.PositiveSmallIntegerField("Pouls", default=None, blank=True, null=True)
-    temperature = models.DecimalField(max_digits=3, decimal_places=1, default=0, blank=True, null=True)
-    stools = models.PositiveSmallIntegerField("Selles", choices=StoolsQty.choices, default=0)
+    temperature = models.DecimalField("Température", max_digits=3, decimal_places=1, default=0, blank=True, null=True)
+    stools = models.PositiveSmallIntegerField("Selles", choices=StoolsQty.choices, default=None, blank=True, null=True)
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1, default=None, blank=True, null=True)
     oximeter_saturation = models.PositiveSmallIntegerField("Saturation O2 %", default=None, blank=True, null=True)
     general_remarks = models.TextField("Remarques générales", max_length=25, default=None, blank=True, null=True)
-    blood_glucose = models.DecimalField("Mesure de la glycémie", max_digits=4, decimal_places=1, default=None, blank=True,
+    blood_glucose = models.DecimalField("Mesure de la glycémie", max_digits=4, decimal_places=1, default=None,
+                                        blank=True,
                                         null=True)
     monthly_params = models.ForeignKey(MonthlyParameters, related_name='health_params_to_monthly_params',
                                        on_delete=models.CASCADE, default=None)

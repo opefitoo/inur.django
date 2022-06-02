@@ -164,6 +164,12 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
             'form_method': 'GET',
             'view': 'print_all_params',
         },
+        {
+            'slug': 'print_glucose_params',
+            'verbose_name': 'F. Glycémie',
+            'form_method': 'GET',
+            'view': 'print_glucose_params',
+        },
 
     ]
 
@@ -171,6 +177,11 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'monthlyparameters/print_all_params.html', {'obj': obj})
+
+    def print_glucose_params(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'monthlyparameters/print_glucose_params.html', {'obj': obj})
 
 
 @admin.register(PatientAnamnesis)
