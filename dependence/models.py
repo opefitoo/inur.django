@@ -88,12 +88,13 @@ class TensionAndTemperatureParameters(models.Model):
     systolic_blood_press = models.PositiveSmallIntegerField("Tension max.", default=0)
     diastolic_blood_press = models.PositiveSmallIntegerField("Tension min.", default=0)
     heart_pulse = models.PositiveSmallIntegerField("Pouls", default=None, blank=True, null=True)
-    temperature = models.DecimalField(max_digits=3, decimal_places=1, default=0)
+    temperature = models.DecimalField(max_digits=3, decimal_places=1, default=0, blank=True, null=True)
     stools = models.PositiveSmallIntegerField("Selles", choices=StoolsQty.choices, default=0)
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1, default=None, blank=True, null=True)
     oximeter_saturation = models.PositiveSmallIntegerField("Saturation O2 %", default=None, blank=True, null=True)
     general_remarks = models.TextField("Remarques générales", max_length=25, default=None, blank=True, null=True)
-    blood_glucose = models.DecimalField("Mesure de la glycémie", max_digits=4, decimal_places=1, default=0)
+    blood_glucose = models.DecimalField("Mesure de la glycémie", max_digits=4, decimal_places=1, default=None, blank=True,
+                                        null=True)
     monthly_params = models.ForeignKey(MonthlyParameters, related_name='health_params_to_monthly_params',
                                        on_delete=models.CASCADE, default=None)
     # Technical Fields
