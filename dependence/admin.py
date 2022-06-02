@@ -144,18 +144,33 @@ class TensionAndTemperatureParametersInLine(admin.TabularInline):
     extra = 0
     model = TensionAndTemperatureParameters
     formset = TensionAndTemperatureParametersFormset
-    fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'temperature', 'stools',
-              'oximeter_saturation', 'weight', 'general_remarks', 'user', 'created_on', 'updated_on')
+    fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'heart_pulse', 'temperature',
+              'stools', 'oximeter_saturation', 'weight', 'blood_glucose', 'general_remarks', 'user', 'created_on', 'updated_on')
     readonly_fields = ('user', 'created_on', 'updated_on')
 
 
 @admin.register(MonthlyParameters)
-class PatientParameters(admin.ModelAdmin):
+class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     fields = ('patient', 'params_year', 'params_month', 'weight')
     list_filter = ('params_month', 'params_year', FilteringPatientsLinkedToParameters)
-    list_display = ('patient', 'params_month', 'params_year')
+    list_display = ('patient', 'params_month', 'params_year', 'display_object_actions_list')
     inlines = [TensionAndTemperatureParametersInLine]
     autocomplete_fields = ['patient']
+
+    object_actions = [
+        {
+            'slug': 'print_all_params',
+            'verbose_name': 'Print ALL',
+            'form_method': 'GET',
+            'view': 'print_all_params',
+        },
+
+    ]
+
+    def print_all_params(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'monthlyparameters/print_all_params.html', {'obj': obj})
 
 
 @admin.register(PatientAnamnesis)

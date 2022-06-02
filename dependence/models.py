@@ -21,8 +21,8 @@ def current_month():
 class MonthlyParameters(models.Model):
     class Meta:
         ordering = ['-id']
-        verbose_name = u"Paramètre Patient"
-        verbose_name_plural = u"Paramètres Patient"
+        verbose_name = u"Surveillance Paramètres"
+        verbose_name_plural = u"Surveillances Param."
 
     params_year = models.PositiveIntegerField(
         default=current_year())
@@ -71,6 +71,9 @@ class MonthlyParameters(models.Model):
                                      'params_month']})
         return messages
 
+    def display_month(self):
+        return MonthsNames(self.params_month).label
+
     def __str__(self):
         return "Paramètres de %s - %s/%s" % (self.patient, self.params_month, self.params_year)
 
@@ -84,12 +87,13 @@ class TensionAndTemperatureParameters(models.Model):
     params_date_time = models.DateTimeField("Date", default=datetime.now)
     systolic_blood_press = models.PositiveSmallIntegerField("Tension max.", default=0)
     diastolic_blood_press = models.PositiveSmallIntegerField("Tension min.", default=0)
-    heart_pulse = models.PositiveSmallIntegerField("Pouls", default=0)
+    heart_pulse = models.PositiveSmallIntegerField("Pouls", default=None, blank=True, null=True)
     temperature = models.DecimalField(max_digits=3, decimal_places=1, default=0)
     stools = models.PositiveSmallIntegerField("Selles", choices=StoolsQty.choices, default=0)
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1, default=None, blank=True, null=True)
     oximeter_saturation = models.PositiveSmallIntegerField("Saturation O2 %", default=None, blank=True, null=True)
     general_remarks = models.TextField("Remarques générales", max_length=25, default=None, blank=True, null=True)
+    blood_glucose = models.DecimalField("Mesure de la glycémie", max_digits=4, decimal_places=1, default=0)
     monthly_params = models.ForeignKey(MonthlyParameters, related_name='health_params_to_monthly_params',
                                        on_delete=models.CASCADE, default=None)
     # Technical Fields
