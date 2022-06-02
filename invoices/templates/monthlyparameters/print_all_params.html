@@ -27,12 +27,12 @@
             vertical-align: top;
         }
 
-        .invoice-box table tr td:nth-child(2) {
-            text-align: right;
-        }
-
         .invoice-box table tr.top table td {
             padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.top table td:nth-child(2) {
+            text-align: right;
         }
 
         .invoice-box table tr.top table td.title {
@@ -142,7 +142,7 @@
                         </td>
 
                         <td>
-                            Paramètres paramédicaux pour {{ obj.display_month }} / {{ obj.params_year }}<br/>
+                            Paramètres pour {{ obj.display_month }} / {{ obj.params_year }}<br/>
                         </td>
                     </tr>
                 </table>

@@ -78,8 +78,10 @@ class MonthlyParameters(models.Model):
     @property
     def physicians_set(self):
         if self.id:
-            return [p.assigned_physician for p in AssignedPhysician.objects.filter(anamnesis_id=self.id)]
-        return None
+            anamnesis = PatientAnamnesis.objects.filter(patient__id=self.patient.id).first()
+            if anamnesis:
+                return [p.assigned_physician for p in AssignedPhysician.objects.filter(anamnesis_id=anamnesis.id)]
+        return "N.D."
 
     @property
     def parameters_set(self):
