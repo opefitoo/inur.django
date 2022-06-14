@@ -240,7 +240,10 @@ class Patient(models.Model):
     is_private = models.BooleanField(default=False)
     is_under_dependence_insurance = models.BooleanField(u"Assurance dépendance", default=False)
     date_of_death = models.DateField(u"Date de décès", default=None, blank=True, null=True)
-
+    additional_details = models.TextField(u"Détails additionels",
+                                          help_text="Vous pouvez mettre par exemple les numéros de carte adapto ou tout autre info utile.",
+                                          max_length=500,
+                                          default=None, blank=True, null=True)
     @property
     def anamnesis_set(self):
         if self.id:

@@ -13,6 +13,7 @@ from django.contrib import admin
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from fieldsets_with_inlines import FieldsetsInlineMixin
 
+from invoices.employee import JobPosition
 from invoices.models import Patient
 
 
@@ -26,6 +27,8 @@ class CarePlanDetailInLine(admin.TabularInline):
     model = CarePlanDetail
     params_occurrence = ModelMultipleChoiceField(widget=CheckboxSelectMultiple(), queryset=CareOccurrence.objects.all(),
                                                  required=True)
+    required_skills = ModelMultipleChoiceField(widget=CheckboxSelectMultiple(), queryset=JobPosition.objects.all(),
+                                               required=True, limit_choices_to={'is_involved_in_health_care': True})
     formfield_overrides = {
         ManyToManyField: {'widget': CheckboxSelectMultiple},
     }
@@ -145,7 +148,8 @@ class TensionAndTemperatureParametersInLine(admin.TabularInline):
     model = TensionAndTemperatureParameters
     formset = TensionAndTemperatureParametersFormset
     fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'heart_pulse', 'temperature',
-              'stools', 'oximeter_saturation', 'weight', 'blood_glucose', 'general_remarks', 'user', 'created_on', 'updated_on')
+              'stools', 'oximeter_saturation', 'weight', 'blood_glucose', 'general_remarks', 'user', 'created_on',
+              'updated_on')
     readonly_fields = ('user', 'created_on', 'updated_on')
 
 

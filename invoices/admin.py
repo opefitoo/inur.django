@@ -1,7 +1,5 @@
-import copy
 from decimal import Decimal
 
-from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
@@ -13,20 +11,15 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from django_csv_exports.admin import CSVExportAdmin
-from fieldsets_with_inlines import FieldsetsInlineMixin
-
-import dependence
-import invoices
-from invoices import models
 from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
-from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, EventCalendarPeriodFilter
+from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
-from invoices.models import PatientAnamnesis, ContactPerson, OtherStakeholder, DependenceInsurance, \
+from invoices.models import ContactPerson, OtherStakeholder, DependenceInsurance, \
     BiographyHabits
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
@@ -49,18 +42,14 @@ from django.utils.safestring import mark_safe
 from invoices.utils import EventCalendar
 
 
-class JobPostionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description')
+@admin.register(JobPosition)
+class JobPositionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'is_involved_in_health_care')
 
 
-admin.site.register(JobPosition, JobPostionAdmin)
-
-
+@admin.register(TimesheetTask)
 class TimesheetTaskAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
-
-
-admin.site.register(TimesheetTask, TimesheetTaskAdmin)
 
 
 # Define an inline admin descriptor for Employee model
@@ -223,7 +212,7 @@ class PatientAdmin(CSVExportAdmin):
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
                   'country', 'phone_number', 'email_address', 'date_of_death']
     readonly_fields = ('age', 'link_to_invoices')
-    search_fields = ['name', 'first_name', 'code_sn']
+    search_fields = ['name', 'first_name', 'code_sn', 'zipcode']
     form = PatientForm
     # actions = [generate_road_book_2019_mehdi]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]

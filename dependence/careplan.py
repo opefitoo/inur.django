@@ -1,9 +1,10 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.forms import MultipleChoiceField
 from django.utils import timezone
 
 from invoices.db.fields import CurrentUserField
-from invoices.enums.generic import WeekDayNames
+from invoices.employee import JobPosition
 from invoices.models import Patient
 
 
@@ -24,8 +25,8 @@ class CarePlanMaster(models.Model):
     plan_start_date = models.DateField(u"À partir de:", help_text=u"Date du début d'application du plan des soins",
                                        default=timezone.now)
     plan_end_date = models.DateField(u"Jusqu'à:",
-                                       help_text=u"Date de la fin d'application du plan des soins",
-                                       null=True, blank=True, default=None)
+                                     help_text=u"Date de la fin d'application du plan des soins",
+                                     null=True, blank=True, default=None)
     plan_decision_date = models.DateField(u"Date décision:", help_text=u"Date de la décision de l'assurance dépendance",
                                           blank=True, null=True)
     # Technical Fields
@@ -108,11 +109,16 @@ class CarePlanDetail(models.Model):
         verbose_name = u"Détail"
         verbose_name_plural = u"Détails"
 
-    params_occurrence = models.ManyToManyField(CareOccurrence, verbose_name="Occurence")
+    params_occurrence = models.ManyToManyField(CareOccurrence,
+                                               related_name="from_careplan_detail_to_occurence+",
+                                               verbose_name="Occurence")
 
     time_start = models.TimeField("De")
     time_end = models.TimeField("A")
     care_actions = models.TextField(u"Actions à prévoir", max_length=500)
+    req_skills = models.ManyToManyField(JobPosition, related_name="care_job_position", verbose_name="Qualif.", )
+    required_technical_resources = models.TextField("Ressources techniques requises", max_length=500,
+                                                    null=True, blank=True, default=None)
     care_plan_to_master = models.ForeignKey(CarePlanMaster, related_name="care_plan_detail_to_master",
                                             on_delete=models.CASCADE, null=True, blank=True, default=None)
 

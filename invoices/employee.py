@@ -16,6 +16,7 @@ class JobPosition(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100, blank=True,
                                    null=True)
+    is_involved_in_health_care = models.BooleanField("Impliqué dans les soins", default=True)
 
     def __str__(self):
         return '%s' % (self.name.strip())
