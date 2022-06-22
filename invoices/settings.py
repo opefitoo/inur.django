@@ -56,7 +56,6 @@ INSTALLED_APPS = (
 
 INSTALLED_APPS += ('admin_object_actions',)
 
-
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -198,7 +197,13 @@ CONSTANCE_CONFIG = {
     'BIS_NURSE_CODE': (
         '', "Code infirmier secondaire pour les soins", str),
     'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select'),
-    'CC_EMAIL_SENT': ("", "Lors de l'envoi d'un email au client, envoi à cette adresse en CC (pour en mettre plusieurs veuillez les séparer d'une virgule ',')", str)
+    'CC_EMAIL_SENT': ("",
+                      "Lors de l'envoi d'un email au client, envoi à cette adresse en CC (pour en mettre plusieurs veuillez les séparer d'une virgule ',')",
+                      str),
+    'CONVADIS_CLIENT_ID': ('NOT_SET', 'Client ID pour authentification oauth2 convadis services', str),
+    'CONVADIS_SECRET_ID': ('NOT_SET', 'Secret ID pour authentification oauth2 convadis services', str),
+    'CONVADIS_URL': ('NOT_SET', 'Url pour authentification oauth2 convadis services', str),
+    'CONVADIS_ORG_ID': ('NOT_SET', 'Organisation ID pour authentification oauth2 convadis services', str),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
@@ -206,6 +211,7 @@ CONSTANCE_CONFIG_FIELDSETS = {
     'Options de Facturation': (
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
         'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT'),
+    'Options API Convadis': ('CONVADIS_ORG_ID', 'CONVADIS_CLIENT_ID', 'CONVADIS_SECRET_ID', 'CONVADIS_URL')
 }
 
 GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')

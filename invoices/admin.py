@@ -149,7 +149,18 @@ class ExpenseCardDetailInline(TabularInline):
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
     inlines = [ExpenseCardDetailInline]
-    list_display = ('name', 'licence_plate', 'pin_codes')
+    list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url')
+
+    def geo_localisation_of_car_url(self, obj):
+        if 'n/a' == obj.geo_localisation_of_car:
+            return 'n/a'
+        url = 'https://maps.google.com/?q=%s,%s' % (obj.geo_localisation_of_car[1],
+                                                    obj.geo_localisation_of_car[2])
+
+        return format_html("<a href='%s'>Google Maps</a>" % url)
+
+    geo_localisation_of_car_url.allow_tags = True
+    geo_localisation_of_car_url.short_description = "Dernière position connue"
 
 
 class HospitalizationInline(admin.TabularInline):
@@ -763,19 +774,24 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                                                                         timesheet_validated=True)
                 if len(previous_timsheets) == 0:
                     if tsheet.extra_hours_paid_current_month:
-                        file_data += "\nA travaillé {total_extra} heures supplémentaires.".format(total_extra=tsheet.extra_hours_paid_current_month)
+                        file_data += "\nA travaillé {total_extra} heures supplémentaires.".format(
+                            total_extra=tsheet.extra_hours_paid_current_month)
                     if tsheet.total_hours_holidays_taken:
-                        file_data += "\nA pris {total_hours_holidays_taken} jours de {request_type}.".format(total_extra=tsheet.total_hours_holidays_taken)
+                        file_data += "\nA pris {total_hours_holidays_taken} jours de {request_type}.".format(
+                            total_extra=tsheet.total_hours_holidays_taken)
                 else:
                     previous_month_tsheet = previous_timsheets.first()
                     file_data += "\n {counter} - {last_name}:\n".format(counter=_counter,
-                                                                 last_name=previous_month_tsheet.user.last_name.upper())
+                                                                        last_name=previous_month_tsheet.user.last_name.upper())
                     if previous_month_tsheet.total_hours_sundays:
-                        file_data += " \nA travaillé {hours_sunday} heures des Dimanche".format(hours_sunday=previous_month_tsheet.total_hours_sundays)
+                        file_data += " \nA travaillé {hours_sunday} heures des Dimanche".format(
+                            hours_sunday=previous_month_tsheet.total_hours_sundays)
                     if previous_month_tsheet.total_hours_public_holidays:
-                        file_data += " \nA travaillé {total_hours_public_holidays} heures des Jours fériés.".format(total_hours_public_holidays=previous_month_tsheet.total_hours_public_holidays)
+                        file_data += " \nA travaillé {total_hours_public_holidays} heures des Jours fériés.".format(
+                            total_hours_public_holidays=previous_month_tsheet.total_hours_public_holidays)
                     if tsheet.extra_hours_paid_current_month:
-                        file_data += " \nA travaillé {total_extra} heures supplémentaires.".format(total_extra=tsheet.extra_hours_paid_current_month)
+                        file_data += " \nA travaillé {total_extra} heures supplémentaires.".format(
+                            total_extra=tsheet.extra_hours_paid_current_month)
                     if tsheet.absence_hours_taken()[0] > 0:
                         holiday_sickness_explanation = tsheet.absence_hours_taken()[1].beautiful_explanation()
                         if len(holiday_sickness_explanation) > 0:
