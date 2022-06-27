@@ -12,7 +12,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from helpers.holidays import how_many_hours_taken_in_period
+from helpers.holidays import how_many_hours_taken_in_period, how_many_hours_taken_in_period_v2
 from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
 from invoices.enums.generic import HolidayRequestChoice
@@ -185,8 +185,9 @@ class SimplifiedTimesheet(models.Model):
                     calendar_date__exact=v.start_date.astimezone()).first() is not None:
                 total_public_holidays = total_public_holidays + delta
         calculated_hours["total_hours_holidays_taken"] = self.absence_hours_taken()
-        calculated_hours["total_hours_holidays_taken_verbose"] = "%d heure(s) --> %s" % (calculated_hours["total_hours_holidays_taken"][0],
-                                                                            str(calculated_hours["total_hours_holidays_taken"][1]))
+        calculated_hours["total_hours_holidays_taken_verbose"] = "%d heure(s) --> %s" % (
+        calculated_hours["total_hours_holidays_taken"][0],
+        str(calculated_hours["total_hours_holidays_taken"][1]))
         calculated_hours["total"] = total
         calculated_hours["total_sundays"] = total_sundays
         calculated_hours["total_public_holidays"] = total_public_holidays
@@ -196,14 +197,13 @@ class SimplifiedTimesheet(models.Model):
 
     def absence_hours_taken(self):
         data = {'start_date': self.get_start_date, 'end_date': self.get_end_date, 'user_id': self.user.id}
-        return how_many_hours_taken_in_period(data,
-                                              PublicHolidayCalendarDetail.objects.filter(
-                                                  calendar_date__lte=data['end_date'],
-                                                  calendar_date__gte=data['start_date']))
+        return how_many_hours_taken_in_period_v2(data,
+                                                 PublicHolidayCalendarDetail.objects.filter(
+                                                     calendar_date__lte=data['end_date'],
+                                                     calendar_date__gte=data['start_date']))
 
     @property
     def total_hours_holidays_taken(self):
-        print(self)
         return self.__calculate_total_hours()["total_hours_holidays_taken_verbose"]
 
     @property
@@ -256,11 +256,12 @@ class SimplifiedTimesheet(models.Model):
 
     @property
     def total_working_days(self):
-        return "Jours ouvrables %d, Heures contractuelles %d (h/semaine)" % (self.date_range(self.get_start_date, self.get_end_date),
-                                                                 (self.employee.employeecontractdetail_set.filter(Q(
-                                        end_date__gte=self.get_end_date, start_date__lte=self.get_start_date) | Q(
-                                        end_date__isnull=True,
-                                        start_date__lte=self.get_start_date)).first().number_of_hours))
+        return "Jours ouvrables %d, Heures contractuelles %d (h/semaine)" % (
+        self.date_range(self.get_start_date, self.get_end_date),
+        (self.employee.employeecontractdetail_set.filter(Q(
+            end_date__gte=self.get_end_date, start_date__lte=self.get_start_date) | Q(
+            end_date__isnull=True,
+            start_date__lte=self.get_start_date)).first().number_of_hours))
 
     @property
     def total_hours(self):

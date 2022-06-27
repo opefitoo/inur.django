@@ -17,14 +17,17 @@ class SicknessHolidayDaysCalculations(ABC):
         self.holiday_sickness_requests_dates = holiday_sickness_requests_dates
 
     def __str__(self):
-        return "Explication: ( (%.2f jours congés + %.2f jours maladie) - %d jours fériés )  x %d nombre h. /j" % (
+        return "Explication: ( %.2f jours congés + %.2f jours maladie )  x %d nombre h. /j et %d jours fériés" % (
             self.holidays_count,
             self.sickness_days_count,
-            self.number_of_public_holidays,
-            self.daily_working_hours)
+            self.daily_working_hours,
+            self.number_of_public_holidays)
 
     def compute_total_hours(self):
         return ((self.holidays_count + self.sickness_days_count) - self.number_of_public_holidays) * self.daily_working_hours
+
+    def compute_total_hours_v2(self):
+        return (self.holidays_count + self.sickness_days_count) * self.daily_working_hours
 
     def beautiful_explanation(self):
         _explanation = ""
