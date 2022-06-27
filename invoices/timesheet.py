@@ -134,7 +134,7 @@ class SimplifiedTimesheet(models.Model):
     extra_hours_paid_current_month = models.DecimalField(u"Heures supp. payées ou récupérées pour le mois courant",
                                                          default=0,
                                                          max_digits=4,
-                                                         decimal_places=1
+                                                         decimal_places=2
                                                          )
     extra_hours_balance = models.DecimalField(u"Balance des heures supp. non soldées",
                                               help_text="Ce champ est calculé mais vous pouvez quand même écraser la valeur si vous êtes admin.\n"
