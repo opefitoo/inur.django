@@ -21,7 +21,7 @@ from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.models import ContactPerson, OtherStakeholder, DependenceInsurance, \
     BiographyHabits
-from invoices.employee import Employee, EmployeeContractDetail, JobPosition
+from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
@@ -90,9 +90,14 @@ class EmployeeContractDetailInline(TabularInline):
     model = EmployeeContractDetail
 
 
+class EmployeeAdminFileInline(TabularInline):
+    extra = 0
+    model = EmployeeAdminFile
+
+
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    inlines = [EmployeeContractDetailInline]
+    inlines = [EmployeeContractDetailInline, EmployeeAdminFileInline]
     list_display = ('user', 'start_contract', 'end_contract', 'occupation', 'abbreviation')
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
 

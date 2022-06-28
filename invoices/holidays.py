@@ -196,7 +196,7 @@ class HolidayRequest(models.Model):
             self.employee, self.REASONS[self.reason - 1][1], self.start_date, self.end_date)
 
 
-def update_absence_request_filename(instance: HolidayRequest, filename):
+def update_absence_request_filename(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
     if instance.request.start_date is None:
         _current_yr_or_prscr_yr = now().date().strftime('%Y')

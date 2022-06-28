@@ -1,3 +1,5 @@
+import os
+
 from colorfield.fields import ColorField
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -5,6 +7,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models.signals import pre_save, post_delete, post_save
 from django.dispatch import receiver
+from django.utils.timezone import now
 
 from invoices.storages import CustomizedGoogleDriveStorage
 
@@ -92,6 +95,26 @@ class EmployeeContractDetail(models.Model):
         if self.end_date:
             return u'Du %s au %s : %d heures/semaine' % (self.start_date, self.end_date, self.number_of_hours)
         return u'Du %s : %d heures/semaine' % (self.start_date, self.number_of_hours)
+
+
+def update_filename(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.employee.start_contract is None:
+        _current_yr_or_prscr_yr = now().date().strftime('%Y')
+        _current_month_or_prscr_month = now().date().strftime('%M')
+    else:
+        _current_yr_or_prscr_yr = str(instance.employee.start_contract.year)
+        _current_month_or_prscr_month = str(instance.employee.start_contract.month)
+    path = os.path.join("Doc. Admin employes", "%s_%s" % (instance.employee.user.last_name.upper(),
+                                                          instance.employee.user.first_name.capitalize()))
+    filename = '%s_%s_%s_%s%s' % (_current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.employee.abbreviation, instance.file_description, file_extension)
+    return os.path.join(path, filename)
+
+
+class EmployeeAdminFile(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    file_description = models.CharField("description", max_length=50)
+    file_upload = models.FileField(null=True, blank=True, upload_to=update_filename)
 
 
 @receiver(pre_save, sender=User, dispatch_uid="user_pre_save_gservices_permissions")
