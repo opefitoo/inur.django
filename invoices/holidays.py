@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User
@@ -8,6 +9,8 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
+from django.utils.timezone import now
+
 from helpers.employee import get_admin_emails
 from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
@@ -95,10 +98,11 @@ class HolidayRequest(models.Model):
         if isinstance(computation, str) or "Non applicable" == computation:
             return computation
         return [(computation.num_days - computation.jours_feries) * computation.hours_jour,
-                "explication: ( (%.2f jours congés + %.2f jours maladie ) - %d jours fériés )  x %d nombre h. /j" % (computation.num_days,
-                                                                                                                    computation.num_days_sickness,
-                                                                                             computation.jours_feries,
-                                                                                             computation.hours_jour)]
+                "explication: ( (%.2f jours congés + %.2f jours maladie ) - %d jours fériés )  x %d nombre h. /j" % (
+                    computation.num_days,
+                    computation.num_days_sickness,
+                    computation.jours_feries,
+                    computation.hours_jour)]
 
     def hours_calculations(self, same_year_only=False, holiday_request=None):
         import holidays
@@ -190,6 +194,30 @@ class HolidayRequest(models.Model):
     def __str__(self):
         return u'%s - %s du  %s au %s' % (
             self.employee, self.REASONS[self.reason - 1][1], self.start_date, self.end_date)
+
+
+def update_absence_request_filename(instance: HolidayRequest, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.request.start_date is None:
+        _current_yr_or_prscr_yr = now().date().strftime('%Y')
+        _current_month_or_prscr_month = now().date().strftime('%M')
+    else:
+        _current_yr_or_prscr_yr = str(instance.request.start_date.year)
+        _current_month_or_prscr_month = str(instance.request.start_date.month)
+    path = os.path.join("Doc. Demandes Absences", _current_yr_or_prscr_yr,
+                        _current_month_or_prscr_month)
+    filename = '%s%s' % (str(instance.request), file_extension)
+
+    return os.path.join(path, filename)
+
+
+class AbsenceRequestFile(models.Model):
+    request = models.ForeignKey(HolidayRequest, on_delete=models.CASCADE)
+    file_description = models.CharField("description", max_length=30)
+    file_upload = models.FileField(null=True, blank=True, upload_to=update_absence_request_filename)
+
+    def __str__(self):
+        "%s" % self.file_description
 
 
 def validate_date_range(instance_id, data):

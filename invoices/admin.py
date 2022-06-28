@@ -26,7 +26,7 @@ from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm
-from invoices.holidays import HolidayRequest
+from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, AssignedPhysician
 from invoices.modelspackage import InvoicingDetails
@@ -543,6 +543,11 @@ class PublicHolidayCalendarAdmin(admin.ModelAdmin):
     verbose_name_plural = u'Congés légaux'
 
 
+class AbsenceRequestFileInline(admin.TabularInline):
+    extra = 1
+    model = AbsenceRequestFile
+
+
 @admin.register(HolidayRequest)
 class HolidayRequestAdmin(admin.ModelAdmin):
     class Media:
@@ -555,6 +560,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
     ordering = ['-start_date']
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
+    inlines = [AbsenceRequestFileInline]
 
     def holiday_request_status(self, obj):
         if HolidayRequestWorkflowStatus.ACCEPTED == obj.request_status:

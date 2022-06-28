@@ -701,10 +701,14 @@ def update_medical_prescription_filename(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
     if instance.date is None:
         _current_yr_or_prscr_yr = now().date().strftime('%Y')
+        _current_month_or_prscr_month = now().date().strftime('%M')
     else:
         _current_yr_or_prscr_yr = str(instance.date.year)
-    path = os.path.join(CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER, _current_yr_or_prscr_yr)
-    filename = '%s_%s_%s%s' % (instance.patient.name, instance.patient.first_name, str(instance.date), file_extension)
+        _current_month_or_prscr_month = str(instance.date.month)
+    path = os.path.join(CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER, _current_yr_or_prscr_yr,
+                        _current_month_or_prscr_month)
+    filename = '%s_pour_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
+                                       str(instance.date), file_extension)
 
     return os.path.join(path, filename)
 
@@ -953,6 +957,7 @@ class InvoiceItem(models.Model):
     validation_comment = models.TextField(null=True, blank=True)
     medical_prescription = models.ForeignKey(MedicalPrescription, related_name='invoice_items', null=True, blank=True,
                                              help_text='Please choose a Medical Prescription',
+                                             limit_choices_to={'is_under_dependence_insurance': True},
                                              on_delete=models.SET_NULL)
 
     def clean(self, *args, **kwargs):
