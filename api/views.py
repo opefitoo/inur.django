@@ -170,6 +170,7 @@ class EventList(generics.ListCreateAPIView):
         result = self.create(request, *args, **kwargs)
         if result.status_code == status.HTTP_201_CREATED:
             instance = Event.objects.get(pk=result.data.get('id'))
+            instance.notes += request.data['notes']
             assert isinstance(instance, Event)
             gmail_event = create_or_update_google_calendar(instance)
             if gmail_event.get('id'):
