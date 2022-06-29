@@ -24,7 +24,7 @@ pyasn1-modules==0.2.8
 pyparsing==3.0.9
 python-dateutil==2.8.2
 reportlab==3.6.10
-requests==2.28.0
+requests==2.28.1
 rsa==4.8
 six==1.16.0
 SQLAlchemy==1.4.39
@@ -56,4 +56,6 @@ redis==4.3.3
 oauthlib==3.2.0
 asgiref==3.5.2
 django-storages==1.12.3
-boto3==1.24.18
+boto3==1.24.19
+django-phonenumber-field==6.3.0
+phonenumberslite==8.12.50

@@ -160,8 +160,13 @@ class EventList(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         if request.data['employees']:
-            emp_id = get_employee_id_by_abbreviation(request.data['employees'])
+            emp_id = get_employee_id_by_abbreviation(request.data['employees']).id
             request.data['employees'] = emp_id
+            if request['notes'].contains("+"):
+                employee_bis = get_employee_id_by_abbreviation(request.data['notes'].split("+")[1])
+                request.data['notes'] = "En collaboration avec %s %s - Tél %s" % (employee_bis.last_name,
+                                                                                  employee_bis.first_name,
+                                                                                  employee_bis.phone_number)
         result = self.create(request, *args, **kwargs)
         if result.status_code == status.HTTP_201_CREATED:
             instance = Event.objects.get(pk=result.data.get('id'))

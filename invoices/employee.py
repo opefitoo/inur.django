@@ -8,6 +8,7 @@ from django.db import models
 from django.db.models.signals import pre_save, post_delete, post_save
 from django.dispatch import receiver
 from django.utils.timezone import now
+from phonenumber_field.modelfields import PhoneNumberField
 
 from invoices.storages import CustomizedGoogleDriveStorage
 
@@ -46,6 +47,8 @@ class Employee(models.Model):
                                     help_text='Enter employee abbreviation, must be unique accross company',
                                     max_length=3,
                                     default='XXX')
+    phone_number = PhoneNumberField(blank=True)
+    bank_account_number = models.CharField("Numéro de compte IBAN", max_length=50, blank=True)
     address = models.TextField("Adresse", max_length=100, blank=True, null=True)
     access_card_number = models.CharField("Carte Voiture", max_length=20, blank=True, null=True)
     color_cell = ColorField(default='#FF0000')

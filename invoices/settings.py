@@ -51,7 +51,8 @@ INSTALLED_APPS = (
     'django_csv_exports',
     'colorfield',
     'dependence',
-    'fieldsets_with_inlines'
+    'fieldsets_with_inlines',
+    'phonenumber_field',
 )
 
 INSTALLED_APPS += ('admin_object_actions',)
