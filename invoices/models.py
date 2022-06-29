@@ -957,7 +957,6 @@ class InvoiceItem(models.Model):
     validation_comment = models.TextField(null=True, blank=True)
     medical_prescription = models.ForeignKey(MedicalPrescription, related_name='invoice_items', null=True, blank=True,
                                              help_text='Please choose a Medical Prescription',
-                                             limit_choices_to={'is_under_dependence_insurance': True},
                                              on_delete=models.SET_NULL)
 
     def clean(self, *args, **kwargs):
