@@ -164,13 +164,12 @@ class EventList(generics.ListCreateAPIView):
             request.data['employees'] = emp_id
             if request.data['notes'].startswith("+"):
                 employee_bis = get_employee_id_by_abbreviation(request.data['notes'].split("+")[1])
-                request.data['notes'] = "En collaboration avec %s %s - Tél %s" % (employee_bis.last_name,
-                                                                                  employee_bis.first_name,
-                                                                                  employee_bis.phone_number)
         result = self.create(request, *args, **kwargs)
         if result.status_code == status.HTTP_201_CREATED:
             instance = Event.objects.get(pk=result.data.get('id'))
-            instance.notes += request.data['notes']
+            instance.notes = "En collaboration avec %s %s - Tél %s" % (employee_bis.last_name,
+                                                                       employee_bis.first_name,
+                                                                       employee_bis.phone_number)
             assert isinstance(instance, Event)
             gmail_event = create_or_update_google_calendar(instance)
             if gmail_event.get('id'):
