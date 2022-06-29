@@ -24,4 +24,4 @@ def get_pks_all_active_employees():
 
 
 def get_employee_id_by_abbreviation(abr):
-    return Employee.objects.get(abbreviation=abr).id
+    return Employee.objects.get(abbreviation=abr)
