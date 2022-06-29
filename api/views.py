@@ -162,7 +162,7 @@ class EventList(generics.ListCreateAPIView):
         if request.data['employees']:
             emp_id = get_employee_id_by_abbreviation(request.data['employees']).id
             request.data['employees'] = emp_id
-            if request.data['notes'].contains("+"):
+            if request.data['notes'].startswith("+"):
                 employee_bis = get_employee_id_by_abbreviation(request.data['notes'].split("+")[1])
                 request.data['notes'] = "En collaboration avec %s %s - Tél %s" % (employee_bis.last_name,
                                                                                   employee_bis.first_name,
