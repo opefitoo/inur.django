@@ -1,4 +1,5 @@
 import json
+import requests
 from typing import List
 from constance import config
 from django.core.cache import cache
@@ -6,7 +7,8 @@ from django.core.cache import cache
 from django.db import models
 from oauthlib.oauth2 import LegacyApplicationClient, TokenExpiredError
 from requests_oauthlib import OAuth2Session
-
+from datetime import datetime
+from pytz import timezone
 
 def get_last_token():
     if len(ConvadisOAuth2Token.objects.all()) > 0:
@@ -72,6 +74,7 @@ class Car(models.Model):
 
     @property
     def geo_localisation_of_car(self):
+
         if not self.is_connected_to_convadis:
             return "n/a"
         vehicles_last_position = cache.get('vehicles-last-position')
@@ -80,6 +83,8 @@ class Car(models.Model):
         else:
             client = get_oauth2_convadis_rest_client()
             if client:
+                r_post = client.post(
+                    'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles/%s/commands/request-last-position' % (config.CONVADIS_ORG_ID, self.convadis_identifier))
                 r_last = client.get(
                     'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-position' % config.CONVADIS_ORG_ID)
 
@@ -95,6 +100,33 @@ class Car(models.Model):
                 # print(v_states)
 
             return "Error"
+
+    @property
+    def address(self):
+        if not self.is_connected_to_convadis:
+            return "n/a"
+
+        geo_loc_car = self.geo_localisation_of_car
+        position_lon = geo_loc_car[2]
+        position_lat = geo_loc_car[1]
+        position_time = geo_loc_car[0]
+
+        headers = {
+            'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
+        }
+
+        url_address = "https://api.openrouteservice.org/geocode/reverse?api_key" \
+                      "=5b3ce3597851110001cf624832a693d3ece74ea2aa3c21e7d8ea26a8&point.lon=%s&point.lat=%s" % (
+                          position_lon, position_lat)
+
+        r = requests.get(url_address, headers=headers)
+        data = json.loads(r.text)
+
+        time_converter = datetime.strptime(position_time, '%Y-%m-%dT%H:%M:%S%z')
+        heure_luxembourg = str(time_converter.astimezone(timezone('Europe/Luxembourg')))
+        address = data["features"][0]['properties']['label']
+
+        return "%s - màj: %s" % (address, heure_luxembourg)
 
     @property
     def pin_codes(self):

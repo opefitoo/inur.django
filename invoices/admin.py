@@ -161,8 +161,8 @@ class CarAdmin(admin.ModelAdmin):
             return 'n/a'
         url = 'https://maps.google.com/?q=%s,%s' % (obj.geo_localisation_of_car[1],
                                                     obj.geo_localisation_of_car[2])
-
-        return format_html("<a href='%s'>Google Maps</a>" % url)
+        address = obj.address
+        return format_html("<a href='%s'>%s</a>" % (url, address))
 
     geo_localisation_of_car_url.allow_tags = True
     geo_localisation_of_car_url.short_description = "Dernière position connue"
