@@ -205,6 +205,7 @@ CONSTANCE_CONFIG = {
     'CONVADIS_SECRET_ID': ('NOT_SET', 'Secret ID pour authentification oauth2 convadis services', str),
     'CONVADIS_URL': ('NOT_SET', 'Url pour authentification oauth2 convadis services', str),
     'CONVADIS_ORG_ID': ('NOT_SET', 'Organisation ID pour authentification oauth2 convadis services', str),
+    'OPENROUTE_SERVICE_API_KEY': ('NOT_SET', 'Open Route API KEY', str),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
@@ -212,7 +213,8 @@ CONSTANCE_CONFIG_FIELDSETS = {
     'Options de Facturation': (
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
         'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT'),
-    'Options API Convadis': ('CONVADIS_ORG_ID', 'CONVADIS_CLIENT_ID', 'CONVADIS_SECRET_ID', 'CONVADIS_URL')
+    'Options API Convadis': ('CONVADIS_ORG_ID', 'CONVADIS_CLIENT_ID', 'CONVADIS_SECRET_ID', 'CONVADIS_URL',
+                             'OPENROUTE_SERVICE_API_KEY')
 }
 
 GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
