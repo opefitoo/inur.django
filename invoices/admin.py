@@ -160,10 +160,13 @@ class CarAdmin(admin.ModelAdmin):
         _geo_localisation_of_car = obj.geo_localisation_of_car
         if type(_geo_localisation_of_car) is not tuple and _geo_localisation_of_car.startswith('n/a'):
             return _geo_localisation_of_car
-        url = 'https://maps.google.com/?q=%s,%s' % (_geo_localisation_of_car[1],
+        else:
+
+            url = 'https://maps.google.com/?q=%s,%s' % (_geo_localisation_of_car[1],
                                                     _geo_localisation_of_car[2])
-        address = obj.address
-        return format_html("<a href='%s'>%s</a>" % (url, address))
+            address = obj.address
+            return format_html("<a href='%s'>%s</a>" % (url, address))
+        return _geo_localisation_of_car
 
     geo_localisation_of_car_url.allow_tags = True
     geo_localisation_of_car_url.short_description = "Dernière position connue"
