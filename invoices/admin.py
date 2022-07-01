@@ -154,7 +154,7 @@ class ExpenseCardDetailInline(TabularInline):
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
     inlines = [ExpenseCardDetailInline]
-    list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url')
+    list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'car_movement', 'mileage')
 
     def geo_localisation_of_car_url(self, obj):
         if 'n/a' == obj.geo_localisation_of_car:
