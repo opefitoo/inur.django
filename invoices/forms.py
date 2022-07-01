@@ -46,7 +46,7 @@ def check_for_periods_intersection_time_based(cleaned_data):
                 continue
             elif not (row_data['start_date'].time() > data['end_date']
                       or row_data['end_date'] < data['start_date'].time()):
-                dates_on_error.add(data['start_date'].date().strftime("%Y-%m-%d"))
+                dates_on_error.add(data['start_date'].date().strftime("%d/%m/%Y"))
                 is_valid = False
 
         if not is_valid:
@@ -197,7 +197,7 @@ class HospitalizationFormSet(BaseInlineFormSet):
         if hasattr(self, 'cleaned_data'):
             check_for_periods_intersection(self.cleaned_data)
             if 'date_of_death' in self.data and self.data['date_of_death']:
-                date_of_death = datetime.strptime(self.data['date_of_death'], "%Y-%m-%d").date()
+                date_of_death = datetime.strptime(self.data['date_of_death'], "%d/%m/%Y").date()
                 self.validate_with_patient_date_of_death(self.cleaned_data, date_of_death)
 
     @staticmethod
