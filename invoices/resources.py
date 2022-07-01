@@ -87,9 +87,10 @@ class Car(models.Model):
 
     @property
     def geo_localisation_of_car(self):
-
         if not self.is_connected_to_convadis:
             return "n/a"
+        if self.is_connected_to_convadis and not self.convadis_identifier:
+            return "n/a Error: convadis id is not set"
         vehicles_last_position = cache.get('vehicles-last-position')
         if vehicles_last_position:
             return find_vehicle_position(self.convadis_identifier, vehicles_last_position)
@@ -119,7 +120,8 @@ class Car(models.Model):
     def address(self):
         if not self.is_connected_to_convadis:
             return "n/a"
-
+        if self.is_connected_to_convadis and not self.convadis_identifier:
+            return "n/a Error: convadis id is not set"
         geo_loc_car = self.geo_localisation_of_car
         position_lon = geo_loc_car[2]
         position_lat = geo_loc_car[1]
@@ -146,6 +148,8 @@ class Car(models.Model):
     def car_movement(self):
         if not self.is_connected_to_convadis:
             return "n/a"
+        if self.is_connected_to_convadis and not self.convadis_identifier:
+            return "n/a Error: convadis id is not set"
         client = get_oauth2_convadis_rest_client()
 
         r_get = client.get(
@@ -173,6 +177,8 @@ class Car(models.Model):
 
         if not self.is_connected_to_convadis:
             return "n/a"
+        if self.is_connected_to_convadis and not self.convadis_identifier:
+            return "n/a Error: convadis id is not set"
         client = get_oauth2_convadis_rest_client()
 
         r_get = client.get(

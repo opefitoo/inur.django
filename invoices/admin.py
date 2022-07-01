@@ -157,10 +157,11 @@ class CarAdmin(admin.ModelAdmin):
     list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'car_movement', 'mileage')
 
     def geo_localisation_of_car_url(self, obj):
-        if 'n/a' == obj.geo_localisation_of_car:
-            return 'n/a'
-        url = 'https://maps.google.com/?q=%s,%s' % (obj.geo_localisation_of_car[1],
-                                                    obj.geo_localisation_of_car[2])
+        _geo_localisation_of_car = obj.geo_localisation_of_car
+        if type(_geo_localisation_of_car) is not tuple and _geo_localisation_of_car.startswith('n/a'):
+            return _geo_localisation_of_car
+        url = 'https://maps.google.com/?q=%s,%s' % (_geo_localisation_of_car[1],
+                                                    _geo_localisation_of_car[2])
         address = obj.address
         return format_html("<a href='%s'>%s</a>" % (url, address))
 
