@@ -140,9 +140,10 @@ class Car(models.Model):
 
         time_converter = datetime.strptime(position_time, '%Y-%m-%dT%H:%M:%S%z')
         heure_luxembourg = str(time_converter.astimezone(timezone('Europe/Luxembourg')))
-        address = data["features"][0]['properties']['label']
-
-        return "%s - màj: %s" % (address, heure_luxembourg)
+        if "features" in data:
+            address = data["features"][0]['properties']['label']
+            return "%s - màj: %s" % (address, heure_luxembourg)
+        return data
 
     @property
     def car_movement(self):
