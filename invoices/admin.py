@@ -154,7 +154,8 @@ class ExpenseCardDetailInline(TabularInline):
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
     inlines = [ExpenseCardDetailInline]
-    list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'car_movement', 'mileage')
+    list_display = ('name', 'licence_plate', 'pin_codes', 'car_movement', 'address')
+    #list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'car_movement', 'address')
 
     def geo_localisation_of_car_url(self, obj):
         _geo_localisation_of_car = obj.geo_localisation_of_car
@@ -163,13 +164,16 @@ class CarAdmin(admin.ModelAdmin):
         else:
 
             url = 'https://maps.google.com/?q=%s,%s' % (_geo_localisation_of_car[1],
-                                                    _geo_localisation_of_car[2])
+                                                        _geo_localisation_of_car[2])
             address = obj.address
             return format_html("<a href='%s'>%s</a>" % (url, address))
         return _geo_localisation_of_car
 
     geo_localisation_of_car_url.allow_tags = True
     geo_localisation_of_car_url.short_description = "Dernière position connue"
+
+    def address(self, obj):
+        return obj.address
 
 
 class HospitalizationInline(admin.TabularInline):
