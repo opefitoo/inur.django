@@ -216,9 +216,6 @@ class AbsenceRequestFile(models.Model):
     file_description = models.CharField("description", max_length=30)
     file_upload = models.FileField(null=True, blank=True, upload_to=update_absence_request_filename)
 
-    def __str__(self):
-        "%s" % self.file_description
-
 
 def validate_date_range(instance_id, data):
     messages = {}
