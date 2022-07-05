@@ -101,6 +101,30 @@ class EmployeeAdmin(admin.ModelAdmin):
     list_display = ('user', 'start_contract', 'end_contract', 'occupation', 'abbreviation')
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
 
+    def entry_declaration(self, request, queryset):
+        counter = 1
+        file_data = ""
+        for emp in queryset:
+            if emp.end_contract:
+                pass
+            else:
+                _last_first_name = "%s %s" % (emp.user.last_name.upper(), emp.user.first_name.capitalize())
+                _matricule = "Matricule CNS: %s " % emp.sn_code
+                _address = "Demeurant au: %s" % emp.address
+                _date_entree = "Date Entrée: %s " % emp.start_contract
+                _citizenship = "Nationalité: %s" % emp.citizenship
+                cd = EmployeeContractDetail.objects.filter(employee_link_id=emp.id, end_date__isnull=True).first()
+                _contract_situation = "Contrat %s %s h. / semaine - salaire: %s / mois" % (
+                    cd.contract_type, cd.number_of_hours, cd.monthly_wage)
+                _trial_period = "Date fin période d'essai: %s" % emp.end_trial_period
+                _bank_account_details = "Numéro de compte bancaire: %s" % emp.bank_account_number
+                file_data += _last_first_name + "\n" + _matricule + "\n" + _citizenship + "\n" + _address + "\n" + _date_entree + "\n" + _contract_situation + "\n" + _trial_period + "\n" + _bank_account_details
+
+            counter += 1
+        response = HttpResponse(file_data, content_type='application/text charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="declaration_entree.txt"'
+        return response
+
     def work_certificate(self, request, queryset):
         try:
             return generate_pdf(queryset)
@@ -133,7 +157,7 @@ class EmployeeAdmin(admin.ModelAdmin):
     contracts_situation_certificate.short_description = "Situation des contrats"
 
     # actions = [work_certificate, 'delete_in_google_calendar']
-    actions = [work_certificate, contracts_situation_certificate]
+    actions = [work_certificate, contracts_situation_certificate, entry_declaration]
 
     def delete_in_google_calendar(self, request, queryset):
         if not request.user.is_superuser:
@@ -154,7 +178,7 @@ class ExpenseCardDetailInline(TabularInline):
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
     inlines = [ExpenseCardDetailInline]
-    list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'car_movement', )
+    list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'car_movement',)
 
     def geo_localisation_of_car_url(self, obj):
         _geo_localisation_of_car = obj.geo_localisation_of_car
@@ -978,4 +1002,3 @@ class EventListAdmin(EventAdmin):
             return
         for e in queryset:
             e.display_unconnected_events()
-

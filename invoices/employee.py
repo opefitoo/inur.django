@@ -8,8 +8,10 @@ from django.db import models
 from django.db.models.signals import pre_save, post_delete, post_save
 from django.dispatch import receiver
 from django.utils.timezone import now
+from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from invoices.enums.holidays import ContractType
 from invoices.storages import CustomizedGoogleDriveStorage
 
 
@@ -48,9 +50,14 @@ class Employee(models.Model):
                                     max_length=3,
                                     default='XXX')
     phone_number = PhoneNumberField(blank=True)
-    bank_account_number = models.CharField("Numéro de compte IBAN", max_length=50, blank=True)
+    bank_account_number = models.CharField("Numéro de compte IBAN", help_text="Code BIC + IBAN",
+                                           max_length=50, blank=True)
     address = models.TextField("Adresse", max_length=100, blank=True, null=True)
     access_card_number = models.CharField("Carte Voiture", max_length=20, blank=True, null=True)
+    access_card_code = models.CharField("Code Carte Voiture", max_length=40, blank=True, null=True)
+    sn_code = models.CharField("Matricule sécurité sociale", max_length=40, blank=True, null=True)
+    end_trial_period = models.DateField("Fin période d'essai", blank=True, null=True)
+    citizenship = CountryField(blank_label='...', blank=True, null=True)
     color_cell = ColorField(default='#FF0000')
     color_text = ColorField(default='#FF0000')
 
@@ -89,6 +96,11 @@ class EmployeeContractDetail(models.Model):
     end_date = models.DateField(u'Date fin période', blank=True, null=True)
     number_of_hours = models.PositiveSmallIntegerField(u"Nombre d'heures par semaine",
                                                        validators=[MinValueValidator(5), MaxValueValidator(40)])
+    contract_type = models.CharField("Type contrat",
+                                     max_length=10,
+                                     choices=ContractType.choices,
+                                     default=ContractType.CDI, blank=True, null=True)
+    monthly_wage = models.DecimalField("Salaire Mensuel", max_digits=8, decimal_places=2, blank=True, null=True)
     employee_link = models.ForeignKey(Employee, on_delete=models.CASCADE)
 
     def calculate_current_daily_hours(self):
@@ -110,7 +122,9 @@ def update_filename(instance, filename):
         _current_month_or_prscr_month = str(instance.employee.start_contract.month)
     path = os.path.join("Doc. Admin employes", "%s_%s" % (instance.employee.user.last_name.upper(),
                                                           instance.employee.user.first_name.capitalize()))
-    filename = '%s_%s_%s_%s%s' % (_current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.employee.abbreviation, instance.file_description, file_extension)
+    filename = '%s_%s_%s_%s%s' % (
+    _current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.employee.abbreviation, instance.file_description,
+    file_extension)
     return os.path.join(path, filename)
 
 
