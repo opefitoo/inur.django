@@ -10,6 +10,8 @@ from django.conf import settings
 import logging
 import sys
 from rq import Queue
+
+from invoices.employee import Employee
 from worker import conn
 
 logger = logging.getLogger('console')
@@ -105,10 +107,10 @@ class PrestationGoogleCalendarSurLu:
         summary = '%s - %s' % (data.get('patient'), ','.join(u.abbreviation for u in data.get('event_employees')))
 
         localized = datetime.datetime(data.get('day').year,
-                                       data.get('day').month, data.get('day').day,
-                                       data.get('time_start_event').hour,
-                                       data.get('time_start_event').minute,
-                                       data.get('time_start_event').second).astimezone(ZoneInfo("Europe/Luxembourg"))
+                                      data.get('day').month, data.get('day').day,
+                                      data.get('time_start_event').hour,
+                                      data.get('time_start_event').minute,
+                                      data.get('time_start_event').second).astimezone(ZoneInfo("Europe/Luxembourg"))
         naive_end_date = datetime.datetime(data.get('day').year,
                                            data.get('day').month, data.get('day').day,
                                            data.get('time_end_event').hour,
@@ -176,10 +178,10 @@ class PrestationGoogleCalendarSurLu:
         summary = '%s - %s' % (event.patient, event.employees.abbreviation)
 
         localized = datetime.datetime(event.day.year,
-                                       event.day.month, event.day.day,
-                                       event.time_start_event.hour,
-                                       event.time_start_event.minute,
-                                       event.time_start_event.second).astimezone(ZoneInfo("Europe/Luxembourg"))
+                                      event.day.month, event.day.day,
+                                      event.time_start_event.hour,
+                                      event.time_start_event.minute,
+                                      event.time_start_event.second).astimezone(ZoneInfo("Europe/Luxembourg"))
         naive_end_date = datetime.datetime(event.day.year,
                                            event.day.month, event.day.day,
                                            event.time_end_event.hour,
@@ -240,6 +242,19 @@ class PrestationGoogleCalendarSurLu:
         # print("Successfully delete GCalendar event %s" % gmail_event)
         # sys.stdout.flush()
         return gmail_event
+
+    def list_event_with_sur_id(self):
+        employees = Employee.objects.filter(end_contract=None)
+        inur_event_ids = []
+        for emp in employees:
+            g_events = self._service.events().list(calendarId=emp.user.email, q="SUR LU ID",
+                                                   timeMin="2022-07-04T10:00:00-00:00").execute()
+
+            for g_event in g_events['items']:
+                description = g_event['description']
+                _inur_event_id = description.split("Sur LU ID:</b>")[1].split("<br>")[0]
+                inur_event_ids.append({'gId': g_event['id'], 'inurId': _inur_event_id, 'htmlLink': g_event['htmlLink']})
+        return inur_event_ids
 
     def delete_all_events_from_calendar(self, calendar_id):
         # FIXME: hardcoded date to be replaced

@@ -127,6 +127,16 @@ class Event(models.Model):
             calendar_gcalendar.delete_event(self)
         super(Event, self).delete(using=None, keep_parents=False)
 
+    def display_unconnected_events(self):
+        calendar_gcalendar = PrestationGoogleCalendarSurLu()
+        # calendar_gcalendar.q_delete_event(self)
+        inur_ids = calendar_gcalendar.list_event_with_sur_id()
+        orphan_ids = []
+        for found_event in inur_ids:
+            if not Event.objects.filter(pk=found_event['inurId']):
+                orphan_ids.append(found_event)
+        print(orphan_ids)
+
     @staticmethod
     def validate(model, instance_id, data):
         result = {}

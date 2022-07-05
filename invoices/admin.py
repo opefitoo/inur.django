@@ -965,10 +965,17 @@ class EventListAdmin(EventAdmin):
     list_filter = ('employees', 'event_type', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'
 
-    actions = ['safe_delete', 'delete_in_google_calendar']
+    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events']
 
     def safe_delete(self, request, queryset):
         if not request.user.is_superuser:
             return
         for e in queryset:
             e.delete()
+
+    def list_orphan_events(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        for e in queryset:
+            e.display_unconnected_events()
+
