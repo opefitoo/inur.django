@@ -110,6 +110,7 @@ class EmployeeAdmin(admin.ModelAdmin):
             else:
                 _last_first_name = "%s %s" % (emp.user.last_name.upper(), emp.user.first_name.capitalize())
                 _matricule = "Matricule CNS: %s " % emp.sn_code
+                _occupation = "Occupation: %s" % emp.occupation
                 _address = "Demeurant au: %s" % emp.address
                 _date_entree = "Date Entrée: %s " % emp.start_contract
                 _citizenship = "Nationalité: %s" % emp.citizenship
@@ -118,7 +119,9 @@ class EmployeeAdmin(admin.ModelAdmin):
                     cd.contract_type, cd.number_of_hours, cd.monthly_wage)
                 _trial_period = "Date fin période d'essai: %s" % emp.end_trial_period
                 _bank_account_details = "Numéro de compte bancaire: %s" % emp.bank_account_number
-                file_data += _last_first_name + "\n" + _matricule + "\n" + _citizenship + "\n" + _address + "\n" + _date_entree + "\n" + _contract_situation + "\n" + _trial_period + "\n" + _bank_account_details
+                file_data += _last_first_name + "\n" + _matricule + "\n" + _occupation + "\n" + _citizenship + "\n" \
+                             + _address + "\n" + _date_entree + "\n" + _contract_situation + "\n" + _trial_period \
+                             + "\n" + _bank_account_details + "\n"
 
             counter += 1
         response = HttpResponse(file_data, content_type='application/text charset=utf-8')
