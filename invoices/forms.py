@@ -3,13 +3,14 @@ from datetime import datetime
 from constance import config
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.forms import BaseInlineFormSet, ValidationError, ModelForm, ModelMultipleChoiceField
+from django.forms import BaseInlineFormSet, ValidationError, ModelForm, ModelMultipleChoiceField, CharField, TextInput, \
+    ChoiceField, ModelChoiceField
 
 from invoices.employee import Employee
 from invoices.events import Event, create_or_update_google_calendar
 from invoices.models import InvoiceItem, MedicalPrescription
 from invoices.timesheet import SimplifiedTimesheet, SimplifiedTimesheetDetail
-from invoices.widgets import CodeSnWidget
+from invoices.widgets import CodeSnWidget, MedicalPrescriptionSelect
 
 
 def check_for_periods_intersection(cleaned_data):
@@ -164,19 +165,23 @@ class SimplifiedTimesheetDetailForm(BaseInlineFormSet):
 #         fields = '__all__'
 
 
-# class InvoiceItemForm(forms.ModelForm):
-#     medical_prescription = forms.ModelChoiceField(
-#         help_text='Veuillez choisir une ordonnance',
-#         queryset=MedicalPrescription.objects.all(),
-#         widget=autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
-#                                          attrs={'data-placeholder': '...'},
-#                                          forward=['patient']),
-#         required=False,
-#     )
-#
-#     #
-#     # def __init__(self, *args, **kwargs):
-#     #     super(InvoiceItemForm, self).__init__(*args, **kwargs)
+class InvoiceItemForm(forms.ModelForm):
+
+    medical_prescription = ModelChoiceField(widget=MedicalPrescriptionSelect, queryset=MedicalPrescription.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['medical_prescription'].queryset = MedicalPrescription.objects.none()
+
+        if 'medical_prescription' in self.data:
+            try:
+                country_id = int(self.data.get('country'))
+                self.fields['city'].queryset = MedicalPrescription.objects.filter(country_id=country_id).order_by('name')
+            except (ValueError, TypeError):
+                pass  # invalid input from the client; ignore and fallback to empty City queryset
+        elif self.instance.pk:
+            self.fields['medical_prescription'].queryset = MedicalPrescription.objects.filter(patient=self.instance.patient.id)
+
 #     #     if self.instance.has_patient():
 #     #         self.fields['medical_prescription'].queryset = MedicalPrescription.objects.filter(patient=self.instance.patient)
 #     class Meta:

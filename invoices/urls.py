@@ -9,6 +9,7 @@ from django.conf import settings
 import api
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
     get_active_care_plans
+from invoices import views
 from invoices.views import delete_prestation
 
 admin.autodiscover()
@@ -88,6 +89,9 @@ urlpatterns += [
 ]
 urlpatterns += [
     re_path(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
+]
+urlpatterns += [
+     re_path(r'^ajax/load-medical-prescriptions/$', views.load_prescriptions, name='ajax_load_prescriptions'),
 ]
 # if settings.DEBUG:
 #     import debug_toolbar
