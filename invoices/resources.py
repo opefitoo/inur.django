@@ -83,9 +83,9 @@ class Car(models.Model):
             return find_vehicle_position(self.convadis_identifier, vehicles_last_position)
         else:
             try:
-                client = self.get_oauth2_convadis_rest_client_v2()
+                client = get_oauth2_convadis_rest_client_v2()
             except TokenExpiredError as e:
-                client = self.get_oauth2_convadis_rest_client_v2(refresh_token=True)
+                client = get_oauth2_convadis_rest_client_v2(refresh_token=True)
                 print(e)
             if client:
                 r_post = client.post(
