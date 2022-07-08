@@ -82,8 +82,13 @@ class Car(models.Model):
         if vehicles_last_position:
             return find_vehicle_position(self.convadis_identifier, vehicles_last_position)
         else:
+            client = get_oauth2_convadis_rest_client_v2()
             try:
-                client = get_oauth2_convadis_rest_client_v2()
+                r_post = client.post(
+                    'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles/%s/commands/request-last-position' % (
+                        config.CONVADIS_ORG_ID, self.convadis_identifier))
+                r_last = client.get(
+                    'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-position' % config.CONVADIS_ORG_ID)
             except TokenExpiredError as e:
                 client = get_oauth2_convadis_rest_client_v2(refresh_token=True)
                 print(e)
@@ -93,7 +98,6 @@ class Car(models.Model):
                         config.CONVADIS_ORG_ID, self.convadis_identifier))
                 r_last = client.get(
                     'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-position' % config.CONVADIS_ORG_ID)
-
                 text_last = r_last.text
                 vehicles_last_position = json.loads(text_last)
                 # cache 30 seconds
@@ -142,11 +146,15 @@ class Car(models.Model):
             return "n/a"
         if self.is_connected_to_convadis and not self.convadis_identifier:
             return "n/a Error: convadis id is not set"
-        client = get_oauth2_convadis_rest_client()
-
-        r_get = client.get(
-            'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-position' % config.CONVADIS_ORG_ID)
-
+        client = get_oauth2_convadis_rest_client_v2()
+        try:
+            r_get = client.get(
+                'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-position' % config.CONVADIS_ORG_ID)
+        except TokenExpiredError as te:
+            print(te)
+            get_oauth2_convadis_rest_client_v2(refresh_token=True)
+            r_get = client.get(
+                'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-position' % config.CONVADIS_ORG_ID)
         speed = json.loads(r_get.text)
 
         if vehicle_speed(self.convadis_identifier, speed) > 1:
