@@ -53,7 +53,7 @@ INSTALLED_APPS = (
     'dependence',
     'fieldsets_with_inlines',
     'phonenumber_field',
-    'django.forms'
+    'django_select2'
 )
 
 INSTALLED_APPS += ('admin_object_actions',)

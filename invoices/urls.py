@@ -91,7 +91,9 @@ urlpatterns += [
     re_path(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
 ]
 urlpatterns += [
-     re_path(r'^ajax/load-medical-prescriptions/$', views.load_prescriptions, name='ajax_load_prescriptions'),
+    # … other patterns
+    re_path("select2/", include("django_select2.urls")),
+    # … other patterns
 ]
 # if settings.DEBUG:
 #     import debug_toolbar
