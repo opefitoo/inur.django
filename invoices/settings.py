@@ -56,6 +56,8 @@ INSTALLED_APPS = (
     'django_select2'
 )
 
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 20000
+
 INSTALLED_APPS += ('admin_object_actions',)
 
 MIDDLEWARE = (
