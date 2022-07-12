@@ -336,9 +336,15 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date',)
     list_display = ('date', 'prescriptor', 'patient',)
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
-    readonly_fields = ('image_preview',)
+    readonly_fields = ('image_preview', 'link_to_invoices')
     autocomplete_fields = ['prescriptor', 'patient']
+
     # actions = [migrate_from_g_to_cl]
+    def link_to_invoices(self, instance):
+        url = f'{reverse("admin:invoices_invoiceitem_changelist")}?medical_prescription__id={instance.id}'
+        return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici"))
+
+    link_to_invoices.short_description = "Factures client"
 
 
 class PrestationInline(TabularInline):
