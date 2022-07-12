@@ -1,0 +1,20 @@
+<select name="{{ widget.name }}" id="id_medical_prescription"
+       data-medical-prescriptions-url="{% url 'ajax_load_prescriptions' %}">
+    {% for group_name, group_choices, group_index in widget.optgroups %}
+        {% if group_name %}
+            <optgroup label="{{ group_name }}">{% endif %}{% for option in group_choices %}
+        {% include option.template_name with widget=option %}{% endfor %}{% if group_name %}
+        </optgroup>{% endif %}{% endfor %}
+</select>
+
+{% comment %}<select name="{{ widget.name }}" id="id_medical_prescription"
+        data-medical-prescriptions-url="{% url 'ajax_load_prescriptions' %}">
+    {% if widget.value %}
+        <option {{ widget.value }} class="selected" selected> {{ widget.value }} + "__" + {{ instance }}</option>
+    {% else %}
+        <option value="" selected disabled>Please select</option>
+        {% for med in medical_prescriptions %}
+            <option {{ med.pk }} selected>{{ med }} + ".." + {{ widget.name }}</option>
+        {% endfor %}
+    {% endif %}
+</select>{% endcomment %}

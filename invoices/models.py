@@ -705,7 +705,7 @@ def update_medical_prescription_filename(instance, filename):
     else:
         _current_yr_or_prscr_yr = str(instance.date.year)
         _current_month_or_prscr_month = str(instance.date.month)
-    path = os.path.join(CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER, _current_yr_or_prscr_yr,
+    path = os.path.join("Medical Prescription", _current_yr_or_prscr_yr,
                         _current_month_or_prscr_month)
     filename = '%s_pour_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
                                        str(instance.date), file_extension)
@@ -738,6 +738,7 @@ class MedicalPrescription(models.Model):
     file = models.ImageField(storage=gd_storage, blank=True,
                              upload_to=update_medical_prescription_filename,
                              validators=[validate_image])
+    file_upload = models.FileField(null=True, blank=True, upload_to=update_medical_prescription_filename)
     # image_file = _modelscloudinary.CloudinaryField('Scan or picture', default=None,
     #                                                blank=True,
     #                                                null=True)
@@ -784,7 +785,7 @@ class MedicalPrescription(models.Model):
         if max_height is None:
             max_height = '800'
         # used in the admin site model as a "thumbnail"
-        link = self.file.storage.get_thumbnail_link(getattr(self.file, 'name', None))
+        link = self.file_upload.storage.get_thumbnail_link(getattr(self.file, 'name', None))
         styles = "max-width: %spx; max-height: %spx;" % (max_width, max_height)
         tag = '<img src="{}" style="{}"/>'.format(link, styles)
 

@@ -1,4 +1,6 @@
+from django import forms
 from django.contrib.admin.widgets import AdminSplitDateTime, AdminTextInputWidget
+from django.forms import Select
 
 
 class CustomAdminSplitDateTime(AdminSplitDateTime):
@@ -16,3 +18,5 @@ class CodeSnWidget(AdminTextInputWidget):
     class Media:
         js = ('js/jquery.maskedinput.min.js',
               'js/widgets/code-sn-mask.js',)
+
+

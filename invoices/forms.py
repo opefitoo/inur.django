@@ -3,10 +3,11 @@ from datetime import datetime
 from constance import config
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.forms import BaseInlineFormSet, ValidationError, ModelForm, ModelMultipleChoiceField
+from django.forms import BaseInlineFormSet, ValidationError, ModelForm, ModelMultipleChoiceField, CharField, TextInput, \
+    ChoiceField, ModelChoiceField
+from django_select2.forms import ModelSelect2Widget
 
-from invoices.employee import Employee
-from invoices.events import Event, create_or_update_google_calendar
+from invoices.events import Event
 from invoices.models import InvoiceItem, MedicalPrescription
 from invoices.timesheet import SimplifiedTimesheet, SimplifiedTimesheetDetail
 from invoices.widgets import CodeSnWidget
@@ -164,30 +165,22 @@ class SimplifiedTimesheetDetailForm(BaseInlineFormSet):
 #         fields = '__all__'
 
 
-# class InvoiceItemForm(forms.ModelForm):
-#     medical_prescription = forms.ModelChoiceField(
-#         help_text='Veuillez choisir une ordonnance',
-#         queryset=MedicalPrescription.objects.all(),
-#         widget=autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
-#                                          attrs={'data-placeholder': '...'},
-#                                          forward=['patient']),
-#         required=False,
-#     )
-#
-#     #
-#     # def __init__(self, *args, **kwargs):
-#     #     super(InvoiceItemForm, self).__init__(*args, **kwargs)
-#     #     if self.instance.has_patient():
-#     #         self.fields['medical_prescription'].queryset = MedicalPrescription.objects.filter(patient=self.instance.patient)
-#     class Meta:
-#         model = InvoiceItem
-#         fields = '__all__'
-#         # widgets = {
-#         #     'medical_prescription': dal.autocomplete.ModelSelect2(url='medical-prescription-autocomplete',
-#         #                                                           attrs={'data-placeholder': '...',
-#         #                                                                  'data-minimum-input-length': 3},
-#         #                                                           forward=['patient'])
-#         # }
+class InvoiceItemForm(forms.ModelForm):
+
+    medical_prescription = forms.ModelChoiceField(
+        queryset=MedicalPrescription.objects.all(),
+        label=u"Medical Prescription",
+        help_text=u"Entrez les première lettres du nom (ou prénom) du patient ou du docteur ou code CNS du médecin",
+        required=False,
+        widget=ModelSelect2Widget(
+            search_fields=['patient__name__icontains',
+                           'patient__first_name__icontains',
+                           'prescriptor__name__icontains',
+                           'prescriptor__first_name__icontains',
+                           'prescriptor__provider_code__icontains'],
+            dependent_fields={'patient': 'patient'},
+        )
+    )
 
 
 class HospitalizationFormSet(BaseInlineFormSet):

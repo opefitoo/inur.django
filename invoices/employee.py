@@ -123,8 +123,9 @@ def update_filename(instance, filename):
     path = os.path.join("Doc. Admin employes", "%s_%s" % (instance.employee.user.last_name.upper(),
                                                           instance.employee.user.first_name.capitalize()))
     filename = '%s_%s_%s_%s%s' % (
-    _current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.employee.abbreviation, instance.file_description,
-    file_extension)
+        _current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.employee.abbreviation,
+        instance.file_description,
+        file_extension)
     return os.path.join(path, filename)
 
 

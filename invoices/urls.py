@@ -9,6 +9,7 @@ from django.conf import settings
 import api
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
     get_active_care_plans
+from invoices import views
 from invoices.views import delete_prestation
 
 admin.autodiscover()
@@ -88,6 +89,11 @@ urlpatterns += [
 ]
 urlpatterns += [
     re_path(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
+]
+urlpatterns += [
+    # … other patterns
+    re_path("select2/", include("django_select2.urls")),
+    # … other patterns
 ]
 # if settings.DEBUG:
 #     import debug_toolbar
