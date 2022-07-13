@@ -10,6 +10,7 @@ import api
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
     get_active_care_plans
 from invoices import views
+from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
 from invoices.views import delete_prestation
 
 admin.autodiscover()
@@ -81,6 +82,16 @@ urlpatterns += [
     re_path(r'^media/(?P<path>.*)$', serve, {
         'document_root': settings.MEDIA_ROOT,
     }),
+]
+
+urlpatterns += [
+    # re_path('', Calendar1View.as_view(), name='calendar_1'),
+    re_path('^admin/EventWeekList/update-event/<int:id>/', Calendar1View.as_view(),
+            name='update-even'),
+    re_path('^admin/EventWeekList/add-event-form/', load_calendar_form, name='load-calendar-form'),
+    re_path('update-event-form/',
+            update_calendar_form,
+            name='update-calendar-form'),
 ]
 
 urlpatterns += [

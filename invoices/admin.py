@@ -258,7 +258,7 @@ class PatientAdmin(CSVExportAdmin):
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
                   'country', 'phone_number', 'email_address', 'date_of_death']
-    readonly_fields = ('age', 'link_to_invoices')
+    readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions')
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode']
     form = PatientForm
     # actions = [generate_road_book_2019_mehdi]
@@ -266,9 +266,17 @@ class PatientAdmin(CSVExportAdmin):
 
     def link_to_invoices(self, instance):
         url = f'{reverse("admin:invoices_invoiceitem_changelist")}?patient__id={instance.id}'
-        return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici"))
+        return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici (%d)" % InvoiceItem.objects.filter(
+            patient_id=instance.id).count()))
 
     link_to_invoices.short_description = "Factures client"
+
+    def link_to_medical_prescriptions(self, instance):
+        url = f'{reverse("admin:invoices_medicalprescription_changelist")}?patient__id={instance.id}'
+        return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici (%d)" % MedicalPrescription.objects.filter(
+            patient_id=instance.id).count()))
+
+    link_to_medical_prescriptions.short_description = "Ordonnances client"
 
     def has_csv_permission(self, request):
         """Only super users can export as CSV"""
@@ -1012,3 +1020,56 @@ class EventListAdmin(EventAdmin):
             return
         for e in queryset:
             e.display_unconnected_events()
+
+
+class EventWeekList(Event):
+    class Meta:
+        proxy = True
+        verbose_name = "Nouveau Plannig (Ne modifiez pas les événements à partir d'ici)"
+        verbose_name_plural = "Nouveaux Plannigs (Ne modifiez pas les événements à partir d'ici)"
+
+
+@admin.register(EventWeekList)
+class EventWeekListAdmin(admin.ModelAdmin):
+    class Media:
+        css = {
+            "all": ("css/main.min.css",)
+        }
+        js = [
+            "js/main.min.js",
+        ]
+
+    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type', 'patient', 'employees']
+    change_list_template = 'events/calendar.html'
+    list_filter = ('employees', 'event_type', 'state', 'patient', 'created_by')
+    date_hierarchy = 'day'
+
+    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events']
+
+    context = {}
+    form = EventForm
+
+    @csrf_protect_m
+    def changelist_view(self, request, extra_context=None):
+        raw_list = Event.objects.filter(day__month=datetime.date.today().month).order_by("employees_id")
+        # object_list = (Event.objects
+        #                .values()
+        #                .annotate(employees=Count('employees_id'))
+        #                .order_by()
+        #                )
+        #
+        # results = Event.objects.raw(
+        #     'SELECT ie.employees_id, ie.* FROM invoices_event ie order by ie.employees_id desc')
+        object_list = {}
+        for r in raw_list:
+            if r.employees:
+                l = object_list.get(r.employees.id)
+                if l:
+                    l.append(r)
+                    # dd[r.employees.id] = l
+                else:
+                    object_list[r.employees.id] = [r]
+
+        extra_context = {'object_list': raw_list, 'form': self.form}
+
+        return super(EventWeekListAdmin, self).changelist_view(request, extra_context)

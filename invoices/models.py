@@ -366,11 +366,12 @@ class PatientAnamnesis(models.Model):
     general_wishes = models.TextField("Souhaits", max_length=250, default=None, blank=True, null=True)
     family_ties = models.TextField("Famille", max_length=200, default=None, blank=True, null=True)
     friend_ties = models.TextField("Amis", max_length=200, default=None, blank=True, null=True)
-    important_persons_ties = models.TextField("Personnes importantes", max_length=200, default=None, blank=True, null=True)
+    important_persons_ties = models.TextField("Personnes importantes", max_length=200, default=None, blank=True,
+                                              null=True)
     bio_highlights = models.TextField("Important",
-                                              help_text=u"Quelles sont les éléments marquants de votre vie, "
-                                                        "qui sont importants pour bien vous soigner ?", max_length=200,
-                                              default=None, blank=True, null=True)
+                                      help_text=u"Quelles sont les éléments marquants de votre vie, "
+                                                "qui sont importants pour bien vous soigner ?", max_length=200,
+                                      default=None, blank=True, null=True)
 
     # Habitation
     house_type = models.CharField("Type d'habitation",

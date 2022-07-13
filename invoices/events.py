@@ -12,6 +12,7 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from invoices.employee import Employee
@@ -158,6 +159,11 @@ class Event(models.Model):
         if events.count() > 0:
             messages = {'patient': 'Event already created'}
         return messages
+
+    def print_html_safe_notes(self):
+        if self.notes:
+            return self.notes.replace('\r\n', '<br />').replace('\n', '<br />').replace('\r', '<br />')
+        return ""
 
     def __str__(self):  # Python 3: def __str__(self):,
         event_type = self.event_type
