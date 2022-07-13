@@ -1060,15 +1060,15 @@ class EventWeekListAdmin(admin.ModelAdmin):
         #
         # results = Event.objects.raw(
         #     'SELECT ie.employees_id, ie.* FROM invoices_event ie order by ie.employees_id desc')
-        object_list = {}
-        for r in raw_list:
-            if r.employees:
-                l = object_list.get(r.employees.id)
-                if l:
-                    l.append(r)
-                    # dd[r.employees.id] = l
-                else:
-                    object_list[r.employees.id] = [r]
+        # object_list = {}
+        # for r in raw_list:
+        #     if r.employees:
+        #         l = object_list.get(r.employees.id)
+        #         if l:
+        #             l.append(r)
+        #             # dd[r.employees.id] = l
+        #         else:
+        #             object_list[r.employees.id] = [r]
 
         extra_context = {'object_list': raw_list, 'form': self.form}
 
