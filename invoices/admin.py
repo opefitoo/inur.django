@@ -320,7 +320,7 @@ class PatientAdmin(CSVExportAdmin):
 class PhysicianAdmin(admin.ModelAdmin):
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'provider_code')
-    search_fields = ['name', 'first_name', 'code_sn']
+    search_fields = ['name', 'first_name', 'provider_code']
 
 
 # def migrate_from_g_to_cl(modeladmin, request, queryset):
