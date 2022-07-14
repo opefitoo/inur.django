@@ -16,6 +16,7 @@ from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
 from invoices.actions.print_pdf import do_it, PdfActionType
+from invoices.enums.event import EventTypeEnum
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
@@ -1003,6 +1004,8 @@ class EventAdmin(admin.ModelAdmin):
 class EventList(Event):
     class Meta:
         proxy = True
+        verbose_name = "Mes tâches"
+        verbose_name_plural = "Planning tâches à valider"
 
 
 @admin.register(EventList)
@@ -1027,28 +1030,12 @@ class EventListAdmin(admin.ModelAdmin):
         for e in queryset:
             e.display_unconnected_events()
 
-
-class MyEventList(Event):
-    class Meta:
-        proxy = True
-
-
-@admin.register(MyEventList)
-class MyEventListAdmin(admin.ModelAdmin):
-    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees']
-    list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
-    date_hierarchy = 'day'
-    exclude = ('event_type',)
-
-    actions = []
-
     def get_queryset(self, request):
-        queryset = super(MyEventListAdmin, self).get_queryset(request)
+        queryset = super(EventListAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return Event.objects.all()
         else:
-            operator = request.user.profile
-            return queryset.filter(operator=operator)
+            return queryset.filter(employees__user_id=request.user.id).exclude(state=3)
 
 
 class EventWeekList(Event):
@@ -1069,7 +1056,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
         ]
 
     list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees']
-    exclude = ('event_type', )
+    exclude = ('event_type',)
     change_list_template = 'events/calendar.html'
     list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'
