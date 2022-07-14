@@ -235,6 +235,7 @@
                             color: '{{event.employees.color_cell}}',
                             textColor: '{{event.employees.color_text}}',
                             description: '{{event}}{{event.print_html_safe_notes}}',
+                            type: '{{ event.event_type_enum }}'
                         },
 
                     {% endfor %}

@@ -8,14 +8,14 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, QuerySet
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from invoices.employee import Employee
+from invoices.enums.event import EventTypeEnum
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.models import Patient
 
@@ -63,7 +63,9 @@ class Event(models.Model):
     state = models.PositiveSmallIntegerField(_('State'), choices=STATES)
     event_type = models.ForeignKey(EventType, help_text=_('Event type'),
                                    on_delete=models.CASCADE,
-                                   verbose_name=_('Event type'))
+                                   verbose_name=_('Event type'), blank=True, null=True)
+    event_type_enum = models.CharField(_('Type'), max_length=10,
+                                       choices=EventTypeEnum.choices, default=EventTypeEnum.CARE)
     employees = models.ForeignKey(Employee, related_name='event_link_to_employee', blank=True, null=True,
                                   help_text=_('Please select an employee'),
                                   on_delete=models.CASCADE, limit_choices_to=limit_to_active_employees)
@@ -71,6 +73,8 @@ class Event(models.Model):
     notes = models.TextField(
         _('Notes'),
         help_text=_('Notes'), blank=True, null=True)
+    event_report = models.TextField(_('Rapport de soin'), help_text="A remplir une fois le soin terminé",
+                                    blank=True, null=True)
     patient = models.ForeignKey(Patient, related_name='event_link_to_patient', blank=True, null=True,
                                 help_text=_('Please select a patient'),
                                 on_delete=models.CASCADE)
@@ -122,7 +126,7 @@ class Event(models.Model):
         self.calendar_url = cal.get('htmlLink')
 
     def delete(self, using=None, keep_parents=False):
-        if "soin" == self.event_type.name:
+        if EventTypeEnum.BIRTHDAY != self.event_type_enum:
             calendar_gcalendar = PrestationGoogleCalendarSurLu()
             # calendar_gcalendar.q_delete_event(self)
             calendar_gcalendar.delete_event(self)
@@ -166,13 +170,12 @@ class Event(models.Model):
         return ""
 
     def __str__(self):  # Python 3: def __str__(self):,
-        event_type = self.event_type
         cached_patient = cache.get('cached_patient_%s' % self.patient.id)
         if not cached_patient:
             cache.set('cached_patient_%s' % self.patient.id, self.patient)
             cached_patient = cache.get('cached_patient_%s' % self.patient.id)
-        if 'soin' != event_type.name:
-            return '%s for %s on %s' % (event_type, cached_patient, self.day)
+        if EventTypeEnum.CARE != self.event_type_enum:
+            return '%s for %s on %s' % (self.event_type_enum, cached_patient, self.day)
         cached_employees = cache.get('event_employees_cache_%s' % self.employees.id)
         if not cached_employees:
             cache.set('event_employees_cache_%s' % self.employees.id, self.employees)
@@ -202,7 +205,7 @@ class AssignedAdditionalEmployee(models.Model):
 def create_or_update_google_calendar(instance):
     print("*** Creating event")
     sys.stdout.flush()
-    if "soin" == instance.event_type.name:
+    if EventTypeEnum.GENERIC != instance.event_type_enum:
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         if instance.pk:
             old_event = Event.objects.get(pk=instance.pk)
@@ -220,7 +223,7 @@ def create_or_update_google_calendar(instance):
 
 @receiver(post_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
 def delete_google_calendar(sender, instance, **kwargs):
-    if "soin" == instance.event_type.name:
+    if EventTypeEnum.GENERIC != instance.event_type_enum:
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         calendar_gcalendar.delete_event(instance)
 

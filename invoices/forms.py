@@ -222,7 +222,7 @@ class EventForm(ModelForm):
 
     class Meta:
         model = Event
-        exclude = []
+        exclude = ('event_type', )
 
     def __init__(self, *args, **kwargs):
         super(EventForm, self).__init__(*args, **kwargs)

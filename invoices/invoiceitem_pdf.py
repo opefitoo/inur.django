@@ -37,11 +37,11 @@ def get_doc_elements(queryset, med_p=False):
             elements.extend(_result["elements"])
             summary_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
             elements.append(PageBreak())
-            if med_p and qs.medical_prescription and bool(qs.medical_prescription.file) \
-                    and qs.medical_prescription.file.file.name not in already_added_images:
-                elements.append(Image(qs.medical_prescription.file, width=469.88, height=773.19))
+            if med_p and qs.medical_prescription and bool(qs.medical_prescription.file_upload) \
+                    and qs.medical_prescription.file_upload.file_upload.name not in already_added_images:
+                elements.append(Image(qs.medical_prescription.file_upload, width=469.88, height=773.19))
                 elements.append(PageBreak())
-                already_added_images.append(qs.medical_prescription.file.file.name)
+                already_added_images.append(qs.medical_prescription.file_upload.file.name)
     recap_data = _build_recap(summary_data)
     elements.extend(recap_data[0])
     elements.append(PageBreak())

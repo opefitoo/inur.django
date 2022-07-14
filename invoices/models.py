@@ -751,7 +751,7 @@ class MedicalPrescription(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(MedicalPrescription, self).__init__(*args, **kwargs)
-        self._original_file = self.file
+        self._original_file = self.file_upload
 
     def clean(self):
         logger.info('clean medical prescription %s' % self)
@@ -786,7 +786,7 @@ class MedicalPrescription(models.Model):
         if max_height is None:
             max_height = '800'
         # used in the admin site model as a "thumbnail"
-        link = self.file_upload.storage.get_thumbnail_link(getattr(self.file, 'name', None))
+        link = self.file_upload.storage.get_thumbnail_link(getattr(self.file_upload, 'name', None))
         styles = "max-width: %spx; max-height: %spx;" % (max_width, max_height)
         tag = '<img src="{}" style="{}"/>'.format(link, styles)
 
@@ -800,10 +800,10 @@ class MedicalPrescription(models.Model):
         return 'date', 'prescriptor__name', 'prescriptor__first_name'
 
     def __str__(self):
-        if bool(self.file):
+        if bool(self.file_upload):
             return '%s %s (%s) [%s...]' % (
                 self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
-                self.file.name[:5])
+                self.file_upload.name[:5])
         else:
             return '%s %s (%s) sans fichier' % (
                 self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
@@ -812,21 +812,21 @@ class MedicalPrescription(models.Model):
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
 def medical_prescription_clean_gdrive_pre_save(sender, instance, **kwargs):
     origin_file = instance.get_original_file()
-    if origin_file.name and origin_file != instance.file:
+    if origin_file.name and origin_file != instance.file_upload:
         gd_storage.delete(origin_file.name)
 
 
 @receiver(post_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_save")
 def medical_prescription_clean_gdrive_post_save(sender, instance, **kwargs):
-    if instance.file.name:
-        path = instance.file.name
+    if instance.file_upload.name:
+        path = instance.file_upload.name
         gd_storage.update_file_description(path, instance.file_description)
 
 
 @receiver(post_delete, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_delete")
 def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
-    if instance.file.name:
-        gd_storage.delete(instance.file.name)
+    if instance.file_upload.name:
+        gd_storage.delete(instance.file_upload.name)
 
 
 def get_default_invoice_number():
@@ -893,9 +893,9 @@ class InvoiceItemBatch(models.Model):
 
 @receiver(pre_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_pre_save")
 def invoiceitembatch_generate_pdf_name(sender, instance, **kwargs):
-    instance.file = InvoiceItemBatchPdf.get_filename(instance)
+    instance.file_upload = InvoiceItemBatchPdf.get_filename(instance)
     origin_file = instance.get_original_file()
-    if origin_file.name and origin_file != instance.file:
+    if origin_file.name and origin_file != instance.file_upload:
         batch_gd_storage.delete(origin_file.name)
 
 
@@ -910,8 +910,8 @@ def invoiceitembatch_generate_pdf_name(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_delete")
 def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
-    if instance.file.name:
-        gd_storage.delete(instance.file.name)
+    if instance.file_upload.name:
+        gd_storage.delete(instance.file_upload.name)
 
 
 class PaymentReference(models.Model):

@@ -341,8 +341,10 @@ class PhysicianAdmin(admin.ModelAdmin):
 
 @admin.register(MedicalPrescription)
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
-    list_filter = ('date',)
+    date_hierarchy = 'date'
+    list_filter = ('date', 'prescriptor', 'patient')
     list_display = ('date', 'prescriptor', 'patient', 'link_to_invoices')
+    fields = ('prescriptor', 'patient', 'date', 'end_date', 'file_upload')
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
     readonly_fields = ('image_preview', 'link_to_invoices')
     autocomplete_fields = ['prescriptor', 'patient']
@@ -350,8 +352,10 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     # actions = [migrate_from_g_to_cl]
     def link_to_invoices(self, instance):
         url = f'{reverse("admin:invoices_invoiceitem_changelist")}?medical_prescription__id={instance.id}'
-        return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici (%d)" % InvoiceItem.objects.filter(
-            medical_prescription__id=instance.id).count()))
+        if instance.id:
+            return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici (%d)" % InvoiceItem.objects.filter(
+                medical_prescription__id=instance.id).count()))
+        return '-'
 
     link_to_invoices.short_description = "Factures client"
 
@@ -945,7 +949,7 @@ class EventAdmin(admin.ModelAdmin):
 
     form = EventForm
 
-    list_display = ['day', 'state', 'event_type', 'notes', 'patient']
+    list_display = ['day', 'state', 'event_type_enum', 'notes', 'patient']
     readonly_fields = ['created_by', 'created_on', 'calendar_url', 'calendar_id']
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
