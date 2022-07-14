@@ -951,6 +951,7 @@ class EventAdmin(admin.ModelAdmin):
 
     list_display = ['day', 'state', 'event_type_enum', 'notes', 'patient']
     readonly_fields = ['created_by', 'created_on', 'calendar_url', 'calendar_id']
+    exclude = ('event_type',)
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
     list_filter = (SmartEmployeeFilter,)
@@ -1005,11 +1006,12 @@ class EventList(Event):
 
 
 @admin.register(EventList)
-class EventListAdmin(EventAdmin):
-    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type', 'patient', 'employees']
+class EventListAdmin(admin.ModelAdmin):
+    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees']
     change_list_template = 'admin/change_list.html'
-    list_filter = ('employees', 'event_type', 'state', 'patient', 'created_by')
+    list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'
+    exclude = ('event_type',)
 
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events']
 
@@ -1024,6 +1026,29 @@ class EventListAdmin(EventAdmin):
             return
         for e in queryset:
             e.display_unconnected_events()
+
+
+class MyEventList(Event):
+    class Meta:
+        proxy = True
+
+
+@admin.register(MyEventList)
+class MyEventListAdmin(admin.ModelAdmin):
+    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees']
+    list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
+    date_hierarchy = 'day'
+    exclude = ('event_type',)
+
+    actions = []
+
+    def get_queryset(self, request):
+        queryset = super(MyEventListAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return Event.objects.all()
+        else:
+            operator = request.user.profile
+            return queryset.filter(operator=operator)
 
 
 class EventWeekList(Event):
@@ -1043,9 +1068,10 @@ class EventWeekListAdmin(admin.ModelAdmin):
             "js/main.min.js",
         ]
 
-    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type', 'patient', 'employees']
+    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees']
+    exclude = ('event_type', )
     change_list_template = 'events/calendar.html'
-    list_filter = ('employees', 'event_type', 'state', 'patient', 'created_by')
+    list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'
 
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events']
