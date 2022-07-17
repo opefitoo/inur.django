@@ -10,7 +10,7 @@ from django_select2.forms import ModelSelect2Widget
 from invoices.events import Event
 from invoices.models import InvoiceItem, MedicalPrescription
 from invoices.timesheet import SimplifiedTimesheet, SimplifiedTimesheetDetail
-from invoices.widgets import CodeSnWidget
+from invoices.widgets import CodeSnWidget, ContaboImageWidget
 
 
 def check_for_periods_intersection(cleaned_data):
@@ -166,7 +166,6 @@ class SimplifiedTimesheetDetailForm(BaseInlineFormSet):
 
 
 class InvoiceItemForm(forms.ModelForm):
-
     medical_prescription = forms.ModelChoiceField(
         queryset=MedicalPrescription.objects.all(),
         label=u"Medical Prescription",
@@ -216,31 +215,26 @@ class EmployeeSelect(forms.Select):
 
 
 class EventForm(ModelForm):
-    # event_employees = ModelMultipleChoiceField(
-    #     Employee.objects.filter(end_contract__isnull=True).exclude(abbreviation="XXX").order_by('-abbreviation'),
-    #     widget=FilteredSelectMultiple("employees", is_stacked=True, ))
 
     class Meta:
         model = Event
-        exclude = ('event_type', )
+        exclude = ('event_type',)
 
     def __init__(self, *args, **kwargs):
         super(EventForm, self).__init__(*args, **kwargs)
         if self.instance.at_office:
             self.fields['event_address'].disabled = True
 
-    #
-    # def clean(self):
-    #     cleaned_data = super().clean()
-    #     if cleaned_data.get('event_employees'):
-    #         self.instance.event_employees.set(cleaned_data.get('event_employees').all())
-    #         self.instance.save
 
-    #     if cleaned_data.get('at_office'):
-    #         cleaned_data['event_address'] = "%s %s" % (config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY)
-    #     cal = create_or_update_google_calendar(cleaned_data)
-    #     self.calendar_id = cal.get('id')
-    #     self.calendar_url = cal.get('htmlLink')
-    #     messages = self.validate(self, self.id, self.__dict__)
-    #     if messages:
-    #         raise ValidationError(messages)
+class MedicalPrescriptionForm(ModelForm):
+    class Meta:
+        model = MedicalPrescription()
+        exclude = ()
+        widgets = {'thumbnail_img': ContaboImageWidget()}
+        readonly_fields = ('thumbnail_img',)
+
+    thumbnail_img = forms.ImageField(widget=ContaboImageWidget(attrs={'readonly': 'readonly'}), label='Aperçu')
+    thumbnail_img.required = False
+
+    def __init__(self, *args, **kwargs):
+        super(MedicalPrescriptionForm, self).__init__(*args, **kwargs)

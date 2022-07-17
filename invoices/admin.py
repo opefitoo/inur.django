@@ -26,7 +26,8 @@ from invoices.employee import Employee, EmployeeContractDetail, JobPosition, Emp
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
-    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, InvoiceItemForm
+    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, InvoiceItemForm, \
+    MedicalPrescriptionForm
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, AssignedPhysician
@@ -344,11 +345,13 @@ class PhysicianAdmin(admin.ModelAdmin):
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
     date_hierarchy = 'date'
     list_filter = ('date', 'prescriptor', 'patient')
-    list_display = ('date', 'prescriptor', 'patient', 'link_to_invoices')
-    fields = ('prescriptor', 'patient', 'date', 'end_date', 'file_upload')
+    list_display = ('date', 'prescriptor', 'patient', 'link_to_invoices', 'image_preview')
+    fields = ('prescriptor', 'patient', 'date', 'end_date', 'notes', 'file_upload', 'thumbnail_img')
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
-    readonly_fields = ('image_preview', 'link_to_invoices')
+    readonly_fields = ('link_to_invoices', )
     autocomplete_fields = ['prescriptor', 'patient']
+    exclude = ('file', )
+    form = MedicalPrescriptionForm
 
     # actions = [migrate_from_g_to_cl]
     def link_to_invoices(self, instance):

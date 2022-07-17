@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base64
 import copy
 import logging
 
@@ -7,8 +8,11 @@ from copy import deepcopy
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+import requests
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
+from django.core.files.images import ImageFile
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
@@ -17,6 +21,7 @@ from django.dispatch import receiver
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from gdstorage.storage import GoogleDriveStorage
+from pdf2image import convert_from_bytes
 
 from invoices.enums.generic import HouseType, CivilStatus, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
     MobilizationsType, NutritionAutonomyLevel, DependenceInsuranceLevel, GenderType, HabitType
@@ -244,6 +249,7 @@ class Patient(models.Model):
                                           help_text="Vous pouvez mettre par exemple les numéros de carte adapto ou tout autre info utile.",
                                           max_length=500,
                                           default=None, blank=True, null=True)
+
     @property
     def anamnesis_set(self):
         if self.id:
@@ -736,6 +742,10 @@ class MedicalPrescription(models.Model):
                                 on_delete=models.CASCADE)
     date = models.DateField('Date ordonnance')
     end_date = models.DateField('Date fin des soins', null=True, blank=True)
+    notes = models.TextField("Notes ou remarques",
+                             help_text="Veuillez mettre le text de l'ordonnance ou des notes concernant les soins prescrits",
+                             max_length=1000,
+                             blank=True, null=True)
     file = models.ImageField(storage=gd_storage, blank=True,
                              upload_to=update_medical_prescription_filename,
                              validators=[validate_image])
@@ -743,6 +753,7 @@ class MedicalPrescription(models.Model):
     # image_file = _modelscloudinary.CloudinaryField('Scan or picture', default=None,
     #                                                blank=True,
     #                                                null=True)
+    thumbnail_img = models.ImageField("Aperçu", null=True, blank=True, upload_to=update_medical_prescription_filename)
     _original_file = None
 
     @property
@@ -752,6 +763,28 @@ class MedicalPrescription(models.Model):
     def __init__(self, *args, **kwargs):
         super(MedicalPrescription, self).__init__(*args, **kwargs)
         self._original_file = self.file_upload
+
+    @property
+    def image_preview(self, max_width=None, max_height=None):
+        if max_width is None:
+            max_width = '300'
+        # used in the admin site model as a "thumbnail"
+        # if value:
+        #     r = requests.get(value.url, stream=True)
+        #     encoded = ("data:" +
+        #                r.headers['Content-Type'] + ";" +
+        #                "base64," + base64.b64encode(r.content).decode('utf-8'))  # Convert to a string first
+        #     context = {'imagedata': encoded, 'pdf_url': value.instance.file_upload.url}
+        if not self.thumbnail_img:
+            return '-'
+        r = requests.get(self.thumbnail_img.url, stream=True)
+        encoded = ("data:" +
+                   r.headers['Content-Type'] + ";" +
+                   "base64," + base64.b64encode(r.content).decode('utf-8'))
+        styles = "max-width: %spx; max-height: %spx;" % (max_width, 300)
+        tag = '<img src="{}" style="{}"/>'.format(encoded, styles)
+
+        return mark_safe(tag)
 
     def clean(self):
         logger.info('clean medical prescription %s' % self)
@@ -780,18 +813,6 @@ class MedicalPrescription(models.Model):
 
         return messages
 
-    def image_preview(self, max_width=None, max_height=None):
-        if max_width is None:
-            max_width = '800'
-        if max_height is None:
-            max_height = '800'
-        # used in the admin site model as a "thumbnail"
-        link = self.file_upload.storage.get_thumbnail_link(getattr(self.file_upload, 'name', None))
-        styles = "max-width: %spx; max-height: %spx;" % (max_width, max_height)
-        tag = '<img src="{}" style="{}"/>'.format(link, styles)
-
-        return mark_safe(tag)
-
     def get_original_file(self):
         return self._original_file
 
@@ -811,22 +832,25 @@ class MedicalPrescription(models.Model):
 
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
 def medical_prescription_clean_gdrive_pre_save(sender, instance, **kwargs):
-    origin_file = instance.get_original_file()
-    if origin_file.name and origin_file != instance.file_upload:
-        gd_storage.delete(origin_file.name)
+    if instance.file_upload:
+        thumbnail_images = convert_from_bytes(instance.file_upload.read(), fmt='png', dpi=200, size=(300, None))
+        instance.thumbnail_img = ImageFile(thumbnail_images[0].fp, name="thubnail.png")
 
 
-@receiver(post_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_save")
-def medical_prescription_clean_gdrive_post_save(sender, instance, **kwargs):
-    if instance.file_upload.name:
-        path = instance.file_upload.name
-        gd_storage.update_file_description(path, instance.file_description)
+# @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_save")
+# def medical_prescription_clean_gdrive_post_save(sender, instance, **kwargs):
+# if instance.file_upload:
+#     pdf = requests.get(instance.file_upload.url, stream=True)
+#     thumbnail_images = convert_from_bytes(pdf.raw.read(), dpi=200, size=(400, None))
+#     instance.thumbnail_img = thumbnail_images[0]
+#     instance.save()
 
 
 @receiver(post_delete, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_delete")
 def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
     if instance.file_upload.name:
-        gd_storage.delete(instance.file_upload.name)
+        instance.file_upload.delete(save=False)
+        instance.thumbnail_img.delete(save=False)
 
 
 def get_default_invoice_number():
