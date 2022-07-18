@@ -1,10 +1,7 @@
 from datetime import datetime
 
-from constance import config
 from django import forms
-from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.forms import BaseInlineFormSet, ValidationError, ModelForm, ModelMultipleChoiceField, CharField, TextInput, \
-    ChoiceField, ModelChoiceField
+from django.forms import BaseInlineFormSet, ValidationError, ModelForm
 from django_select2.forms import ModelSelect2Widget
 
 from invoices.events import Event
