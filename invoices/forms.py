@@ -118,53 +118,6 @@ class SimplifiedTimesheetDetailForm(BaseInlineFormSet):
         check_for_periods_intersection_time_based(all_clean_data)
 
 
-# class PrestationForm(ModelForm):
-#     carecode = ModelChoiceField(
-#         queryset=CareCode.objects.all(),
-#         widget=ModelSelect2(url='carecode-autocomplete')
-#     )
-#     employee = ModelChoiceField(
-#         queryset=Employee.objects.all(),
-#         required=False,
-#         widget=ModelSelect2(url='employee-autocomplete')
-#     )
-#     at_home_paired = ModelChoiceField(
-#         queryset=Prestation.objects.all(),
-#         required=False,
-#         widget=forms.HiddenInput()
-#     )
-#
-#     at_home_paired_name = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}), disabled=True,
-#                                           required=False)
-#     paired_at_home_name = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}), disabled=True,
-#                                           required=False)
-#
-#     def __init__(self, *args, **kwargs):
-#         super(PrestationForm, self).__init__(*args, **kwargs)
-#         self.fields['carecode'].autocomplete = False
-#         self.fields['employee'].autocomplete = False
-#         self.fields['date'].widget = CustomAdminSplitDateTime()
-#
-#         if self.instance.at_home_paired is not None:
-#             self.fields['carecode'].disabled = True
-#             self.fields['at_home'].disabled = True
-#         if hasattr(self.instance, 'paired_at_home') and self.instance.paired_at_home is not None:
-#             self.fields['at_home'].disabled = True
-#             self.fields['at_home_paired_name'].widget = forms.HiddenInput()
-#             self.fields['paired_at_home_name'].initial = self.instance.paired_at_home_name
-#         elif hasattr(self.instance, 'at_home_paired') and self.instance.at_home_paired is not None:
-#             self.fields['at_home'].disabled = True
-#             self.fields['paired_at_home_name'].widget = forms.HiddenInput()
-#             self.fields['at_home_paired_name'].initial = self.instance.at_home_paired_name
-#         else:
-#             self.fields['at_home_paired_name'].widget = forms.HiddenInput()
-#             self.fields['paired_at_home_name'].widget = forms.HiddenInput()
-#
-#     class Meta:
-#         model = Prestation
-#         fields = '__all__'
-
-
 class InvoiceItemForm(forms.ModelForm):
     medical_prescription = forms.ModelChoiceField(
         queryset=MedicalPrescription.objects.all(),
