@@ -8,15 +8,17 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, QuerySet
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from invoices import settings
 from invoices.employee import Employee
 from invoices.enums.event import EventTypeEnum
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
+from invoices.googlemessages import post_webhook
 from invoices.models import Patient
 
 
@@ -53,7 +55,8 @@ class Event(models.Model):
         (1, _('Waiting for validation')),
         (2, _('Valid')),
         (3, _('Done')),
-        (4, _('Ignored'))
+        (4, _('Ignored')),
+        (5, _('Not Done'))
     ]
 
     day = models.DateField(_('Event day'), help_text=_('Event day'))
@@ -181,7 +184,9 @@ class Event(models.Model):
             cache.set('event_employees_cache_%s' % self.employees.id, self.employees)
             cached_employees = cache.get('event_employees_cache_%s' % self.employees.id)
         if self.event_assigned.count() > 1:
-            return '%s ++ %s' % (",".join(a.assigned_additional_employee.abbreviation for a in self.event_assigned.all()), cached_patient.name)
+            return '%s ++ %s' % (
+                ",".join(a.assigned_additional_employee.abbreviation for a in self.event_assigned.all()),
+                cached_patient.name)
         return '%s - %s' % (cached_employees.abbreviation, cached_patient.name)
 
 
@@ -191,9 +196,9 @@ class AssignedAdditionalEmployee(models.Model):
         verbose_name_plural = u'Invités Traitant'
 
     assigned_additional_employee = models.ForeignKey(Employee, related_name='assigned_employees_to_event',
-                                                      help_text='Please enter employee',
-                                                      verbose_name=u"Soignant",
-                                                      on_delete=models.CASCADE, null=True, blank=True, default=None)
+                                                     help_text='Please enter employee',
+                                                     verbose_name=u"Soignant",
+                                                     on_delete=models.CASCADE, null=True, blank=True, default=None)
     event_assigned_to = models.ForeignKey(Event, related_name='event_assigned',
                                           help_text='Please enter xxx',
                                           on_delete=models.CASCADE, null=True, blank=True, default=None)
@@ -219,6 +224,11 @@ def create_or_update_google_calendar(instance):
 #     print("*** Creating event from callback")
 #     sys.stdout.flush()
 #     create_or_update_google_calendar(instance)
+
+@receiver(post_save, sender=Event, dispatch_uid="event_post_save")
+def event_post_save_callback(sender, instance, **kwargs):
+    if settings.GOOGLE_CHAT_WEBHOOK_URL:
+        post_webhook(instance.employees, instance.patient, instance.event_report, instance.state)
 
 
 @receiver(post_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")

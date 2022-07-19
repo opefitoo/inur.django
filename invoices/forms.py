@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.utils import timezone
 
 from django import forms
 from django.forms import BaseInlineFormSet, ValidationError, ModelForm
@@ -164,6 +165,22 @@ class EmployeeSelect(forms.Select):
         return option
 
 
+def cannot_validate_in_future(instance, user):
+    if user.is_superuser:
+        return
+    datetime_event_end = timezone.now().replace(year=instance.day.year,
+                                                month=instance.day.month,
+                                                day=instance.day.day,
+                                                hour=instance.time_end_event.hour,
+                                                minute=instance.time_end_event.minute)
+
+    if timezone.now() < datetime_event_end:
+        raise ValidationError(
+            "Vous ne voupez pas valider un soin dans le futur "
+        )
+    return
+
+
 class EventForm(ModelForm):
 
     class Meta:
@@ -171,9 +188,15 @@ class EventForm(ModelForm):
         exclude = ('event_type',)
 
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
         super(EventForm, self).__init__(*args, **kwargs)
+
         if self.instance.at_office:
             self.fields['event_address'].disabled = True
+
+    def clean(self):
+        super().clean()
+        cannot_validate_in_future(self.instance, self.request.user)
 
 
 class MedicalPrescriptionForm(ModelForm):

@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.utils.translation import gettext_lazy as _
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
@@ -211,10 +212,11 @@ class HospitalizationInline(admin.TabularInline):
 class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     extra = 0
     model = MedicalPrescription
-    readonly_fields = ('scan_preview',)
+    readonly_fields = ('thumbnail_img',)
+    fields = [field.name for field in MedicalPrescription._meta.fields if field.name not in ["id", "file"]]
 
     def scan_preview(self, obj):
-        return obj.image_preview(300, 300)
+        return obj.image_preview
 
     scan_preview.allow_tags = True
 
@@ -961,6 +963,29 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = (SmartEmployeeFilter,)
     inlines = (AssignedAdditionalEmployeeInLine,)
 
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not request.user.is_superuser:
+            if len(form.base_fields) > 0:
+                form.base_fields["event_report"].required = True
+                form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'))
+
+        class ModelFormWithRequest(form):
+            def __new__(cls, *args, **kwargs):
+                kwargs['request'] = request
+                return form(*args, **kwargs)
+        return ModelFormWithRequest
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            if not request.user.is_superuser and obj.event_type_enum == EventTypeEnum.ASS_DEP:
+                fs = [field.name for field in Event._meta.fields if field.name != "id"]
+                if obj.employees.user.id == request.user.id:
+                    return [f for f in fs if f not in ['event_report', 'state']]
+                else:
+                    return fs
+        return self.readonly_fields
+
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):
         after_day = request.GET.get('day__gte', None)
@@ -1021,6 +1046,8 @@ class EventListAdmin(admin.ModelAdmin):
 
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events']
 
+    form = EventForm
+
     def safe_delete(self, request, queryset):
         if not request.user.is_superuser:
             return
@@ -1039,6 +1066,29 @@ class EventListAdmin(admin.ModelAdmin):
             return Event.objects.all()
         else:
             return queryset.filter(employees__user_id=request.user.id).exclude(state=3)
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not request.user.is_superuser:
+            if len(form.base_fields) > 0:
+                form.base_fields["event_report"].required = True
+                form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'))
+
+        class ModelFormWithRequest(form):
+            def __new__(cls, *args, **kwargs):
+                kwargs['request'] = request
+                return form(*args, **kwargs)
+        return ModelFormWithRequest
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            if not request.user.is_superuser and obj.event_type_enum == EventTypeEnum.ASS_DEP:
+                fs = [field.name for field in Event._meta.fields if field.name != "id"]
+                if obj.employees.user.id == request.user.id:
+                    return [f for f in fs if f not in ['event_report', 'state']]
+                else:
+                    return fs
+        return self.readonly_fields
 
 
 class EventWeekList(Event):
@@ -1065,6 +1115,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
     date_hierarchy = 'day'
 
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events']
+    readonly_fields = ['created_by', 'created_on', 'calendar_url', 'calendar_id']
 
     context = {}
     form = EventForm
@@ -1093,3 +1144,27 @@ class EventWeekListAdmin(admin.ModelAdmin):
         extra_context = {'object_list': raw_list, 'form': self.form}
 
         return super(EventWeekListAdmin, self).changelist_view(request, extra_context)
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not request.user.is_superuser:
+            if len(form.base_fields) > 0:
+                form.base_fields["event_report"].required = True
+                form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'))
+
+        class ModelFormWithRequest(form):
+            def __new__(cls, *args, **kwargs):
+                kwargs['request'] = request
+                return form(*args, **kwargs)
+        return ModelFormWithRequest
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            if not request.user.is_superuser and obj.event_type_enum == EventTypeEnum.ASS_DEP:
+                fs = [field.name for field in Event._meta.fields if field.name != "id"]
+                if obj.employees.user.id == request.user.id:
+                    return [f for f in fs if f not in ['event_report', 'state']]
+                else:
+                    return fs
+        return self.readonly_fields
+
