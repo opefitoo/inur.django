@@ -978,7 +978,7 @@ class EventAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
-            if not request.user.is_superuser and obj.event_type_enum == EventTypeEnum.ASS_DEP:
+            if not request.user.is_superuser:
                 fs = [field.name for field in Event._meta.fields if field.name != "id"]
                 if obj.employees.user.id == request.user.id:
                     return [f for f in fs if f not in ['event_report', 'state']]
@@ -1082,7 +1082,7 @@ class EventListAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
-            if not request.user.is_superuser and obj.event_type_enum == EventTypeEnum.ASS_DEP:
+            if not request.user.is_superuser:
                 fs = [field.name for field in Event._meta.fields if field.name != "id"]
                 if obj.employees.user.id == request.user.id:
                     return [f for f in fs if f not in ['event_report', 'state']]
@@ -1160,7 +1160,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
-            if not request.user.is_superuser and obj.event_type_enum == EventTypeEnum.ASS_DEP:
+            if not request.user.is_superuser:
                 fs = [field.name for field in Event._meta.fields if field.name != "id"]
                 if obj.employees.user.id == request.user.id:
                     return [f for f in fs if f not in ['event_report', 'state']]
