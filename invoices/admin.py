@@ -833,8 +833,7 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                 return
             else:
                 # take previous months timesheet
-                today = datetime.date.today()
-                first = today.replace(day=1)
+                first = tsheet.get_start_date
                 lastMonth = first - datetime.timedelta(days=1)
                 previous_timsheets = SimplifiedTimesheet.objects.filter(time_sheet_month=lastMonth.month,
                                                                         time_sheet_year=lastMonth.year,
@@ -844,9 +843,9 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                     if tsheet.extra_hours_paid_current_month:
                         file_data += "\nA travaillé {total_extra} heures supplémentaires.".format(
                             total_extra=tsheet.extra_hours_paid_current_month)
-                    if tsheet.total_hours_holidays_taken:
-                        file_data += "\nA pris {total_hours_holidays_taken} jours de {request_type}.".format(
-                            total_extra=tsheet.total_hours_holidays_taken)
+                    if tsheet.total_hours_holidays_and_sickness_taken[0] > 0:
+                        file_data += "\n{holidays_sickness_explanation}".format(
+                            holidays_sickness_explanation=tsheet.total_hours_holidays_and_sickness_taken[1])
                 else:
                     previous_month_tsheet = previous_timsheets.first()
                     file_data += "\n {counter} - {last_name}:\n".format(counter=_counter,
