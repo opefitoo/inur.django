@@ -11,6 +11,8 @@ logger = logging.getLogger('console')
 def post_webhook(employees, patient, event_report, state):
     """Hangouts Chat incoming webhook quickstart."""
     # FIXME: remove hardcoded value for state
+    if state not in [3, 5]:
+        return
     if 3 == state:
         message = "Soin FAIT par %s chez %s : %s" % (employees.user.first_name, patient.name, event_report)
     # FIXME: remove hardcoded value for state
