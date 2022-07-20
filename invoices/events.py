@@ -124,6 +124,8 @@ class Event(models.Model):
             raise ValidationError(messages)
         if self.at_office:
             self.event_address = "%s %s" % (config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY)
+        if self.event_type_enum != EventTypeEnum.BIRTHDAY:
+            return
         cal = create_or_update_google_calendar(self)
         self.calendar_id = cal.get('id')
         self.calendar_url = cal.get('htmlLink')
@@ -208,15 +210,12 @@ class AssignedAdditionalEmployee(models.Model):
 
 
 def create_or_update_google_calendar(instance):
-    print("*** Creating event")
-    sys.stdout.flush()
-    if EventTypeEnum.GENERIC != instance.event_type_enum:
-        calendar_gcalendar = PrestationGoogleCalendarSurLu()
-        if instance.pk:
-            old_event = Event.objects.get(pk=instance.pk)
-            if old_event.employees != instance.employees:
-                calendar_gcalendar.delete_event(old_event)
-        return calendar_gcalendar.update_event(instance)
+    calendar_gcalendar = PrestationGoogleCalendarSurLu()
+    if instance.pk:
+        old_event = Event.objects.get(pk=instance.pk)
+        if old_event.employees != instance.employees:
+            calendar_gcalendar.delete_event(old_event)
+    return calendar_gcalendar.update_event(instance)
 
 
 # @receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")

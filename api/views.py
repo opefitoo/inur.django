@@ -22,6 +22,7 @@ from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation
 from invoices import settings
 from invoices.employee import JobPosition
+from invoices.enums.event import EventTypeEnum
 from invoices.events import EventType, Event, create_or_update_google_calendar
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
@@ -173,6 +174,8 @@ class EventList(generics.ListCreateAPIView):
                                                                            employee_bis.user.first_name,
                                                                            employee_bis.phone_number)
             assert isinstance(instance, Event)
+            if instance.event_type_enum != EventTypeEnum.BIRTHDAY:
+                return
             gmail_event = create_or_update_google_calendar(instance)
             if gmail_event.get('id'):
                 instance.calendar_id = gmail_event.get('id')
