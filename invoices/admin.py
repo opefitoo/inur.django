@@ -17,7 +17,6 @@ from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
 from invoices.actions.print_pdf import do_it, PdfActionType
-from invoices.enums.event import EventTypeEnum
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
@@ -37,7 +36,7 @@ from invoices.notifications import notify_holiday_request_validation
 from invoices.resources import ExpenseCard, Car
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
-from invoices.events import EventType, Event, AssignedAdditionalEmployee
+from invoices.events import EventType, Event, AssignedAdditionalEmployee, create_or_update_google_calendar
 
 import datetime
 import calendar
@@ -350,9 +349,9 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_display = ('date', 'prescriptor', 'patient', 'link_to_invoices', 'image_preview')
     fields = ('prescriptor', 'patient', 'date', 'end_date', 'notes', 'file_upload', 'thumbnail_img')
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
-    readonly_fields = ('link_to_invoices', )
+    readonly_fields = ('link_to_invoices',)
     autocomplete_fields = ['prescriptor', 'patient']
-    exclude = ('file', )
+    exclude = ('file',)
     form = MedicalPrescriptionForm
     list_per_page = 10
 
@@ -865,7 +864,8 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                             file_data += holiday_sickness_explanation
                     if previous_month_tsheet.absence_hours_taken()[0] > 0:
                         file_data += "\nPour rappel le mois de %s" % previous_month_tsheet.get_start_date.month
-                        holiday_sickness_explanation = previous_month_tsheet.absence_hours_taken()[1].beautiful_explanation()
+                        holiday_sickness_explanation = previous_month_tsheet.absence_hours_taken()[
+                            1].beautiful_explanation()
                         if len(holiday_sickness_explanation) > 0:
                             file_data += holiday_sickness_explanation
 
@@ -979,6 +979,7 @@ class EventAdmin(admin.ModelAdmin):
             def __new__(cls, *args, **kwargs):
                 kwargs['request'] = request
                 return form(*args, **kwargs)
+
         return ModelFormWithRequest
 
     def get_readonly_fields(self, request, obj=None):
@@ -1049,7 +1050,7 @@ class EventListAdmin(admin.ModelAdmin):
     date_hierarchy = 'day'
     exclude = ('event_type',)
 
-    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events']
+    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync']
 
     form = EventForm
 
@@ -1064,6 +1065,19 @@ class EventListAdmin(admin.ModelAdmin):
             return
         for e in queryset:
             e.display_unconnected_events()
+
+    def force_gcalendar_sync(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        evts_synced = []
+        for e in queryset:
+            cal = create_or_update_google_calendar(e)
+            e.calendar_id = cal.get('id')
+            e.calendar_url = cal.get('htmlLink')
+            evts_synced.append(e.calendar_url)
+            e.save()
+        self.message_user(request, "%s évenements synchronisés. : %s" % (len(evts_synced), evts_synced),
+                          level=messages.INFO)
 
     def get_queryset(self, request):
         queryset = super(EventListAdmin, self).get_queryset(request)
@@ -1083,6 +1097,7 @@ class EventListAdmin(admin.ModelAdmin):
             def __new__(cls, *args, **kwargs):
                 kwargs['request'] = request
                 return form(*args, **kwargs)
+
         return ModelFormWithRequest
 
     def get_readonly_fields(self, request, obj=None):
@@ -1161,6 +1176,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
             def __new__(cls, *args, **kwargs):
                 kwargs['request'] = request
                 return form(*args, **kwargs)
+
         return ModelFormWithRequest
 
     def get_readonly_fields(self, request, obj=None):
@@ -1172,4 +1188,3 @@ class EventWeekListAdmin(admin.ModelAdmin):
                 else:
                     return fs
         return self.readonly_fields
-

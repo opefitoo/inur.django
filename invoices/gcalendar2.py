@@ -3,6 +3,7 @@ import datetime
 from zoneinfo import ZoneInfo
 
 from apiclient import discovery
+from django.db.models import Q
 from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
 from django.conf import settings
@@ -244,7 +245,7 @@ class PrestationGoogleCalendarSurLu:
         return gmail_event
 
     def list_event_with_sur_id(self):
-        employees = Employee.objects.filter(end_contract=None)
+        employees = Employee.objects.filter(end_contract=None).filter(~Q(abbreviation='XXX'))
         inur_event_ids = []
         for emp in employees:
             g_events = self._service.events().list(calendarId=emp.user.email, q="SUR LU ID",
