@@ -2,6 +2,7 @@ import re
 
 from django.utils import timezone
 
+from invoices.enums.event import EventTypeEnum
 from invoices.events import EventType, Event
 from invoices.models import Patient, extract_birth_date, calculate_age
 
@@ -30,6 +31,7 @@ def process_and_generate(num_days: int):
                     day=searches_date,
                     state=1,
                     event_type=even_type_birthday,
+                    event_type_enum=EventTypeEnum.BIRTHDAY,
                     notes='%s will turn %d \n generated on %s' % (patient,
                                                                   calculate_age(None, patient.code_sn),
                                                                   timezone.now()),
