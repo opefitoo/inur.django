@@ -1050,7 +1050,9 @@ class EventListAdmin(admin.ModelAdmin):
     date_hierarchy = 'day'
     exclude = ('event_type',)
 
-    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync']
+    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events',
+               'force_gcalendar_sync',
+               'print_unsynced_events']
 
     form = EventForm
 
@@ -1078,6 +1080,20 @@ class EventListAdmin(admin.ModelAdmin):
             e.save()
         self.message_user(request, "%s évenements synchronisés. : %s" % (len(evts_synced), evts_synced),
                           level=messages.INFO)
+
+    def print_unsynced_events(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        evts_not_synced = []
+        for e in queryset:
+            if 'http://a.sur.lu' == e.calendar_url and e.calendar_id == 0:
+                evts_not_synced.append(e)
+        if len(evts_not_synced) > 0:
+            self.message_user(request, "%s évenements non synchronisés. : %s" % (len(evts_not_synced), evts_not_synced),
+                              level=messages.WARNING)
+        else:
+            self.message_user(request, "Tous les évenements sont synchronisés.",
+                              level=messages.INFO)
 
     def get_queryset(self, request):
         queryset = super(EventListAdmin, self).get_queryset(request)
