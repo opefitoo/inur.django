@@ -1,3 +1,4 @@
+import itertools
 from decimal import Decimal
 
 from django.utils.translation import gettext_lazy as _
@@ -1105,7 +1106,7 @@ class EventListAdmin(admin.ModelAdmin):
                 e.save()
                 evts_cleaned.append(e)
         if len(evts_cleaned) > 0:
-            self.message_user(request, "%s évenements nettoyés. : %s" % (len(evts_cleaned), evts_cleaned),
+            self.message_user(request, "%s événements nettoyés. : %s" % (len(evts_cleaned), evts_cleaned),
                               level=messages.WARNING)
         else:
             self.message_user(request, "Tous les évenements sont propres.",
@@ -1113,10 +1114,12 @@ class EventListAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super(EventListAdmin, self).get_queryset(request)
+        today = datetime.datetime.now()
         if request.user.is_superuser:
             return Event.objects.all()
         else:
-            return queryset.filter(employees__user_id=request.user.id).exclude(state=3)
+            # Display only today's events for non admin users
+            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).filter(day__year=today.year).filter(day__month=today.month).filter(day__day=today.day)
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
