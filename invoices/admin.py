@@ -939,7 +939,7 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
             return False
         return self.has_delete_permission
 
-    def force_cache_clearing(self, request):
+    def force_cache_clearing(self, request, queryset):
         if request.user.is_superuser:
             cache.clear()
             self.message_user(request, u"Cache refresh OK.", level=messages.INFO)
