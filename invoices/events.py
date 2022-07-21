@@ -179,7 +179,7 @@ class Event(models.Model):
         if not cached_patient:
             cache.set('cached_patient_%s' % self.patient.id, self.patient)
             cached_patient = cache.get('cached_patient_%s' % self.patient.id)
-        if self.event_type_enum not in [EventTypeEnum.CARE, EventTypeEnum.ASS_DEP]:
+        if self.event_type_enum == EventTypeEnum.BIRTHDAY:
             return '%s for %s on %s' % (self.event_type_enum, cached_patient, self.day)
         cached_employees = cache.get('event_employees_cache_%s' % self.employees.id)
         if not cached_employees:

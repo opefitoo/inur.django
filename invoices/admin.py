@@ -17,6 +17,7 @@ from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
 from invoices.actions.print_pdf import do_it, PdfActionType
+from invoices.enums.event import EventTypeEnum
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
@@ -1050,9 +1051,8 @@ class EventListAdmin(admin.ModelAdmin):
     date_hierarchy = 'day'
     exclude = ('event_type',)
 
-    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events',
-               'force_gcalendar_sync',
-               'print_unsynced_events']
+    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
+               'cleanup_events_event_types', 'print_unsynced_events']
 
     form = EventForm
 
@@ -1093,6 +1093,22 @@ class EventListAdmin(admin.ModelAdmin):
                               level=messages.WARNING)
         else:
             self.message_user(request, "Tous les évenements sont synchronisés.",
+                              level=messages.INFO)
+
+    def cleanup_events_event_types(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        evts_cleaned = []
+        for e in Event.objects.filter(event_type=EventType.objects.get(id=1)):
+            if e.event_type_enum != EventTypeEnum.BIRTHDAY:
+                e.event_type_enum = EventTypeEnum.BIRTHDAY
+                e.save()
+                evts_cleaned.append(e)
+        if len(evts_cleaned) > 0:
+            self.message_user(request, "%s évenements nettoyés. : %s" % (len(evts_cleaned), evts_cleaned),
+                              level=messages.WARNING)
+        else:
+            self.message_user(request, "Tous les évenements sont propres.",
                               level=messages.INFO)
 
     def get_queryset(self, request):
