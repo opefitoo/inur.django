@@ -863,6 +863,11 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                         holiday_sickness_explanation = tsheet.absence_hours_taken()[1].beautiful_explanation()
                         if len(holiday_sickness_explanation) > 0:
                             file_data += holiday_sickness_explanation
+                    if previous_month_tsheet.absence_hours_taken()[0] > 0:
+                        file_data += "\nPour rappel le mois de %s" % previous_month_tsheet.get_start_date.month
+                        holiday_sickness_explanation = previous_month_tsheet.absence_hours_taken()[1].beautiful_explanation()
+                        if len(holiday_sickness_explanation) > 0:
+                            file_data += holiday_sickness_explanation
 
             _counter += 1
         response = HttpResponse(file_data, content_type='application/text charset=utf-8')
