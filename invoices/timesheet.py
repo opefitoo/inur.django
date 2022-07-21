@@ -12,7 +12,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from helpers.holidays import how_many_hours_taken_in_period, how_many_hours_taken_in_period_v2
+from helpers.holidays import how_many_hours_taken_in_period_v2
 from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
 from invoices.enums.generic import HolidayRequestChoice

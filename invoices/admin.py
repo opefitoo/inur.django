@@ -1,4 +1,4 @@
-import itertools
+from django.core.cache import cache
 from decimal import Decimal
 
 from django.utils.translation import gettext_lazy as _
@@ -819,7 +819,7 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                        'extra_hours_paid_current_month')
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
-    actions = ['validate_time_sheets', 'timesheet_situation']
+    actions = ['validate_time_sheets', 'timesheet_situation', 'force_cache_clearing']
     form = SimplifiedTimesheetForm
 
     def timesheet_situation(self, request, queryset):
@@ -841,6 +841,9 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                                                                         employee__user_id=tsheet.user.id,
                                                                         timesheet_validated=True)
                 if len(previous_timsheets) == 0:
+                    file_data += "\n {counter} - {last_name} {first_name}:\n".format(counter=_counter,
+                                                                        last_name=tsheet.user.last_name.upper(),
+                                                                                     first_name=tsheet.user.first_name)
                     if tsheet.extra_hours_paid_current_month:
                         file_data += "\nA travaillé {total_extra} heures supplémentaires.".format(
                             total_extra=tsheet.extra_hours_paid_current_month)
@@ -935,6 +938,13 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
         if obj and obj.timesheet_validated and not request.user.is_superuser:
             return False
         return self.has_delete_permission
+
+    def force_cache_clearing(self, request):
+        if request.user.is_superuser:
+            cache.clear()
+            self.message_user(request, u"Cache refresh OK.", level=messages.INFO)
+        else:
+            self.message_user(request, u"Not super user.", level=messages.WARNING)
 
 
 @admin.register(EventType)

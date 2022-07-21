@@ -2,8 +2,8 @@ from abc import ABC
 
 
 class SicknessHolidayDaysCalculations(ABC):
-    def __init__(self, holidays_count: int, sickness_days_count: int, number_of_public_holidays: int,
-                 daily_working_hours: int, holiday_sickness_requests_dates: [str]):
+    def __init__(self, holidays_count: int, sickness_days_count: int, exceptional_break: int,
+                 number_of_public_holidays: int, daily_working_hours: int, holiday_sickness_requests_dates: [str]):
         """
         @param holidays_count:
         @param sickness_days_count:
@@ -15,11 +15,13 @@ class SicknessHolidayDaysCalculations(ABC):
         self.number_of_public_holidays = number_of_public_holidays
         self.daily_working_hours = daily_working_hours
         self.holiday_sickness_requests_dates = holiday_sickness_requests_dates
+        self.exceptional_break = exceptional_break
 
     def __str__(self):
-        return "Explication: ( %.2f jours congés + %.2f jours maladie )  x %d nombre h. /j et %d jours fériés" % (
+        return "Explication: ( %.2f jours congés + %.2f jours maladie +%.2f congés exceptionnel )  x %d nombre h. /j et %d jours fériés" % (
             self.holidays_count,
             self.sickness_days_count,
+            self.exceptional_break,
             self.daily_working_hours,
             self.number_of_public_holidays)
 
@@ -27,7 +29,7 @@ class SicknessHolidayDaysCalculations(ABC):
         return ((self.holidays_count + self.sickness_days_count) - self.number_of_public_holidays) * self.daily_working_hours
 
     def compute_total_hours_v2(self):
-        return (self.holidays_count + self.sickness_days_count) * self.daily_working_hours
+        return (self.holidays_count + self.sickness_days_count + self.exceptional_break) * self.daily_working_hours
 
     def beautiful_explanation(self):
         _explanation = ""

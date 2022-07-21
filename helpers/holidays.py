@@ -90,16 +90,18 @@ def how_many_hours_taken_in_period_v2(data, public_holidays):
         Q(start_date__lte=data['start_date'], end_date__gte=data['start_date']) |
         Q(start_date__lte=data['end_date'], end_date__gte=data['end_date'])
     ).filter(employee_id=data['user_id']).filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED).filter(
-        reason__range=(1, 2))
+        reason__in=[1, 2, 5])
     lu_holidays = holidays.Luxembourg()
     if len(holiday_requests) > 0:
         sh_object = SicknessHolidayDaysCalculations(holidays_count=0,
                                                     sickness_days_count=0,
+                                                    exceptional_break=0,
                                                     number_of_public_holidays=0,
                                                     daily_working_hours=0,
                                                     holiday_sickness_requests_dates=holiday_requests)
         counter = 0
         counter_sickness = 0
+        counter_exceptional_break = 0
         for holiday_request in holiday_requests:
             if holiday_request.start_date == holiday_request.end_date:
                 delta = 1
@@ -125,7 +127,6 @@ def how_many_hours_taken_in_period_v2(data, public_holidays):
                         elif my_date.weekday() < 5 and holiday_request.requested_period == HolidayRequestChoice.req_full_day:
                             counter += 1
                     my_date = my_date + timedelta(days=1)
-                number_of_public_holidays = 0
 
             elif holiday_request.reason == 2:
                 for _ in (range(1) if delta == 1 else range(delta.days)):
@@ -137,13 +138,23 @@ def how_many_hours_taken_in_period_v2(data, public_holidays):
                         elif my_date.weekday() < 5 and holiday_request.requested_period == HolidayRequestChoice.req_full_day:
                             counter_sickness += 1
                     my_date = my_date + timedelta(days=1)
-                number_of_public_holidays = 0
+            elif holiday_request.reason == 5:
+                for _ in (range(1) if delta == 1 else range(delta.days)):
+                    if my_date in lu_holidays:
+                        pass
+                    else:
+                        if my_date.weekday() < 5 and holiday_request.requested_period != HolidayRequestChoice.req_full_day:
+                            counter_exceptional_break += 0.5
+                        elif my_date.weekday() < 5 and holiday_request.requested_period == HolidayRequestChoice.req_full_day:
+                            counter_exceptional_break += 1
+                    my_date = my_date + timedelta(days=1)
+
+        number_of_public_holidays = 0
 
         heures_jour = Employee.objects.get(user_id=data['user_id']).employeecontractdetail_set.filter(Q(
             end_date__gte=data['end_date'], start_date__lte=data['start_date']) | Q(
             end_date__isnull=True,
             start_date__lte=data['start_date'])).first().number_of_hours / 5
-
         for public_holiday in public_holidays:
             if public_holiday.calendar_date.weekday() < 5:
                 number_of_public_holidays = number_of_public_holidays + 1
@@ -151,6 +162,7 @@ def how_many_hours_taken_in_period_v2(data, public_holidays):
         counter_sickness = counter_sickness
         sh_object.holidays_count = counter
         sh_object.sickness_days_count = counter_sickness
+        sh_object.exceptional_break = counter_exceptional_break
         sh_object.number_of_public_holidays = number_of_public_holidays
         sh_object.daily_working_hours = heures_jour
         return [sh_object.compute_total_hours_v2(),
