@@ -9,7 +9,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, QuerySet
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_save, pre_save, pre_delete
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
@@ -131,12 +131,12 @@ class Event(models.Model):
         self.calendar_id = cal.get('id')
         self.calendar_url = cal.get('htmlLink')
 
-    def delete(self, using=None, keep_parents=False):
-        if EventTypeEnum.BIRTHDAY != self.event_type_enum:
-            calendar_gcalendar = PrestationGoogleCalendarSurLu()
-            # calendar_gcalendar.q_delete_event(self)
-            calendar_gcalendar.delete_event(self)
-        super(Event, self).delete(using=None, keep_parents=False)
+    # def delete(self, using=None, keep_parents=False):
+    #     if EventTypeEnum.BIRTHDAY != self.event_type_enum:
+    #         calendar_gcalendar = PrestationGoogleCalendarSurLu()
+    #         # calendar_gcalendar.q_delete_event(self)
+    #         calendar_gcalendar.delete_event(self)
+    #     super(Event, self).delete(using=None, keep_parents=False)
 
     # FIXME pass date as parameter
     def cleanup_all_events_on_google(self, dry_run):
@@ -271,6 +271,26 @@ def create_or_update_google_calendar(instance):
     return calendar_gcalendar.update_event(instance)
 
 
+@receiver(pre_save, sender=Event, dispatch_uid="event_pre_save_gcalendar")
+def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwargs):
+    calendar_gcalendar = PrestationGoogleCalendarSurLu()
+    if instance.pk:
+        old_event = Event.objects.get(pk=instance.pk)
+        if old_event.employees != instance.employees:
+            calendar_gcalendar.delete_event(old_event)
+    gmail_event = calendar_gcalendar.update_event(instance)
+    instance.calendar_id = gmail_event['id']
+    instance.calendar_url = gmail_event['htmlLink']
+    # instance.save()
+
+
+@receiver(post_save, sender=Event, dispatch_uid="event_post_save_gcalendar")
+def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwargs):
+    calendar_gcalendar = PrestationGoogleCalendarSurLu()
+    if instance.pk:
+        print(calendar_gcalendar.update_events_sur_id(instance))
+
+
 # @receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
 # def create_or_update_google_calendar_callback(sender, instance, **kwargs):
 #     print("*** Creating event from callback")
@@ -283,9 +303,9 @@ def event_post_save_callback(sender, instance, **kwargs):
         post_webhook(instance.employees, instance.patient, instance.event_report, instance.state)
 
 
-@receiver(post_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
-def delete_google_calendar(sender, instance, **kwargs):
-    if EventTypeEnum.GENERIC != instance.event_type_enum:
+@receiver(pre_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
+def delete_google_calendar(sender, instance: Event, **kwargs):
+    if instance.calendar_id != 0:
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         calendar_gcalendar.delete_event(instance)
 

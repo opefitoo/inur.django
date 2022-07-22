@@ -154,6 +154,19 @@ class PrestationGoogleCalendarSurLu:
         else:
             raise ValueError("error during sync with google calendar %s" % gmail_event)
 
+    def update_events_sur_id(self, event):
+        gmail_event = self.get_event(event_id=event.calendar_id, calendar_id=event.employees.user.email)
+        event_body = {
+            'summary': gmail_event['summary'],
+            'description': gmail_event['description'] + "<b>%s</b> %s<br>" % (u'Sur LU ID:', event.id),
+            'location': gmail_event['location'],
+            'start':  gmail_event['start'],
+            'end':  gmail_event['end'],
+        }
+        return self._service.events().update(calendarId=event.employees.user.email,
+                                             eventId=event.calendar_id,
+                                             body=event_body).execute()
+
     def update_event(self, event):
         descr_line = "<b>%s</b> %s<br>"
         description = descr_line % ('Patient:', event.patient)
