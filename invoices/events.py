@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import sys
+import datetime
 
+import pytz
 from constance import config
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -137,15 +138,67 @@ class Event(models.Model):
             calendar_gcalendar.delete_event(self)
         super(Event, self).delete(using=None, keep_parents=False)
 
+    # FIXME pass date as parameter
+    def cleanup_all_events_on_google(self):
+        calendar_gcalendar = PrestationGoogleCalendarSurLu()
+        # calendar_gcalendar.q_delete_event(self)
+        inur_ids = calendar_gcalendar.list_event_with_sur_id()
+        deleted_evts = []
+        for found_event in inur_ids:
+            deleted_evts.append(calendar_gcalendar.delete_event_by_google_id(calendar_id=found_event['email'],
+                                                                             event_id=found_event['gId'],
+                                                                             dry_run=True))
+        return deleted_evts
+
     def display_unconnected_events(self):
+        # FIXME not complete one
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         # calendar_gcalendar.q_delete_event(self)
         inur_ids = calendar_gcalendar.list_event_with_sur_id()
         orphan_ids = []
+        events_different_times = []
         for found_event in inur_ids:
-            if not Event.objects.filter(pk=found_event['inurId']):
+            # '2022-07-22T11:00:00Z'
+            calendar_gcalendar.delete_event_by_google_id(calendar_id=found_event['email'],
+                                                         event_id=found_event['gId'],
+                                                         dry_run=True)
+            lu_tz = pytz.timezone(found_event['start']['timeZone'])
+            inur_event = Event.objects.get(pk=found_event['inurId'])
+            try:
+                localized_start = lu_tz.localize(
+                    datetime.datetime.strptime(found_event['start']['dateTime'], '%Y-%m-%dT%H:%M:%SZ'))
+                localized_end = lu_tz.localize(
+                    datetime.datetime.strptime(found_event['end']['dateTime'], '%Y-%m-%dT%H:%M:%SZ'))
+            except ValueError as v:
+                print("%s %s" % (found_event['htmlLink'], found_event['start']['dateTime']))
+                pass
+                # localized_start = lu_tz.localize(
+                #     datetime.datetime.strptime(found_event['start']['dateTime'], '%Y-%m-%dT%H:%M:%S-04:00'))
+                # localized_end = lu_tz.localize(
+                #     datetime.datetime.strptime(found_event['end']['dateTime'], '%Y-%m-%dT%H:%M:%S-04:00'))
+
+            day_time_start_event = timezone.now().replace(year=inur_event.day.year, day=inur_event.day.day,
+                                                          month=inur_event.day.month,
+                                                          hour=inur_event.time_start_event.hour,
+                                                          minute=inur_event.time_start_event.minute,
+                                                          second=inur_event.time_start_event.second, microsecond=0)
+            day_time_end_event = timezone.now().replace(year=inur_event.day.year, day=inur_event.day.day,
+                                                        month=inur_event.day.month,
+                                                        hour=inur_event.time_end_event.hour,
+                                                        minute=inur_event.time_end_event.minute,
+                                                        second=inur_event.time_end_event.second, microsecond=0)
+            if not inur_event:
                 orphan_ids.append(found_event)
+
+            elif day_time_start_event != localized_start or day_time_end_event != localized_end:
+                from dateutil.relativedelta import relativedelta
+                offset1 = relativedelta(day_time_start_event, localized_start)
+                offset2 = relativedelta(day_time_end_event, localized_end)
+                if (day_time_start_event - localized_start).seconds > 14400 \
+                        or (day_time_end_event - localized_end).seconds > 14400:
+                    events_different_times.append(inur_event)
         print(orphan_ids)
+        print(events_different_times)
 
     @staticmethod
     def validate(model, instance_id, data):

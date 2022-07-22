@@ -1063,7 +1063,7 @@ class EventListAdmin(admin.ModelAdmin):
     exclude = ('event_type',)
 
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
-               'cleanup_events_event_types', 'print_unsynced_events']
+               'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google']
 
     form = EventForm
 
@@ -1078,6 +1078,15 @@ class EventListAdmin(admin.ModelAdmin):
             return
         for e in queryset:
             e.display_unconnected_events()
+
+    def cleanup_all_events_on_google(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Must be super user", level=messages.ERROR)
+            return
+        for e in queryset:
+            result = e.cleanup_all_events_on_google()
+            self.message_user(request, "Deleted %s messages from Google calendar " % len(result),
+                              level=messages.WARNING)
 
     def force_gcalendar_sync(self, request, queryset):
         if not request.user.is_superuser:

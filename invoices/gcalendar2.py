@@ -1,4 +1,3 @@
-import uuid
 import datetime
 from zoneinfo import ZoneInfo
 
@@ -230,31 +229,36 @@ class PrestationGoogleCalendarSurLu:
         print("Queue result %s" % q_r)
         sys.stdout.flush()
 
-    def delete_event(self, evt_instance):
-        # print("Trying to delete %s from %s" % (evt_instance.calendar_id, evt_instance))
-        # sys.stdout.flush()
+    def delete_event_by_google_id(self, calendar_id, event_id, dry_run=True):
+        if dry_run:
+            e = self._service.events().get(calendarId=calendar_id, eventId=event_id).execute()
+            print("Pretending that I delete event: %s on Goole %s" % (event_id, e))
+            return e
         try:
-            gmail_event = self._service.events().delete(calendarId=evt_instance.employees.user.email,
-                                                        eventId=evt_instance.calendar_id).execute()
+            gmail_event = self._service.events().delete(calendarId=calendar_id,
+                                                        eventId=event_id).execute()
         except HttpError as e:
-            # print("An error happened when trying to delete event %s - exception %s" % (evt_instance.calendar_id, e))
-            # sys.stdout.flush()
-            return
-        # print("Successfully delete GCalendar event %s" % gmail_event)
-        # sys.stdout.flush()
+            raise ValueError("Problem de connexion", e)
         return gmail_event
+
+    def delete_event(self, evt_instance):
+        return self.delete_event_by_google_id(calendar_id=evt_instance.employees.user.email,
+                                              event_id=evt_instance.calendar_id,
+                                              dry_run=False)
 
     def list_event_with_sur_id(self):
         employees = Employee.objects.filter(end_contract=None).filter(~Q(abbreviation='XXX'))
         inur_event_ids = []
         for emp in employees:
             g_events = self._service.events().list(calendarId=emp.user.email, q="SUR LU ID",
-                                                   timeMin="2022-07-04T10:00:00-00:00").execute()
+                                                   timeMin="2022-07-21T10:00:00-00:00").execute()
 
             for g_event in g_events['items']:
                 description = g_event['description']
                 _inur_event_id = description.split("Sur LU ID:</b>")[1].split("<br>")[0]
-                inur_event_ids.append({'gId': g_event['id'], 'inurId': _inur_event_id, 'htmlLink': g_event['htmlLink']})
+                inur_event_ids.append({'email': emp.user.email, 'gId': g_event['id'], 'inurId': _inur_event_id,
+                                       'htmlLink': g_event['htmlLink'],
+                                       'start': g_event['start'], 'end': g_event['end']})
         return inur_event_ids
 
     def delete_all_events_from_calendar(self, calendar_id):
