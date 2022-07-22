@@ -1084,7 +1084,7 @@ class EventListAdmin(admin.ModelAdmin):
             self.message_user(request, "Must be super user", level=messages.ERROR)
             return
         for e in queryset:
-            result = e.cleanup_all_events_on_google()
+            result = e.cleanup_all_events_on_google(dry_run=False)
             self.message_user(request, "Deleted %s messages from Google calendar " % len(result),
                               level=messages.WARNING)
 

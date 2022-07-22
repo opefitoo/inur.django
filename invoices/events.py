@@ -139,7 +139,7 @@ class Event(models.Model):
         super(Event, self).delete(using=None, keep_parents=False)
 
     # FIXME pass date as parameter
-    def cleanup_all_events_on_google(self):
+    def cleanup_all_events_on_google(self, dry_run):
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         # calendar_gcalendar.q_delete_event(self)
         inur_ids = calendar_gcalendar.list_event_with_sur_id()
@@ -147,7 +147,7 @@ class Event(models.Model):
         for found_event in inur_ids:
             deleted_evts.append(calendar_gcalendar.delete_event_by_google_id(calendar_id=found_event['email'],
                                                                              event_id=found_event['gId'],
-                                                                             dry_run=True))
+                                                                             dry_run=dry_run))
         return deleted_evts
 
     def display_unconnected_events(self):
