@@ -115,7 +115,7 @@ class TensionAndTemperatureParameters(models.Model):
     stools = models.PositiveSmallIntegerField("Selles", choices=StoolsQty.choices, default=None, blank=True, null=True)
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1, default=None, blank=True, null=True)
     oximeter_saturation = models.PositiveSmallIntegerField("Saturation O2 %", default=None, blank=True, null=True)
-    general_remarks = models.TextField("Remarques générales", max_length=25, default=None, blank=True, null=True)
+    general_remarks = models.TextField("Remarques générales", max_length=200, default=None, blank=True, null=True)
     blood_glucose = models.DecimalField("Mesure de la glycémie", max_digits=4, decimal_places=1, default=None,
                                         blank=True,
                                         null=True)
