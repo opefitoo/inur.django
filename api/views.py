@@ -174,16 +174,16 @@ class EventList(generics.ListCreateAPIView):
                                                                            employee_bis.user.first_name,
                                                                            employee_bis.phone_number)
             assert isinstance(instance, Event)
-            if instance.event_type_enum != EventTypeEnum.BIRTHDAY:
-                return
-            gmail_event = create_or_update_google_calendar(instance)
-            if gmail_event.get('id'):
-                instance.calendar_id = gmail_event.get('id')
-                instance.calendar_url = gmail_event.get('htmlLink')
-                instance.save()
-            else:
-                instance.delete()
-                return JsonResponse(result.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # if instance.event_type_enum == EventTypeEnum.BIRTHDAY:
+            #     return "Birthday created"
+            #gmail_event = create_or_update_google_calendar(instance)
+            # if gmail_event.get('id'):
+            #     instance.calendar_id = gmail_event.get('id')
+            #     instance.calendar_url = gmail_event.get('htmlLink')
+            #     instance.save()
+            # else:
+            #     instance.delete()
+            #     return JsonResponse(result.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return result
 
