@@ -163,10 +163,10 @@
                 <td>{{ detail.objectives }}</td>
                 <td>{% if detail.means %} {{ detail.means }} {% else %} - {% endif %}</td>
                 <td>{% if detail.date_time_means_set %} {{ detail.date_time_means_set }} {% else %} - {% endif %}</td>
-                <td>{% if detail.means_paraph  %} {{ detail.means_paraph }} {% else %} - {% endif %}</td>
+                <td>{% if detail.means_paraph  %} {{ detail.means_paraph.abbreviation }} {% else %} - {% endif %}</td>
                 <td>{% if detail.results %} {{ detail.results }} {% else %} - {% endif %}</td>
                 <td>{% if detail.date_time_results_set %} {{ detail.date_time_results_set }} {% else %} - {% endif %}</td>
-                <td>{% if detail.results_paraph %} {{ detail.results_paraph }} {% else %} - {% endif %}</td>
+                <td>{% if detail.results_paraph %} {{ detail.results_paraph.abbreviation }} {% else %} - {% endif %}</td>
             </tr>
         {% endfor %}
 
