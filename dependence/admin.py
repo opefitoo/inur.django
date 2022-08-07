@@ -339,8 +339,21 @@ class AAITransDetailInLine(admin.TabularInline):
 
 @admin.register(AAITransmission)
 class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
-    # list_display = ('patient', 'transmission_number', 'display_object_actions_list',)
-    list_display = ('patient', 'transmission_number',)
+    list_display = ('patient', 'transmission_number', 'display_object_actions_list',)
     autocomplete_fields = ['patient']
     readonly_fields = ('user', 'created_on', 'updated_on')
     inlines = [AAITransDetailInLine]
+
+    object_actions = [
+        {
+            'slug': 'print_aai',
+            'verbose_name': 'Imprimer',
+            'form_method': 'GET',
+            'view': 'print_aai',
+        },
+    ]
+
+    def print_aai(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'aai/print_aai.html', {'obj': obj})

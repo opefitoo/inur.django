@@ -1,8 +1,11 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+
+from dependence.models import AssignedPhysician, PatientAnamnesis
 from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
 from invoices.models import Patient
+from constance import config
 
 
 class AAITransmission(models.Model):
@@ -49,6 +52,28 @@ class AAITransmission(models.Model):
                                  "Il existe déjà un avec le numéro %s et ce patient dans le système" % data[
                                      'transmission_number']})
         return messages
+
+    @property
+    def details_set(self):
+        if self.id:
+            return AAITransDetail.objects.filter(detail_to_aai_master_id=self.id).order_by(
+                'date_time_means_set')
+        return None
+
+    @property
+    def header_details(self):
+        return [config.NURSE_NAME, config.MAIN_NURSE_CODE,
+                config.NURSE_ADDRESS,
+                config.NURSE_ZIP_CODE_CITY,
+                config.NURSE_PHONE_NUMBER]
+
+    @property
+    def physicians_set(self):
+        if self.id:
+            anamnesis = PatientAnamnesis.objects.filter(patient__id=self.patient.id).first()
+            if anamnesis:
+                return [p.assigned_physician for p in AssignedPhysician.objects.filter(anamnesis_id=anamnesis.id)]
+        return "N.D."
 
     def __str__(self):
         return "AAI de %s - num. %s" % (self.patient, self.transmission_number)
