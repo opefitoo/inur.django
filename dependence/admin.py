@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Count, ManyToManyField
 from django.forms import ModelMultipleChoiceField, CheckboxSelectMultiple
 
+from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
 from dependence.forms import TypeDescriptionGenericInlineFormset, TensionAndTemperatureParametersFormset
@@ -329,3 +330,17 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'patientanamnesis/print_cover.html', {'obj': obj})
+
+
+class AAITransDetailInLine(admin.TabularInline):
+    extra = 0
+    model = AAITransDetail
+
+
+@admin.register(AAITransmission)
+class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
+    #list_display = ('patient', 'transmission_number', 'display_object_actions_list',)
+    list_display = ('patient', 'transmission_number', )
+    autocomplete_fields = ['patient']
+    readonly_fields = ('user', 'created_on', 'updated_on')
+    inlines = [AAITransDetailInLine]
