@@ -56,7 +56,7 @@ class AAITransmission(models.Model):
 
 class AAITransDetail(models.Model):
     class Meta:
-        ordering = ['id']
+        ordering = ['date_time_means_set']
         verbose_name = u"Détail"
         verbose_name_plural = u"Détails"
 
