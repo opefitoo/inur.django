@@ -3,7 +3,8 @@ import warnings
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django_currentuser.middleware import get_current_authenticated_user
+
+from invoices.middleware import get_current_authenticated_user
 
 
 class CurrentUserField(models.ForeignKey):
