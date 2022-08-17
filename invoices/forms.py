@@ -1,8 +1,8 @@
 from datetime import datetime
-from django.utils import timezone
 
 from django import forms
 from django.forms import BaseInlineFormSet, ValidationError, ModelForm
+from django.utils import timezone
 from django_select2.forms import ModelSelect2Widget
 
 from invoices.events import Event
@@ -94,6 +94,10 @@ class SimplifiedTimesheetForm(ModelForm):
     class Meta:
         model = SimplifiedTimesheet
         fields = '__all__'
+        help_texts = {'total_hours': "Nombre total d'heures (dernière màj 17/08/2022)",
+                      'total_hours_sundays': "Nombre total d'heures travaillées les Dimanche + la liste des dimanches (dernière màj 17/08/2022)",
+                      'total_hours_public_holidays': "Nombre total d'heures travaillées les Jours fériés + la liste de ces jours (dernière màj 17/08/2022)",
+                      }
 
 
 class SimplifiedTimesheetDetailForm(BaseInlineFormSet):

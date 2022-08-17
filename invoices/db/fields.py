@@ -3,8 +3,7 @@ import warnings
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
-from invoices.middleware import get_current_authenticated_user
+from django_currentuser.middleware import get_current_authenticated_user
 
 
 class CurrentUserField(models.ForeignKey):
@@ -39,11 +38,10 @@ class CurrentUserField(models.ForeignKey):
 
         return name, path, args, kwargs
 
-    def get_default(self):
-        return get_current_authenticated_user()
+    # def get_default(self):
+    #     return get_current_authenticated_user()
 
     def pre_save(self, model_instance, add):
-
         if self.on_update:
             value = get_current_authenticated_user()
             if value is not None:

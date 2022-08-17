@@ -22,7 +22,7 @@ class EmployeeTestCase(TestCase):
         user = User(username='Some_username')
         employee = Employee(user=user, abbreviation="SU")
 
-        self.assertEqual(str(employee), '%s (%s)' % (employee.user.username.strip(), employee.abbreviation))
+        self.assertEqual(str(employee), '%s - %s' % (employee.user.username.strip(), employee.abbreviation))
 
     def test_autocomplete(self):
         self.assertEqual(Employee.autocomplete_search_fields(),

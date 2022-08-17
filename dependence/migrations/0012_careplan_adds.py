@@ -6,12 +6,13 @@ from django.db import migrations
 
 def insert_user_one(apps, schema_editor):
     user_model = apps.get_model("auth", "User")
-    user_1 = user_model.objects.get(id=1)
-    careplan_master_model = apps.get_model("dependence", "CarePlanMaster")
-    careplans = careplan_master_model.objects.all()
-    for c in careplans:
-        c.user = user_1
-        c.save()
+    if user_model.objects.filter(id=1).exists():
+        user_1 = user_model.objects.get(id=1)
+        careplan_master_model = apps.get_model("dependence", "CarePlanMaster")
+        careplans = careplan_master_model.objects.all()
+        for c in careplans:
+            c.user = user_1
+            c.save()
 
 
 class Migration(migrations.Migration):

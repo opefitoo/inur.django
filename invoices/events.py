@@ -273,6 +273,9 @@ def create_or_update_google_calendar(instance):
 
 @receiver(pre_save, sender=Event, dispatch_uid="event_pre_save_gcalendar")
 def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwargs):
+    if settings.TESTING:
+        print("** TEST mode")
+        return
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
     if instance.pk:
         old_event = Event.objects.get(pk=instance.pk)
@@ -286,6 +289,9 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
 
 @receiver(post_save, sender=Event, dispatch_uid="event_post_save_gcalendar")
 def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwargs):
+    if settings.TESTING:
+        print("** TEST mode")
+        return
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
     if instance.pk:
         print(calendar_gcalendar.update_events_sur_id(instance))
@@ -299,12 +305,18 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
 
 @receiver(post_save, sender=Event, dispatch_uid="event_post_save")
 def event_post_save_callback(sender, instance, **kwargs):
+    if settings.TESTING:
+        print("** TEST mode")
+        return
     if settings.GOOGLE_CHAT_WEBHOOK_URL:
         post_webhook(instance.employees, instance.patient, instance.event_report, instance.state)
 
 
 @receiver(pre_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
 def delete_google_calendar(sender, instance: Event, **kwargs):
+    if settings.TESTING:
+        print("** TEST mode")
+        return
     if instance.calendar_id != 0:
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         calendar_gcalendar.delete_event(instance)

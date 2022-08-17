@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import json
+import dj_database_url
+import sys
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -105,7 +107,8 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 # Parse database configuration from $DATABASE_URL
-import dj_database_url
+
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 DATABASES = {'default': dj_database_url.config(default='postgres://inur:inur@localhost:5432/inur')}
 if 'CIRCLECI' in os.sys.argv:

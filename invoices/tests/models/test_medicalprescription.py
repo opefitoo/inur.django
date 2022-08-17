@@ -53,16 +53,21 @@ class MedicalPrescriptionTestCase(TestCase):
 class UpdateMedicalPrescriptionFilenameTestCase(TestCase):
     def test_filename(self):
         filename = 'somename.jpg'
-        date = timezone.now()
+        date = timezone.now().date()
         patient = Patient(first_name='first name',
                           name='name')
+        prescriptor = Physician(provider_code='1111', first_name='doc', name='toubib')
         prescription = MedicalPrescription(date=date,
-                                           patient=patient)
+                                           patient=patient, prescriptor=prescriptor)
 
-        path = os.path.join(CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER, str(prescription.date.year))
+        path = os.path.join(CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER, str(prescription.date.year),
+                            str(prescription.date.month))
         file_name, file_extension = os.path.splitext(filename)
-        filename = '%s_%s_%s%s' % (
+        '%s_%s_%s%s' % (
             prescription.patient.name, prescription.patient.first_name, str(prescription.date), file_extension)
+        filename = '%s_pour_%s_%s_%s%s' % (prescription.prescriptor.name, prescription.patient.name,
+                                           prescription.patient.first_name,
+                                           str(prescription.date), file_extension)
         expected_name = os.path.join(path, filename)
 
         generated_name = update_medical_prescription_filename(prescription, filename)

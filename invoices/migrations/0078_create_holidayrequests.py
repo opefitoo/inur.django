@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('end_date', models.DateField(verbose_name='Date fin')),
                 ('half_day', models.BooleanField(verbose_name='Demi journée')),
                 ('reason', models.PositiveSmallIntegerField(choices=[(1, 'Congés'), (2, 'Maladie'), (3, 'Formation')])),
-                ('employee', invoices.db.fields.CurrentUserField(default=invoices.middleware.get_current_authenticated_user, editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('employee', invoices.db.fields.CurrentUserField(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
                 ('validated_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='validator', to='invoices.Employee')),
             ],
             options={

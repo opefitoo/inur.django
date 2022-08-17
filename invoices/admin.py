@@ -1,48 +1,48 @@
-from django.core.cache import cache
+import calendar
+import datetime
 from decimal import Decimal
 
-from django.utils.translation import gettext_lazy as _
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 from django_csv_exports.admin import CSVExportAdmin
+
 from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
 from invoices.actions.print_pdf import do_it, PdfActionType
+from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
 from invoices.enums.event import EventTypeEnum
+from invoices.enums.holidays import HolidayRequestWorkflowStatus
+from invoices.events import EventType, Event, AssignedAdditionalEmployee, create_or_update_google_calendar
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
-from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
-from invoices.models import ContactPerson, OtherStakeholder, DependenceInsurance, \
-    BiographyHabits
-from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
-from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, InvoiceItemForm, \
     MedicalPrescriptionForm
+from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, AssignedPhysician
+from invoices.models import ContactPerson, OtherStakeholder, DependenceInsurance, \
+    BiographyHabits
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.resources import ExpenseCard, Car
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
-from invoices.events import EventType, Event, AssignedAdditionalEmployee, create_or_update_google_calendar
-
-import datetime
-import calendar
-from django.utils.safestring import mark_safe
 from invoices.utils import EventCalendar
 
 
@@ -816,7 +816,7 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
     readonly_fields = ('timesheet_validated', 'total_hours',
                        'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days',
                        'total_hours_holidays_taken', 'hours_should_work', 'extra_hours_balance',
-                       'extra_hours_paid_current_month')
+                       'extra_hours_paid_current_month', 'created_on', 'updated_on')
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
     actions = ['validate_time_sheets', 'timesheet_situation', 'force_cache_clearing']
