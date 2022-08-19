@@ -1,14 +1,13 @@
 import datetime
+import logging
+import sys
 from zoneinfo import ZoneInfo
 
 from apiclient import discovery
+from django.conf import settings
 from django.db.models import Q
 from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
-from django.conf import settings
-
-import logging
-import sys
 from rq import Queue
 
 from invoices.employee import Employee
@@ -202,7 +201,7 @@ class PrestationGoogleCalendarSurLu:
                                            event.time_end_event.second)
 
         attendees_list = []
-        if event.event_assigned.count() > 1:
+        if event.id and event.event_assigned.count() > 1:
             for u in event.event_assigned.all():
                 attendees_list.append({'email': '%s' % u.assigned_additional_employee.user.email})
 
