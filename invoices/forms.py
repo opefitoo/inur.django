@@ -94,9 +94,12 @@ class SimplifiedTimesheetForm(ModelForm):
     class Meta:
         model = SimplifiedTimesheet
         fields = '__all__'
-        help_texts = {'total_hours': "Nombre total d'heures (dernière màj 17/08/2022)",
-                      'total_hours_sundays': "Nombre total d'heures travaillées les Dimanche + la liste des dimanches (dernière màj 17/08/2022)",
-                      'total_hours_public_holidays': "Nombre total d'heures travaillées les Jours fériés + la liste de ces jours (dernière màj 17/08/2022)",
+        help_texts = {'total_hours': "Nombre total d'heures",
+                      'total_hours_sundays': "Nombre total d'heures travaillées les Dimanche + la liste des dimanches",
+                      'total_hours_public_holidays': "Nombre total d'heures travaillées les Jours fériés + la liste "
+                                                     "de ces jours",
+                      'hours_should_work': "si heures supp. alors le symbole + sinon avec le symble - devant le "
+                                           "nombre d'heures "
                       }
 
 

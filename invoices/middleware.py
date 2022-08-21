@@ -1,8 +1,8 @@
+from threading import local
+
+from asgiref.local import Local
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
-from threading import local
-from asgiref.local import Local
-
 from django.utils.deprecation import MiddlewareMixin
 
 USER_ATTR_NAME = getattr(settings, 'LOCAL_USER_ATTR_NAME', '_current_user')
@@ -61,4 +61,6 @@ def get_current_authenticated_user():
     current_user = get_current_user()
     if isinstance(current_user, AnonymousUser):
         return None
-    return current_user.id
+    if current_user:
+        return current_user.id
+    return None

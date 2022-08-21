@@ -17,6 +17,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_csv_exports.admin import CSVExportAdmin
 
+from helpers.timesheet import build_use_case_objects
 from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
@@ -815,12 +816,22 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
                        'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days',
+                       'total_legal_working_hours',
                        'total_hours_holidays_taken', 'hours_should_work', 'extra_hours_balance',
                        'extra_hours_paid_current_month', 'created_on', 'updated_on')
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
-    actions = ['validate_time_sheets', 'timesheet_situation', 'force_cache_clearing']
+    actions = ['validate_time_sheets', 'timesheet_situation', 'force_cache_clearing', 'build_use_case_objects']
     form = SimplifiedTimesheetForm
+
+    def build_use_case_objects(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de faire cette action des %s." % self.verbose_name_plural)
+            return
+        file_data = build_use_case_objects(queryset)
+        response = HttpResponse(file_data, content_type='application/text charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="test_case.txt"'
+        return response
 
     def timesheet_situation(self, request, queryset):
         _counter = 1
@@ -847,9 +858,9 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                     if tsheet.extra_hours_paid_current_month:
                         file_data += "\nA travaillé {total_extra} heures supplémentaires.".format(
                             total_extra=tsheet.extra_hours_paid_current_month)
-                    if tsheet.total_hours_holidays_and_sickness_taken[0] > 0:
+                    if tsheet.total_hours_holidays_and_sickness_taken > 0:
                         file_data += "\n{holidays_sickness_explanation}".format(
-                            holidays_sickness_explanation=tsheet.total_hours_holidays_and_sickness_taken[1])
+                            holidays_sickness_explanation=tsheet.total_hours_holidays_and_sickness_taken_object.beautiful_explanation())
                 else:
                     previous_month_tsheet = previous_timsheets.first()
                     file_data += "\n {counter} - {last_name}:\n".format(counter=_counter,

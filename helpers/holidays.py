@@ -1,6 +1,5 @@
-import sys
-from datetime import timedelta, date
 from calendar import monthrange
+from datetime import timedelta, date
 
 import holidays
 from django.db.models import Q
@@ -77,7 +76,7 @@ def how_many_hours_taken_in_period(data, public_holidays):
         sh_object.sickness_days_count = counter_sickness
         sh_object.number_of_public_holidays = number_of_public_holidays
         sh_object.daily_working_hours = heures_jour
-        return [sh_object.compute_total_hours_v2(),
+        return [sh_object.compute_total_hours(),
                 sh_object]
     return [0, ""]
 
@@ -165,7 +164,7 @@ def how_many_hours_taken_in_period_v2(data, public_holidays):
         sh_object.exceptional_break = counter_exceptional_break
         sh_object.number_of_public_holidays = number_of_public_holidays
         sh_object.daily_working_hours = heures_jour
-        return [sh_object.compute_total_hours_v2(),
+        return [sh_object.compute_total_hours(),
                 sh_object]
     return [0, ""]
 
