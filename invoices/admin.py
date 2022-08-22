@@ -812,7 +812,7 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                   'simplifiedtimesheetdetail__end_date']
     list_display = ('timesheet_owner', 'timesheet_validated', 'time_sheet_year', 'time_sheet_month',
                     'extra_hours_balance')
-    list_filter = ['employee', ]
+    list_filter = ['employee', 'time_sheet_year', 'time_sheet_month']
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
                        'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days',
