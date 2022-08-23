@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 import base64
-import copy
 import logging
-
 import os
 from copy import deepcopy
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import requests
+from constance import config
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
 from django.db import models
 from django.db.models import Q, IntegerField, Max
@@ -19,23 +17,19 @@ from django.db.models.functions import Cast
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.utils.safestring import mark_safe
+from django.utils.timezone import now
 from django_countries.fields import CountryField
 from gdstorage.storage import GoogleDriveStorage
 from pdf2image import convert_from_bytes
 
+from invoices.employee import Employee
 from invoices.enums.generic import HouseType, CivilStatus, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
     MobilizationsType, NutritionAutonomyLevel, DependenceInsuranceLevel, GenderType, HabitType
-from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.gcalendar import PrestationGoogleCalendar
-
-from django.utils.timezone import now
-
+from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.modelspackage import InvoicingDetails
 from invoices.modelspackage.invoice import get_default_invoicing_details
 from invoices.storages import CustomizedGoogleDriveStorage
-from constance import config
-
-from invoices.employee import Employee
 from invoices.validators.validators import MyRegexValidator
 
 prestation_gcalendar = PrestationGoogleCalendar()
@@ -1239,6 +1233,8 @@ class Prestation(models.Model):
             messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
 
         max_limit = InvoiceItem.PRESTATION_LIMIT_MAX
+        if invoice_item.id is None:
+            return messages
         existing_prestations = invoice_item.prestations
         existing_count = existing_prestations.count()
         expected_count = existing_count
