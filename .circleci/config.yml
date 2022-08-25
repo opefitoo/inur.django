@@ -20,7 +20,7 @@ jobs: # A basic unit of work in a run
       - checkout # check out source code to working directory
       - run: sudo apt-get update && sudo apt-get install apt-transport-https
       - run: echo "deb https://dl.bintray.com/sobolevn/deb git-secret main" | sudo tee -a /etc/apt/sources.list
-      - run: wget -qO - https://api.bintray.com/users/sobolevn/keys/gpg/public.key | sudo apt-key add -
+      #- run: wget -qO - https://api.bintray.com/users/sobolevn/keys/gpg/public.key | sudo apt-key add -
       - run: sudo apt-get update && sudo apt-get install git-secret
       - run: echo -e "$GIT_SECRET_PRIVATE" | gpg --import
       - run: git secret tell inur@circleci.com
