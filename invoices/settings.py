@@ -10,11 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
+import json
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-import json
-import dj_database_url
 import sys
+
+import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -223,17 +224,7 @@ CONSTANCE_CONFIG_FIELDSETS = {
                              'OPENROUTE_SERVICE_API_KEY')
 }
 
-GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
-GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2 = os.path.join(BASE_DIR, '../keys/inur-test-environment-71cbf29a05be.json')
-if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE):
-    credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
-    with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
-        json.dump(json.loads(credentials), outfile)
 
-if 'GOOGLE_APPLICATION_CREDENTIALS2' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2):
-    credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS2']
-    with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2, 'w') as outfile:
-        json.dump(json.loads(credentials), outfile)
 
 INTERNAL_IPS = {'127.0.0.1', }
 
@@ -309,3 +300,15 @@ AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
 
 # GOOGLE CHAT WEBHOOK CONFIGURATION
 GOOGLE_CHAT_WEBHOOK_URL = os.environ['GOOGLE_CHAT_WEBHOOK_URL']
+
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2 = os.path.join(BASE_DIR, '../keys/inur-test-environment-71cbf29a05be.json')
+if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE):
+    credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
+    with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
+        json.dump(json.loads(credentials), outfile)
+
+if 'GOOGLE_APPLICATION_CREDENTIALS2' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2):
+    credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS2']
+    with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2, 'w') as outfile:
+        json.dump(json.loads(credentials), outfile)
