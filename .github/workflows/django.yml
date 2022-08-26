@@ -35,6 +35,8 @@ jobs:
         envkey_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         envkey_AWS_STORAGE_BUCKET_NAME: ${{ secrets.AWS_STORAGE_BUCKET_NAME }}
         envkey_GOOGLE_CHAT_WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}
+        envkey_GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        envkey_GOOGLE_APPLICATION_CREDENTIALS2: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS2 }}
         file_name: .env
         fail_on_empty: false
 
