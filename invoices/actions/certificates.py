@@ -1,12 +1,12 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from constance import config
 from django.http import HttpResponse
-from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_RIGHT
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph
-from constance import config
 
 
 def generate_pdf(queryset):
@@ -32,7 +32,8 @@ def generate_pdf(queryset):
         titlist))
     elements.append(Spacer(6, 20))
     elements.append(Paragraph(
-        u"Par la présente, le soussigné certifie que     :     %s %s" % (queryset[0].user.last_name, queryset[0].user.first_name),
+        u"Par la présente, le soussigné certifie que     :     %s %s" % (
+        queryset[0].user.last_name, queryset[0].user.first_name),
         styles['Justify']))
     elements.append(Spacer(2, 20))
     elements.append(Paragraph(u"Demeurant à      :       %s" % queryset[0].address, styles['Justify']))
@@ -41,15 +42,20 @@ def generate_pdf(queryset):
         u"a été au service de %s" % config.NURSE_NAME,
         styles['Justify']))
     elements.append(Spacer(3, 20))
-    w_positions = queryset[0].employeecontractdetail_set.all()
+    w_positions = queryset[0].employeecontractdetail_set.order_by('end_date').all()
     for w_position in w_positions:
         if w_position.end_date is not None:
             elements.append(Paragraph(
-                u"du %s au %s en qualité de : %s" % (w_position.start_date, w_position.end_date, queryset[0].occupation),
+                u"du %s au %s %s h./semaine en qualité de : %s" % (w_position.start_date.strftime('%d/%m/%Y'),
+                                                                   w_position.end_date.strftime('%d/%m/%Y'),
+                                                                   w_position.number_of_hours,
+                                                                   queryset[0].occupation),
                 styles['Justify']))
         else:
             elements.append(Paragraph(
-                u"du %s jusqu´à présent en qualité de : %s" % (w_position.start_date, queryset[0].occupation),
+                u"du %s jusqu´à présent %s h./semaine en qualité de : %s" % (w_position.start_date.strftime('%d/%m/%Y'),
+                                                                             w_position.number_of_hours,
+                                                                             queryset[0].occupation),
                 styles['Justify']))
         elements.append(Spacer(1, 20))
     dt_now_aware = datetime.now().astimezone(ZoneInfo("Europe/Luxembourg"))  # 1
