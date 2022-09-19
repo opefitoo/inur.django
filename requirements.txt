@@ -39,7 +39,7 @@ django-cors-headers==3.13.0
 #APScheduler==3.6.3″
 google-auth-oauthlib==0.5.3
 google-auth-httplib2
-holidays==0.15
+holidays==0.16
 django-csv-exports==1.0.5
 django-colorfield==0.7.2
 django-fieldsets-with-inlines==0.6
@@ -55,7 +55,7 @@ redis==4.3.3
 oauthlib==3.2.1
 asgiref==3.5.2
 django-storages==1.13.1
-boto3==1.24.74
+boto3==1.24.75
 django-phonenumber-field==7.0.0
 phonenumberslite==8.12.55
 django-select2==7.10.1
