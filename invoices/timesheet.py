@@ -210,7 +210,8 @@ class SimplifiedTimesheet(models.Model):
 
     @property
     def total_hours_holidays_taken(self):
-        return self.__calculate_total_hours()["total_hours_holidays_taken_verbose"]
+        return "%s %s" % (calculate_total_hours(self).total_hours_holidays_absence_taken,
+                          calculate_total_hours(self).total_hours_holidays_absence_taken_object)
 
     @property
     def total_hours_holidays_taken_xxx(self):

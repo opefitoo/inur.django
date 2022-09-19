@@ -19,16 +19,18 @@ class SicknessHolidayDaysCalculations(ABC):
         self.public_holidays = None
 
     def __str__(self):
-        return "Explication: ( %.2f jours congés + %.2f jours maladie +%.2f congés exceptionnel )  x %d nombre h. /j " \
-               "et %d jours fériés" % (
+        return "Explication: ( %.2f jours congés + %.2f jours maladie + %.2f congés exceptionnel + %d jours fériés)  " \
+               "x %d nombre h. /j " % (
                    self.holidays_count,
                    self.sickness_days_count,
                    self.exceptional_break,
-                   self.daily_working_hours,
-                   self.number_of_public_holidays)
+                   self.number_of_public_holidays,
+                   self.daily_working_hours
+                   )
 
     def compute_total_hours(self):
-        return (self.holidays_count + self.sickness_days_count + self.exceptional_break + self.number_of_public_holidays) * self.daily_working_hours
+        return (
+                           self.holidays_count + self.sickness_days_count + self.exceptional_break + self.number_of_public_holidays) * self.daily_working_hours
 
     def beautiful_explanation(self):
         _explanation = ""
@@ -38,7 +40,8 @@ class SicknessHolidayDaysCalculations(ABC):
             _explanation += "\nA pris %d jour(s) de congés." % self.holidays_count
         if len(self.holiday_sickness_requests_dates) > 0:
             for holiday_sickness_r_date in self.holiday_sickness_requests_dates:
-                _explanation += "\n du %s au %s" % (holiday_sickness_r_date.start_date, holiday_sickness_r_date.end_date)
+                _explanation += "\n du %s au %s" % (
+                holiday_sickness_r_date.start_date, holiday_sickness_r_date.end_date)
         return _explanation
 
 
