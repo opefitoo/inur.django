@@ -44,11 +44,12 @@ def absence_hours_taken(simplified_timesheet_object):
                                                 exceptional_break=0,
                                                 number_of_public_holidays=0,
                                                 daily_working_hours=0,
+
                                                 holiday_sickness_requests_dates=holiday_requests)
+    counter = 0
+    counter_sickness = 0
+    counter_exceptional_break = 0
     if len(holiday_requests) > 0:
-        counter = 0
-        counter_sickness = 0
-        counter_exceptional_break = 0
         for holiday_request in holiday_requests:
             if holiday_request.start_date == holiday_request.end_date:
                 delta = 1
@@ -64,7 +65,7 @@ def absence_hours_taken(simplified_timesheet_object):
                     period_start_date = holiday_request.start_date
                 delta = period_end_date - period_start_date
                 my_date = period_start_date
-            if holiday_request.reason == 1 and my_date not in lu_holidays:
+            if holiday_request.reason == 1:
                 for _ in (range(1) if delta == 1 else range(delta.days)):
                     if my_date in lu_holidays:
                         pass
