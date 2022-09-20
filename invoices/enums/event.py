@@ -6,4 +6,6 @@ class EventTypeEnum(models.TextChoices):
     BIRTHDAY = 'BIRTHDAY', _('Birthday')
     CARE = 'CARE', _('Soin')
     ASS_DEP = 'ASS_DEP', _('Soin Assurance dépendance')
-    GENERIC = 'GENERIC', _('Général (non soin)')
+    GENERIC = 'GENERIC', _('Général pour Patient (non soin)')
+    GNRC_EMPL = 'GNRC_EMPL', _('Général pour Employé')
+

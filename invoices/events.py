@@ -9,7 +9,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, QuerySet
-from django.db.models.signals import post_delete, post_save, pre_save, pre_delete
+from django.db.models.signals import post_save, pre_save, pre_delete
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
@@ -95,7 +95,7 @@ class Event(models.Model):
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
-        if self.time_start_event:
+        if self.time_start_event and self.employees:
             event_id = self.id
             cached_employees = cache.get('event_employees_cache_%s' % event_id)
             if not cached_employees:
@@ -112,6 +112,12 @@ class Event(models.Model):
                     self.patient,
                     self.time_start_event,
                     self.notes))
+        if self.event_type_enum == EventTypeEnum.GENERIC:
+            return u'<a class="eventtooltip" href="%s">&#9758;%s %s</a>' % (url,
+                                                                            str(self),
+                                                                            '<span class="evttooltiptext">%s</span> '
+                                                                            % self.notes)
+
         return u'<a class="eventtooltip" href="%s">&#9829;%s %s</a>' % (url,
                                                                         str(self),
                                                                         '<span class="evttooltiptext">%s</span> '
@@ -204,6 +210,9 @@ class Event(models.Model):
     def validate(model, instance_id, data):
         result = {}
         # result.update(HolidayRequest.validate_dates(data))
+        result.update(event_end_time_and_address_is_sometimes_mandatory(data))
+        result.update(employee_maybe_mandatory(data))
+        result.update(patient_maybe_mandatory(data))
         result.update(validate_date_range(instance_id, data))
         result.update(model.event_is_unique(data))
         # result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
@@ -233,6 +242,8 @@ class Event(models.Model):
             cache.set('cached_patient_%s' % self.patient.id, self.patient)
             cached_patient = cache.get('cached_patient_%s' % self.patient.id)
         if self.event_type_enum == EventTypeEnum.BIRTHDAY:
+            return '%s for %s on %s' % (self.event_type_enum, cached_patient, self.day)
+        if self.event_type_enum == EventTypeEnum.GENERIC:
             return '%s for %s on %s' % (self.event_type_enum, cached_patient, self.day)
         cached_employees = cache.get('event_employees_cache_%s' % self.employees.id)
         if not cached_employees:
@@ -322,16 +333,48 @@ def delete_google_calendar(sender, instance: Event, **kwargs):
         calendar_gcalendar.delete_event(instance)
 
 
+def event_end_time_and_address_is_sometimes_mandatory(data):
+    messages = {}
+    if data['event_type_enum'] != EventTypeEnum.BIRTHDAY and data['time_end_event'] is None:
+        messages = {'time_end_event': _("Heure fin est obligatoire pour type %s") % _(data['event_type_enum'])}
+    return messages
+
+
+def employee_maybe_mandatory(data):
+    messages = {}
+    if data['event_type_enum'] == EventTypeEnum.GNRC_EMPL and data['employees_id'] is None:
+        messages = {'employees': _("Employees est obligatoire pour %s") % _(data['event_type_enum'])}
+    return messages
+
+
+def patient_maybe_mandatory(data):
+    messages = {}
+    if data['event_type_enum'] == EventTypeEnum.GENERIC and data['patient_id'] is None:
+        messages = {'patient': _("Patient est obligatoire pour %s") % _(data['event_type_enum'])}
+    return messages
+
+
 def validate_date_range(instance_id, data):
     messages = {}
-    conflicts_count = Event.objects.filter(day=data['day']).filter(
-        Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
-        Q(time_end_event__range=(data['time_start_event'], data['time_end_event'])) |
-        Q(time_start_event__lte=data['time_start_event'], time_end_event__gte=data['time_start_event']) |
-        Q(time_start_event__lte=data['time_end_event'], time_end_event__gte=data['time_end_event'])
-    ).filter(
-        employees_id=data['employees_id']).exclude(
-        pk=instance_id).count()
+    conflicts_count = 0
+    if data['employees_id']:
+        conflicts_count = Event.objects.filter(day=data['day']).filter(
+            Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
+            Q(time_end_event__range=(data['time_start_event'], data['time_end_event'])) |
+            Q(time_start_event__lte=data['time_start_event'], time_end_event__gte=data['time_start_event']) |
+            Q(time_start_event__lte=data['time_end_event'], time_end_event__gte=data['time_end_event'])
+        ).filter(
+            employees_id=data['employees_id']).exclude(
+            pk=instance_id).count()
+    elif data['patient_id'] and data['employees_id'] is None:
+        conflicts_count = Event.objects.filter(day=data['day']).filter(
+            Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
+            Q(time_end_event__range=(data['time_start_event'], data['time_end_event'])) |
+            Q(time_start_event__lte=data['time_start_event'], time_end_event__gte=data['time_start_event']) |
+            Q(time_start_event__lte=data['time_end_event'], time_end_event__gte=data['time_end_event'])
+        ).filter(
+            employees_id=data['patient_id']).exclude(
+            pk=instance_id).count()
     if 0 < conflicts_count:
         messages = {'time_start_event': _("Intersection with other %s") % Event._meta.verbose_name_plural}
     return messages

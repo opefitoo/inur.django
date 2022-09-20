@@ -189,7 +189,6 @@ def cannot_validate_in_future(instance, user):
 
 
 class EventForm(ModelForm):
-
     class Meta:
         model = Event
         exclude = ('event_type',)

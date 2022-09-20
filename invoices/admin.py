@@ -264,7 +264,7 @@ class PatientAdmin(CSVExportAdmin):
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
                   'country', 'phone_number', 'email_address', 'date_of_death']
-    readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions')
+    readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions', 'link_to_events')
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode']
     form = PatientForm
     # actions = [generate_road_book_2019_mehdi]
@@ -282,7 +282,13 @@ class PatientAdmin(CSVExportAdmin):
         return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici (%d)" % MedicalPrescription.objects.filter(
             patient_id=instance.id).count()))
 
+    def link_to_events(self, instance):
+        url = f'{reverse("admin:invoices_eventlist_changelist")}?event_type_enum__exact=GENERIC&patient__id={instance.id}'
+        return mark_safe('<a href="%s">%s</a>' % (url, "Tous les événements Generic du patient ici (%d)" % Event.objects.filter(
+            patient_id=instance.id, event_type_enum__exact=EventTypeEnum.GENERIC).count()))
+
     link_to_medical_prescriptions.short_description = "Ordonnances client"
+    link_to_events.short_description = "Evénements client"
 
     def has_csv_permission(self, request):
         """Only super users can export as CSV"""

@@ -4,6 +4,7 @@ import sys
 from zoneinfo import ZoneInfo
 
 from apiclient import discovery
+from constance import config
 from django.conf import settings
 from django.db.models import Q
 from google.oauth2 import service_account
@@ -154,7 +155,11 @@ class PrestationGoogleCalendarSurLu:
             raise ValueError("error during sync with google calendar %s" % gmail_event)
 
     def update_events_sur_id(self, event):
-        gmail_event = self.get_event(event_id=event.calendar_id, calendar_id=event.employees.user.email)
+        if event.employees:
+            calendar_id = event.employees.user.email
+        else:
+            calendar_id = config.GENERAL_CALENDAR_ID
+        gmail_event = self.get_event(event_id=event.calendar_id, calendar_id=calendar_id)
         event_body = {
             'summary': gmail_event['summary'],
             'description': gmail_event['description'] + "<b>%s</b> %s<br>" % (u'Sur LU ID:', event.id),
@@ -162,7 +167,7 @@ class PrestationGoogleCalendarSurLu:
             'start':  gmail_event['start'],
             'end':  gmail_event['end'],
         }
-        return self._service.events().update(calendarId=event.employees.user.email,
+        return self._service.events().update(calendarId=calendar_id,
                                              eventId=event.calendar_id,
                                              body=event_body).execute()
 
@@ -187,7 +192,10 @@ class PrestationGoogleCalendarSurLu:
             description += descr_line % (u'Sur LU ID:', event.id)
         if event.notes and len(event.notes) > 0:
             description += descr_line % ('Notes:', event.notes)
-        summary = '%s - %s' % (event.patient, event.employees.abbreviation)
+        if event.employees:
+            summary = '%s - %s' % (event.patient, event.employees.abbreviation)
+        else:
+            summary = '%s - %s' % (event.patient, event.notes)
 
         localized = datetime.datetime(event.day.year,
                                       event.day.month, event.day.day,
@@ -217,13 +225,17 @@ class PrestationGoogleCalendarSurLu:
             },
             'attendees': attendees_list
         }
+        if event.employees:
+            calendar_id = event.employees.user.email
+        else:
+            calendar_id = config.GENERAL_CALENDAR_ID
 
-        gmail_event = self.get_event(event_id=event.calendar_id, calendar_id=event.employees.user.email)
+        gmail_event = self.get_event(event_id=event.calendar_id, calendar_id=calendar_id)
         if gmail_event is None:
-            gmail_event = self._service.events().insert(calendarId=event.employees.user.email,
+            gmail_event = self._service.events().insert(calendarId=calendar_id,
                                                         body=event_body).execute()
         else:
-            gmail_event = self._service.events().update(calendarId=event.employees.user.email,
+            gmail_event = self._service.events().update(calendarId=calendar_id,
                                                         eventId=event.calendar_id,
                                                         body=event_body).execute()
 

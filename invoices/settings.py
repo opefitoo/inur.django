@@ -208,6 +208,9 @@ CONSTANCE_CONFIG = {
     'CC_EMAIL_SENT': ("",
                       "Lors de l'envoi d'un email au client, envoi à cette adresse en CC (pour en mettre plusieurs veuillez les séparer d'une virgule ',')",
                       str),
+    'GENERAL_CALENDAR_ID': ("",
+                      "Identifiant de l'agenda Google de configuration générale",
+                      str),
     'CONVADIS_CLIENT_ID': ('NOT_SET', 'Client ID pour authentification oauth2 convadis services', str),
     'CONVADIS_SECRET_ID': ('NOT_SET', 'Secret ID pour authentification oauth2 convadis services', str),
     'CONVADIS_URL': ('NOT_SET', 'Url pour authentification oauth2 convadis services', str),
@@ -219,7 +222,7 @@ CONSTANCE_CONFIG_FIELDSETS = {
     'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE'),
     'Options de Facturation': (
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
-        'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT'),
+        'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT', 'GENERAL_CALENDAR_ID'),
     'Options API Convadis': ('CONVADIS_ORG_ID', 'CONVADIS_CLIENT_ID', 'CONVADIS_SECRET_ID', 'CONVADIS_URL',
                              'OPENROUTE_SERVICE_API_KEY')
 }
