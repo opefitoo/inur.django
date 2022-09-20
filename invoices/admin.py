@@ -356,7 +356,7 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     autocomplete_fields = ['prescriptor', 'patient']
     exclude = ('file',)
     form = MedicalPrescriptionForm
-    list_per_page = 10
+    list_per_page = 5
 
     # actions = [migrate_from_g_to_cl]
     def link_to_invoices(self, instance):
