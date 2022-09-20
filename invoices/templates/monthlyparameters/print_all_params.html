@@ -155,6 +155,7 @@
             <td>Pouls</td>
             <td>Temp.</td>
             <td>Selles</td>
+            <td>EVS</td>
             <td>Poids</td>
             <td>Satur. O2</td>
             <td>Glycémie</td>
@@ -166,6 +167,7 @@
                 <td>{% if param.heart_pulse > 0 %} {{ param.heart_pulse }} {% else %} - {% endif %}</td>
                 <td>{% if param.temperature > 0 %} {{ param.temperature }} {% else %} - {% endif %}</td>
                 <td>{% if param.stools %} {{ param.stools }} {% else %} - {% endif %}</td>
+                <td>{% if param.vas > 0 %} {{ param.vas }} {% else %} - {% endif %}</td>
                 <td>{% if param.weight > 0 %} {{ param.weight }} {% else %} - {% endif %}</td>
                 <td>{% if param.oximeter_saturation %} {{ param.oximeter_saturation }} {% else %} - {% endif %}</td>
                 <td>{% if param.blood_glucose %} {{ param.blood_glucose }} {% else %} - {% endif %}</td>

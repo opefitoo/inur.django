@@ -133,3 +133,17 @@ class StoolsQty(models.IntegerChoices):
     little = 1, "+"
     medium = 2, "++"
     lot = 3, "+++"
+
+
+class VisualAnalogueScaleLvl(models.IntegerChoices):
+    none = 0, "0 (aucune douleur)"
+    mild_1 = 1, "1 (simple inconfort)"
+    mild = 2, "2 (simple inconfort+)"
+    moderate_3 = 3, "3 (douleur légère)"
+    moderate = 4, "4 (douleur légère+)"
+    severe_5 = 5, "5 (douleur modérée)"
+    severe = 6, "6 (douleur modérée+)"
+    very_severe_7 = 7, "7 (douleur intense)"
+    very_severe = 8, "8 (douleur intense+)"
+    worst_pain_possible_9 = 9, "9 (douleur intolérable)"
+    worst_pain_possible = 10, "10 (douleur intolérable+)"

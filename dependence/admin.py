@@ -1,8 +1,11 @@
+from admin_object_actions.admin import ModelAdminObjectActionsMixin
+from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
 from django.db.models import Count, ManyToManyField
 from django.forms import ModelMultipleChoiceField, CheckboxSelectMultiple
+from fieldsets_with_inlines import FieldsetsInlineMixin
 
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
@@ -10,10 +13,6 @@ from dependence.careplan_pdf import generate_pdf
 from dependence.forms import TypeDescriptionGenericInlineFormset, TensionAndTemperatureParametersFormset
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
-from django.contrib import admin
-from admin_object_actions.admin import ModelAdminObjectActionsMixin
-from fieldsets_with_inlines import FieldsetsInlineMixin
-
 from invoices.employee import JobPosition
 from invoices.models import Patient
 
@@ -149,8 +148,8 @@ class TensionAndTemperatureParametersInLine(admin.TabularInline):
     model = TensionAndTemperatureParameters
     formset = TensionAndTemperatureParametersFormset
     fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'heart_pulse', 'temperature',
-              'stools', 'oximeter_saturation', 'weight', 'blood_glucose', 'general_remarks', 'user', 'created_on',
-              'updated_on')
+              'stools', 'oximeter_saturation', 'vas', 'weight', 'blood_glucose', 'general_remarks', 'user', 'created_on'
+              , "updated_on")
     readonly_fields = ('user', 'created_on', 'updated_on')
 
 

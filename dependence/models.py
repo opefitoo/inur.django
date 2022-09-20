@@ -1,3 +1,6 @@
+from datetime import date, datetime
+
+from constance import config
 from django.core.exceptions import ValidationError
 from django.db import models
 from django_countries.fields import CountryField
@@ -5,10 +8,8 @@ from django_countries.fields import CountryField
 from invoices.db.fields import CurrentUserField
 from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
     MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType, \
-    MonthsNames, StoolsQty
+    MonthsNames, StoolsQty, VisualAnalogueScaleLvl
 from invoices.models import Patient, Physician
-from datetime import date, datetime
-from constance import config
 
 
 def current_year():
@@ -113,6 +114,8 @@ class TensionAndTemperatureParameters(models.Model):
     heart_pulse = models.PositiveSmallIntegerField("Pouls", default=None, blank=True, null=True)
     temperature = models.DecimalField("Température", max_digits=3, decimal_places=1, default=0, blank=True, null=True)
     stools = models.PositiveSmallIntegerField("Selles", choices=StoolsQty.choices, default=None, blank=True, null=True)
+    vas = models.PositiveSmallIntegerField("EVA", choices=VisualAnalogueScaleLvl.choices, default=None, blank=True,
+                                           null=True)
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1, default=None, blank=True, null=True)
     oximeter_saturation = models.PositiveSmallIntegerField("Saturation O2 %", default=None, blank=True, null=True)
     general_remarks = models.TextField("Remarques générales", max_length=200, default=None, blank=True, null=True)
