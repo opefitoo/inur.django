@@ -192,8 +192,8 @@ class HolidayRequest(models.Model):
         return reverse('admin:%s_%s_change' % info, args=(self.pk,))
 
     def __str__(self):
-        return u'%s - %s du  %s au %s' % (
-            self.employee, self.REASONS[self.reason - 1][1], self.start_date, self.end_date)
+        return u'%s de %s - du  %s au %s' % (
+            self.REASONS[self.reason - 1][1], self.employee, self.start_date, self.end_date)
 
 
 def update_absence_request_filename(instance, filename):
@@ -250,6 +250,6 @@ def notify_holiday_request_creation(sender, instance, created, **kwargs):
     url = instance.get_admin_url()
     to_emails = get_admin_emails()
     if len(to_emails) > 0:
-        send_email_notification('A new holiday request from %s' % instance,
+        send_email_notification('A new %s' % instance,
                                 'please validate. %s' % url,
                                 to_emails)
