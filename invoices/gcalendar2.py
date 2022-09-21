@@ -173,7 +173,8 @@ class PrestationGoogleCalendarSurLu:
 
     def update_event(self, event):
         descr_line = "<b>%s</b> %s<br>"
-        description = descr_line % ('Patient:', event.patient)
+        if event.patient:
+            description = descr_line % ('Patient:', event.patient)
         if event.at_office:
             address = event.event_address
             location = address
@@ -187,15 +188,16 @@ class PrestationGoogleCalendarSurLu:
                                           event.patient.city,
                                           event.patient.country)
         description += descr_line % (u'Adresse:', address)
-        description += descr_line % (u'Tél Patient:', event.patient.phone_number)
+        if event.patient:
+            description += descr_line % (u'Tél Patient:', event.patient.phone_number)
         if event.id:
             description += descr_line % (u'Sur LU ID:', event.id)
         if event.notes and len(event.notes) > 0:
             description += descr_line % ('Notes:', event.notes)
-        if event.employees:
+        if event.employees and event.patient:
             summary = '%s - %s' % (event.patient, event.employees.abbreviation)
-        else:
-            summary = '%s - %s' % (event.patient, event.notes)
+        elif event.employees and not event.patient:
+            summary = '%s - %s' % (event.employees.abbreviation, event.notes)
 
         localized = datetime.datetime(event.day.year,
                                       event.day.month, event.day.day,
@@ -256,8 +258,11 @@ class PrestationGoogleCalendarSurLu:
     def delete_event_by_google_id(self, calendar_id, event_id, dry_run=True):
         if dry_run:
             e = self._service.events().get(calendarId=calendar_id, eventId=event_id).execute()
-            print("Pretending that I delete event: %s on Goole %s" % (event_id, e))
+            print("Pretending that I delete event: %s on Google %s" % (event_id, e))
             return e
+        event = self.get_event(calendar_id=calendar_id, event_id=event_id)
+        if 'cancelled' == event['status']:
+            return
         try:
             gmail_event = self._service.events().delete(calendarId=calendar_id,
                                                         eventId=event_id).execute()
