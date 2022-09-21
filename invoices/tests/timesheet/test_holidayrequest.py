@@ -81,7 +81,8 @@ class HolidayRequestTestCase(TestCase):
                                                                 request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
         self.assertEqual(validate_date_range(1234567890, data),
-                         {'start_date': "Intersection avec d'autres demandes u2 - Congés du  2021-02-08 au 2021-02-20 "})
+                         {'start_date': "Intersection avec d'autres demandes Congés de u2 - du  2021-02-08 au "
+                                        "2021-02-20 "})
 
     def test_u1_from_18_01_21_to_26_01_21_u2_from_13_02_21_to_20_02_21(self):
         # no intersection
