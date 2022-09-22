@@ -284,8 +284,9 @@ class PatientAdmin(CSVExportAdmin):
 
     def link_to_events(self, instance):
         url = f'{reverse("admin:invoices_eventlist_changelist")}?event_type_enum__exact=GENERIC&patient__id={instance.id}'
-        return mark_safe('<a href="%s">%s</a>' % (url, "Tous les événements Generic du patient ici (%d)" % Event.objects.filter(
-            patient_id=instance.id, event_type_enum__exact=EventTypeEnum.GENERIC).count()))
+        return mark_safe(
+            '<a href="%s">%s</a>' % (url, "Tous les événements Generic du patient ici (%d)" % Event.objects.filter(
+                patient_id=instance.id, event_type_enum__exact=EventTypeEnum.GENERIC).count()))
 
     link_to_medical_prescriptions.short_description = "Ordonnances client"
     link_to_events.short_description = "Evénements client"
@@ -832,7 +833,8 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
 
     def build_use_case_objects(self, request, queryset):
         if not request.user.is_superuser:
-            self.message_user(request, "Vous n'avez pas le droit de faire cette action des %s." % self.verbose_name_plural)
+            self.message_user(request,
+                              "Vous n'avez pas le droit de faire cette action des %s." % self.verbose_name_plural)
             return
         file_data = build_use_case_objects(queryset)
         response = HttpResponse(file_data, content_type='application/text charset=utf-8')
@@ -859,7 +861,7 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                                                                         timesheet_validated=True)
                 if len(previous_timsheets) == 0:
                     file_data += "\n {counter} - {last_name} {first_name}:\n".format(counter=_counter,
-                                                                        last_name=tsheet.user.last_name.upper(),
+                                                                                     last_name=tsheet.user.last_name.upper(),
                                                                                      first_name=tsheet.user.first_name)
                     if tsheet.extra_hours_paid_current_month:
                         file_data += "\nA travaillé {total_extra} heures supplémentaires.".format(
@@ -869,12 +871,13 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
                             holidays_sickness_explanation=tsheet.total_hours_holidays_and_sickness_taken_object.beautiful_explanation())
                 else:
                     previous_month_tsheet = previous_timsheets.first()
-                    file_data += "\n {counter} - {last_name}:\n".format(counter=_counter,
-                                                                        last_name=previous_month_tsheet.user.last_name.upper())
-                    if previous_month_tsheet.total_hours_sundays:
+                    file_data += "\n {counter} - {last_name} {first_name}:\n".format(counter=_counter,
+                                                                                     last_name=tsheet.user.last_name.upper(),
+                                                                                     first_name=tsheet.user.first_name)
+                    if tsheet.total_hours_sundays:
                         file_data += " \nA travaillé {hours_sunday} heures des Dimanche".format(
                             hours_sunday=previous_month_tsheet.total_hours_sundays)
-                    if previous_month_tsheet.total_hours_public_holidays:
+                    if tsheet.total_hours_public_holidays:
                         file_data += " \nA travaillé {total_hours_public_holidays} heures des Jours fériés.".format(
                             total_hours_public_holidays=previous_month_tsheet.total_hours_public_holidays)
                     if tsheet.extra_hours_paid_current_month:
@@ -1155,7 +1158,8 @@ class EventListAdmin(admin.ModelAdmin):
             return Event.objects.all()
         else:
             # Display only today's events for non admin users
-            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).filter(day__year=today.year).filter(day__month=today.month).filter(day__day=today.day)
+            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).filter(
+                day__year=today.year).filter(day__month=today.month).filter(day__day=today.day)
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
