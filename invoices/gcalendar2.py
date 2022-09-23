@@ -198,6 +198,8 @@ class PrestationGoogleCalendarSurLu:
             summary = '%s - %s' % (event.patient, event.employees.abbreviation)
         elif event.employees and not event.patient:
             summary = '%s - %s' % (event.employees.abbreviation, event.notes)
+        elif not event.employees and event.patient:
+            summary = '%s - %s' % (event.patient, event.notes)
 
         localized = datetime.datetime(event.day.year,
                                       event.day.month, event.day.day,

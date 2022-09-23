@@ -237,10 +237,12 @@ class Event(models.Model):
         return ""
 
     def __str__(self):  # Python 3: def __str__(self):,
-        cached_patient = cache.get('cached_patient_%s' % self.patient.id)
-        if not cached_patient:
-            cache.set('cached_patient_%s' % self.patient.id, self.patient)
+        cached_patient = None
+        if self.patient:
             cached_patient = cache.get('cached_patient_%s' % self.patient.id)
+            if not cached_patient:
+                cache.set('cached_patient_%s' % self.patient.id, self.patient)
+                cached_patient = cache.get('cached_patient_%s' % self.patient.id)
         if self.event_type_enum == EventTypeEnum.BIRTHDAY:
             return '%s for %s on %s' % (self.event_type_enum, cached_patient, self.day)
         if self.event_type_enum == EventTypeEnum.GENERIC:
@@ -253,7 +255,9 @@ class Event(models.Model):
             return '%s ++ %s' % (
                 ",".join(a.assigned_additional_employee.abbreviation for a in self.event_assigned.all()),
                 cached_patient.name)
-        return '%s - %s (%s)' % (cached_employees.abbreviation, cached_patient.name, self.event_type_enum)
+        if cached_patient:
+            return '%s - %s (%s)' % (cached_employees.abbreviation, cached_patient.name, self.event_type_enum)
+        return '%s (%s)' % (cached_employees.abbreviation, self.event_type_enum)
 
 
 class AssignedAdditionalEmployee(models.Model):
