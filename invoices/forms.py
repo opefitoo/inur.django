@@ -153,7 +153,7 @@ class HospitalizationFormSet(BaseInlineFormSet):
     @staticmethod
     def validate_with_patient_date_of_death(cleaned_data, date_of_death):
         for row_data in cleaned_data:
-            if row_data['end_date'] >= date_of_death:
+            if row_data['end_date'] > date_of_death:
                 raise ValidationError("Hospitalization cannot be later than or include Patient's death date")
 
 

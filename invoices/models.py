@@ -692,7 +692,9 @@ class Hospitalization(models.Model):
             messages = {'patient': 'Please fill Patient field'}
 
         date_of_death = patient.date_of_death
-        if date_of_death is not None and data['end_date'] >= date_of_death:
+        if date_of_death and data['end_date'] is None:
+            messages = {'end_date': "Hospitalization end date must be set"}
+        if date_of_death and data['end_date'] > date_of_death:
             messages = {'end_date': "Hospitalization cannot be later than or include Patient's death date"}
 
         return messages
