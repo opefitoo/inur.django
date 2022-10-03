@@ -219,6 +219,8 @@ class AbsenceRequestFile(models.Model):
 
 def validate_date_range(instance_id, data):
     messages = {}
+    if data['force_creation']:
+        return messages
     conflicts = HolidayRequest.objects.filter(
         Q(start_date__range=(data['start_date'], data['end_date'])) |
         Q(end_date__range=(data['start_date'], data['end_date'])) |
@@ -232,6 +234,8 @@ def validate_date_range(instance_id, data):
 
 def validate_requests_from_other_employees(instance_id, data):
     messages = {}
+    if data['force_creation']:
+        return messages
     conflicts = HolidayRequest.objects.filter(
         end_date__lte=data['end_date'], end_date__gte=data['start_date']) | \
                 HolidayRequest.objects.filter(start_date__gte=data['start_date'], start_date__lte=data['end_date'])
