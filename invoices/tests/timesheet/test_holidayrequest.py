@@ -68,7 +68,8 @@ class HolidayRequestTestCase(TestCase):
         data = {
             'start_date': timezone.now().replace(year=2021, month=2, day=18, hour=8, minute=00),
             'end_date': timezone.now().replace(year=2020, month=2, day=26, hour=16, minute=00),
-            'employee_id': self.u1
+            'employee_id': self.u1,
+            'force_creation': False
         }
         # create holiday request but now being validated
         another_holiday_request = HolidayRequest.objects.create(employee=self.u2,
@@ -78,6 +79,7 @@ class HolidayRequestTestCase(TestCase):
                                                                                                 day=20),
                                                                 requested_period=HolidayRequestChoice.req_full_day,
                                                                 reason=1,
+                                                                force_creation=False,
                                                                 request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
         self.assertEqual(validate_date_range(1234567890, data),
@@ -89,7 +91,8 @@ class HolidayRequestTestCase(TestCase):
         data = {
             'start_date': timezone.now().replace(year=2021, month=1, day=18, hour=8, minute=00),
             'end_date': timezone.now().replace(year=2020, month=1, day=26, hour=16, minute=00),
-            'employee_id': self.u1
+            'employee_id': self.u1,
+            'force_creation': False
         }
         # create holiday request but now being validated
         another_holiday_request = HolidayRequest.objects.create(employee=self.u2,
@@ -99,6 +102,7 @@ class HolidayRequestTestCase(TestCase):
                                                                                                 day=20),
                                                                 requested_period=HolidayRequestChoice.req_full_day,
                                                                 reason=1,
+                                                                force_creation=False,
                                                                 request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
         self.assertEqual(validate_date_range(1234567890, data), {})
