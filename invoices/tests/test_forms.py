@@ -194,8 +194,8 @@ class HospitalizationFormSetTestCase(TestCase):
 
     def test_start_equal_to_end(self):
         self.date_of_death = self.date_of_death.replace(month=9, day=1)
-        self.assertIsNone(ValidationError, HospitalizationFormSet.validate_with_patient_date_of_death, self.periods,
-                          self.date_of_death)
+        self.assertIsNone(HospitalizationFormSet.validate_with_patient_date_of_death(self.periods,
+                          self.date_of_death))
 
     def test_after(self):
         self.date_of_death = self.date_of_death.replace(month=11, day=1)
