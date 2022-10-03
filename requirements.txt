@@ -11,7 +11,7 @@ django-picklefield==3.1
 djangorestframework==3.13.1
 enum34==1.1.10
 #google-api-python-client==1.7.11
-google-api-python-client==2.62.0
+google-api-python-client==2.63.0
 gunicorn==20.1.0
 httplib2==0.20.4
 Markdown==3.4.1
@@ -55,7 +55,7 @@ redis==4.3.3
 oauthlib==3.2.1
 asgiref==3.5.2
 django-storages==1.13.1
-boto3==1.24.83
+boto3==1.24.84
 django-phonenumber-field==7.0.0
 phonenumberslite==8.12.56
 django-select2==7.10.1
