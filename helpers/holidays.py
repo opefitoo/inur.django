@@ -185,6 +185,13 @@ def whois_available(working_day):
     return [x.abbreviation for x in Employee.objects.filter(end_contract__isnull=True) if x not in employees_on_leave]
 
 
+def which_shift(working_day, abbreviation):
+    employees_on_leave = [x.employee.employee for x in
+                          HolidayRequest.objects.filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED,
+                                                        start_date__lte=working_day, end_date__gte=working_day)]
+    return [x.abbreviation for x in Employee.objects.filter(end_contract__isnull=True) if x not in employees_on_leave]
+
+
 def get_bank_holidays(y, m):
     import holidays
     lu_holidays = holidays.Luxembourg()

@@ -69,7 +69,8 @@ class HolidayRequestTestCase(TestCase):
             'start_date': timezone.now().replace(year=2021, month=2, day=18, hour=8, minute=00),
             'end_date': timezone.now().replace(year=2020, month=2, day=26, hour=16, minute=00),
             'employee_id': self.u1,
-            'force_creation': False
+            'force_creation': False,
+            'reason': 1  # maladie
         }
         # create holiday request but now being validated
         another_holiday_request = HolidayRequest.objects.create(employee=self.u2,
@@ -86,13 +87,35 @@ class HolidayRequestTestCase(TestCase):
                          {'start_date': "Intersection avec d'autres demandes Congés de u2 - du  2021-02-08 au "
                                         "2021-02-20 "})
 
+    def test_u1_from_18_02_21_to_26_02_21_u2_from_13_02_21_to_20_02_21_sickness_should_not_trigger_validation(self):
+        data = {
+            'start_date': timezone.now().replace(year=2021, month=2, day=18, hour=8, minute=00),
+            'end_date': timezone.now().replace(year=2020, month=2, day=26, hour=16, minute=00),
+            'employee_id': self.u1,
+            'force_creation': False,
+            'reason': 2 # maladie
+        }
+        # create holiday request but now being validated
+        another_holiday_request = HolidayRequest.objects.create(employee=self.u2,
+                                                                start_date=timezone.now().replace(year=2021, month=2,
+                                                                                                  day=8),
+                                                                end_date=timezone.now().replace(year=2021, month=2,
+                                                                                                day=20),
+                                                                requested_period=HolidayRequestChoice.req_full_day,
+                                                                reason=1,
+                                                                force_creation=False,
+                                                                request_status=HolidayRequestWorkflowStatus.ACCEPTED)
+        another_holiday_request.save()
+        self.assertEqual(validate_date_range(1234567890, data), {})
+
     def test_u1_from_18_01_21_to_26_01_21_u2_from_13_02_21_to_20_02_21(self):
         # no intersection
         data = {
             'start_date': timezone.now().replace(year=2021, month=1, day=18, hour=8, minute=00),
             'end_date': timezone.now().replace(year=2020, month=1, day=26, hour=16, minute=00),
             'employee_id': self.u1,
-            'force_creation': False
+            'force_creation': False,
+            'reason': 1  # congés
         }
         # create holiday request but now being validated
         another_holiday_request = HolidayRequest.objects.create(employee=self.u2,
