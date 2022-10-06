@@ -22,6 +22,7 @@ from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
+# from invoices.actions.maps import calculate_distance_matrix
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
 from invoices.enums.event import EventTypeEnum
@@ -266,6 +267,7 @@ class PatientAdmin(CSVExportAdmin):
                   'country', 'phone_number', 'email_address', 'date_of_death']
     readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions', 'link_to_events')
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode']
+    #actions = [calculate_distance_matrix]
     form = PatientForm
     # actions = [generate_road_book_2019_mehdi]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
@@ -1018,7 +1020,7 @@ class EventAdmin(admin.ModelAdmin):
         if obj is not None:
             if not request.user.is_superuser:
                 fs = [field.name for field in Event._meta.fields if field.name != "id"]
-                if obj.employees.user.id == request.user.id:
+                if obj.employees is not None and obj.employees.user.id == request.user.id:
                     return [f for f in fs if f not in ['event_report', 'state']]
                 else:
                     return fs
