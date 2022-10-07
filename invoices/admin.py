@@ -1101,7 +1101,7 @@ class EventListAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             return
         for e in queryset:
-            post_webhook(employees=e.employees, patient=e.patient, event_report=e.notes, state=e.state)
+            post_webhook(employees=e.employees, patient=e.patient, event_report=e.event_report, state=e.state)
 
     def list_orphan_events(self, request, queryset):
         if not request.user.is_superuser:
