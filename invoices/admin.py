@@ -35,6 +35,7 @@ from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, InvoiceItemForm, \
     MedicalPrescriptionForm
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
+from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, AssignedPhysician
@@ -267,7 +268,7 @@ class PatientAdmin(CSVExportAdmin):
                   'country', 'phone_number', 'email_address', 'date_of_death']
     readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions', 'link_to_events')
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode']
-    #actions = [calculate_distance_matrix]
+    # actions = [calculate_distance_matrix]
     form = PatientForm
     # actions = [generate_road_book_2019_mehdi]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
@@ -1085,7 +1086,8 @@ class EventListAdmin(admin.ModelAdmin):
     exclude = ('event_type',)
 
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
-               'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google']
+               'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
+               'send_webhook_message']
 
     form = EventForm
 
@@ -1094,6 +1096,12 @@ class EventListAdmin(admin.ModelAdmin):
             return
         for e in queryset:
             e.delete()
+
+    def send_webhook_message(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        for e in queryset:
+            post_webhook(employees=e.employees, patient=e.patient, event_report=e.notes, state=e.state)
 
     def list_orphan_events(self, request, queryset):
         if not request.user.is_superuser:

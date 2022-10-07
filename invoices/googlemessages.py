@@ -1,9 +1,9 @@
 import logging
+from json import dumps
 
 from httplib2 import Http
 
 from invoices import settings
-from json import dumps
 
 logger = logging.getLogger('console')
 
@@ -11,6 +11,8 @@ logger = logging.getLogger('console')
 def post_webhook(employees, patient, event_report, state):
     """Hangouts Chat incoming webhook quickstart."""
     # FIXME: remove hardcoded value for state
+    if patient is None:
+        return
     if state not in [3, 5]:
         return
     if 3 == state:
