@@ -173,6 +173,7 @@ class PrestationGoogleCalendarSurLu:
 
     def update_event(self, event):
         descr_line = "<b>%s</b> %s<br>"
+        description = descr_line
         if event.patient:
             description = descr_line % ('Patient:', event.patient)
         if event.at_office:
@@ -181,7 +182,7 @@ class PrestationGoogleCalendarSurLu:
         elif not event.at_office and event.event_address:
             address = event.event_address
             location = address
-        else:
+        elif event.patient and event.patient.address:
             address = event.patient.address
             location = "%s, %s %s, %s" % (event.patient.address,
                                           event.patient.zipcode,

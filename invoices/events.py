@@ -19,7 +19,6 @@ from invoices import settings
 from invoices.employee import Employee
 from invoices.enums.event import EventTypeEnum
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
-from invoices.googlemessages import post_webhook
 from invoices.models import Patient
 
 
@@ -215,6 +214,7 @@ class Event(models.Model):
         result.update(patient_maybe_mandatory(data))
         result.update(validate_date_range(instance_id, data))
         result.update(model.event_is_unique(data))
+        result.update(address_mandatory_for_generic_employee(data))
         # result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
         # result.update(create_or_update_google_calendar(model))
         return result
@@ -310,6 +310,8 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
     if instance.pk:
         print(calendar_gcalendar.update_events_sur_id(instance))
+    # if settings.GOOGLE_CHAT_WEBHOOK_URL:
+    #     post_webhook(instance.employees, instance.patient, instance.event_report, instance.state)
 
 
 # @receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
@@ -318,13 +320,7 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
 #     sys.stdout.flush()
 #     create_or_update_google_calendar(instance)
 
-@receiver(post_save, sender=Event, dispatch_uid="event_post_save")
-def event_post_save_callback(sender, instance, **kwargs):
-    if settings.TESTING:
-        print("** TEST mode")
-        return
-    if settings.GOOGLE_CHAT_WEBHOOK_URL:
-        post_webhook(instance.employees, instance.patient, instance.event_report, instance.state)
+
 
 
 @receiver(pre_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
@@ -357,6 +353,12 @@ def patient_maybe_mandatory(data):
         messages = {'patient': _("Patient est obligatoire pour %s") % _(data['event_type_enum'])}
     return messages
 
+
+def address_mandatory_for_generic_employee(data):
+    messages = {}
+    if data['event_type_enum'] == EventTypeEnum.GNRC_EMPL and len(data['event_address']) == 0:
+        messages = {'event_address': _("Adresse est obligatoire pour %s") % _(data['event_type_enum'])}
+    return messages
 
 def validate_date_range(instance_id, data):
     messages = {}
