@@ -27,7 +27,7 @@ from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
-from invoices.events import EventType, Event, AssignedAdditionalEmployee, create_or_update_google_calendar
+from invoices.events import EventType, Event, AssignedAdditionalEmployee, create_or_update_google_calendar, EventList
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
@@ -1070,13 +1070,6 @@ class EventAdmin(admin.ModelAdmin):
         return super(EventAdmin, self).changelist_view(request, extra_context)
 
 
-class EventList(Event):
-    class Meta:
-        proxy = True
-        verbose_name = "Mes tâches"
-        verbose_name_plural = "Planning tâches à valider"
-
-
 @admin.register(EventList)
 class EventListAdmin(admin.ModelAdmin):
     list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees']
@@ -1168,7 +1161,7 @@ class EventListAdmin(admin.ModelAdmin):
             return Event.objects.all()
         else:
             # Display only today's events for non admin users
-            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).filter(
+            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).exclude(state=5).filter(
                 day__year=today.year).filter(day__month=today.month).filter(day__day=today.day)
 
     def get_form(self, request, obj=None, change=False, **kwargs):

@@ -19,6 +19,7 @@ from invoices import settings
 from invoices.employee import Employee
 from invoices.enums.event import EventTypeEnum
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
+from invoices.googlemessages import post_webhook
 from invoices.models import Patient
 
 
@@ -277,6 +278,13 @@ class AssignedAdditionalEmployee(models.Model):
         return "%s - %s" % (self.assigned_additional_employee.abbreviation, self.event_assigned_to_id)
 
 
+class EventList(Event):
+    class Meta:
+        proxy = True
+        verbose_name = "Mes tâches"
+        verbose_name_plural = "Planning tâches à valider"
+
+
 def create_or_update_google_calendar(instance):
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
     if instance.pk:
@@ -314,13 +322,20 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
     #     post_webhook(instance.employees, instance.patient, instance.event_report, instance.state)
 
 
+@receiver(post_save, sender=EventList, dispatch_uid="send_update_via_chat_1413")
+def send_update_via_chat(sender, instance: EventList, **kwargs):
+    if settings.TESTING:
+        print("** TEST mode %s" % sender)
+        return
+    if settings.GOOGLE_CHAT_WEBHOOK_URL:
+        post_webhook(instance.employees, instance.patient, instance.event_report, instance.state)
+
+
 # @receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
 # def create_or_update_google_calendar_callback(sender, instance, **kwargs):
 #     print("*** Creating event from callback")
 #     sys.stdout.flush()
 #     create_or_update_google_calendar(instance)
-
-
 
 
 @receiver(pre_delete, sender=Event, dispatch_uid="event_delete_gcalendar_event")
@@ -359,6 +374,7 @@ def address_mandatory_for_generic_employee(data):
     if data['event_type_enum'] == EventTypeEnum.GNRC_EMPL and len(data['event_address']) == 0:
         messages = {'event_address': _("Adresse est obligatoire pour %s") % _(data['event_type_enum'])}
     return messages
+
 
 def validate_date_range(instance_id, data):
     messages = {}
