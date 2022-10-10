@@ -1,6 +1,7 @@
 import calendar
 import datetime
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from django.contrib import admin
 from django.contrib.admin import TabularInline
@@ -1094,7 +1095,9 @@ class EventListAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             return
         for e in queryset:
-            post_webhook(employees=e.employees, patient=e.patient, event_report=e.event_report, state=e.state)
+            post_webhook(employees=e.employees, patient=e.patient, event_report=e.event_report, state=e.state,
+                         event_date=datetime.datetime.combine(e.day, e.time_start_event).astimezone(ZoneInfo("Europe"
+                                                                                                             "/Luxembourg")))
 
     def list_orphan_events(self, request, queryset):
         if not request.user.is_superuser:

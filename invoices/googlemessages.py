@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from json import dumps
 
 from httplib2 import Http
@@ -8,18 +9,32 @@ from invoices import settings
 logger = logging.getLogger('console')
 
 
-def post_webhook(employees, patient, event_report, state):
-    """Hangouts Chat incoming webhook quickstart."""
+def post_webhook(employees, patient, event_report, state, event_date=None):
+    """Hangouts Chat incoming webhook quickstart.
+    @param event_report:
+    @param state:
+    @param patient:
+    @param employees:
+    @param event_date:
+    """
     # FIXME: remove hardcoded value for state
     if patient is None:
         return
     if state not in [3, 5]:
         return
+    string_event_date = ""
+    if event_date:
+        if event_date.date() < datetime.now().date():
+            string_event_date = "du %s programmé à %s" % (event_date.date().strftime('%d-%h-%Y'), event_date.time().strftime("%Hh%M"))
+        else:
+            string_event_date = "programmé à  %s" % event_date.time().strftime("%Hh%M")
     if 3 == state:
-        message = "Soin FAIT par %s chez %s : %s" % (employees.user.first_name, patient.name, event_report)
+        message = 'Passage %s FAIT par *%s* chez *%s* : %s' % (string_event_date, employees.user.first_name, patient.name,
+                                                               event_report)
     # FIXME: remove hardcoded value for state
     elif 5 == state:
-        message = "Soin non FAIT par %s chez %s : %s" % (employees.user.first_name, patient.name, event_report)
+        message = "Passage de %s pour *%s* annulé  chez *%s* : %s" % (string_event_date, employees.user.first_name, patient.name,
+                                                             event_report)
     url = settings.GOOGLE_CHAT_WEBHOOK_URL
     bot_message = {
         'text': message}
@@ -32,3 +47,27 @@ def post_webhook(employees, patient, event_report, state):
         body=dumps(bot_message),
     )
     print(response)
+
+    # response2 = http_obj.request(uri="url",
+    #                              method="GET",
+    #                              headers=message_headers)
+    # print(response2)
+    #
+    # # Specify required scopes.
+    # SCOPES = ['https://www.googleapis.com/auth/admin.directory.user']
+    #
+    # # Specify service account details.
+    # CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_name(
+    #     #'service_account.json', SCOPES)
+    #     settings.GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2, SCOPES)
+    #
+    # # Build the URI and authenticate with the service account.
+    # service = build('admin', 'directory_v1', http=CREDENTIALS.authorize(Http()))
+    # results = service.users().list(domain='xxx.fr').execute()
+    # #results = service.users().get(userKey='toto@bibi.oxx').execute()
+    # print(results)
+    # #"https: // chat.googleapis.com / v1 / {parent = spaces / *} / members"
+
+
+
+

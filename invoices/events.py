@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import datetime
+from zoneinfo import ZoneInfo
 
 import pytz
 from constance import config
@@ -328,7 +329,9 @@ def send_update_via_chat(sender, instance: EventList, **kwargs):
         print("** TEST mode %s" % sender)
         return
     if settings.GOOGLE_CHAT_WEBHOOK_URL:
-        post_webhook(instance.employees, instance.patient, instance.event_report, instance.state)
+        post_webhook(instance.employees, instance.patient, instance.event_report, instance.state,
+                     event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
+                         ZoneInfo("Europe/Luxembourg")))
 
 
 # @receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
