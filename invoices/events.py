@@ -384,7 +384,7 @@ def address_mandatory_for_generic_employee(data):
 
 def event_report_mandatory_validated_events(data):
     messages = {}
-    if data['state'] in (3, 5) and data['event_report'] is None or len(data['event_report']) == 0:
+    if data['state'] in (3, 5) and (data['event_report'] is None or len(data['event_report']) == 0):
         messages = {'event_report': _("Rapport de soin obligatoire  lors d'une validation")}
     return messages
 
