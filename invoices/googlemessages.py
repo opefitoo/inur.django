@@ -33,7 +33,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None):
                                                                event_report)
     # FIXME: remove hardcoded value for state
     elif 5 == state:
-        message = "Passage de %s pour *%s* annulé  chez *%s* : %s" % (string_event_date, employees.user.first_name, patient.name,
+        message = "Passage %s pour *%s* annulé  chez *%s* : %s" % (string_event_date, employees.user.first_name, patient.name,
                                                              event_report)
     url = settings.GOOGLE_CHAT_WEBHOOK_URL
     bot_message = {

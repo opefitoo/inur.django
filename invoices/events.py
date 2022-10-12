@@ -217,6 +217,7 @@ class Event(models.Model):
         result.update(validate_date_range(instance_id, data))
         result.update(model.event_is_unique(data))
         result.update(address_mandatory_for_generic_employee(data))
+        result.update(event_report_mandatory_validated_events(data))
         # result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
         # result.update(create_or_update_google_calendar(model))
         return result
@@ -228,7 +229,7 @@ class Event(models.Model):
                                                        day=data["day"],
                                                        patient_id=data["patient_id"],
                                                        time_start_event=data["time_start_event"],
-                                                       time_end_event=data["time_end_event"]).exclude(id=self.id)
+                                                       time_end_event=data["time_end_event"]).exclude(pk=self.pk)
         if events.count() > 0:
             messages = {'patient': 'Event already created'}
         return messages
@@ -319,8 +320,10 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
     if instance.pk:
         print(calendar_gcalendar.update_events_sur_id(instance))
-    # if settings.GOOGLE_CHAT_WEBHOOK_URL:
-    #     post_webhook(instance.employees, instance.patient, instance.event_report, instance.state)
+    if settings.GOOGLE_CHAT_WEBHOOK_URL:
+        post_webhook(instance.employees, instance.patient, instance.event_report, instance.state,
+                     event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
+                         ZoneInfo("Europe/Luxembourg")))
 
 
 @receiver(post_save, sender=EventList, dispatch_uid="send_update_via_chat_1413")
@@ -376,6 +379,13 @@ def address_mandatory_for_generic_employee(data):
     messages = {}
     if data['event_type_enum'] == EventTypeEnum.GNRC_EMPL and len(data['event_address']) == 0:
         messages = {'event_address': _("Adresse est obligatoire pour %s") % _(data['event_type_enum'])}
+    return messages
+
+
+def event_report_mandatory_validated_events(data):
+    messages = {}
+    if data['state'] in (3, 5) and data['event_report'] is None or len(data['event_report']) == 0:
+        messages = {'event_report': _("Rapport de soin obligatoire  lors d'une validation")}
     return messages
 
 
