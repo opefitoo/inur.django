@@ -230,6 +230,9 @@ class Event(models.Model):
                                                        patient_id=data["patient_id"],
                                                        time_start_event=data["time_start_event"],
                                                        time_end_event=data["time_end_event"]).exclude(pk=self.pk)
+        # FIXME what a shame :(
+        if events.count() == 1 and 'planning script' == events[0].created_by and not data['_state'].adding:
+            return messages
         if events.count() > 0:
             messages = {'patient': 'Event already created'}
         return messages
