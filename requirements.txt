@@ -55,7 +55,7 @@ redis==4.3.3
 oauthlib==3.2.2
 asgiref==3.5.2
 django-storages==1.13.1
-boto3==1.24.93
+boto3==1.24.95
 django-phonenumber-field==7.0.0
 phonenumberslite==8.12.57
 django-select2==7.10.1
