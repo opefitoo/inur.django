@@ -394,25 +394,27 @@ def event_report_mandatory_validated_events(data):
 
 def validate_date_range(instance_id, data):
     messages = {}
-    conflicts_count = 0
+    conflicts = None
     if data['employees_id']:
-        conflicts_count = Event.objects.filter(day=data['day']).filter(
+        conflicts = Event.objects.filter(day=data['day']).filter(
             Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
             Q(time_end_event__range=(data['time_start_event'], data['time_end_event'])) |
             Q(time_start_event__lte=data['time_start_event'], time_end_event__gte=data['time_start_event']) |
             Q(time_start_event__lte=data['time_end_event'], time_end_event__gte=data['time_end_event'])
         ).filter(
             employees_id=data['employees_id']).exclude(
-            pk=instance_id).count()
+            pk=instance_id)
     elif data['patient_id'] and data['employees_id'] is None:
-        conflicts_count = Event.objects.filter(day=data['day']).filter(
+        conflicts = Event.objects.filter(day=data['day']).filter(
             Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
             Q(time_end_event__range=(data['time_start_event'], data['time_end_event'])) |
             Q(time_start_event__lte=data['time_start_event'], time_end_event__gte=data['time_start_event']) |
             Q(time_start_event__lte=data['time_end_event'], time_end_event__gte=data['time_end_event'])
         ).filter(
             employees_id=data['patient_id']).exclude(
-            pk=instance_id).count()
-    if 0 < conflicts_count:
-        messages = {'time_start_event': _("Intersection with other %s") % Event._meta.verbose_name_plural}
+            pk=instance_id)
+    if conflicts and 0 < conflicts.count():
+        messages = {'time_start_event': _("Intersection with other %s, here : %s from %s to %s") %
+                                        (Event._meta.verbose_name_plural, conflicts[0], conflicts[0].time_start_event,
+                                         conflicts[0].time_end_event)}
     return messages
