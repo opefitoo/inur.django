@@ -37,7 +37,7 @@ rq==1.11.0
 django-cors-headers==3.13.0
 #django-autocomplete-light==3.8.2
 #APScheduler==3.6.3″
-google-auth-oauthlib==0.7.0
+google-auth-oauthlib==0.5.3
 google-auth-httplib2
 holidays==0.16
 django-csv-exports==1.0.5
