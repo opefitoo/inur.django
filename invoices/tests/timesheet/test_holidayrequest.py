@@ -93,7 +93,7 @@ class HolidayRequestTestCase(TestCase):
             'end_date': timezone.now().replace(year=2020, month=2, day=26, hour=16, minute=00),
             'employee_id': self.u1,
             'force_creation': False,
-            'reason': 2 # maladie
+            'reason': 2  # maladie
         }
         # create holiday request but now being validated
         another_holiday_request = HolidayRequest.objects.create(employee=self.u2,
@@ -129,3 +129,17 @@ class HolidayRequestTestCase(TestCase):
                                                                 request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
         self.assertEqual(validate_date_range(1234567890, data), {})
+
+    def test_holidays_taken_across_two_years(self):
+        another_holiday_request = HolidayRequest.objects.create(employee=self.u2,
+                                                                start_date=timezone.now().replace(year=2022, month=12,
+                                                                                                  day=28),
+                                                                end_date=timezone.now().replace(year=2023, month=1,
+                                                                                                day=15),
+                                                                requested_period=HolidayRequestChoice.req_full_day,
+                                                                reason=1,
+                                                                force_creation=False,
+                                                                request_status=HolidayRequestWorkflowStatus.ACCEPTED)
+        another_holiday_request.save()
+        self.assertEqual(another_holiday_request.total_days_in_current_year, 3)
+        # take only the year starting the holiday request

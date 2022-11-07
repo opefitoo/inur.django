@@ -110,7 +110,7 @@ class HolidayRequest(models.Model):
         counter_holidays = 0
         counter_sickness_leaves = 0
         if same_year_only and holiday_request.end_date.year != holiday_request.start_date.year:
-            delta = holiday_request.end_date.replace(month=12, day=31) - holiday_request.start_date
+            delta = holiday_request.end_date.replace(year=holiday_request.start_date.year, month=12, day=31) - holiday_request.start_date
         else:
             delta = holiday_request.end_date - holiday_request.start_date
         date_comp = holiday_request.start_date
