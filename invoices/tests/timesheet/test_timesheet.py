@@ -173,8 +173,8 @@ class TimesheetDetailTestCase(TestCase):
         # }
         # create holiday request but now being validated
         holiday_request = HolidayRequest.objects.create(employee=self.user,
-                                                        start_date=timezone.now().replace(day=19),
-                                                        end_date=timezone.now().replace(day=20),
+                                                        start_date=timezone.now().replace(year=2022, month=11, day=17),
+                                                        end_date=timezone.now().replace(year=2022, month=11, day=18),
                                                         requested_period=HolidayRequestChoice.req_full_day,
                                                         reason=1,
                                                         request_status=HolidayRequestWorkflowStatus.ACCEPTED)
