@@ -219,6 +219,7 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     model = MedicalPrescription
     readonly_fields = ('thumbnail_img',)
     fields = [field.name for field in MedicalPrescription._meta.fields if field.name not in ["id", "file"]]
+    ordering = ['-date']
 
     def scan_preview(self, obj):
         return obj.image_preview
