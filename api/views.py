@@ -1,8 +1,5 @@
-import sys
-
 from constance import config
 from django.contrib.auth.models import User, Group
-from django.http import JsonResponse
 from django.utils.datetime_safe import datetime
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.decorators import api_view
@@ -22,12 +19,11 @@ from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation
 from invoices import settings
 from invoices.employee import JobPosition
-from invoices.enums.event import EventTypeEnum
-from invoices.events import EventType, Event, create_or_update_google_calendar
+from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.processors.birthdays import process_and_generate
-from invoices.processors.events import delete_events_created_by_script, async_deletion
+from invoices.processors.events import delete_events_created_by_script
 from invoices.timesheet import Timesheet, TimesheetTask
 
 
@@ -176,7 +172,7 @@ class EventList(generics.ListCreateAPIView):
             assert isinstance(instance, Event)
             # if instance.event_type_enum == EventTypeEnum.BIRTHDAY:
             #     return "Birthday created"
-            #gmail_event = create_or_update_google_calendar(instance)
+            # gmail_event = create_or_update_google_calendar(instance)
             # if gmail_event.get('id'):
             #     instance.calendar_id = gmail_event.get('id')
             #     instance.calendar_url = gmail_event.get('htmlLink')
@@ -212,12 +208,39 @@ def whois_available(request):
         return Response(reqs, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+def which_shift(request):
+    if 'POST' == request.method:  # user posting data
+        reqs = holidays.which_shift(datetime.strptime(request.data["working_day"], "%Y-%m-%d"))
+        return Response(reqs, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 def get_bank_holidays(request):
     if 'GET' == request.method:  # user posting data
         reqs = holidays.get_bank_holidays(request.GET.get("year"), request.GET.get("month"))
         return Response(reqs, status=status.HTTP_200_OK)
 
+
+@api_view(['GET'])
+def how_many_care_given(request):
+    if 'GET' == request.method:
+        reqs = Prestation.objects.all().count()
+        return Response(reqs, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def how_many_patients(request):
+    if 'GET' == request.method:
+        reqs = Patient.objects.all().count()
+        return Response(reqs, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def how_many_care_hours(request):
+    if 'GET' == request.method:
+        reqs = Event.objects.all().count() * 2
+        return Response(reqs, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def get_active_care_plans(request):

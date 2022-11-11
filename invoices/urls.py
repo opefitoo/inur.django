@@ -1,15 +1,14 @@
-from django.urls import include, re_path
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
+from django.urls import include, re_path
 from django.views.generic import RedirectView
 from django.views.static import serve
 from rest_framework.authtoken import views as authtoken_views
-from django.conf import settings
 
 import api
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
-    get_active_care_plans
-from invoices import views
+    get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
 from invoices.views import delete_prestation
 
@@ -56,6 +55,21 @@ urlpatterns = [
         r'^api/v1/whois_available/$',
         whois_available,
         name='whois_available',
+    ),
+    re_path(
+        r'^api/v1/how_many_care_given/$',
+        how_many_care_given,
+        name='how_many_care_given',
+    ),
+    re_path(
+        r'^api/v1/how_many_patients/$',
+        how_many_patients,
+        name='how_many_patients',
+    ),
+    re_path(
+        r'^api/v1/how_many_care_hours/$',
+        how_many_care_hours,
+        name='how_many_care_hours',
     ),
     re_path(
         r'^api/v1/get_bank_holidays/$',
