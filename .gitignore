@@ -88,3 +88,5 @@ target/
 .xxxgitsecret/keys/random_seed
 
 .DS_Store
+.venv
+.vscode
