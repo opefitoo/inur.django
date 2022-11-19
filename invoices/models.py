@@ -29,10 +29,8 @@ from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.modelspackage import InvoicingDetails
 from invoices.modelspackage.invoice import get_default_invoicing_details
-from invoices.settings import DEFAULT_FILE_STORAGE
 from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
-from django.utils.encoding import filepath_to_uri
 
 prestation_gcalendar = PrestationGoogleCalendar()
 gd_storage: CustomizedGoogleDriveStorage = CustomizedGoogleDriveStorage()
