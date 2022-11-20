@@ -828,7 +828,16 @@ class MedicalPrescription(models.Model):
 
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
 def medical_prescription_clean_gdrive_pre_save(sender, instance, **kwargs):
+    if instance.thumbnail_img:
+        old_file_name=instance.file_upload.name
+        new_file_name=update_medical_prescription_filename(instance,old_file_name)
+        my_file = instance.file_upload.storage.open(old_file_name, 'rb')
+        instance.file_upload.storage.save(new_file_name,my_file)
+        my_file.close()
+        instance.file_upload.delete(save=False)
+        instance.file_upload.name=new_file_name
     if instance.file_upload:
+        instance.thumbnail_img.delete(save=False)
         thumbnail_images = convert_from_bytes(instance.file_upload.read(), fmt='png', dpi=200, size=(300, None))
         instance.thumbnail_img = ImageFile(thumbnail_images[0].fp, name="thubnail.png")
 
