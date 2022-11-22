@@ -1,17 +1,15 @@
 from django.contrib.auth.models import User, Group
-from django.utils import timezone
-from rest_framework import serializers
 from django_countries.serializers import CountryFieldMixin
-from rest_framework.exceptions import ValidationError
+from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from dependence.careplan import CarePlanMaster, CarePlanDetail
 from dependence.models import PatientAnamnesis, AssignedPhysician
+from invoices.employee import JobPosition
+from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.timesheet import Timesheet, TimesheetTask
-from invoices.employee import JobPosition
-from invoices.events import EventType, Event
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -196,6 +194,9 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         day = serializers.DateField(format="%Y-%m-%d")
+        # for DateTimeField
+        time_start_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+        time_end_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
         fields = ('id', 'day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'notes', 'patient',
                   'employees', 'created_by')
         validators = [
