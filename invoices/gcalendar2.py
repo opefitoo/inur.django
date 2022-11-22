@@ -12,6 +12,7 @@ from googleapiclient.errors import HttpError
 from rq import Queue
 
 from invoices.employee import Employee
+from invoices.enums.event import EventTypeEnum
 from worker import conn
 
 logger = logging.getLogger('console')
@@ -164,8 +165,8 @@ class PrestationGoogleCalendarSurLu:
             'summary': gmail_event['summary'],
             'description': gmail_event['description'] + "<b>%s</b> %s<br>" % (u'Sur LU ID:', event.id),
             'location': gmail_event['location'],
-            'start':  gmail_event['start'],
-            'end':  gmail_event['end'],
+            'start': gmail_event['start'],
+            'end': gmail_event['end'],
         }
         return self._service.events().update(calendarId=calendar_id,
                                              eventId=event.calendar_id,
@@ -201,35 +202,59 @@ class PrestationGoogleCalendarSurLu:
             summary = '%s - %s' % (event.employees.abbreviation, event.notes)
         elif not event.employees and event.patient:
             summary = '%s - %s' % (event.patient, event.notes)
+        localized = None
+        if EventTypeEnum.BIRTHDAY != event.event_type_enum:
+            localized = datetime.datetime(event.day.year,
+                                          event.day.month, event.day.day,
+                                          event.time_start_event.hour,
+                                          event.time_start_event.minute,
+                                          event.time_start_event.second).astimezone(ZoneInfo("Europe/Luxembourg"))
+            naive_end_date = datetime.datetime(event.day.year,
+                                               event.day.month, event.day.day,
+                                               event.time_end_event.hour,
+                                               event.time_end_event.minute,
+                                               event.time_end_event.second)
 
-        localized = datetime.datetime(event.day.year,
-                                      event.day.month, event.day.day,
-                                      event.time_start_event.hour,
-                                      event.time_start_event.minute,
-                                      event.time_start_event.second).astimezone(ZoneInfo("Europe/Luxembourg"))
-        naive_end_date = datetime.datetime(event.day.year,
-                                           event.day.month, event.day.day,
-                                           event.time_end_event.hour,
-                                           event.time_end_event.minute,
-                                           event.time_end_event.second)
+            attendees_list = []
+            if event.id and event.event_assigned.count() > 1:
+                for u in event.event_assigned.all():
+                    attendees_list.append({'email': '%s' % u.assigned_additional_employee.user.email})
 
-        attendees_list = []
-        if event.id and event.event_assigned.count() > 1:
-            for u in event.event_assigned.all():
-                attendees_list.append({'email': '%s' % u.assigned_additional_employee.user.email})
+            event_body = {
+                'summary': summary,
+                'description': description,
+                'location': location,
+                'start': {
+                    'dateTime': localized.isoformat(),
+                },
+                'end': {
+                    'dateTime': naive_end_date.astimezone(ZoneInfo("Europe/Luxembourg")).isoformat(),
+                },
+                'attendees': attendees_list
+            }
+        else:
+            localized = datetime.datetime(event.day.year,
+                                          event.day.month, event.day.day,
+                                          8,
+                                          0,
+                                          0).astimezone(ZoneInfo("Europe/Luxembourg"))
+            naive_end_date = datetime.datetime(event.day.year,
+                                               event.day.month, event.day.day,
+                                               20,
+                                               0,
+                                               0)
+            event_body = {
+                'summary': summary,
+                'description': description,
+                'location': location,
+                'start': {
+                    'dateTime': localized.isoformat(),
+                },
+                'end': {
+                    'dateTime': naive_end_date.astimezone(ZoneInfo("Europe/Luxembourg")).isoformat(),
+                },
+            }
 
-        event_body = {
-            'summary': summary,
-            'description': description,
-            'location': location,
-            'start': {
-                'dateTime': localized.isoformat(),
-            },
-            'end': {
-                'dateTime': naive_end_date.astimezone(ZoneInfo("Europe/Luxembourg")).isoformat(),
-            },
-            'attendees': attendees_list
-        }
         if event.employees:
             calendar_id = event.employees.user.email
         else:
