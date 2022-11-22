@@ -26,7 +26,7 @@ def process_and_generate(num_days: int):
         if patient_birthday.replace(year=last_day.year) <= last_day:
             searches_date = timezone.now().replace(last_day.year, patient_birthday.month, patient_birthday.day)
             events = Event.objects.filter(day=searches_date).filter(event_type__name='Birthdays')
-            if not events and patient.date_of_death is None:
+            if not events:
                 event = Event(
                     day=searches_date,
                     state=1,
@@ -36,7 +36,9 @@ def process_and_generate(num_days: int):
                     notes='%s will turn %d \n generated on %s' % (patient,
                                                                   calculate_age(None, patient.code_sn),
                                                                   timezone.now()),
-                    patient=patient
+                    patient=patient,
+                    created_by="cron_process"
+
                 )
                 event.save()
                 events_processed.append(event)

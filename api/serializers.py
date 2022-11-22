@@ -207,6 +207,13 @@ class EventSerializer(serializers.ModelSerializer):
         ]
 
 
+class BirthdayEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        day = serializers.DateField(format="%Y-%m-%d")
+        fields = ('id', 'day', 'notes', 'patient', 'created_by')
+
+
 class PatientSerializerForCarePlan(serializers.ModelSerializer):
     class Meta:
         model = Patient

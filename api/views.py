@@ -12,7 +12,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
-    PatientAnamnesisSerializer, CarePlanMasterSerializer
+    PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer
 from api.utils import get_settings
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
@@ -264,7 +264,7 @@ class EventProcessorView(APIView):
         Calling api this way: http://localhost:8000/api/v1/process/45/
         """
         result = process_and_generate(int(kw['numdays']))
-        items_serializer = EventSerializer(result, many=True)
+        items_serializer = BirthdayEventSerializer(result, many=True)
         items = items_serializer.data
         response = Response(items, status=status.HTTP_200_OK)
         return response
