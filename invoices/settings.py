@@ -216,10 +216,11 @@ CONSTANCE_CONFIG = {
     'CONVADIS_URL': ('NOT_SET', 'Url pour authentification oauth2 convadis services', str),
     'CONVADIS_ORG_ID': ('NOT_SET', 'Organisation ID pour authentification oauth2 convadis services', str),
     'OPENROUTE_SERVICE_API_KEY': ('NOT_SET', 'Open Route API KEY', str),
+    'ROOT_URL': ('NOT_SET', 'Root URL Main url', str),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
-    'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE'),
+    'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE', 'ROOT_URL'),
     'Options de Facturation': (
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
         'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT', 'GENERAL_CALENDAR_ID'),
