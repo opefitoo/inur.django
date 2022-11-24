@@ -2,6 +2,7 @@
 import os
 from datetime import date, timedelta
 
+from constance import config
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -251,7 +252,7 @@ def validate_requests_from_other_employees(instance_id, data):
 def notify_holiday_request_creation(sender, instance, created, **kwargs):
     if not created:
         return
-    url = instance.get_admin_url()
+    url = "%s%s " % (config.ROOT_URL, instance.get_admin_url())
     to_emails = get_admin_emails()
     if len(to_emails) > 0:
         send_email_notification('A new %s' % instance,
