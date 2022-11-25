@@ -10,7 +10,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, QuerySet
-from django.db.models.signals import post_save, pre_save, pre_delete
+from django.db.models.signals import post_save, pre_save, pre_delete, post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
@@ -323,6 +323,11 @@ class ReportPicture(models.Model):
                               on_delete=models.CASCADE)
     image = models.ImageField(upload_to=update_report_picture_filename,
                              validators=[validate_image])
+
+@receiver(post_delete, sender=ReportPicture, dispatch_uid="report_picture_clean_s3_post_delete")
+def report_picture_clean_s3_post_delete(sender, instance, **kwargs):
+    if instance.image.name:
+        instance.image.delete(save=False)
 
 class EventList(Event):
     class Meta:
