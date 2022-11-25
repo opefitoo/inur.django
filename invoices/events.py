@@ -25,6 +25,7 @@ from invoices.models import Patient
 
 import os
 from django.utils.timezone import now
+from django.core.files.storage import default_storage
 
 class EventType(models.Model):
     class Meta:
@@ -284,9 +285,22 @@ class AssignedAdditionalEmployee(models.Model):
     def __str__(self):
         return "%s - %s" % (self.assigned_additional_employee.abbreviation, self.event_assigned_to_id)
 
+def get_next_available_picture_name(path, file_prefixe, file_ext):
+    filename = '%s_%04d%s' % (file_prefixe, 10000, file_ext)
+    for i in range(1,10000):
+        filename = '%s_%04d%s' % (file_prefixe, i, file_ext)
+        if not (default_storage.exists(os.path.join(path, filename))):
+            break
+
+    return filename
 
 def update_report_picture_filename(instance, filename):
+    if instance._get_pk_val():
+        old = instance.__class__.objects.get(pk=instance._get_pk_val())
+        if old and old.image.name:
+            return old.image.name  
     file_name, file_extension = os.path.splitext(filename)
+    file_extension = file_extension.lower()
     if instance.event.day is None:
         _current_yr_or_prscr_yr = datetime.now().date().strftime('%Y')
         _current_month_or_prscr_month = datetime.now().date().strftime('%M')
@@ -298,9 +312,9 @@ def update_report_picture_filename(instance, filename):
                         instance.event.patient.first_name +' '+
                         instance.event.patient.code_sn,
                        _current_yr_or_prscr_yr, _current_month_or_prscr_month)
-    next_number=instance.event.report_pictures.count()+1                 
-    filename = '%s_%s_%s_%04d%s' % (instance.event.patient.name, instance.event.patient.first_name,
-                                       str(instance.event.day), next_number, file_extension)
+    file_prefix='%s_%s_%s' % (instance.event.patient.name, instance.event.patient.first_name,
+                                       str(instance.event.day))
+    filename=get_next_available_picture_name(path,file_prefix,file_extension)             
 
     return os.path.join(path, filename)
 
@@ -323,6 +337,7 @@ class ReportPicture(models.Model):
                               on_delete=models.CASCADE)
     image = models.ImageField(upload_to=update_report_picture_filename,
                              validators=[validate_image])
+
 
 @receiver(post_delete, sender=ReportPicture, dispatch_uid="report_picture_clean_s3_post_delete")
 def report_picture_clean_s3_post_delete(sender, instance, **kwargs):
