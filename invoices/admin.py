@@ -28,7 +28,7 @@ from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
-from invoices.events import EventType, Event, AssignedAdditionalEmployee, create_or_update_google_calendar, EventList
+from invoices.events import EventType, Event, AssignedAdditionalEmployee, ReportPicture, create_or_update_google_calendar, EventList
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
@@ -984,6 +984,10 @@ class AssignedAdditionalEmployeeInLine(admin.StackedInline):
     fields = ('assigned_additional_employee',)
     autocomplete_fields = ['assigned_additional_employee']
 
+class ReportPictureInLine(admin.StackedInline):
+    extra = 0
+    model = ReportPicture
+    fields = ('image',)
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
@@ -1004,7 +1008,7 @@ class EventAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
     list_filter = (SmartEmployeeFilter,)
-    inlines = (AssignedAdditionalEmployeeInLine,)
+    inlines = (AssignedAdditionalEmployeeInLine, ReportPictureInLine)
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -1084,6 +1088,7 @@ class EventListAdmin(admin.ModelAdmin):
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
                'send_webhook_message']
+    inlines = (ReportPictureInLine,)           
 
     form = EventForm
 

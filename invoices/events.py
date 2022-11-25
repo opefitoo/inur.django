@@ -23,6 +23,8 @@ from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.models import Patient
 
+import os
+from django.utils.timezone import now
 
 class EventType(models.Model):
     class Meta:
@@ -283,12 +285,52 @@ class AssignedAdditionalEmployee(models.Model):
         return "%s - %s" % (self.assigned_additional_employee.abbreviation, self.event_assigned_to_id)
 
 
+def update_report_picture_filename(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.event.day is None:
+        _current_yr_or_prscr_yr = datetime.now().date().strftime('%Y')
+        _current_month_or_prscr_month = datetime.now().date().strftime('%M')
+    else:
+        _current_yr_or_prscr_yr = str(instance.event.day.year)
+        _current_month_or_prscr_month = str(instance.event.day.month)
+    path = os.path.join("Report Pictures",
+                        instance.event.patient.name+' '+
+                        instance.event.patient.first_name +' '+
+                        instance.event.patient.code_sn,
+                       _current_yr_or_prscr_yr, _current_month_or_prscr_month)
+    next_number=instance.event.report_pictures.count()+1                 
+    filename = '%s_%s_%s_%04d%s' % (instance.event.patient.name, instance.event.patient.first_name,
+                                       str(instance.event.day), next_number, file_extension)
+
+    return os.path.join(path, filename)
+
+def validate_image(image):
+    try:
+        file_size = image.file.size
+    except:
+        return
+    limit_kb = 10
+    if file_size > limit_kb * 1024 *1024:
+        raise ValidationError("Taille maximale du fichier est %s MO" % limit_kb)    
+
+class ReportPicture(models.Model):
+    class Meta:
+        verbose_name = u'Image attachée au rapport'
+        verbose_name_plural = u'Images attachées au rapport'
+
+    event = models.ForeignKey(Event,related_name='report_pictures', 
+                              help_text='Here, you can upload pictures of the patient if needed',
+                              on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=update_report_picture_filename,
+                             validators=[validate_image])
+
 class EventList(Event):
     class Meta:
         proxy = True
         verbose_name = "Mes tâches"
         verbose_name_plural = "Planning tâches à valider"
 
+    
 
 def create_or_update_google_calendar(instance):
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
