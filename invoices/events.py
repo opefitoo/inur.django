@@ -2,12 +2,14 @@
 from __future__ import unicode_literals
 
 import datetime
+import os
 from zoneinfo import ZoneInfo
 
 import pytz
 from constance import config
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models import Q, QuerySet
 from django.db.models.signals import post_save, pre_save, pre_delete, post_delete
@@ -23,9 +25,6 @@ from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.models import Patient
 
-import os
-from django.utils.timezone import now
-from django.core.files.storage import default_storage
 
 class EventType(models.Model):
     class Meta:
@@ -285,20 +284,22 @@ class AssignedAdditionalEmployee(models.Model):
     def __str__(self):
         return "%s - %s" % (self.assigned_additional_employee.abbreviation, self.event_assigned_to_id)
 
+
 def get_next_available_picture_name(path, file_prefixe, file_ext):
     filename = '%s_%04d%s' % (file_prefixe, 10000, file_ext)
-    for i in range(1,10000):
+    for i in range(1, 10000):
         filename = '%s_%04d%s' % (file_prefixe, i, file_ext)
         if not (default_storage.exists(os.path.join(path, filename))):
             break
 
     return filename
 
+
 def update_report_picture_filename(instance, filename):
     if instance._get_pk_val():
         old = instance.__class__.objects.get(pk=instance._get_pk_val())
         if old and old.image.name:
-            return old.image.name  
+            return old.image.name
     file_name, file_extension = os.path.splitext(filename)
     file_extension = file_extension.lower()
     if instance.event.day is None:
@@ -308,15 +309,16 @@ def update_report_picture_filename(instance, filename):
         _current_yr_or_prscr_yr = str(instance.event.day.year)
         _current_month_or_prscr_month = str(instance.event.day.month)
     path = os.path.join("Report Pictures",
-                        instance.event.patient.name+' '+
-                        instance.event.patient.first_name +' '+
+                        instance.event.patient.name + ' ' +
+                        instance.event.patient.first_name + ' ' +
                         instance.event.patient.code_sn,
-                       _current_yr_or_prscr_yr, _current_month_or_prscr_month)
-    file_prefix='%s_%s_%s' % (instance.event.patient.name, instance.event.patient.first_name,
-                                       str(instance.event.day))
-    filename=get_next_available_picture_name(path,file_prefix,file_extension)             
+                        _current_yr_or_prscr_yr, _current_month_or_prscr_month)
+    file_prefix = '%s_%s_%s' % (instance.event.patient.name, instance.event.patient.first_name,
+                                str(instance.event.day))
+    filename = get_next_available_picture_name(path, file_prefix, file_extension)
 
     return os.path.join(path, filename)
+
 
 def validate_image(image):
     try:
@@ -324,8 +326,9 @@ def validate_image(image):
     except:
         return
     limit_kb = 10
-    if file_size > limit_kb * 1024 *1024:
-        raise ValidationError("Taille maximale du fichier est %s MO" % limit_kb)    
+    if file_size > limit_kb * 1024 * 1024:
+        raise ValidationError("Taille maximale du fichier est %s MO" % limit_kb)
+
 
 class ReportPicture(models.Model):
     class Meta:
@@ -333,13 +336,13 @@ class ReportPicture(models.Model):
         verbose_name_plural = u'Images attachées au rapport'
 
     description = models.TextField("Description",
-                                    help_text='Please, give a decription of the uploaded image.',
-                                     max_length=250, default='')
-    event = models.ForeignKey(Event,related_name='report_pictures', 
-                              help_text='Here, you can upload pictures of the patient if needed',
+                                   help_text='Please, give a description of the uploaded image.',
+                                   max_length=250, default='')
+    event = models.ForeignKey(Event, related_name='report_pictures',
+                              help_text='Here, you can upload pictures if needed',
                               on_delete=models.CASCADE)
     image = models.ImageField(upload_to=update_report_picture_filename,
-                             validators=[validate_image])
+                              validators=[validate_image])
 
 
 @receiver(post_delete, sender=ReportPicture, dispatch_uid="report_picture_clean_s3_post_delete")
@@ -347,13 +350,13 @@ def report_picture_clean_s3_post_delete(sender, instance, **kwargs):
     if instance.image.name:
         instance.image.delete(save=False)
 
+
 class EventList(Event):
     class Meta:
         proxy = True
         verbose_name = "Mes tâches"
         verbose_name_plural = "Planning tâches à valider"
 
-    
 
 def create_or_update_google_calendar(instance):
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
@@ -389,9 +392,14 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
     if instance.pk:
         print(calendar_gcalendar.update_events_sur_id(instance))
     if settings.GOOGLE_CHAT_WEBHOOK_URL:
+        event_pictures_urls = None
+        if instance.report_pictures.all():
+            event_pictures_urls = ["%s|%s" % (a.image.url, a.description) if a.description else a.image.url
+                                   for a in instance.report_pictures.all()]
+            print(ReportPicture.objects.filter(event_id=instance.id))
         post_webhook(instance.employees, instance.patient, instance.event_report, instance.state,
                      event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
-                         ZoneInfo("Europe/Luxembourg")))
+                         ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls)
 
 
 @receiver(post_save, sender=EventList, dispatch_uid="send_update_via_chat_1413")

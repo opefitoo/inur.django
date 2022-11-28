@@ -9,8 +9,9 @@ from invoices import settings
 logger = logging.getLogger('console')
 
 
-def post_webhook(employees, patient, event_report, state, event_date=None):
+def post_webhook(employees, patient, event_report, state, event_date=None, event_pictures_urls=None):
     """Hangouts Chat incoming webhook quickstart.
+    @param event_pictures_urls:
     @param event_report:
     @param state:
     @param patient:
@@ -25,17 +26,27 @@ def post_webhook(employees, patient, event_report, state, event_date=None):
     string_event_date = ""
     if event_date:
         if event_date.date() < datetime.now().date():
-            string_event_date = "du %s programmé à %s" % (event_date.date().strftime('%d-%h-%Y'), event_date.time().strftime("%Hh%M"))
+            string_event_date = "du %s programmé à %s" % (event_date.date().strftime('%d-%h-%Y'),
+                                                          event_date.time().strftime("%Hh%M"))
         else:
             string_event_date = "programmé à  %s" % event_date.time().strftime("%Hh%M")
     if 3 == state:
-        message = 'Passage %s FAIT par *%s* chez *%s* : %s' % (string_event_date, employees.user.first_name, patient.name,
+        message = 'Passage %s FAIT par *%s* chez *%s* : %s' % (string_event_date, employees.user.first_name,
+                                                               patient.name,
                                                                event_report)
     # FIXME: remove hardcoded value for state
     elif 5 == state:
-        message = "Passage %s pour *%s* annulé  chez *%s* : %s" % (string_event_date, employees.user.first_name, patient.name,
-                                                             event_report)
+        message = "Passage %s pour *%s* annulé  chez *%s* : %s" % (string_event_date, employees.user.first_name,
+                                                                   patient.name,
+                                                                   event_report)
     url = settings.GOOGLE_CHAT_WEBHOOK_URL
+    if event_pictures_urls:
+        # ici
+        print(event_report)
+        counter_pictures = 0
+        for event_pictures_url in event_pictures_urls:
+            counter_pictures += 1
+            message += "\n cliquez sur la photo %s <%s>" % (counter_pictures, event_pictures_url)
     bot_message = {
         'text': message}
     message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
