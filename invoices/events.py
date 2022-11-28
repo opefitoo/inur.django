@@ -22,7 +22,7 @@ from invoices import settings
 from invoices.employee import Employee
 from invoices.enums.event import EventTypeEnum
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
-from invoices.googlemessages import post_webhook
+from invoices.googlemessages import post_webhook, post_webhook_pic_urls
 from invoices.models import Patient
 
 
@@ -407,9 +407,24 @@ def send_update_via_chat(sender, instance: EventList, **kwargs):
         print("** TEST mode %s" % sender)
         return
     if settings.GOOGLE_CHAT_WEBHOOK_URL:
+        event_pictures_urls = None
+        if instance.report_pictures.all():
+            event_pictures_urls = ["%s|%s" % (a.image.url, a.description) if a.description else a.image.url
+                                   for a in instance.report_pictures.all()]
         post_webhook(instance.employees, instance.patient, instance.event_report, instance.state,
                      event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
-                         ZoneInfo("Europe/Luxembourg")))
+                         ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls)
+
+
+@receiver(post_save, sender=ReportPicture, dispatch_uid="send_update_via_chat_via_report_picture_1710")
+def send_update_via_chat(sender, instance: ReportPicture, **kwargs):
+    if settings.TESTING:
+        print("** TEST mode %s" % sender)
+        return
+    if settings.GOOGLE_CHAT_WEBHOOK_URL:
+        event_pictures_url = "%s|%s" % (instance.image.url, instance.description) if instance.description \
+            else "%s|%s" % (instance.image.url, instance.id)
+        post_webhook_pic_urls(event_pictures_url=event_pictures_url)
 
 
 # @receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")

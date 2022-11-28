@@ -28,7 +28,8 @@ from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
-from invoices.events import EventType, Event, AssignedAdditionalEmployee, ReportPicture, create_or_update_google_calendar, EventList
+from invoices.events import EventType, Event, AssignedAdditionalEmployee, ReportPicture, \
+    create_or_update_google_calendar, EventList
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
@@ -369,6 +370,7 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     autocomplete_fields = ['prescriptor', 'patient']
     exclude = ('file',)
     form = MedicalPrescriptionForm
+
     # list_per_page = 5
 
     # actions = [migrate_from_g_to_cl]
@@ -984,10 +986,24 @@ class AssignedAdditionalEmployeeInLine(admin.StackedInline):
     fields = ('assigned_additional_employee',)
     autocomplete_fields = ['assigned_additional_employee']
 
+
 class ReportPictureInLine(admin.StackedInline):
     extra = 0
     model = ReportPicture
-    fields = ('description','image',)
+    fields = ('description', 'image',)
+
+    def has_add_permission(self, request, obj):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
@@ -1088,7 +1104,7 @@ class EventListAdmin(admin.ModelAdmin):
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
                'send_webhook_message']
-    inlines = (ReportPictureInLine,)           
+    inlines = (ReportPictureInLine,)
 
     form = EventForm
 
@@ -1193,10 +1209,13 @@ class EventListAdmin(admin.ModelAdmin):
             if not request.user.is_superuser:
                 fs = [field.name for field in Event._meta.fields if field.name != "id"]
                 if obj.employees.user.id == request.user.id:
-                    return [f for f in fs if f not in ['event_report', 'state']]
+                    return [f for f in fs if f not in ['event_report', 'state', '']]
                 else:
                     return fs
         return self.readonly_fields
+
+    def get_inlines(self, request, obj):
+        return [ReportPictureInLine]
 
 
 class EventWeekList(Event):
