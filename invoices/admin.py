@@ -987,7 +987,7 @@ class AssignedAdditionalEmployeeInLine(admin.StackedInline):
 class ReportPictureInLine(admin.StackedInline):
     extra = 0
     model = ReportPicture
-    fields = ('image',)
+    fields = ('description','image',)
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):

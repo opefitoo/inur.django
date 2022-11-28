@@ -332,6 +332,9 @@ class ReportPicture(models.Model):
         verbose_name = u'Image attachée au rapport'
         verbose_name_plural = u'Images attachées au rapport'
 
+    description = models.TextField("Description",
+                                    help_text='Please, give a decription of the uploaded image.',
+                                     max_length=250, default='')
     event = models.ForeignKey(Event,related_name='report_pictures', 
                               help_text='Here, you can upload pictures of the patient if needed',
                               on_delete=models.CASCADE)
