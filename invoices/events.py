@@ -10,7 +10,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, QuerySet
-from django.db.models.signals import post_save, pre_save, pre_delete
+from django.db.models.signals import post_save, pre_save, pre_delete, post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
@@ -23,6 +23,9 @@ from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.models import Patient
 
+import os
+from django.utils.timezone import now
+from django.core.files.storage import default_storage
 
 class EventType(models.Model):
     class Meta:
@@ -282,6 +285,67 @@ class AssignedAdditionalEmployee(models.Model):
     def __str__(self):
         return "%s - %s" % (self.assigned_additional_employee.abbreviation, self.event_assigned_to_id)
 
+def get_next_available_picture_name(path, file_prefixe, file_ext):
+    filename = '%s_%04d%s' % (file_prefixe, 10000, file_ext)
+    for i in range(1,10000):
+        filename = '%s_%04d%s' % (file_prefixe, i, file_ext)
+        if not (default_storage.exists(os.path.join(path, filename))):
+            break
+
+    return filename
+
+def update_report_picture_filename(instance, filename):
+    if instance._get_pk_val():
+        old = instance.__class__.objects.get(pk=instance._get_pk_val())
+        if old and old.image.name:
+            return old.image.name  
+    file_name, file_extension = os.path.splitext(filename)
+    file_extension = file_extension.lower()
+    if instance.event.day is None:
+        _current_yr_or_prscr_yr = datetime.now().date().strftime('%Y')
+        _current_month_or_prscr_month = datetime.now().date().strftime('%M')
+    else:
+        _current_yr_or_prscr_yr = str(instance.event.day.year)
+        _current_month_or_prscr_month = str(instance.event.day.month)
+    path = os.path.join("Report Pictures",
+                        instance.event.patient.name+' '+
+                        instance.event.patient.first_name +' '+
+                        instance.event.patient.code_sn,
+                       _current_yr_or_prscr_yr, _current_month_or_prscr_month)
+    file_prefix='%s_%s_%s' % (instance.event.patient.name, instance.event.patient.first_name,
+                                       str(instance.event.day))
+    filename=get_next_available_picture_name(path,file_prefix,file_extension)             
+
+    return os.path.join(path, filename)
+
+def validate_image(image):
+    try:
+        file_size = image.file.size
+    except:
+        return
+    limit_kb = 10
+    if file_size > limit_kb * 1024 *1024:
+        raise ValidationError("Taille maximale du fichier est %s MO" % limit_kb)    
+
+class ReportPicture(models.Model):
+    class Meta:
+        verbose_name = u'Image attachée au rapport'
+        verbose_name_plural = u'Images attachées au rapport'
+
+    description = models.TextField("Description",
+                                    help_text='Please, give a decription of the uploaded image.',
+                                     max_length=250, default='')
+    event = models.ForeignKey(Event,related_name='report_pictures', 
+                              help_text='Here, you can upload pictures of the patient if needed',
+                              on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=update_report_picture_filename,
+                             validators=[validate_image])
+
+
+@receiver(post_delete, sender=ReportPicture, dispatch_uid="report_picture_clean_s3_post_delete")
+def report_picture_clean_s3_post_delete(sender, instance, **kwargs):
+    if instance.image.name:
+        instance.image.delete(save=False)
 
 class EventList(Event):
     class Meta:
@@ -289,6 +353,7 @@ class EventList(Event):
         verbose_name = "Mes tâches"
         verbose_name_plural = "Planning tâches à valider"
 
+    
 
 def create_or_update_google_calendar(instance):
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
