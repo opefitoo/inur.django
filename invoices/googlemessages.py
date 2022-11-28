@@ -41,8 +41,6 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
                                                                    event_report)
     url = settings.GOOGLE_CHAT_WEBHOOK_URL
     if event_pictures_urls:
-        # ici
-        print(event_report)
         counter_pictures = 0
         for event_pictures_url in event_pictures_urls:
             counter_pictures += 1

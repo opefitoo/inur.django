@@ -396,7 +396,6 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
         if instance.report_pictures.all():
             event_pictures_urls = ["%s|%s" % (a.image.url, a.description) if a.description else a.image.url
                                    for a in instance.report_pictures.all()]
-            print(ReportPicture.objects.filter(event_id=instance.id))
         post_webhook(instance.employees, instance.patient, instance.event_report, instance.state,
                      event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
                          ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls)
