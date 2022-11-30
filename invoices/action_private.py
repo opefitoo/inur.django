@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-import sys
+import decimal
 from io import BytesIO
 from zoneinfo import ZoneInfo
 
+from constance import config
 from django.core.mail import EmailMessage
 from django.http import HttpResponse
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -14,9 +16,6 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-import decimal
-from constance import config
-from django.utils.translation import gettext_lazy as _
 
 from invoices import settings
 
@@ -81,7 +80,9 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
 
     if attach_to_email:
         subject = "Votre Facture %s" % _file_name
-        message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe. \nCordialement \n -- \n%s \n%s " \
+        message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe.\nSi ce courrier a croisé votre " \
+                  "paiement, veuillez considérer ce message (rappel) comme nul et non avenu.\nCordialement \n -- \n%s " \
+                  "\n%s " \ 
                   "%s\n%s\n%s" % (config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
                                   config.NURSE_PHONE_NUMBER, config.MAIN_BANK_ACCOUNT)
         emails = [qs.patient.email_address]
