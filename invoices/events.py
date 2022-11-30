@@ -505,7 +505,7 @@ def validate_date_range(instance_id, data):
             employees_id=data['patient_id']).exclude(
             pk=instance_id)
     if conflicts and 0 < conflicts.count():
-        messages = {'time_start_event': _("Intersection with other %s, here : %s from %s to %s") %
+        messages = {'state': _("Intersection with other %s, here : %s from %s to %s") %
                                         (Event._meta.verbose_name_plural, conflicts[0], conflicts[0].time_start_event,
                                          conflicts[0].time_end_event)}
     return messages
