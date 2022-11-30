@@ -1,7 +1,7 @@
 from constance import config
 from django.contrib.auth.models import User, Group
 from django.utils.datetime_safe import datetime
-from rest_framework import viewsets, filters, status, generics
+from rest_framework import viewsets, filters, status, generics, serializers
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -19,6 +19,7 @@ from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation
 from invoices import settings
 from invoices.employee import JobPosition
+from invoices.enums.event import EventTypeEnum
 from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
@@ -152,8 +153,21 @@ class PatientAnamnesisViewSet(viewsets.ModelViewSet):
 
 
 class EventList(generics.ListCreateAPIView):
+    class Meta:
+        model = Event
+
+        extra_kwargs = {
+            'patient': {'required': False},  # make `address` to optional if your address in model is required.
+        }
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+
+    def validate(self, attrs):
+        # if `address` and `address_detail` are both present or none of them is present
+        if bool('event_type_enum' in attrs) and (attrs['event_type_enum'] != EventTypeEnum.GNRC_EMPL and not bool('patient')):
+            raise serializers.ValidationError('Patient field should be provided for event type %s.' % attrs['event_type_enum'])
+
+        return attrs
 
     def post(self, request, *args, **kwargs):
         if request.data['employees']:
@@ -242,6 +256,7 @@ def how_many_care_hours(request):
         reqs = Event.objects.all().count() * 2
         return Response(reqs, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 def get_active_care_plans(request):
     if 'GET' == request.method:  # user posting data
@@ -268,6 +283,22 @@ class EventProcessorView(APIView):
         items = items_serializer.data
         response = Response(items, status=status.HTTP_200_OK)
         return response
+#
+# TODO continue here
+# class YaleEventProcessorView(APIView):
+#
+#     def get(self, request, *args, **kw):
+#         """
+#         Calling api this way: http://localhost:8000/api/v1/process/45/
+#         """
+#         employees = Employee.objects.filter(end_contract__isnull=True)
+#         items = ""
+#         for employee in employees:
+#             result = get_door_events_for_employee(employee=employee)
+#             items += result
+#             break
+#         response = Response(items, status=status.HTTP_200_OK)
+#         return response
 
 
 class SettingViewSet(viewsets.ViewSet):
