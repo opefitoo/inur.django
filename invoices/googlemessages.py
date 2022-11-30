@@ -9,9 +9,12 @@ from invoices import settings
 logger = logging.getLogger('console')
 
 
-def post_webhook_pic_urls(event_pictures_url=None):
+def post_webhook_pic_urls(description=None, event_pictures_url=None):
     url = settings.GOOGLE_CHAT_WEBHOOK_URL
-    message = "\n cliquez sur la photo <%s>" % (event_pictures_url)
+    message = "\n"
+    if description:
+        message += description + "👇 "
+    message += "%s" % event_pictures_url
     bot_message = {
         'text': message}
     message_headers = {'Content-Type': 'application/json; charset=UTF-8'}

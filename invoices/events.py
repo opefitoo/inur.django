@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 
 import pytz
 from constance import config
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
@@ -95,6 +96,10 @@ class Event(models.Model):
     created_on = models.DateTimeField(default=timezone.now)
     calendar_url = models.URLField(blank=True, null=True, default='http://a.sur.lu')
     calendar_id = models.CharField(blank=True, null=True, default='0', max_length=100)
+
+    def get_admin_url(self):
+        content_type = ContentType.objects.get_for_model(self.__class__)
+        return reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model), args=(self.id,))
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
@@ -422,9 +427,8 @@ def send_update_via_chat(sender, instance: ReportPicture, **kwargs):
         print("** TEST mode %s" % sender)
         return
     if settings.GOOGLE_CHAT_WEBHOOK_URL:
-        event_pictures_url = "%s|%s" % (instance.image.url, instance.description) if instance.description \
-            else "%s|%s" % (instance.image.url, instance.id)
-        post_webhook_pic_urls(event_pictures_url=event_pictures_url)
+        post_webhook_pic_urls(description=instance.description,
+                              event_pictures_url=instance.image.url)
 
 
 # @receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
