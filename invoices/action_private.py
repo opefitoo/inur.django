@@ -80,9 +80,7 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
 
     if attach_to_email:
         subject = "Votre Facture %s" % _file_name
-        message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe.\nSi ce courrier a croisé votre " \
-                  "paiement, veuillez considérer ce message (rappel) comme nul et non avenu.\nCordialement \n -- \n%s " \
-                  "\n%s " \ 
+        message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe.\nSi ce courrier a croisé votre paiement, veuillez considérer ce message (rappel) comme nul et non avenu.\nCordialement \n -- \n%s \n%s " \
                   "%s\n%s\n%s" % (config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
                                   config.NURSE_PHONE_NUMBER, config.MAIN_BANK_ACCOUNT)
         emails = [qs.patient.email_address]
