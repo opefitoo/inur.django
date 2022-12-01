@@ -190,6 +190,23 @@ class EventTypeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
+class GenericEmployeeEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        day = serializers.DateField(format="%Y-%m-%d")
+        # for DateTimeField
+        time_start_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+        time_end_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+        fields = ('id', 'day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'notes',
+                  'employees', 'created_by', "event_address")
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Event.objects.all(),
+                fields=['day', 'event_type_enum', 'time_start_event', 'time_end_event', 'employees']
+            )
+        ]
+
+
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event

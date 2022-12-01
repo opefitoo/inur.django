@@ -9,6 +9,7 @@ from rest_framework.authtoken import views as authtoken_views
 import api
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
     get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours
+# get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
 from invoices.views import delete_prestation
 
@@ -89,6 +90,10 @@ urlpatterns = [
         r'^api/v1/process/(?P<numdays>\d+)/$',
         login_required(EventProcessorView.as_view()),
         name='event_processor_rest_view'),
+    # re_path(
+    #     r'^api/v1/yale_events/',
+    #     login_required(YaleEventProcessorView.as_view()),
+    #     name='yale_event_processor_rest_view'),
 
 ]
 
@@ -108,6 +113,9 @@ urlpatterns += [
             name='update-calendar-form'),
 ]
 
+urlpatterns += [
+    re_path(r'^api/v1/generic_event_list/$', api.views.GenericEmployeeEventList.as_view()),
+]
 urlpatterns += [
     re_path(r'^api/v1/event_list/$', api.views.EventList.as_view()),
     re_path(r'^api/v1/event_list/(?P<pk>[0-9]+)/$', api.views.EventDetail.as_view()),
