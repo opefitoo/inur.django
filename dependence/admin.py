@@ -1,4 +1,5 @@
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
+from dependence.fall_declaration import FallDecleration
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
@@ -356,3 +357,23 @@ class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'aai/print_aai.html', {'obj': obj})
+
+@admin.register(FallDecleration)
+class FallDeclerationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
+    list_display = ('patient', 'datetimeOfFall', 'display_object_actions_list',)
+    autocomplete_fields = ['patient']
+    readonly_fields = ('user', 'created_on', 'updated_on')
+
+    object_actions = [
+        {
+            'slug': 'print_fall_decleration',
+            'verbose_name': 'Imprimer',
+            'form_method': 'GET',
+            'view': 'print_fall_decleration',
+        },
+    ]
+
+    def print_fall_decleration(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'aai/print_fall_declaration.html', {'obj': obj})
