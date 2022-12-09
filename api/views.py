@@ -18,12 +18,13 @@ from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation
 from invoices import settings
-from invoices.employee import JobPosition
+from invoices.employee import JobPosition, Employee
 from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.processors.birthdays import process_and_generate
 from invoices.processors.events import delete_events_created_by_script
+from invoices.processors.timesheets import get_door_events_for_employee
 from invoices.timesheet import Timesheet, TimesheetTask
 
 
@@ -291,22 +292,20 @@ class EventProcessorView(APIView):
         items = items_serializer.data
         response = Response(items, status=status.HTTP_200_OK)
         return response
-#
-# TODO continue here
-# class YaleEventProcessorView(APIView):
-#
-#     def get(self, request, *args, **kw):
-#         """
-#         Calling api this way: http://localhost:8000/api/v1/process/45/
-#         """
-#         employees = Employee.objects.filter(end_contract__isnull=True)
-#         items = ""
-#         for employee in employees:
-#             result = get_door_events_for_employee(employee=employee)
-#             items += result
-#             break
-#         response = Response(items, status=status.HTTP_200_OK)
-#         return response
+
+class YaleEventProcessorView(APIView):
+    def get(self, request, *args, **kw):
+         """
+         Calling api this way: http://localhost:8000/api/v1/yale_events/
+         """
+         employees = Employee.objects.filter(end_contract__isnull=True)
+         items = ""
+         for employee in employees:
+             result = get_door_events_for_employee(employee=employee)
+             items += result
+             break
+         response = Response(items, status=status.HTTP_200_OK)
+         return response
 
 
 class SettingViewSet(viewsets.ViewSet):

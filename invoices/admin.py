@@ -49,6 +49,7 @@ from invoices.resources import ExpenseCard, Car
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 from invoices.utils import EventCalendar
+from invoices.yale.model import DoorEvent
 
 
 @admin.register(JobPosition)
@@ -1295,3 +1296,11 @@ class EventWeekListAdmin(admin.ModelAdmin):
                 else:
                     return fs
         return self.readonly_fields
+
+
+@admin.register(DoorEvent)
+class DoorEventAdmin(admin.ModelAdmin):
+    list_filter = ('employee', 'activity_start_time', 'activity_type')
+    list_display = ('employee', 'activity_start_time')
+    date_hierarchy = 'activity_start_time'
+
