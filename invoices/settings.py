@@ -220,6 +220,7 @@ CONSTANCE_CONFIG = {
     'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL': ('NOT_SET', 'Webhook for notification of job completion', str),
     'YALE_USERNAME': ('NOT_SET', 'Yale username', str),
     'YALE_PASSWORD': ('NOT_SET', 'Yale password', str),
+    'YALE_HOUSE_ID': ('NOT_SET', 'House ID', str),
     'YALE_VERIFICATION_CODE': ('NOT_SET', 'Yale verification code', str),
 }
 
@@ -230,7 +231,7 @@ CONSTANCE_CONFIG_FIELDSETS = {
         'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT', 'GENERAL_CALENDAR_ID'),
     'Options API Convadis': ('CONVADIS_ORG_ID', 'CONVADIS_CLIENT_ID', 'CONVADIS_SECRET_ID', 'CONVADIS_URL',
                              'OPENROUTE_SERVICE_API_KEY'),
-    'Options API Yale': ('YALE_USERNAME', 'YALE_PASSWORD', 'YALE_VERIFICATION_CODE')
+    'Options API Yale': ('YALE_USERNAME', 'YALE_PASSWORD', 'YALE_VERIFICATION_CODE', 'YALE_HOUSE_ID')
 }
 
 

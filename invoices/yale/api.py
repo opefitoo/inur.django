@@ -34,9 +34,9 @@ def get_yale_house_activities():
 
     # Once you have authenticated and validated you can use the access token to make API calls
     # locks = api.get_locks(authentication.access_token) # toto
-    house_acts = api.get_house_activities(authentication.access_token, house_id="9981165c-d37e-4365-abbf-809c2ba64e82",
+    house_acts = api.get_house_activities(authentication.access_token, house_id=config.YALE_HOUSE_ID,
                                           limit=2000)  # toto
 
     # lock_activities = api.get_house_activities(authentication.access_token, house_id="") # toto
-    print(house_acts)
+    #print(house_acts)
     return house_acts
