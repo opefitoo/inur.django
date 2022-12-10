@@ -1,5 +1,5 @@
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
-from dependence.fall_declaration import FallDecleration
+from dependence.falldecleration import FallDecleration
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
