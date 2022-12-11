@@ -1,5 +1,6 @@
 from django.db import models
 from invoices.db.fields import CurrentUserField
+from enums.falldecleration_enum import FallCircumstances, FallConsequences
 
 from invoices.models import Patient
 from constance import config
@@ -12,6 +13,8 @@ class FallDecleration(models.Model):
         verbose_name = u"Fall Decleration"
         verbose_name_plural = u"Fall Decleration"
     # Patient
+
+
     patient = models.ForeignKey(Patient,
                                 help_text=u"Ne recheche que les patients pris en charge par l'assurance dépendance, vérifiez que la checkbox est validé si vous ne trouvez pas votre patient",
                                 related_name='falldecleration_to_patient',
@@ -27,8 +30,12 @@ class FallDecleration(models.Model):
                                      null=True, blank=True, default=None)
     witnesses = models.TextField(u"Témoins éventuels", max_length= 255,
                                 null=True, blank=True, default=None)
-    fall_circumstance = models.TextField(u"Circonstances de la chute", max_length= 255)
+    fall_circumstance = models.CharField(u"Circonstances de la chute", choices=FallCircumstances.choices, max_length= 255)
+    other_fall_circumstance = models.CharField(u"Autre circonstances de la chute",  max_length= 255,
+                                null=True, blank=True, default=None)
     incident_circumstance = models.TextField(u"Circonstances de l’incident", max_length= 255,
+                                null=True, blank=True, default=None)
+    other_fall_consequence = models.CharField(u"Autre conséquence de la chute",  max_length= 255,
                                 null=True, blank=True, default=None)
     medications_risk_factor = models.TextField(u"Facteurs de risque", max_length= 255,
                                 null=True, blank=True, default=None)
@@ -57,8 +64,8 @@ class FallDecleration(models.Model):
 
 class FallConsequence(models.Model):
     fallDecleration = models.ForeignKey(FallDecleration, related_name='fall_consequences')
-    consequence = models.TextField()
+    consequence = models.CharField(choices=FallConsequences.choices, max_length=255)
 
 class FallRequiredMedicalAct(models.Model):
     fallDecleration = models.ForeignKey(FallDecleration, related_name='fall_required_medical_acts')
-    required_medical_act = models.TextField()
+    required_medical_act = models.CharField()
