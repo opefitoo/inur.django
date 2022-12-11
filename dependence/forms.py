@@ -1,6 +1,11 @@
+from dataclasses import fields
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet
+from django.core.validators import EMPTY_VALUES
+from django import forms
+from dependence.enums.falldecleration_enum import FallCircumstances
 
+from dependence.falldecleration import FallDecleration
 
 class TypeDescriptionGenericInlineFormset(BaseInlineFormSet):
 
@@ -41,3 +46,23 @@ class TensionAndTemperatureParametersFormset(BaseInlineFormSet):
         is_valid = data['params_date_time'].month == int(month) and data['params_date_time'].year == int(year)
         if not is_valid:
             raise ValidationError("Ligne %d : Date doit être dans le mois %s de l'année %s" % (rowindex, month, year))
+
+class FallDeclerationForm(forms.ModelForm):
+    class Meta:
+        model = FallDecleration
+        exclude = ()
+        
+
+    def clean(self):
+        fall_circumstance = self.cleaned_data.get('fall_circumstance', None)
+        activity_name = self.cleaned_data.get('other_fall_circumstance', None)
+        if fall_circumstance == FallCircumstances.FCI_OTHER_CAUSES:
+            if activity_name in EMPTY_VALUES:
+                self._errors['other_fall_circumstance'] = self.error_class([
+                    'Selon votre sélection, il faut remplire le champ: "Autre circonstances de la chute"'])
+        else:
+            if activity_name not in EMPTY_VALUES:
+                self._errors['other_fall_circumstance'] = self.error_class([
+                    'Selon votre sélection, il faut laisser champ "Autre circonstances de la chute" vide'])
+
+        return self.cleaned_data
