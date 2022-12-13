@@ -17,7 +17,7 @@ from dependence.models import AssignedPhysician, ContactPerson, DependenceInsura
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from invoices.employee import JobPosition
 from invoices.models import Patient
-
+from django.template.loader import get_template
 
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):
@@ -359,11 +359,11 @@ class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'aai/print_aai.html', {'obj': obj})
 
-class FallConsequenceInLine(admin.StackedInline):
+class FallConsequenceInLine(admin.TabularInline):
     
     extra = 0
     model = FallConsequence
-    fields = ('consequence',)
+    # fields = ('consequence',)
 
     def has_add_permission(self, request, obj):
         return True
@@ -431,31 +431,38 @@ class FallIncontinenceInLine(admin.StackedInline):
 
 @admin.register(FallDecleration)
 class FallDeclerationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
-    # fields = ('patient', 
-    #               'datetimeOfFall',
-    #               'placeOfFall',
-    #               'declared_by',
-    #               'witnesses',
-    #               'fall_circumstance',
-    #               'other_fall_circumstance',
-    #               'incident_circumstance',
-    #               'fall_consequences',
-    #               'other_fall_consequence',
-    #               'fall_required_medical_acts',
-    #               'other_required_medical_act',
-    #               'medications_risk_factor',
-    #               'fall_cognitive_mood_diorders',
-    #               'fall_incontinences',
-    #               'mobility_disability',
-    #               'unsuitable_footwear',
-    #               'other_contributing_factor',
-    #               'preventable_fall',
-    #               'physician_informed',
-    #     )
+    fields = (  'patient', 
+                'datetimeOfFall',
+                'placeOfFall',
+                'declared_by',
+                'witnesses',
+                'fall_circumstance',
+                'other_fall_circumstance',
+                'incident_circumstance',
+                'fall_consequences',
+                'other_fall_consequence',
+                'fall_required_medical_acts',
+                'other_required_medical_act',
+                'medications_risk_factor',
+                'fall_cognitive_mood_diorders',
+                'fall_incontinences',
+                'mobility_disability',
+                'unsuitable_footwear',
+                'other_contributing_factor',
+                'preventable_fall',
+                'physician_informed',
+            )
     form = FallDeclerationForm
     list_display = ('patient', 'datetimeOfFall', 'display_object_actions_list',)
     autocomplete_fields = ['patient']
-    readonly_fields = ('user', 'created_on', 'updated_on')
+    readonly_fields = ('user', 
+                       'created_on', 
+                       'updated_on',
+                       'fall_consequences',
+                       'fall_required_medical_acts',
+                       'fall_cognitive_mood_diorders',
+                       'fall_incontinences'
+                       )
     inlines = (FallConsequenceInLine,
                FallRequiredMedicalAcInLine,
                FallCognitiveMoodDiorderInLine,
@@ -471,8 +478,30 @@ class FallDeclerationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         },
     ]
 
+    def render_inline_in_middle(self, obj):
+        context = obj.response.context_data
+        inline = context['inline_admin_formset'] = context['inline_admin_formsets'].pop(0)
+        return get_template(inline.opts.template).render(context, obj.request)    
+
+    def fall_consequences(self, obj=None, *args, **kwargs):
+        return self.render_inline_in_middle(obj)
+
+    def fall_required_medical_acts(self, obj=None, *args, **kwargs):
+        return self.render_inline_in_middle( obj)
+
+    def fall_cognitive_mood_diorders(self, obj=None, *args, **kwargs):
+        return self.render_inline_in_middle(obj)
+
+    def fall_incontinences(self, obj=None, *args, **kwargs):
+        return self.render_inline_in_middle(obj)
+
+    def render_change_form(self, request, context, *args, **kwargs):
+        instance = context['adminform'].form.instance  # get the model instance from modelform
+        instance.request = request
+        instance.response = super().render_change_form(request, context, *args, **kwargs)
+        return instance.response
+
     def print_fall_decleration(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'aai/print_fall_declaration.html', {'obj': obj})
-
