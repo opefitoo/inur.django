@@ -141,7 +141,7 @@ class FallConsequence(models.Model):
         FallDecleration, related_name="fall_consequences",
         on_delete=models.CASCADE,
     )
-    consequence = models.CharField(choices=FallConsequences.choices, max_length=255)
+    consequence = models.CharField("Conséquence",choices=FallConsequences.choices, max_length=255)
 
 
 class FallRequiredMedicalAct(models.Model):
@@ -149,7 +149,7 @@ class FallRequiredMedicalAct(models.Model):
         FallDecleration, related_name="fall_required_medical_acts",
         on_delete=models.CASCADE,
     )
-    required_medical_act = models.CharField(choices=FallRequiredMedicalActs.choices,
+    required_medical_act = models.CharField("Acte médical et/ou infirmier requis",choices=FallRequiredMedicalActs.choices,
         max_length=255)
 
 class FallCognitiveMoodDiorder(models.Model):
@@ -158,7 +158,7 @@ class FallCognitiveMoodDiorder(models.Model):
         on_delete=models.CASCADE,
     )
     cognitive_mood_diorder = models.CharField(
-        "Troubles cognitifs et/ou de l’humeur",
+        "Trouble cognitif et/ou de l’humeur",
         choices=FallCognitiveMoodDiorders.choices,
         max_length=255,
         null=True,

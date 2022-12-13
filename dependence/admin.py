@@ -18,6 +18,7 @@ from dependence.models import AssignedPhysician, ContactPerson, DependenceInsura
 from invoices.employee import JobPosition
 from invoices.models import Patient
 from django.template.loader import get_template
+from django.utils.translation import gettext_lazy as _
 
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):
@@ -359,74 +360,34 @@ class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'aai/print_aai.html', {'obj': obj})
 
-class FallConsequenceInLine(admin.TabularInline):
-    
+class InlineWithOpenPermissions(admin.TabularInline):
     extra = 0
+    verbose_name_plural = ""
+
+    def has_add_permission(self, request, obj):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+class FallConsequenceInLine(InlineWithOpenPermissions):
+    verbose_name = _("Conséquences de la chute")
     model = FallConsequence
-    # fields = ('consequence',)
 
-    def has_add_permission(self, request, obj):
-        return True
-
-    def has_change_permission(self, request, obj=None):
-        return True
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    def has_view_permission(self, request, obj=None):
-        return True
-
-class FallRequiredMedicalAcInLine(admin.StackedInline):
-    extra = 0
+class FallRequiredMedicalAcInLine(InlineWithOpenPermissions):
     model = FallRequiredMedicalAct
-    fields = ('required_medical_act',)
 
-    def has_add_permission(self, request, obj):
-        return True
-
-    def has_change_permission(self, request, obj=None):
-        return True
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    def has_view_permission(self, request, obj=None):
-        return True
-
-class FallCognitiveMoodDiorderInLine(admin.StackedInline):
-    extra = 0
+class FallCognitiveMoodDiorderInLine(InlineWithOpenPermissions):
     model = FallCognitiveMoodDiorder
-    fields = ('cognitive_mood_diorder',)
 
-    def has_add_permission(self, request, obj):
-        return True
-
-    def has_change_permission(self, request, obj=None):
-        return True
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    def has_view_permission(self, request, obj=None):
-        return True
-
-class FallIncontinenceInLine(admin.StackedInline):
-    extra = 0
+class FallIncontinenceInLine(InlineWithOpenPermissions):
     model = FallIncontinence
-    fields = ('incontinence',)
-
-    def has_add_permission(self, request, obj):
-        return True
-
-    def has_change_permission(self, request, obj=None):
-        return True
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    def has_view_permission(self, request, obj=None):
-        return True
 
 
 @admin.register(FallDecleration)
@@ -482,16 +443,20 @@ class FallDeclerationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         context = obj.response.context_data
         inline = context['inline_admin_formset'] = context['inline_admin_formsets'].pop(0)
         return get_template(inline.opts.template).render(context, obj.request)    
-
+   
+    @admin.display(description=_("Conséquences de la chute"))
     def fall_consequences(self, obj=None, *args, **kwargs):
         return self.render_inline_in_middle(obj)
 
+    @admin.display(description=_("Actes médicaux et/ou infirmiers requis dans les 24h"))
     def fall_required_medical_acts(self, obj=None, *args, **kwargs):
         return self.render_inline_in_middle( obj)
 
+    @admin.display(description=_("Troubles cognitifs et/ou de l’humeur"))
     def fall_cognitive_mood_diorders(self, obj=None, *args, **kwargs):
         return self.render_inline_in_middle(obj)
 
+    @admin.display(description=_("Incontinence"))
     def fall_incontinences(self, obj=None, *args, **kwargs):
         return self.render_inline_in_middle(obj)
 
