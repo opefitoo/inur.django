@@ -44,6 +44,7 @@ class Migration(migrations.Migration):
                         null=True,
                         upload_to=dependence.falldeclaration.update_fall_declaration_filename,
                         validators=[dependence.falldeclaration.validate_file],
+                        verbose_name="Attached file",
                     ),
                 ),
                 (

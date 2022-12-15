@@ -48,8 +48,8 @@ def validate_file(file):
 class FallDeclaration(models.Model):
     class Meta:
         ordering = ["patient__id"]
-        verbose_name = "Fall Declaration"
-        verbose_name_plural = "Fall Declaration"
+        verbose_name = _("Fall Declaration")
+        verbose_name_plural = _("Fall Declarations")
 
     patient = models.ForeignKey(
         Patient,
@@ -71,7 +71,7 @@ class FallDeclaration(models.Model):
         blank=True,
         default=None,
     )
-    file_upload = models.FileField(null=True, blank=True, upload_to=update_fall_declaration_filename,
+    file_upload = models.FileField(_("Attached file"),null=True, blank=True, upload_to=update_fall_declaration_filename,
                               validators=[validate_file],
                               help_text= _("You can attach the scan of the declaration"))
     witnesses = models.CharField(

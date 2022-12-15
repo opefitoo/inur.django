@@ -327,3 +327,15 @@ msgstr ""
 #: dependence/falldeclaration.py:161
 msgid "Cognitive and/or mood disorder"
 msgstr ""
+
+#: dependence/falldeclaration.py:51
+msgid "Fall Declaration"
+msgstr ""
+
+#: dependence/falldeclaration.py:52
+msgid "Fall Declarations"
+msgstr ""
+
+#: dependence/falldeclaration.py:52
+msgid "Attached file"
+msgstr ""
