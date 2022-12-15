@@ -99,3 +99,243 @@ msgstr "Mois suivant"
 
 msgid "List view"
 msgstr "Vers la liste simple"
+
+#: dependence/admin.py:380
+msgid "Consequence of the fall"
+msgstr "Conséquence de la chute"
+
+#: dependence/admin.py:447
+msgid "Consequences of the fall"
+msgstr "Conséquences de la chute"
+
+#: dependence/admin.py:451
+msgid "Medical and/or nursing acts required within 24 hours"
+msgstr "Actes médicaux et/ou infirmiers requis dans les 24h"
+
+#: dependence/admin.py:455
+msgid "Cognitive and/or mood disorders"
+msgstr "Troubles cognitifs et/ou de l’humeur"
+
+#: dependence/admin.py:459 dependence/falldeclaration.py:175
+msgid "Incontinence"
+msgstr "Incontinence"
+
+#: dependence/enums/falldeclaration_enum.py:7
+msgid "Fall on the same level as a result of slipping, stumbling and tripping"
+msgstr "Chute de plain-pied résultant de glissade, faux-pas et trébuchement"
+
+#: dependence/enums/falldeclaration_enum.py:9
+msgid "Fall from a bed"
+msgstr "Chute d'un lit"
+
+#: dependence/enums/falldeclaration_enum.py:10
+msgid "Fall from a chair"
+msgstr "Chute d'une chaise"
+
+#: dependence/enums/falldeclaration_enum.py:11
+msgid "Fall down stairs and steps"
+msgstr "Chute dans un escalier et de marches"
+
+#: dependence/enums/falldeclaration_enum.py:12
+msgid "Fall while being carried or supported by a third party"
+msgstr "Chute en étant porté ou soutenu par un tiers"
+
+#: dependence/enums/falldeclaration_enum.py:13
+msgid "Fall from a wheelchair"
+msgstr "Chute d'un fauteuil roulant"
+
+#: dependence/enums/falldeclaration_enum.py:14
+msgid "Fall from a toilet seat"
+msgstr "Chute d'un siège de toilette"
+
+#: dependence/enums/falldeclaration_enum.py:15
+msgid "Other"
+msgstr "Autre"
+
+#: dependence/enums/falldeclaration_enum.py:19
+msgid "Free from traumatic injuries"
+msgstr "Indemne de lésions traumatiques"
+
+#: dependence/enums/falldeclaration_enum.py:21
+msgid "Superficial traumatic lesion(s) (abrasion, contusion, bruise, hematoma)"
+msgstr "Lésion(s) traumatique(s) superficielle(s) (abrasion, contusion, ecchymose, hématome)"
+
+#: dependence/enums/falldeclaration_enum.py:23
+msgid "Open wound(s) (cut, laceration)"
+msgstr "Plaie(s) ouverte(s) (coupure, lacération)"
+
+#: dependence/enums/falldeclaration_enum.py:24
+msgid "Dislocation, sprain, strain"
+msgstr "Luxation, entorse, foulure"
+
+#: dependence/enums/falldeclaration_enum.py:25
+msgid "Pain (please assess pain)"
+msgstr "Douleurs (évaluer la douleur svp)"
+
+#: dependence/enums/falldeclaration_enum.py:30
+msgid "Radiological investigation"
+msgstr "Investigation radiologique"
+
+#: dependence/enums/falldeclaration_enum.py:31
+msgid "Minor surgery"
+msgstr "Petite chirurgie"
+
+#: dependence/enums/falldeclaration_enum.py:32
+msgid "Transfer"
+msgstr "Transfert"
+
+#: dependence/enums/falldeclaration_enum.py:33
+msgid "Increased nursing supervision"
+msgstr "Surveillance infirmière accrue"
+
+#: dependence/enums/falldeclaration_enum.py:34
+msgid "Restraint"
+msgstr "Contention"
+
+#: dependence/enums/falldeclaration_enum.py:37
+msgid "Medicines (psychotropics, anti-hypertensives, polypragmasia etc.)"
+msgstr "Médicaments (psychotropes, anti-hypertenseurs, polypragmasie etc.)"
+
+#: dependence/enums/falldeclaration_enum.py:38
+msgid "Others: > 4 drugs"
+msgstr "Autres: > 4 médicaments"
+
+#: dependence/enums/falldeclaration_enum.py:41
+msgid "Drowsiness, stupor or coma"
+msgstr "Somnolence, stupeur ou coma"
+
+#: dependence/enums/falldeclaration_enum.py:42
+msgid "Disorientation, confusion"
+msgstr "Désorientation, confusion"
+
+#: dependence/enums/falldeclaration_enum.py:43
+msgid "Agitation"
+msgstr "Agitation"
+
+#: dependence/enums/falldeclaration_enum.py:44
+msgid "Other impairments of cognitive functions"
+msgstr "Autres altérations des fonctions cognitives"
+
+#: dependence/enums/falldeclaration_enum.py:47
+msgid "Urinary incontinence (not catheterized)"
+msgstr "Incontinence urinaire (non sondé)"
+
+#: dependence/enums/falldeclaration_enum.py:48
+msgid "Incontinence of feces"
+msgstr "Incontinence des matières fécales"
+
+#: dependence/enums/falldeclaration_enum.py:51
+msgid "Moves alone, without difficulty, without auxiliary means"
+msgstr "Se déplace seul, sans difficultés, sans moyens auxiliaires"
+
+#: dependence/enums/falldeclaration_enum.py:52
+msgid "Moves independently with difficulty with or without aids"
+msgstr "Se déplace seul avec difficulté avec ou sans moyens auxiliaires"
+
+#: dependence/enums/falldeclaration_enum.py:53
+msgid "Moves accompanied without auxiliary means"
+msgstr "Se déplace accompagné sans moyens auxiliaires"
+
+#: dependence/enums/falldeclaration_enum.py:54
+msgid "Moves accompanied with auxiliary means"
+msgstr "Se déplace accompagné avec moyens auxiliaires"
+
+#: dependence/falldeclaration.py:45
+#, python-format
+msgid "Maximum file size is %s MB"
+msgstr "Taille maximale du fichier est %s MO"
+
+#: dependence/falldeclaration.py:55
+msgid ""
+"Only looks for patients covered by long-term care insurance, check that the "
+"checkbox is validated if you cannot find your patient"
+msgstr "Ne recheche que les patients pris en charge par l'assurance dépendance, vérifiez que la checkbox est validé si vous ne trouvez pas votre patient"
+
+#: dependence/falldeclaration.py:60
+msgid "Date, time of fall"
+msgstr "Date, heure de la chute"
+
+#: dependence/falldeclaration.py:61
+msgid "Place of fall"
+msgstr "Lieu de la chute"
+
+#: dependence/falldeclaration.py:65
+msgid "Declared by"
+msgstr "Déclaré par"
+
+#: dependence/falldeclaration.py:75
+msgid "You can attach the scan of the declaration"
+msgstr "Vous pouvez attacher le scan de la déclaration"
+
+#: dependence/falldeclaration.py:77
+msgid "Possible witnesses"
+msgstr "Témoins éventuels"
+
+#: dependence/falldeclaration.py:80
+msgid "Circumstances of the fall"
+msgstr "Circonstances de la chute"
+
+#: dependence/falldeclaration.py:83
+msgid "Other circumstances of the fall"
+msgstr "Autre circonstances de la chute"
+
+#: dependence/falldeclaration.py:90
+msgid "Circumstances of the incident"
+msgstr "Circonstances de l'incident"
+
+#: dependence/falldeclaration.py:97
+msgid "Other consequence of the fall"
+msgstr "Autre conséquence de la chute"
+
+#: dependence/falldeclaration.py:104
+msgid "Other medical and/or nursing acts required within 24 hours"
+msgstr "Autres actes médicaux et/ou infirmiers requis dans les 24h"
+
+#: dependence/falldeclaration.py:111
+msgid "Risk factors"
+msgstr "Facteurs de risque"
+
+#: dependence/falldeclaration.py:115
+msgid "Mobility Disability"
+msgstr "Incapacité concernant les déplacements"
+
+#: dependence/falldeclaration.py:117
+msgid "Unsuitable footwear"
+msgstr "Chaussures inadaptées"
+
+#: dependence/falldeclaration.py:119
+msgid "Other contributing factor"
+msgstr "Autre facteur favorisant"
+
+#: dependence/falldeclaration.py:121
+msgid "The fall could have been prevented"
+msgstr "La chute aurait pu être prévenue"
+
+#: dependence/falldeclaration.py:122
+msgid "The doctor was notified"
+msgstr "Le médecin a été avisé"
+
+#: dependence/falldeclaration.py:124
+msgid "Created on"
+msgstr "Crée le"
+
+#: dependence/falldeclaration.py:125
+msgid "Last update"
+msgstr "Dernière mise à jour"
+
+#: dependence/falldeclaration.py:126
+msgid "Created by"
+msgstr "Créé par"
+
+#: dependence/falldeclaration.py:144
+msgid "Conséquence"
+msgstr "Conséquence"
+
+#: dependence/falldeclaration.py:152
+msgid "Required medical and/or nursing act"
+msgstr "Acte médical et/ou infirmier requis"
+
+#: dependence/falldeclaration.py:161
+msgid "Cognitive and/or mood disorder"
+msgstr "Trouble cognitif et/ou de l'humeur"
+

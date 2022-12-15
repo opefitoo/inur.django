@@ -1,6 +1,6 @@
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
-from dependence.enums.falldecleration_enum import FallCircumstances
-from dependence.falldecleration import FallCognitiveMoodDiorder, FallConsequence, FallDecleration, FallIncontinence, FallRequiredMedicalAct
+from dependence.enums.falldeclaration_enum import FallCircumstances
+from dependence.falldeclaration import FallCognitiveMoodDiorder, FallConsequence, FallDeclaration, FallIncontinence, FallRequiredMedicalAct
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
@@ -12,7 +12,7 @@ from fieldsets_with_inlines import FieldsetsInlineMixin
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
-from dependence.forms import FallDeclerationForm, TypeDescriptionGenericInlineFormset, TensionAndTemperatureParametersFormset
+from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, TensionAndTemperatureParametersFormset
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from invoices.employee import JobPosition
@@ -377,7 +377,7 @@ class InlineWithOpenPermissions(admin.TabularInline):
         return True
 
 class FallConsequenceInLine(InlineWithOpenPermissions):
-    verbose_name = _("Conséquences de la chute")
+    verbose_name = _("Consequence of the fall")
     model = FallConsequence
 
 class FallRequiredMedicalAcInLine(InlineWithOpenPermissions):
@@ -390,8 +390,8 @@ class FallIncontinenceInLine(InlineWithOpenPermissions):
     model = FallIncontinence
 
 
-@admin.register(FallDecleration)
-class FallDeclerationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
+@admin.register(FallDeclaration)
+class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     fields = (  'patient', 
                 'datetimeOfFall',
                 'placeOfFall',
@@ -413,7 +413,7 @@ class FallDeclerationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
                 'preventable_fall',
                 'physician_informed',
             )
-    form = FallDeclerationForm
+    form = FallDeclarationForm
     list_display = ('patient', 'datetimeOfFall', 'display_object_actions_list',)
     autocomplete_fields = ['patient']
     readonly_fields = ('user', 
@@ -432,10 +432,10 @@ class FallDeclerationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
 
     object_actions = [
         {
-            'slug': 'print_fall_decleration',
+            'slug': 'print_fall_declaration',
             'verbose_name': 'Imprimer',
             'form_method': 'GET',
-            'view': 'print_fall_decleration',
+            'view': 'print_fall_declaration',
         },
     ]
 
@@ -444,15 +444,15 @@ class FallDeclerationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         inline = context['inline_admin_formset'] = context['inline_admin_formsets'].pop(0)
         return get_template(inline.opts.template).render(context, obj.request)    
    
-    @admin.display(description=_("Conséquences de la chute"))
+    @admin.display(description=_("Consequences of the fall"))
     def fall_consequences(self, obj=None, *args, **kwargs):
         return self.render_inline_in_middle(obj)
 
-    @admin.display(description=_("Actes médicaux et/ou infirmiers requis dans les 24h"))
+    @admin.display(description=_("Medical and/or nursing acts required within 24 hours"))
     def fall_required_medical_acts(self, obj=None, *args, **kwargs):
         return self.render_inline_in_middle( obj)
 
-    @admin.display(description=_("Troubles cognitifs et/ou de l’humeur"))
+    @admin.display(description=_("Cognitive and/or mood disorders"))
     def fall_cognitive_mood_diorders(self, obj=None, *args, **kwargs):
         return self.render_inline_in_middle(obj)
 
@@ -466,7 +466,7 @@ class FallDeclerationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         instance.response = super().render_change_form(request, context, *args, **kwargs)
         return instance.response
 
-    def print_fall_decleration(self, request, object_id, form_url='', extra_context=None, action=None):
+    def print_fall_declaration(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'aai/print_fall_declaration.html', {'obj': obj})

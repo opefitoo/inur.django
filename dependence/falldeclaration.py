@@ -1,6 +1,6 @@
 from django.db import models
 from invoices.db.fields import CurrentUserField
-from dependence.enums.falldecleration_enum import (
+from dependence.enums.falldeclaration_enum import (
     FallCircumstances,
     FallConsequences,
     FallRequiredMedicalActs,
@@ -19,15 +19,15 @@ import os
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
-def update_fall_decleration_filename(instance, filename):
+def update_fall_declaration_filename(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
-    if instance.date is None:
+    if instance.datetimeOfFall is None:
         _current_yr_or_prscr_yr = now().date().strftime('%Y')
         _current_month_or_prscr_month = now().date().strftime('%M')
     else:
         _current_yr_or_prscr_yr = str(instance.date.year)
         _current_month_or_prscr_month = str(instance.date.month)
-    path = os.path.join("Fall Decleration", _current_yr_or_prscr_yr,
+    path = os.path.join("Fall_Declaration", _current_yr_or_prscr_yr,
                         _current_month_or_prscr_month)
     filename = '%s_%s_%s%s' % ( instance.patient.name, instance.patient.first_name,
                                        str(instance.datetimeOfFall), file_extension)
@@ -42,27 +42,27 @@ def validate_file(file):
         return
     limit_kb = 10
     if file_size > limit_kb * 1024 * 1024:
-        raise ValidationError("Taille maximale du fichier est %s MO" % limit_kb)
+        raise ValidationError(_("Maximum file size is %s MB" % limit_kb))
 
-class FallDecleration(models.Model):
+class FallDeclaration(models.Model):
     class Meta:
         ordering = ["patient__id"]
-        verbose_name = "Fall Decleration"
-        verbose_name_plural = "Fall Decleration"
+        verbose_name = "Fall Declaration"
+        verbose_name_plural = "Fall Declaration"
 
     patient = models.ForeignKey(
         Patient,
-        help_text="Ne recheche que les patients pris en charge par l'assurance dépendance, vérifiez que la checkbox est validé si vous ne trouvez pas votre patient",
-        related_name="falldecleration_to_patient",
+        help_text=_("Only looks for patients covered by long-term care insurance, check that the checkbox is validated if you cannot find your patient"),
+        related_name="falldeclaration_to_patient",
         on_delete=models.CASCADE,
         limit_choices_to={"is_under_dependence_insurance": True},
     )
-    datetimeOfFall = models.DateTimeField("Date, heure de la chute")
-    placeOfFall = models.CharField("Lieu de la chute", max_length=200)
+    datetimeOfFall = models.DateTimeField(_("Date, time of fall"))
+    placeOfFall = models.CharField(_("Place of fall"), max_length=200)
 
     declared_by = models.ForeignKey(
         Employee,
-        verbose_name="Déclaré par",
+        verbose_name=_("Declared by"),
         limit_choices_to=~models.Q(abbreviation__in=["XXX"]),
         related_name="edeclaring_employee",
         on_delete=models.PROTECT,
@@ -70,60 +70,60 @@ class FallDecleration(models.Model):
         blank=True,
         default=None,
     )
-    file_upload = models.FileField(null=True, blank=True, upload_to=update_fall_decleration_filename,
+    file_upload = models.FileField(null=True, blank=True, upload_to=update_fall_declaration_filename,
                               validators=[validate_file],
-                              help_text= _("Vous pouvez attacher le scan de la déclaration"))
+                              help_text= _("You can attach the scan of the declaration"))
     witnesses = models.CharField(
-        "Témoins éventuels", max_length=255, null=True, blank=True, default=None
+        _("Possible witnesses"), max_length=255, null=True, blank=True, default=None
     )
     fall_circumstance = models.CharField(
-        "Circonstances de la chute", choices=FallCircumstances.choices, max_length=255
+        _("Circumstances of the fall"), choices=FallCircumstances.choices, max_length=255
     )
     other_fall_circumstance = models.CharField(
-        "Autre circonstances de la chute",
+        _("Other circumstances of the fall"),
         max_length=255,
         null=True,
         blank=True,
         default=None,
     )
     incident_circumstance = models.TextField(
-        "Circonstances de l’incident",
+        _("Circumstances of the incident"),
         max_length=255,
         null=True,
         blank=True,
         default=None,
     )
     other_fall_consequence = models.CharField(
-        "Autre conséquence de la chute",
+        _("Other consequence of the fall"),
         max_length=255,
         null=True,
         blank=True,
         default=None,
     )
     other_required_medical_act = models.CharField(
-        "Autres actes médicaux et/ou infirmiers requis dans les 24h",
+        _("Other medical and/or nursing acts required within 24 hours"),
         max_length=255,
         null=True,
         blank=True,
         default=None,
     )
     medications_risk_factor = models.CharField(
-        "Facteurs de risque", max_length=255, null=True, blank=True, default=None,
+        _("Risk factors"), max_length=255, null=True, blank=True, default=None,
         choices=FallMedicationsRiskFactors.choices
     )
     
-    mobility_disability = models.CharField("Incapacité concernant les déplacements", choices=FallmMbilityDisability.choices,
+    mobility_disability = models.CharField(_("Mobility Disability"), choices=FallmMbilityDisability.choices,
                                             max_length=255)
-    unsuitable_footwear = models.BooleanField("Chaussures inadaptées", default=False)
+    unsuitable_footwear = models.BooleanField(_("Unsuitable footwear"), default=False)
     other_contributing_factor = models.TextField(
-        "Autre facteur favorisant", max_length=255, null=True, blank=True, default=None
+        _("Other contributing factor"), max_length=255, null=True, blank=True, default=None
     )
-    preventable_fall = models.BooleanField("La chute aurait pu être prévenue")
-    physician_informed = models.BooleanField("Le médecin a été avisé")
+    preventable_fall = models.BooleanField(_("The fall could have been prevented"))
+    physician_informed = models.BooleanField(_("The doctor was notified"))
     # Technical Fields
-    created_on = models.DateTimeField("Date création", auto_now_add=True)
-    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
-    user = CurrentUserField(verbose_name="Créé par")
+    created_on = models.DateTimeField(_("Created on"), auto_now_add=True)
+    updated_on = models.DateTimeField(_("Last update"), auto_now=True)
+    user = CurrentUserField(verbose_name=_("Created by"))
 
     @property
     def header_details(self):
@@ -137,28 +137,28 @@ class FallDecleration(models.Model):
 
 
 class FallConsequence(models.Model):
-    fall_decleration = models.ForeignKey(
-        FallDecleration, related_name="fall_consequences",
+    fall_declaration = models.ForeignKey(
+        FallDeclaration, related_name="fall_consequences",
         on_delete=models.CASCADE,
     )
-    consequence = models.CharField("Conséquence",choices=FallConsequences.choices, max_length=255)
+    consequence = models.CharField(_("Conséquence"),choices=FallConsequences.choices, max_length=255)
 
 
 class FallRequiredMedicalAct(models.Model):
-    fall_decleration = models.ForeignKey(
-        FallDecleration, related_name="fall_required_medical_acts",
+    fall_declaration = models.ForeignKey(
+        FallDeclaration, related_name="fall_required_medical_acts",
         on_delete=models.CASCADE,
     )
-    required_medical_act = models.CharField("Acte médical et/ou infirmier requis",choices=FallRequiredMedicalActs.choices,
+    required_medical_act = models.CharField(_("Required medical and/or nursing act"),choices=FallRequiredMedicalActs.choices,
         max_length=255)
 
 class FallCognitiveMoodDiorder(models.Model):
-    fall_decleration = models.ForeignKey(
-        FallDecleration, related_name="fall_cognitive_mood_diorders",
+    fall_declaration = models.ForeignKey(
+        FallDeclaration, related_name="fall_cognitive_mood_diorders",
         on_delete=models.CASCADE,
     )
     cognitive_mood_diorder = models.CharField(
-        "Trouble cognitif et/ou de l’humeur",
+        _("Cognitive and/or mood disorder"),
         choices=FallCognitiveMoodDiorders.choices,
         max_length=255,
         null=True,
@@ -167,12 +167,12 @@ class FallCognitiveMoodDiorder(models.Model):
     )
 
 class FallIncontinence (models.Model):
-    fall_decleration = models.ForeignKey(
-        FallDecleration, related_name="fall_incontinences",
+    fall_declaration = models.ForeignKey(
+        FallDeclaration, related_name="fall_incontinences",
         on_delete=models.CASCADE,
     )
     incontinence = models.CharField(
-        "Incontinence", max_length=255, null=True, blank=True, default=None,
+        _("Incontinence"), max_length=255, null=True, blank=True, default=None,
         choices=FallIncontinences.choices
     )
 

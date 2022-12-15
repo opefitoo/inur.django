@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="FallDecleration",
+            name="FallDeclaration",
             fields=[
                 (
                     "id",
@@ -209,7 +209,7 @@ class Migration(migrations.Migration):
                         help_text="Ne recheche que les patients pris en charge par l'assurance dépendance, vérifiez que la checkbox est validé si vous ne trouvez pas votre patient",
                         limit_choices_to={"is_under_dependence_insurance": True},
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="falldecleration_to_patient",
+                        related_name="falldeclaration_to_patient",
                         to="invoices.patient",
                     ),
                 ),
@@ -225,8 +225,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name": "Fall Decleration",
-                "verbose_name_plural": "Fall Decleration",
+                "verbose_name": "Fall Declaration",
+                "verbose_name_plural": "Fall Declaration",
                 "ordering": ["patient__id"],
             },
         ),
@@ -257,11 +257,11 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "fall_decleration",
+                    "fall_declaration",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="fall_required_medical_acts",
-                        to="dependence.falldecleration",
+                        to="dependence.falldeclaration",
                     ),
                 ),
             ],
@@ -293,11 +293,11 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "fall_decleration",
+                    "fall_declaration",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="fall_incontinences",
-                        to="dependence.falldecleration",
+                        to="dependence.falldeclaration",
                     ),
                 ),
             ],
@@ -335,11 +335,11 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "fall_decleration",
+                    "fall_declaration",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="fall_consequences",
-                        to="dependence.falldecleration",
+                        to="dependence.falldeclaration",
                     ),
                 ),
             ],
@@ -376,11 +376,11 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "fall_decleration",
+                    "fall_declaration",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="fall_cognitive_mood_diorders",
-                        to="dependence.falldecleration",
+                        to="dependence.falldeclaration",
                     ),
                 ),
             ],

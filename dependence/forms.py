@@ -3,9 +3,9 @@ from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet
 from django.core.validators import EMPTY_VALUES
 from django import forms
-from dependence.enums.falldecleration_enum import FallCircumstances
+from dependence.enums.falldeclaration_enum import FallCircumstances
 
-from dependence.falldecleration import FallDecleration
+from dependence.falldeclaration import FallDeclaration
 
 class TypeDescriptionGenericInlineFormset(BaseInlineFormSet):
 
@@ -47,9 +47,9 @@ class TensionAndTemperatureParametersFormset(BaseInlineFormSet):
         if not is_valid:
             raise ValidationError("Ligne %d : Date doit être dans le mois %s de l'année %s" % (rowindex, month, year))
 
-class FallDeclerationForm(forms.ModelForm):
+class FallDeclarationForm(forms.ModelForm):
     class Meta:
-        model = FallDecleration
+        model = FallDeclaration
         exclude = ()
         
 
