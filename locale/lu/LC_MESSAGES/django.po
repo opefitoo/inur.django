@@ -317,7 +317,7 @@ msgid "Created by"
 msgstr ""
 
 #: dependence/falldeclaration.py:144
-msgid "Conséquence"
+msgid "Consequence"
 msgstr ""
 
 #: dependence/falldeclaration.py:152

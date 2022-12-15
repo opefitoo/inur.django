@@ -396,6 +396,7 @@ class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
                 'datetimeOfFall',
                 'placeOfFall',
                 'declared_by',
+                'file_upload',
                 'witnesses',
                 'fall_circumstance',
                 'other_fall_circumstance',

@@ -25,12 +25,13 @@ def update_fall_declaration_filename(instance, filename):
         _current_yr_or_prscr_yr = now().date().strftime('%Y')
         _current_month_or_prscr_month = now().date().strftime('%M')
     else:
-        _current_yr_or_prscr_yr = str(instance.date.year)
-        _current_month_or_prscr_month = str(instance.date.month)
+        _current_yr_or_prscr_yr = str(instance.datetimeOfFall.year)
+        _current_month_or_prscr_month = str(instance.datetimeOfFall.month)
     path = os.path.join("Fall_Declaration", _current_yr_or_prscr_yr,
                         _current_month_or_prscr_month)
-    filename = '%s_%s_%s%s' % ( instance.patient.name, instance.patient.first_name,
-                                       str(instance.datetimeOfFall), file_extension)
+    filename = '%s_%s_%s_%s%s' % ( instance.patient.name, instance.patient.first_name,
+                                instance.patient.code_sn,
+                                str(instance.datetimeOfFall), file_extension)
 
     return os.path.join(path, filename)
 
@@ -141,7 +142,7 @@ class FallConsequence(models.Model):
         FallDeclaration, related_name="fall_consequences",
         on_delete=models.CASCADE,
     )
-    consequence = models.CharField(_("Conséquence"),choices=FallConsequences.choices, max_length=255)
+    consequence = models.CharField(_("Consequence"),choices=FallConsequences.choices, max_length=255)
 
 
 class FallRequiredMedicalAct(models.Model):
