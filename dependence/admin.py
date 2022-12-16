@@ -470,4 +470,4 @@ class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     def print_fall_declaration(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
-        return TemplateResponse(request, 'aai/print_fall_declaration.html', {'obj': obj})
+        return TemplateResponse(request, 'falldeclaration/print_fall_declaration.html', {'obj': obj})
