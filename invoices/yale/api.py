@@ -1,3 +1,5 @@
+import threading
+
 from constance import config
 from yalexs.api import Api
 from yalexs.authenticator import Authenticator
@@ -27,10 +29,11 @@ def get_yale_house_activities():
         authenticator.send_verification_code()
 
         # Wait for your code and pass it in to validate_verification_code()
-        validation_result = authenticator.validate_verification_code(config.YALE_VERIFICATION_CODE)
+        validation_result = threading.Timer(10, authenticator.validate_verification_code(config.YALE_VERIFICATION_CODE))
+        #validation_result = authenticator.validate_verification_code(config.YALE_VERIFICATION_CODE)
     # If ValidationResult is INVALID_VERIFICATION_CODE, then you'll need to either enter correct one or resend by calling send_verification_code() again
     # If ValidationResult is VALIDATED, then you'll need to call authenticate() again to finish authentication process
-    authentication = authenticator.authenticate()  # toto
+    authentication = authenticator.authenticate() 
 
     # Once you have authenticated and validated you can use the access token to make API calls
     # locks = api.get_locks(authentication.access_token) # toto
