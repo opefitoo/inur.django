@@ -339,3 +339,16 @@ msgstr ""
 #: dependence/falldeclaration.py:52
 msgid "Attached file"
 msgstr ""
+
+#: dependence/forms.py:62
+msgid "Depending on your selection, you must fill in the field: \"Other circumstances of the fall\""
+msgstr ""
+
+
+#: dependence/forms.py:66
+msgid "Depending on your selection, you must leave the \"Other circumstances of the fall\" field empty"
+msgstr ""
+
+#: dependence/forms.py:95
+msgid "You have a duplicate choice in the \"%s\", you can't select the same choice twice"
+msgstr ""

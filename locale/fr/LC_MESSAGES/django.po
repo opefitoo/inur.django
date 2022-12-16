@@ -350,3 +350,16 @@ msgstr "Constats de chute"
 #: dependence/falldeclaration.py:52
 msgid "Attached file"
 msgstr "Fichier attaché"
+
+#: dependence/forms.py:62
+msgid "Depending on your selection, you must fill in the field: \"Other circumstances of the fall\""
+msgstr "Selon votre sélection, il faut remplire le champ: \"Autre circonstances de la chute\""
+
+
+#: dependence/forms.py:66
+msgid "Depending on your selection, you must leave the \"Other circumstances of the fall\" field empty"
+msgstr "Selon votre sélection, il faut laisser champ \"Autre circonstances de la chute\" vide"
+
+#: dependence/forms.py:95
+msgid "You have a duplicate choice in the \"%s\", you can't select the same choice twice"
+msgstr "Vous avez un choix en double dans le \"%s\", vous ne pouvez pas sélectionner deux fois le même choix"
