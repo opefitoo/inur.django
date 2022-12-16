@@ -18,6 +18,8 @@ from django.core.exceptions import ValidationError
 import os
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django.dispatch import receiver
+from django.db.models.signals import pre_save, post_delete
 
 def update_fall_declaration_filename(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
@@ -177,3 +179,19 @@ class FallIncontinence (models.Model):
         choices=FallIncontinences.choices
     )
 
+@receiver(post_delete, sender=FallDeclaration, dispatch_uid="fall_decaration_file_upload_clean_s3_post_delete")
+def fall_decaration_file_upload_clean_s3_post_delete(sender, instance, **kwargs):
+    if instance.file_upload:
+        instance.file_upload.delete(save=False)
+
+@receiver(pre_save, sender=FallDeclaration, dispatch_uid="fall_decaration_file_upload_clean_s3_pre_save")
+def fall_decaration_file_upload_clean_s3_pre_save(sender, instance, **kwargs):
+    if instance.file_upload:
+        old_file_name=instance.file_upload.name
+        new_file_name=update_fall_declaration_filename(instance,old_file_name)
+        if (old_file_name != new_file_name):
+            my_file = instance.file_upload.storage.open(old_file_name, 'rb')
+            instance.file_upload.storage.save(new_file_name,my_file)
+            my_file.close()
+            instance.file_upload.delete(save=False)
+            instance.file_upload.name=new_file_name
