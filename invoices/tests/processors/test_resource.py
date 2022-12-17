@@ -44,4 +44,4 @@ class DoorEventTestCase(TestCase):
                                             minute=15, second=0, microsecond=0),
             simplified_timesheet=simplified_timesheet)
         simplified_timesheet.save()
-        get_door_events_for_employee(employee=self.employee)
+        #get_door_events_for_employee(employee=self.employee)
