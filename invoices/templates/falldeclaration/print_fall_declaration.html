@@ -1,4 +1,5 @@
 {% load static %}
+{% load adminfilter %}
 <head xmlns="http://www.w3.org/1999/html">
     <meta charset="utf-8"/>
     <title>Imprimer Fall Declaration</title>
@@ -210,11 +211,11 @@
       </td>
     </tr>
     <tr >
-        {% for fall_consequence in obj.fall_consequences.all %}
+        {% for consequence in obj|selected_labels:"fall_consequences" %}
         <td  colspan="1" rowspan="1">
             <ul >
             <li >
-                <span >{{fall_consequence.get_consequence_display}}</span>
+                <span >{{consequence}}</span>
             </li>
             </ul>
         </td>
@@ -241,11 +242,11 @@
       </td>
     </tr>
     <tr >
-        {% for medical_act in obj.fall_required_medical_acts.all %}
+        {% for medical_act in obj|selected_labels:"fall_required_medical_acts" %}
         <td  colspan="1" rowspan="1">
             <ul >
             <li >
-                <span >{{medical_act.get_required_medical_act_display}}</span>
+                <span >{{medical_act}}</span>
             </li>
             </ul>
         </td>
@@ -286,11 +287,11 @@
       </td>
     </tr>
     <tr >
-        {% for trouble in obj.fall_cognitive_mood_diorders.all %}
+        {% for trouble in obj|selected_labels:"fall_cognitive_mood_diorders" %}
         <td  colspan="1" rowspan="1">
         <ul >
         <li >
-            <span >{{trouble.get_cognitive_mood_diorder_display}}</span>
+            <span >{{trouble}}</span>
         </li>
         </ul>
     </td>
@@ -302,11 +303,11 @@
       </td>
     </tr>
     <tr >
-        {% for incontinence in obj.fall_incontinences.all %}
+        {% for incontinence in obj|selected_labels:"fall_incontinences" %}
         <td  colspan="1" rowspan="1">
         <ul >
         <li >
-            <span >{{incontinence.get_incontinence_display}}</span>
+            <span >{{incontinence}}</span>
         </li>
         </ul>
     </td>

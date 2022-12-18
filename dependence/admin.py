@@ -1,6 +1,5 @@
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
-from dependence.enums.falldeclaration_enum import FallCircumstances
-from dependence.falldeclaration import FallCognitiveMoodDiorder, FallConsequence, FallDeclaration, FallIncontinence, FallRequiredMedicalAct
+from dependence.falldeclaration import  FallDeclaration
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
@@ -17,7 +16,6 @@ from dependence.models import AssignedPhysician, ContactPerson, DependenceInsura
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from invoices.employee import JobPosition
 from invoices.models import Patient
-from django.template.loader import get_template
 from django.utils.translation import gettext_lazy as _
 
 @admin.register(CareOccurrence)
@@ -360,36 +358,6 @@ class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'aai/print_aai.html', {'obj': obj})
 
-class InlineWithOpenPermissions(admin.TabularInline):
-    extra = 0
-    verbose_name_plural = ""
-
-    def has_add_permission(self, request, obj):
-        return True
-
-    def has_change_permission(self, request, obj=None):
-        return True
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    def has_view_permission(self, request, obj=None):
-        return True
-
-class FallConsequenceInLine(InlineWithOpenPermissions):
-    verbose_name = _("Consequence of the fall")
-    model = FallConsequence
-
-class FallRequiredMedicalAcInLine(InlineWithOpenPermissions):
-    model = FallRequiredMedicalAct
-
-class FallCognitiveMoodDiorderInLine(InlineWithOpenPermissions):
-    model = FallCognitiveMoodDiorder
-
-class FallIncontinenceInLine(InlineWithOpenPermissions):
-    model = FallIncontinence
-
-
 @admin.register(FallDeclaration)
 class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     fields = (  'patient', 
@@ -420,16 +388,7 @@ class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     readonly_fields = ('user', 
                        'created_on', 
                        'updated_on',
-                       'fall_consequences',
-                       'fall_required_medical_acts',
-                       'fall_cognitive_mood_diorders',
-                       'fall_incontinences'
                        )
-    inlines = (FallConsequenceInLine,
-               FallRequiredMedicalAcInLine,
-               FallCognitiveMoodDiorderInLine,
-               FallIncontinenceInLine
-               )
 
     object_actions = [
         {
@@ -440,32 +399,6 @@ class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         },
     ]
 
-    def render_inline_in_middle(self, obj):
-        context = obj.response.context_data
-        inline = context['inline_admin_formset'] = context['inline_admin_formsets'].pop(0)
-        return get_template(inline.opts.template).render(context, obj.request)    
-   
-    @admin.display(description=_("Consequences of the fall"))
-    def fall_consequences(self, obj=None, *args, **kwargs):
-        return self.render_inline_in_middle(obj)
-
-    @admin.display(description=_("Medical and/or nursing acts required within 24 hours"))
-    def fall_required_medical_acts(self, obj=None, *args, **kwargs):
-        return self.render_inline_in_middle( obj)
-
-    @admin.display(description=_("Cognitive and/or mood disorders"))
-    def fall_cognitive_mood_diorders(self, obj=None, *args, **kwargs):
-        return self.render_inline_in_middle(obj)
-
-    @admin.display(description=_("Incontinence"))
-    def fall_incontinences(self, obj=None, *args, **kwargs):
-        return self.render_inline_in_middle(obj)
-
-    def render_change_form(self, request, context, *args, **kwargs):
-        instance = context['adminform'].form.instance  # get the model instance from modelform
-        instance.request = request
-        instance.response = super().render_change_form(request, context, *args, **kwargs)
-        return instance.response
 
     def print_fall_declaration(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse

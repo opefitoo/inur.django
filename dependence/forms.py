@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet
 from django.core.validators import EMPTY_VALUES
 from django import forms
-from dependence.enums.falldeclaration_enum import FallCircumstances
+from dependence.enums.falldeclaration_enum import FallCircumstances, FallCognitiveMoodDiorders, FallConsequences, FallIncontinences, FallRequiredMedicalActs
 
 from dependence.falldeclaration import FallDeclaration
 from django.utils.translation import gettext_lazy as _
@@ -52,7 +52,25 @@ class FallDeclarationForm(forms.ModelForm):
     class Meta:
         model = FallDeclaration
         exclude = ()
+        fields = (
+                'fall_consequences',
+                'fall_required_medical_acts',
+                'fall_cognitive_mood_diorders',
+                'fall_incontinences',
+            )
         
+    fall_consequences = forms.MultipleChoiceField(choices=FallConsequences.choices,
+                 widget=forms.CheckboxSelectMultiple(),
+                 required = False,)    
+    fall_required_medical_acts = forms.MultipleChoiceField(choices=FallRequiredMedicalActs.choices, 
+                widget=forms.CheckboxSelectMultiple(),
+                required = False, )
+    fall_cognitive_mood_diorders = forms.MultipleChoiceField(choices=FallCognitiveMoodDiorders.choices,
+                widget=forms.CheckboxSelectMultiple(),
+                required = False,)
+    fall_incontinences = forms.MultipleChoiceField(choices=FallIncontinences.choices,
+                widget=forms.CheckboxSelectMultiple(),
+                required = False,)
     def clean(self):
         fall_circumstance = self.cleaned_data.get('fall_circumstance', None)
         activity_name = self.cleaned_data.get('other_fall_circumstance', None)
@@ -65,35 +83,11 @@ class FallDeclarationForm(forms.ModelForm):
                 self._errors['other_fall_circumstance'] = self.error_class([
                     _("Depending on your selection, you must leave the \"Other circumstances of the fall\" field empty")])
 
-        inline_fields=(
-                       'fall_consequences',
-                       'fall_required_medical_acts',
-                       'fall_cognitive_mood_diorders',
-                       'fall_incontinences'
-                       )
-        inline_fields_display=(
-                       _("Consequences of the fall"),
-                       _("Medical and/or nursing acts required within 24 hours"),
-                       _("Cognitive and/or mood disorders"),
-                       _("Incontinence")
-                        )               
-        inline_fields_name=(
-                       'consequence',
-                       'required_medical_act',
-                       'cognitive_mood_diorder',
-                       'incontinence'
-                        )               
-        for idx,field in enumerate(inline_fields):               
-            value_count = int(self.data.get(field+'-TOTAL_FORMS', 0))
-            temp = []
-            for i in range(0, value_count):
-                try:
-                    value = self.data.get((field+'-{0}-'+inline_fields_name[idx]).format(i), '')
-                except ValueError:
-                    pass
-                if value in temp:
-                    raise forms.ValidationError(_("You have a duplicate choice in the \"%s\", you can\'t select the same choice twice")% inline_fields_display[idx] )
-                else:
-                    temp.append(value)      
-
         return self.cleaned_data
+
+    def __init__(self, *args, **kwargs):
+        super(FallDeclarationForm, self).__init__(*args, **kwargs)
+        self.initial['fall_consequences'] = eval(self.initial['fall_consequences'])    
+        self.initial['fall_required_medical_acts'] = eval(self.initial['fall_required_medical_acts'])    
+        self.initial['fall_cognitive_mood_diorders'] = eval(self.initial['fall_cognitive_mood_diorders'])    
+        self.initial['fall_incontinences'] = eval(self.initial['fall_incontinences'])    

@@ -2,11 +2,11 @@ from django.db import models
 from invoices.db.fields import CurrentUserField
 from dependence.enums.falldeclaration_enum import (
     FallCircumstances,
-    FallConsequences,
-    FallRequiredMedicalActs,
-    FallMedicationsRiskFactors,
     FallCognitiveMoodDiorders,
+    FallConsequences,
     FallIncontinences,
+    FallMedicationsRiskFactors,
+    FallRequiredMedicalActs,
     FallmMbilityDisability
 )
 
@@ -20,6 +20,10 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_delete
+
+from django import template
+
+register = template.Library()
 
 def update_fall_declaration_filename(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
@@ -96,8 +100,24 @@ class FallDeclaration(models.Model):
         blank=True,
         default=None,
     )
+    fall_consequences = models.CharField(
+        _("Consequences of the fall"), 
+        choices=FallConsequences.choices,
+        max_length=255,
+        null=True,
+        blank=True,
+        default=None,
+    )
     other_fall_consequence = models.CharField(
         _("Other consequence of the fall"),
+        max_length=255,
+        null=True,
+        blank=True,
+        default=None,
+    )
+    fall_required_medical_acts = models.CharField(
+        _("Medical and/or nursing acts required within 24 hoursonsequences of the fall"),
+        choices=FallRequiredMedicalActs.choices,
         max_length=255,
         null=True,
         blank=True,
@@ -114,7 +134,22 @@ class FallDeclaration(models.Model):
         _("Risk factors"), max_length=255, null=True, blank=True, default=None,
         choices=FallMedicationsRiskFactors.choices
     )
-    
+    fall_cognitive_mood_diorders = models.CharField(
+        _("Cognitive and/or mood disorders"),
+        choices=FallCognitiveMoodDiorders.choices,
+        max_length=255,
+        null=True,
+        blank=True,
+        default=None,
+    )
+    fall_incontinences = models.CharField(
+        _("Incontinence"),
+        choices=FallIncontinences.choices,
+        max_length=255,
+        null=True,
+        blank=True,
+        default=None,
+    )
     mobility_disability = models.CharField(_("Mobility Disability"), choices=FallmMbilityDisability.choices,
                                             max_length=255)
     unsuitable_footwear = models.BooleanField(_("Unsuitable footwear"), default=False)
@@ -139,46 +174,6 @@ class FallDeclaration(models.Model):
         ]
 
 
-class FallConsequence(models.Model):
-    fall_declaration = models.ForeignKey(
-        FallDeclaration, related_name="fall_consequences",
-        on_delete=models.CASCADE,
-    )
-    consequence = models.CharField(_("Consequence"),choices=FallConsequences.choices, max_length=255)
-
-
-class FallRequiredMedicalAct(models.Model):
-    fall_declaration = models.ForeignKey(
-        FallDeclaration, related_name="fall_required_medical_acts",
-        on_delete=models.CASCADE,
-    )
-    required_medical_act = models.CharField(_("Required medical and/or nursing act"),choices=FallRequiredMedicalActs.choices,
-        max_length=255)
-
-class FallCognitiveMoodDiorder(models.Model):
-    fall_declaration = models.ForeignKey(
-        FallDeclaration, related_name="fall_cognitive_mood_diorders",
-        on_delete=models.CASCADE,
-    )
-    cognitive_mood_diorder = models.CharField(
-        _("Cognitive and/or mood disorder"),
-        choices=FallCognitiveMoodDiorders.choices,
-        max_length=255,
-        null=True,
-        blank=True,
-        default=None,
-    )
-
-class FallIncontinence (models.Model):
-    fall_declaration = models.ForeignKey(
-        FallDeclaration, related_name="fall_incontinences",
-        on_delete=models.CASCADE,
-    )
-    incontinence = models.CharField(
-        _("Incontinence"), max_length=255, null=True, blank=True, default=None,
-        choices=FallIncontinences.choices
-    )
-
 @receiver(post_delete, sender=FallDeclaration, dispatch_uid="fall_decaration_file_upload_clean_s3_post_delete")
 def fall_decaration_file_upload_clean_s3_post_delete(sender, instance, **kwargs):
     if instance.file_upload:
@@ -186,7 +181,7 @@ def fall_decaration_file_upload_clean_s3_post_delete(sender, instance, **kwargs)
 
 @receiver(pre_save, sender=FallDeclaration, dispatch_uid="fall_decaration_file_upload_clean_s3_pre_save")
 def fall_decaration_file_upload_clean_s3_pre_save(sender, instance, **kwargs):
-    if instance.file_upload:
+    if instance._get_pk_val() and instance.file_upload.name:
         old_file_name=instance.file_upload.name
         new_file_name=update_fall_declaration_filename(instance,old_file_name)
         if (old_file_name != new_file_name):
