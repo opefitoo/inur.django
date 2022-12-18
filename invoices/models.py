@@ -829,13 +829,13 @@ class MedicalPrescription(models.Model):
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
 def medical_prescription_clean_gdrive_pre_save(sender, instance, **kwargs):
     if instance.thumbnail_img:
-        old_file_name=instance.file_upload.name
-        new_file_name=update_medical_prescription_filename(instance,old_file_name)
+        old_file_name = instance.file_upload.name
+        new_file_name = update_medical_prescription_filename(instance, old_file_name)
         my_file = instance.file_upload.storage.open(old_file_name, 'rb')
-        instance.file_upload.storage.save(new_file_name,my_file)
+        instance.file_upload.storage.save(new_file_name, my_file)
         my_file.close()
         instance.file_upload.delete(save=False)
-        instance.file_upload.name=new_file_name
+        instance.file_upload.name = new_file_name
     if instance.file_upload:
         instance.thumbnail_img.delete(save=False)
         thumbnail_images = convert_from_bytes(instance.file_upload.read(), fmt='png', dpi=200, size=(300, None))
@@ -1287,13 +1287,3 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home_paired = instance
             pair.save()
 
-# @receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
-# def update_prestation_gcalendar_events(sender, instance, **kwargs):
-#     # if config.USE_GDRIVE:
-#     prestation_gcalendar.update_event(instance)
-#
-#
-# @receiver(post_delete, sender=Prestation, dispatch_uid="delete_prestation_gcalendar_events")
-# def delete_prestation_gcalendar_events(sender, instance, **kwargs):
-#     # if config.USE_GDRIVE:
-#     prestation_gcalendar.delete_event(instance.id)

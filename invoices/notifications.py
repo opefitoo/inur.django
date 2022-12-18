@@ -1,6 +1,9 @@
-from constance import config
+from json import dumps
+
+from constance import config, settings
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
+from httplib2 import Http
 
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 
@@ -25,3 +28,17 @@ def send_email_notification(subject, message, to_emails):
         'noreply@opefitoo.org',
         to_emails,
     )
+
+def notify_system_via_google_webhook(message):
+    url = settings.GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL
+    bot_message = {
+        'text': message}
+    message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
+    http_obj = Http()
+    response = http_obj.request(
+        uri=url,
+        method='POST',
+        headers=message_headers,
+        body=dumps(bot_message),
+    )
+    return response

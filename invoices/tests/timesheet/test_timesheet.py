@@ -181,8 +181,8 @@ class TimesheetDetailTestCase(TestCase):
         holiday_request.save()
 
         simplified_timesheet = SimplifiedTimesheet.objects.create(employee=self.employee,
-                                                                  time_sheet_year=timezone.now().year,
-                                                                  time_sheet_month=timezone.now().month,
+                                                                  time_sheet_year=2022,
+                                                                  time_sheet_month=11,
                                                                   user=self.user)
         simplified_timesheet.save()
         self.assertEqual(6, simplified_timesheet.absence_hours_taken()[0])
