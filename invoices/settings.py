@@ -322,3 +322,9 @@ if 'GOOGLE_APPLICATION_CREDENTIALS2' in os.environ and not os.path.exists(GOOGLE
     credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS2']
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2, 'w') as outfile:
         json.dump(json.loads(credentials), outfile)
+
+YALE_ACCESS_TOKEN_FILE = os.path.join(BASE_DIR, '../yale_access_token_file_for_heroku')
+if 'YALE_ACCESS_TOKEN' in os.environ and not os.path.exists(YALE_ACCESS_TOKEN_FILE):
+    credentials = os.environ['YALE_ACCESS_TOKEN']
+    with open(YALE_ACCESS_TOKEN_FILE, 'w') as outfile:
+        json.dump(json.loads(credentials), outfile)
