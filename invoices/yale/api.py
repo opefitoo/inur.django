@@ -37,7 +37,7 @@ class CustomizedYaleSession(metaclass=SingleInstanceMetaClass):
         return self
 
     def send_validation(self):
-        if self.authenticato.state == AuthenticationState.REQUIRES_VALIDATION:
+        if self.authentication.state == AuthenticationState.REQUIRES_VALIDATION:
             self.authenticator.send_verification_code()
             return "Successfully sent validation, state is now %s" % self.authentication.state
         return "No need to send verification code as state is %s" % self.authentication.state
