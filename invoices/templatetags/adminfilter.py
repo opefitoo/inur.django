@@ -9,4 +9,4 @@ def is_company_admin(u):
 
 @register.filter(name='selected_labels')
 def selected_labels(instance, field):
-    return [label for value, label in instance._meta.get_field(field).choices if value in getattr(instance, field)]  
+    return [label for value, label in instance._meta.get_field(field).temp_choices if value in getattr(instance, field)]  

@@ -101,13 +101,13 @@ class FallDeclaration(models.Model):
         default=None,
     )
     fall_consequences = models.CharField(
-        _("Consequences of the fall"), 
-        choices=FallConsequences.choices,
+        _("Consequences of the fall"),
         max_length=255,
         null=True,
         blank=True,
         default=None,
     )
+    fall_consequences.temp_choices=FallConsequences.choices
     other_fall_consequence = models.CharField(
         _("Other consequence of the fall"),
         max_length=255,
@@ -117,12 +117,12 @@ class FallDeclaration(models.Model):
     )
     fall_required_medical_acts = models.CharField(
         _("Medical and/or nursing acts required within 24 hoursonsequences of the fall"),
-        choices=FallRequiredMedicalActs.choices,
         max_length=255,
         null=True,
         blank=True,
         default=None,
     )
+    fall_required_medical_acts.temp_choices = FallRequiredMedicalActs.choices
     other_required_medical_act = models.CharField(
         _("Other medical and/or nursing acts required within 24 hours"),
         max_length=255,
@@ -136,20 +136,20 @@ class FallDeclaration(models.Model):
     )
     fall_cognitive_mood_diorders = models.CharField(
         _("Cognitive and/or mood disorders"),
-        choices=FallCognitiveMoodDiorders.choices,
         max_length=255,
         null=True,
         blank=True,
         default=None,
     )
+    fall_cognitive_mood_diorders.temp_choices = FallCognitiveMoodDiorders.choices
     fall_incontinences = models.CharField(
         _("Incontinence"),
-        choices=FallIncontinences.choices,
         max_length=255,
         null=True,
         blank=True,
         default=None,
     )
+    fall_incontinences.temp_choices = FallIncontinences.choices
     mobility_disability = models.CharField(_("Mobility Disability"), choices=FallmMbilityDisability.choices,
                                             max_length=255)
     unsuitable_footwear = models.BooleanField(_("Unsuitable footwear"), default=False)

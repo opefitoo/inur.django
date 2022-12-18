@@ -87,7 +87,6 @@ class FallDeclarationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(FallDeclarationForm, self).__init__(*args, **kwargs)
-        self.initial['fall_consequences'] = eval(self.initial['fall_consequences'])    
-        self.initial['fall_required_medical_acts'] = eval(self.initial['fall_required_medical_acts'])    
-        self.initial['fall_cognitive_mood_diorders'] = eval(self.initial['fall_cognitive_mood_diorders'])    
-        self.initial['fall_incontinences'] = eval(self.initial['fall_incontinences'])    
+        for field in self.declared_fields:
+            if field in self.initial.keys():
+                 self.initial[field] = eval(self.initial[field]) 
