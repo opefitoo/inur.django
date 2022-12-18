@@ -29,7 +29,7 @@ class CustomizedYaleSession(metaclass=SingleInstanceMetaClass):
                                            login_method="email",
                                            username=config.YALE_USERNAME,
                                            password=config.YALE_PASSWORD,
-                                           access_token_cache_file="yale_access_token")
+                                           access_token_cache_file="yale_access_token_file_for_heroku")
         self.identifier = ''.join(random.choices(string.ascii_lowercase, k=5))
         self.authentication = self.authenticator.authenticate()
 
