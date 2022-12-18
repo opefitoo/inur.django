@@ -31,23 +31,21 @@ class CustomizedYaleSession(metaclass=SingleInstanceMetaClass):
                                            password=config.YALE_PASSWORD,
                                            access_token_cache_file="yale_access_token")
         self.identifier = ''.join(random.choices(string.ascii_lowercase, k=5))
-        self.state = None
         self.authentication = self.authenticator.authenticate()
 
     def __call__(self):
         return self
 
     def send_validation(self):
-        if self.state == AuthenticationState.REQUIRES_VALIDATION:
+        if self.authenticato.state == AuthenticationState.REQUIRES_VALIDATION:
             self.authenticator.send_verification_code()
-            return "Successfully sent validation, state is now %s" % self.state
-        return "No need to send verification code as state is %s" % self.state
+            return "Successfully sent validation, state is now %s" % self.authentication.state
+        return "No need to send verification code as state is %s" % self.authentication.state
 
     def authenticate(self, validation_code):
         self.authentication = self.authenticator.authenticate()
         if self.authentication.state == AuthenticationState.AUTHENTICATED:
-            self.state = self.authentication.state
-            return "Authenticated %s" % self.state
+            return "Authenticated %s" % self.authentication.state
         else:
             validation_result = self.authenticator.validate_verification_code(validation_code)
             print(validation_result)
