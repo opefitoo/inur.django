@@ -11,7 +11,7 @@ from api.views import EventProcessorView, cleanup_event, whois_off, whois_availa
     get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
-from invoices.views import delete_prestation
+from invoices.views import delete_prestation, yale_configuration_view
 
 admin.autodiscover()
 
@@ -134,6 +134,9 @@ urlpatterns += [
 #     urlpatterns += [
 #         path('__debug__/', include(debug_toolbar.urls)),
 #     ]
+urlpatterns += [
+    re_path('yale-conf/', yale_configuration_view, name='yale_configuration_form'),
+]
 admin.site.site_header = "Invoice for Nurses Admin (inur)"
 admin.site.site_title = "INUR Admin Portal"
 admin.site.index_title = "Welcome to INUR Portal"

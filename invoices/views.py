@@ -1,12 +1,13 @@
 # from dal import autocomplete
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.db.models.functions import Concat
-from django.db.models import Value as v
 from django.http import Http404, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
-from invoices.models import Prestation, MedicalPrescription, Patient, InvoiceItem
+from invoices.forms import YaleConfigurationForm
+from invoices.models import Prestation, MedicalPrescription, InvoiceItem
+from invoices.yale.api import CustomizedYaleSession
 
 
 def get_queryset_filter(query_str, fields):
@@ -174,3 +175,25 @@ def optgroups(self, name, value, attr=None):
             )
         )
     return groups
+@login_required
+def yale_configuration_view(request):
+    yale_session = CustomizedYaleSession
+    message = None
+    if request.method == 'POST':
+        form = YaleConfigurationForm(request.POST)
+        if form.validate():
+            input_value = form.text_input.data
+            if form.send_button.data:
+                # send input value to REST service
+                authenticator = yale_session.send_validation()
+                message = "Sent to yale %s" % authenticator
+            elif form.validate_button.data:
+                yale_session.authenticate(input_value)
+            elif form.house_activities_button.data:
+                house_activities =  yale_session.get_house_activities()
+                message = "House activities %s" % house_activities
+            elif form.display_state_button.data:
+                message = yale_session.get_authentication_state()
+    else:
+        form = YaleConfigurationForm()
+    return render(request, 'yale/yale_configuration_template.html', {'form': form, 'message': message})
