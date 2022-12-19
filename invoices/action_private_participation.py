@@ -14,7 +14,6 @@ from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 from django.utils.timezone import now
-from django.utils.encoding import smart_text
 from django.utils.translation import gettext_lazy as _
 
 from invoices import settings
@@ -75,6 +74,8 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False)
                   "%s\n%s\n%s" % (config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
                                   config.NURSE_PHONE_NUMBER, config.MAIN_BANK_ACCOUNT)
         emails = [qs.patient.email_address]
+        if config.CC_EMAIL_SENT:
+            emails += config.CC_EMAIL_SENT.split(",")
         mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
         mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
 
@@ -147,13 +148,13 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                                                  config.NURSE_PHONE_NUMBER),
                    'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
                    ],
-                  [u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n"
-                   + u'Nom et Pr' + smart_text("e") + u'nom du patient: %s' % smart_text(patientNameAndFirstName),
-                   u'Nom: %s' % smart_text(patientName.strip()) + '\n'
-                   + u'Pr' + smart_text(u"é") + u'nom: %s' % smart_text(patient_first_name.strip()) + '\n'
+                  [u'Matricule patient: %s' % patientSocNumber.strip() + "\n"
+                   + u'Nom et Prénom du patient: %s' % patientNameAndFirstName,
+                   u'Nom: %s' % patientName.strip() + '\n'
+                   + u'Prénom: %s' % patient_first_name.strip() + '\n'
                    + u'Rue: %s' % patient_address.strip() + '\n'
-                   + u'Code postal: %s' % smart_text(patientZipCode.strip()) + '\n'
-                   + u'Ville: %s' % smart_text(patientCity.strip())],
+                   + u'Code postal: %s' % patientZipCode.strip() + '\n'
+                   + u'Ville: %s' % patientCity.strip()],
                   [u'Date accident: %s\n' % (accident_date if accident_date else "")
                    + u'Num. accident: %s' % (accident_id if accident_id else "")]]
 
@@ -202,14 +203,10 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     elements.append(Spacer(1, 10))
 
     if patient_invoice_date is not None:
-        from utils import setlocale
-        with setlocale('en_GB.utf8'):
-            if isinstance(patient_invoice_date, unicode):
-                elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
-                    '%d %B %Y').encode('utf-8')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
-            else:
-                elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
-                    '%d %B %Y').decode('utf-8')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
+        import locale
+        locale.setlocale(locale.LC_ALL, "fr_FR.UTF-8")
+        elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
+                    '%d %B %Y')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
         elements.append(Spacer(1, 10))
 
     return {"elements": elements

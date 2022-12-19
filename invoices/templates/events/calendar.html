@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en" id="page">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouveau Plannig (BETA)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            let doubleClick = 0;
+            let clickTimer = 0;
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                slotDuration: '00:10:00',
+                slotMinTime: '06:00:00',
+                slotMaxTime: '22:30:00',
+                nowIndicator: true,
+                selectable: true,
+                unselectAuto: true,
+                selectOverlap: true,
+                navLinks: true,
+                dayMaxEvents: true,
+                initialView: 'timeGridWeek',
+                // selectMinDistance: 2,
+                headerToolbar: {
+                    left: 'prev,next today,addEventButton',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek', // buttons for switching between views /*dayGridWeek,timeGridFiveDay,*/
+                },
+                eventDidMount: function (info) {
+                    $(info.el).tooltip({
+                        title: info.event.extendedProps.description,
+                        container: 'body',
+                        delay: {"show": 50, "hide": 50}
+                    });
+                },
+
+                businessHours: [ // specify an array instead
+                    {
+                        daysOfWeek: [1, 2, 3, 4, 5, 6, 7], // Monday, Tuesday, Wednesday
+                        startTime: '06:00', // 8am
+                        endTime: '22:00' // 6pm
+                    }
+                ],
+
+                select: function (info) {
+                    console.log('select', info);
+
+                    const _start = new Date(info.startStr);
+                    _start.setDate(_start.getDate() + 1);
+                    const _end = new Date(info.endStr);
+
+                    console.log(_start)
+                    console.log(_end)
+
+                    let g_date = _start.getFullYear() + '-' + (_start.getMonth() + 1) + '-' + _start.getDate();
+                    let g_time = _start.getHours() + ":" + _start.getMinutes() + ":" + _start.getSeconds();
+                    let g_start = g_date + ' ' + g_time;
+                    console.log(g_start);
+
+                    let scheduled = document.getElementById('id_scheduled_datetime');
+                    let effective = document.getElementById('id_effective_datetime');
+                    let url = '{% url 'load-calendar-form' %}'
+
+                    if (info.allDay) {
+                        if (_start.getDate() !== _end.getDate()) {
+                            console.log('Select and hold! allDay true');
+
+                            $.ajax({
+                                type: 'POST',
+                                async: true,
+                                url: url,
+                                headers: {
+                                    "X-CSRFToken": '{{ csrf_token }}'
+                                },
+                                data: {
+                                    'start_date': g_start,
+                                    'end_date': _end,
+                                },
+                                success: function (data) {
+                                    console.log("SUCCESS!")
+                                    $('#modal-form').html(data)
+
+                                    // Display Modal
+                                    $('#exampleModal').modal('show');
+                                },
+                                error: function (data) {
+                                    console.log("ERROR: ", data)
+                                }
+                            });
+                        }
+                    } else {
+                        console.log('Select and allDay false');
+                        $.ajax({
+                            type: 'POST',
+                            async: true,
+                            url: url,
+                            headers: {
+                                "X-CSRFToken": '{{ csrf_token }}'
+                            },
+                            data: {
+                                'start_date': g_start,
+                                'end_date': _end,
+                            },
+                            success: function (data) {
+                                console.log("SUCCESS!")
+                                $('#modal-form').html(data)
+
+                                // Display Modal
+                                $('#exampleModal').modal('show');
+                            },
+                            error: function (data) {
+                                console.log("ERROR: ", data)
+                            }
+                        });
+                    }
+                },
+
+                dateClick: function (info) {
+                    console.log('dateClick', info);
+                    var singleClick = info.date.toUTCString();
+
+                    if (doubleClick == singleClick) {
+                        console.log('Double-click!');
+
+                        let url = '{% url 'load-calendar-form' %}'
+                        $.ajax({
+                            type: 'POST',
+                            async: true,
+                            url: url,
+                            headers: {
+                                "X-CSRFToken": '{{ csrf_token }}'
+                            },
+                            data: {
+                                'start_date': info.dateStr,
+                            },
+                            success: function (data) {
+                                console.log("SUCCESS: ", data)
+                                $('#modal-form').html(data)
+                                $('#exampleModal').modal('show'); // Display Modal
+                            },
+                            error: function (data) {
+                                console.log("ERROR: ", data)
+                            }
+                        });
+
+                        doubleClick = null;
+                    } else {
+                        doubleClick = info.date.toUTCString();
+                        clearInterval(clickTimer);
+                        clickTimer = setInterval(function () {
+                            doubleClick = null;
+                            clearInterval(clickTimer);
+                        }, 500);
+                    }
+                },
+
+                eventClick: function (info) {
+                    info.jsEvent.preventDefault(); // don't let the browser navigate
+                    console.log(info);
+
+                    if (info.event.url) {
+                        // window.open(info.event.url);
+                    }
+                    ;
+
+                    console.log(info.event.extendedProps.objectId);
+
+                    if (info.event.extendedProps.objectId) {
+                        let url = '{% url 'update-calendar-form' %}'
+                        $.ajax({
+                            type: 'POST',
+                            async: true,
+                            url: url,
+                            headers: {
+                                "X-CSRFToken": '{{ csrf_token }}'
+                            },
+                            data: {
+                                'object_id': info.event.extendedProps.objectId,
+                            },
+                            success: function (data) {
+                                console.log("SUCCESS: ", data)
+                                $('#modal-form').html(data)
+
+                                // Display Modal
+                                $('#exampleModal').modal('show')
+                            },
+                            error: function (data) {
+                                console.log("ERROR: ", data)
+                            }
+                        });
+                    }
+                },
+
+                /*selectAllow: function(info) {
+                  console.log(info)
+                },*/
+
+                customButtons: {
+                    addEventButton: {
+                        text: 'Schedule an event',
+                        click: function () {
+                            // Display Modal
+                            $('#exampleModal').modal('show');
+                        }
+                    }
+                },
+                {% comment %} eventSources: [
+                     {% for k, v  in object_list.items %}
+                     {{% endcomment %}
+                events: [
+
+                    {% for event in object_list %}
+                        {
+                            objectId: '{{ event.id }}',
+                            title: '{{ event }}',
+                            start: '{{ event.day|date:"Y-m-d" }}T{{ event.time_start_event|date:"H:i:s" }}',
+                            url: 'https://sandbox02.host309.weberp.xyz:2374/calendars/2',
+                            end: '{{ event.day|date:"Y-m-d" }}T{{ event.time_end_event|date:"H:i:s" }}',
+                            extendedProps: {
+                                status: '{{ event.state }}'
+                            },
+                            color: '{{event.employees.color_cell}}',
+                            textColor: '{{event.employees.color_text}}',
+                            description: '{{event}}{{event.print_html_safe_notes}}',
+                            type: '{{ event.event_type_enum }}'
+                        },
+
+                    {% endfor %}
+                ],
+                {% comment %} color: 'yellow',
+                 textColor: 'black'
+         }
+         {% endfor %}
+     ],{% endcomment %}
+
+                // events: 'https://fullcalendar.io/api/demo-feeds/events.json',
+                views: {
+                    dayGridMonth: {
+                        dayMaxEventRows: 6 // adjust to 6 only for timeGridWeek/timeGridDay
+                    },
+                    timeGridWeek: {
+                        dayMaxEventRows: 6, // adjust to 6 only for timeGridWeek/timeGridDay
+                        selectMirror: true,
+                    }
+                },
+                /*events: [
+                        {
+                          title: 'Meeting',
+                          start: '2022-03-22T14:30:00',
+                          extendedProps: {
+                            status: 'done'
+                          }
+                        },
+                        {
+                          title: 'Birthday Party',
+                          start: '2022-03-23T07:00:00',
+                          backgroundColor: 'green',
+                          borderColor: 'green'
+                        }
+                      ],*/
+                /*
+                eventDidMount: function(info) {
+                        if (info.event.extendedProps.status === 'done') {
+
+                          // Change background color of row
+                          info.el.style.backgroundColor = 'red';
+
+                          // Change color of dot marker
+                          var dotEl = info.el.getElementsByClassName('fc-event-dot')[0];
+                          if (dotEl) {
+                            dotEl.style.backgroundColor = 'white';
+                          }
+                        }
+                      }
+                      */
+            });
+            calendar.render();
+        });
+    </script>
+</head>
+
+<body class="d-flex h-100">
+<div class="container-fluid">
+    <div class="d-flex justify-content-center m-3">
+        <h1>Nouveau Planning (version lecture seule BETA !!!)</h1>
+    </div>
+    <hr>
+    <div class="row my-3">
+        <div class="col">
+            <div id='calendar'></div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Schedule an event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="modal-form">
+                    <form action="" method="post">{% csrf_token %}
+                        <div class="modal-body">
+                            {{ form.as_p }}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save on calendar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" id="page">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yale Configuration</title>
+    <script src="https://code.jquery.com/jquery-3.6.2.min.js"/>
+    <script>
+        $('#text_input').on('input', function () {
+            alert("toto");
+            $('#save_button').prop('disabled', !this.value);
+        });
+
+    </script>
+</head>
+<body>
+{% if message %}
+<div class="message">{{ message }}</div>
+{% endif %}
+<p>Yale configuration screen</p>
+<p>If you don't know what you are doing just leave this page</p>
+<form action="{% url 'yale_configuration_form' %}" method="post">
+    {% csrf_token %}
+    {{ form.text_input }}
+    {{ form.send_button }}
+    {{ form.validate_button }}
+    {{ form.house_activities_button }}
+    {{ form.display_state_button }}
+</form>
+</body>
+
+

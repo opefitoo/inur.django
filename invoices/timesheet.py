@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import calendar
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any, Union
 
 from django.core.cache import cache
@@ -11,10 +11,13 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django_currentuser.db.models import CurrentUserField
 
-from helpers.holidays import how_many_hours_taken_in_period
+from helpers.holidays import how_many_hours_taken_in_period_v2
+from helpers.timesheet import calculate_total_hours, display_in_hours_minutes_value, how_many_working_days_in_range, \
+    hours_should_work_gross_in_sec
+from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
+from invoices.enums.generic import HolidayRequestChoice
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 
 
@@ -130,6 +133,18 @@ class SimplifiedTimesheet(models.Model):
         default=current_year())
     user = CurrentUserField()
     user.visible = False
+    extra_hours_paid_current_month = models.DecimalField(u"Heures supp. payées ou récupérées pour le mois courant",
+                                                         default=0,
+                                                         max_digits=4,
+                                                         decimal_places=2
+                                                         )
+    extra_hours_balance = models.DecimalField(u"Balance des heures supp. non soldées",
+                                              help_text="Ce champ est calculé mais vous pouvez quand même écraser la valeur si vous êtes admin.\n"
+                                                        "Il reporte le total des heures suppl. (ou déficit) du mois M - 1.\n"
+                                                        "Il est (re)calculé à chaque fois que l'on valide un Temps de Travail et la formule : Hours should work TS(M-1) + Balance des heures supp. non soldées - Heures supp. payées ou récupérées pour le mois courant",
+                                              default=0,
+                                              max_digits=5,
+                                              decimal_places=2)
 
     YEARS_MONTHS = [
         (1, u'Janvier'),
@@ -149,6 +164,10 @@ class SimplifiedTimesheet(models.Model):
         choices=YEARS_MONTHS,
         default=current_month(),
     )
+
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
     def __calculate_total_hours(self):
         if self.id:
@@ -172,6 +191,9 @@ class SimplifiedTimesheet(models.Model):
                     calendar_date__exact=v.start_date.astimezone()).first() is not None:
                 total_public_holidays = total_public_holidays + delta
         calculated_hours["total_hours_holidays_taken"] = self.absence_hours_taken()
+        calculated_hours["total_hours_holidays_taken_verbose"] = "%d heure(s) --> %s" % (
+            calculated_hours["total_hours_holidays_taken"][0],
+            str(calculated_hours["total_hours_holidays_taken"][1]))
         calculated_hours["total"] = total
         calculated_hours["total_sundays"] = total_sundays
         calculated_hours["total_public_holidays"] = total_public_holidays
@@ -181,59 +203,138 @@ class SimplifiedTimesheet(models.Model):
 
     def absence_hours_taken(self):
         data = {'start_date': self.get_start_date, 'end_date': self.get_end_date, 'user_id': self.user.id}
-        return how_many_hours_taken_in_period(data,
-                                              PublicHolidayCalendarDetail.objects.filter(
-                                                  calendar_date__lte=data['end_date'],
-                                                  calendar_date__gte=data['start_date']))
+        return how_many_hours_taken_in_period_v2(data,
+                                                 PublicHolidayCalendarDetail.objects.filter(
+                                                     calendar_date__lte=data['end_date'],
+                                                     calendar_date__gte=data['start_date']))
 
     @property
     def total_hours_holidays_taken(self):
-        return self.__calculate_total_hours()["total_hours_holidays_taken"]
+        return "%s %s" % (calculate_total_hours(self).total_hours_holidays_absence_taken,
+                          calculate_total_hours(self).total_hours_holidays_absence_taken_object)
 
     @property
-    def hours_should_work(self):
+    def total_hours_holidays_taken_xxx(self):
+        return self.__calculate_total_hours()["total_hours_holidays_taken_verbose"]
+
+    @property
+    def total_hours_holidays_and_sickness_taken(self):
+        return calculate_total_hours(self).total_hours_holidays_absence_taken
+
+    @property
+    def total_hours_holidays_and_sickness_taken_object(self):
+        return calculate_total_hours(self).total_hours_holidays_absence_taken_object
+
+    @property
+    def hours_should_work_gross_in_sec_xxx(self):
+        calculated_hours = self.__calculate_total_hours()
+        total_legal_working_hours = self.date_range(self.get_start_date, self.get_end_date) * \
+                                    ((self.employee.employeecontractdetail_set.filter(Q(
+                                        end_date__gte=self.get_end_date, start_date__lte=self.get_start_date) | Q(
+                                        end_date__isnull=True,
+                                        start_date__lte=self.get_start_date)).first().number_of_hours / 5))
+        balance: Union[float, Any] = calculated_hours["total"].total_seconds() + \
+                                     (calculated_hours["total_hours_holidays_taken"][
+                                          0] - total_legal_working_hours) * 3600
+        return balance
+    @property
+    def total_legal_working_hours(self):
+        return calculate_total_hours(self).total_legal_working_hours
+
+    @property
+    def hours_should_work_gross_in_sec(self):
+        return hours_should_work_gross_in_sec(self)
+
+    @property
+    def hours_should_work_xxx(self):
         if self.id:
             calculated_hours = cache.get('total_hours_dictionary%s' % self.id)
             if calculated_hours is None:
                 calculated_hours = self.__calculate_total_hours()
         total_legal_working_hours = self.date_range(self.get_start_date, self.get_end_date) * \
-                                    (self.employee.employeecontractdetail_set.filter(
-                                        start_date__lte=self.get_start_date).first().number_of_hours / 5)
+                                    ((self.employee.employeecontractdetail_set.filter(Q(
+                                        end_date__gte=self.get_end_date, start_date__lte=self.get_start_date) | Q(
+                                        end_date__isnull=True,
+                                        start_date__lte=self.get_start_date)).first().number_of_hours / 5))
         balance: Union[float, Any] = calculated_hours["total"].total_seconds() + \
                                      (calculated_hours["total_hours_holidays_taken"][
                                           0] - total_legal_working_hours) * 3600
-        return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
+        # return "%d h:%d mn" % (balance // 3600, (balance % 3600) // 60)
+        return "%.2f heures(s)" % round(balance / 3600, 2)
 
-    @staticmethod
-    def date_range(start_date, end_date):
-        if not start_date and not end_date:
-            return
-        days = 0
-        for i in range(0, calendar.monthrange(start_date.year, start_date.month)[1]):
-            next_date = start_date + timedelta(i)
-            if next_date.weekday() not in (5, 6):
-                days = days + 1
-        for i in PublicHolidayCalendarDetail.objects.filter(calendar_date__lte=end_date, calendar_date__gte=start_date):
-            if i.calendar_date.weekday() not in (5, 6):
-                days = days - 1
-        return days
+    @property
+    def hours_should_work(self):
+        h_balance = self.hours_should_work_gross_in_sec
+        if h_balance > 0:
+            return " + %.2f heures(s)" % round(h_balance / 3600, 2)
+        return "%.2f heures(s)" % round(h_balance / 3600, 2)
+
+    hours_should_work.fget.short_description = "Balances des heures"
+
+    # @staticmethod
+    # def date_range(start_date, end_date):
+    #     if not start_date and not end_date:
+    #         return
+    #     days = 0
+    #     for i in range(0, calendar.monthrange(start_date.year, start_date.month)[1]):
+    #         next_date = start_date + timedelta(i)
+    #         if next_date.weekday() not in (5, 6):
+    #             days = days + 1
+    #     for i in PublicHolidayCalendarDetail.objects.filter(calendar_date__lte=end_date, calendar_date__gte=start_date):
+    #         if i.calendar_date.weekday() not in (5, 6):
+    #             days = days - 1
+    #     return days
 
     @property
     def total_working_days(self):
-        return self.date_range(self.get_start_date, self.get_end_date)
+        return "Jours ouvrables %d, Heures contractuelles %d (h/semaine)" % (
+            how_many_working_days_in_range(self.get_start_date),
+            (self.employee.employeecontractdetail_set.filter(Q(
+                end_date__gte=self.get_end_date, start_date__lte=self.get_start_date) | Q(
+                end_date__isnull=True,
+                start_date__lte=self.get_start_date)).first().number_of_hours))
 
-    @property
-    def total_hours(self):
+    # FIXME this is deprecated use new one
+    def total_hours_xxx(self):
         total_delta = self.__calculate_total_hours()["total"].total_seconds()
         return "%d h:%d mn" % (total_delta // 3600, (total_delta % 3600) // 60)
 
     @property
+    def total_hours(self):
+        return display_in_hours_minutes_value(total_seconds=calculate_total_hours(self).total_hours.total_seconds())
+
+    total_hours.fget.short_description = "Nombre d'heures encodées"
+
+
+    @property
     def total_hours_sundays(self):
-        return self.__calculate_total_hours()["total_sundays"]
+        list_of_sundays_worked = calculate_total_hours(self).list_of_sundays_worked
+        if len(list_of_sundays_worked) > 0:
+            return "%s (%s)" % (display_in_hours_minutes_value(total_seconds=
+                                                               calculate_total_hours(
+                                                                   self).total_sundays.total_seconds()),
+                                list_of_sundays_worked)
+        return "%s" % display_in_hours_minutes_value(total_seconds=
+                                                     calculate_total_hours(
+                                                         self).total_sundays.total_seconds())
+
+    total_hours_sundays.fget.short_description = "Nombre d'h. travaillées les Dimanches"
+
 
     @property
     def total_hours_public_holidays(self):
-        return self.__calculate_total_hours()["total_public_holidays"]
+        list_of_public_holidays_worked = calculate_total_hours(self).list_of_public_holidays_worked
+        if len(list_of_public_holidays_worked) > 0:
+            return "%s (%s)" % (display_in_hours_minutes_value(total_seconds=
+                                                               calculate_total_hours(
+                                                                   self).total_hours_during_public_holidays.total_seconds()),
+                                list_of_public_holidays_worked)
+        return "%s" % display_in_hours_minutes_value(total_seconds=
+                                                     calculate_total_hours(
+                                                         self).total_hours_during_public_holidays.total_seconds())
+
+    total_hours_public_holidays.fget.short_description = "Nombre d'h. travaillées les Jours fériés"
+
 
     #
     # @property
@@ -407,8 +508,18 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
         Q(start_date__lte=end_date_time, end_date__gte=end_date_time)
     ).filter(employee_id=employee_id, request_status=HolidayRequestWorkflowStatus.ACCEPTED)
     if 1 == conflicts.count():
-        msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
+        conflict = conflicts[0]
+        if conflict.requested_period == HolidayRequestChoice.req_full_day:
+            msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
+                                                                                              conflicts[0].end_date)}
+        elif (conflict.requested_period == HolidayRequestChoice.req_morning
+              and data['start_date'].time() < data['start_date'].time().replace(hour=12, minute=0, second=0)) \
+                or (conflict.requested_period == HolidayRequestChoice.req_evening
+                    and data['end_date'] > data['start_date'].time().replace(hour=12, minute=0, second=0)):
+            msgs = {
+                'start_date': u"Intersection avec des demandes d'absence de : %s à %s" % (conflicts[0].start_date,
                                                                                           conflicts[0].end_date)}
+
     elif 1 < conflicts.count():
         msgs = {'start_date': u"Intersection avec des demandes d'absence de : %s à %s et %d autres conflits"
                               % (conflicts[0].start_date, conflicts[0].end_date, conflicts.count() - 1)}
@@ -419,3 +530,4 @@ def validate_date_range_vs_holiday_requests(data, employee_id):
 @receiver(post_save, sender=SimplifiedTimesheet, dispatch_uid="notify_timesheet_refresh_cache")
 def notify_timesheet_refresh_cache(sender, instance, created, **kwargs):
     cache.clear()
+    print(cache)

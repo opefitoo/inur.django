@@ -1,22 +1,29 @@
 from django.contrib.auth.models import User, Group
-from django.utils import timezone
-from rest_framework import serializers
 from django_countries.serializers import CountryFieldMixin
-from rest_framework.exceptions import ValidationError
+from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch, AssignedPhysician
-from invoices.models import PatientAnamnesis
-from invoices.timesheet import Timesheet, TimesheetTask
-from invoices.employee import JobPosition
+from dependence.careplan import CarePlanMaster, CarePlanDetail
+from dependence.models import PatientAnamnesis, AssignedPhysician
+from invoices.employee import JobPosition, Employee
 from invoices.events import EventType, Event
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
+    ValidityDate, InvoiceItemBatch
+from invoices.timesheet import Timesheet, TimesheetTask
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('url', 'username', 'email')
+        fields = ('first_name', 'last_name')
+
+class EmployeeAvatarSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    class Meta:
+        model = Employee
+        fields = ('user', 'avatar', 'bio', 'occupation')
+        depth = 1
+
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -191,15 +198,63 @@ class EventTypeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
+class GenericEmployeeEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        day = serializers.DateField(format="%Y-%m-%d")
+        # for DateTimeField
+        time_start_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+        time_end_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+        fields = ('id', 'day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'notes',
+                  'employees', 'created_by', "event_address")
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Event.objects.all(),
+                fields=['day', 'event_type_enum', 'time_start_event', 'time_end_event', 'employees']
+            )
+        ]
+
+
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         day = serializers.DateField(format="%Y-%m-%d")
-        fields = ('id', 'day', 'time_start_event', 'time_end_event', 'state', 'event_type', 'notes', 'patient',
+        # for DateTimeField
+        time_start_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+        time_end_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+        fields = ('id', 'day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'notes', 'patient',
                   'employees', 'created_by')
         validators = [
             UniqueTogetherValidator(
                 queryset=Event.objects.all(),
-                fields=['day', 'event_type', 'time_start_event', 'time_end_event', 'patient', 'employees']
+                fields=['day', 'event_type_enum', 'time_start_event', 'time_end_event', 'patient', 'employees']
             )
         ]
+
+
+class BirthdayEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        day = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+        fields = ('id', 'day', 'notes', 'patient', 'created_by')
+
+
+class PatientSerializerForCarePlan(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ['id', 'name']
+
+
+class CarePlanDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CarePlanDetail
+        fields = '__all__'
+
+
+class CarePlanMasterSerializer(serializers.ModelSerializer):
+    care_plan_detail_to_master = CarePlanDetailSerializer(many=True)
+    patient = PatientSerializerForCarePlan()
+
+    class Meta:
+        model = CarePlanMaster
+        fields = ['patient', 'plan_number', 'plan_start_date', 'care_plan_detail_to_master']

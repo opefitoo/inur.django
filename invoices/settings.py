@@ -10,9 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
+import json
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-import json
+import sys
+
+import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -34,8 +37,6 @@ CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 # Application definition
 INSTALLED_APPS = (
     'django.contrib.admin',
-    'dal',
-    'dal_select2',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -52,8 +53,19 @@ INSTALLED_APPS = (
     # 'debug_toolbar'
     'django_csv_exports',
     'colorfield',
+<<<<<<< HEAD
     'auditlog'
+=======
+    'dependence',
+    'fieldsets_with_inlines',
+    'phonenumber_field',
+    'django_select2'
+>>>>>>> bd9451ad22f2f4e5e27871fc4c0d2a5059d84f54
 )
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 20000
+
+INSTALLED_APPS += ('admin_object_actions',)
 
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -67,9 +79,16 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
+<<<<<<< HEAD
     'django_currentuser.middleware.ThreadLocalUserMiddleware',
     'auditlog.middleware.AuditlogMiddleware'
+=======
+    'invoices.middleware.ThreadLocalUserMiddleware',
+>>>>>>> bd9451ad22f2f4e5e27871fc4c0d2a5059d84f54
 )
+
+MIDDLEWARE += ('crum.CurrentRequestUserMiddleware',)
+
 #
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
@@ -98,7 +117,8 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 # Parse database configuration from $DATABASE_URL
-import dj_database_url
+
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 DATABASES = {'default': dj_database_url.config(default='postgres://inur:inur@localhost:5432/inur')}
 if 'CIRCLECI' in os.sys.argv:
@@ -193,26 +213,37 @@ CONSTANCE_CONFIG = {
          'Nom et adresse du prestataire de soins (apparait sur les factures)', str),
     'BIS_NURSE_CODE': (
         '', "Code infirmier secondaire pour les soins", str),
-    'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select')
+    'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select'),
+    'CC_EMAIL_SENT': ("",
+                      "Lors de l'envoi d'un email au client, envoi à cette adresse en CC (pour en mettre plusieurs veuillez les séparer d'une virgule ',')",
+                      str),
+    'GENERAL_CALENDAR_ID': ("",
+                      "Identifiant de l'agenda Google de configuration générale",
+                      str),
+    'CONVADIS_CLIENT_ID': ('NOT_SET', 'Client ID pour authentification oauth2 convadis services', str),
+    'CONVADIS_SECRET_ID': ('NOT_SET', 'Secret ID pour authentification oauth2 convadis services', str),
+    'CONVADIS_URL': ('NOT_SET', 'Url pour authentification oauth2 convadis services', str),
+    'CONVADIS_ORG_ID': ('NOT_SET', 'Organisation ID pour authentification oauth2 convadis services', str),
+    'OPENROUTE_SERVICE_API_KEY': ('NOT_SET', 'Open Route API KEY', str),
+    'ROOT_URL': ('NOT_SET', 'Root URL Main url', str),
+    'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL': ('NOT_SET', 'Webhook for notification of job completion', str),
+    'YALE_USERNAME': ('NOT_SET', 'Yale username', str),
+    'YALE_PASSWORD': ('NOT_SET', 'Yale password', str),
+    'YALE_HOUSE_ID': ('NOT_SET', 'House ID', str),
+    'YALE_VERIFICATION_CODE': ('NOT_SET', 'Yale verification code', str),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
-    'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE'),
-    'Options de Facturation': ('MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
-                               'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT'),
+    'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE', 'ROOT_URL', 'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL'),
+    'Options de Facturation': (
+        'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
+        'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT', 'GENERAL_CALENDAR_ID'),
+    'Options API Convadis': ('CONVADIS_ORG_ID', 'CONVADIS_CLIENT_ID', 'CONVADIS_SECRET_ID', 'CONVADIS_URL',
+                             'OPENROUTE_SERVICE_API_KEY'),
+    'Options API Yale': ('YALE_USERNAME', 'YALE_PASSWORD', 'YALE_VERIFICATION_CODE', 'YALE_HOUSE_ID')
 }
 
-GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
-GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2 = os.path.join(BASE_DIR, '../keys/inur-test-environment-71cbf29a05be.json')
-if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE):
-    credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
-    with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
-        json.dump(json.loads(credentials), outfile)
 
-if 'GOOGLE_APPLICATION_CREDENTIALS2' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2):
-    credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS2']
-    with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2, 'w') as outfile:
-        json.dump(json.loads(credentials), outfile)
 
 INTERNAL_IPS = {'127.0.0.1', }
 
@@ -270,3 +301,33 @@ LOGGING = {
         }
     }
 }
+
+from dotenv import load_dotenv
+
+load_dotenv(verbose=True)
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# AWS S3 Contabo Configuration
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_S3_ENDPOINT_URL = os.environ['AWS_S3_ENDPOINT_URL']
+AWS_S3_ACCESS_KEY_ID = os.environ['AWS_S3_ACCESS_KEY_ID']
+AWS_S3_SECRET_ACCESS_KEY = os.environ['AWS_S3_SECRET_ACCESS_KEY']
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
+
+# GOOGLE CHAT WEBHOOK CONFIGURATION
+GOOGLE_CHAT_WEBHOOK_URL = os.environ['GOOGLE_CHAT_WEBHOOK_URL']
+
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2 = os.path.join(BASE_DIR, '../keys/inur-test-environment-71cbf29a05be.json')
+if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE):
+    credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
+    with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
+        json.dump(json.loads(credentials), outfile)
+
+if 'GOOGLE_APPLICATION_CREDENTIALS2' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2):
+    credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS2']
+    with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2, 'w') as outfile:
+        json.dump(json.loads(credentials), outfile)

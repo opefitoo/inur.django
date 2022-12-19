@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import base64
 import logging
+<<<<<<< HEAD
 import pytz
 import os
 from copy import deepcopy
@@ -7,31 +9,37 @@ from datetime import datetime
 from auditlog.registry import auditlog
 from auditlog.models import LogEntry
 from django.contrib.auth.models import User
+=======
+import os
+from copy import deepcopy
+from datetime import datetime
+from zoneinfo import ZoneInfo
+>>>>>>> bd9451ad22f2f4e5e27871fc4c0d2a5059d84f54
 
+import requests
+from constance import config
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.files.images import ImageFile
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.utils.safestring import mark_safe
+from django.utils.timezone import now
 from django_countries.fields import CountryField
 from gdstorage.storage import GoogleDriveStorage
+from pdf2image import convert_from_bytes
 
+from invoices.employee import Employee
 from invoices.enums.generic import HouseType, CivilStatus, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
-    MobilizationsType, NutrionAutonomyLevel
-from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
+    MobilizationsType, NutritionAutonomyLevel, DependenceInsuranceLevel, GenderType, HabitType
 from invoices.gcalendar import PrestationGoogleCalendar
-
-from django.utils.timezone import now
-
+from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.modelspackage import InvoicingDetails
 from invoices.modelspackage.invoice import get_default_invoicing_details
 from invoices.storages import CustomizedGoogleDriveStorage
-from constance import config
-
-from invoices.employee import Employee
 from invoices.validators.validators import MyRegexValidator
 
 prestation_gcalendar = PrestationGoogleCalendar()
@@ -48,7 +56,7 @@ class CareCode(models.Model):
         ordering = ['-id']
 
     code = models.CharField(max_length=30, unique=True)
-    name = models.CharField(max_length=50)
+    name = models.TextField(max_length=320)
     description = models.TextField(max_length=400)
     reimbursed = models.BooleanField("Prise en charge par CNS", default=True)
     contribution_undue = models.BooleanField(u"Participation forfaitaire non dûe",
@@ -172,6 +180,10 @@ def extract_birth_date(code_sn) -> object:
     return None
 
 
+def extract_birth_date_fr(code_sn) -> str:
+    return datetime.strftime(extract_birth_date(code_sn), "%d/%m/%Y")
+
+
 def calculate_age(care_date, code_sn):
     if care_date is None:
         care_date = datetime.now()
@@ -220,6 +232,13 @@ class Patient(models.Model):
     ])
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
+    gender = models.CharField("Sex",
+                              max_length=5,
+                              choices=GenderType.choices,
+                              default=None,
+                              blank=True,
+                              null=True
+                              )
     address = models.TextField(max_length=255)
     zipcode = models.CharField(max_length=10)
     city = models.CharField(max_length=30)
@@ -228,7 +247,12 @@ class Patient(models.Model):
     email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
+    is_under_dependence_insurance = models.BooleanField(u"Assurance dépendance", default=False)
     date_of_death = models.DateField(u"Date de décès", default=None, blank=True, null=True)
+    additional_details = models.TextField(u"Détails additionels",
+                                          help_text="Vous pouvez mettre par exemple les numéros de carte adapto ou tout autre info utile.",
+                                          max_length=500,
+                                          default=None, blank=True, null=True)
 
     @property
     def anamnesis_set(self):
@@ -247,6 +271,12 @@ class Patient(models.Model):
     @staticmethod
     def autocomplete_search_fields():
         return 'name', 'first_name'
+
+    def birth_date(self):
+        return extract_birth_date_fr(self.code_sn)
+
+    def clean_phone_number(self):
+        return self.phone_number.replace(" ", ".")
 
     def __str__(self):  # Python 3: def __str__(self):,
         return '%s %s' % (self.name.strip(), self.first_name.strip())
@@ -277,7 +307,7 @@ class Patient(models.Model):
             if Prestation.objects.filter(date__gte=data['date_of_death'], invoice_item__patient_id=instance_id).count():
                 messages = {'date_of_death': 'Prestation for a later date exists'}
 
-            if Hospitalization.objects.filter(end_date__gte=data['date_of_death']).count():
+            if Hospitalization.objects.filter(end_date__gte=data['date_of_death'], patient_id=instance_id).count():
                 messages = {'date_of_death': 'Hospitalization that ends later exists'}
 
         return messages
@@ -334,6 +364,25 @@ class PatientAnamnesis(models.Model):
                                     blank=True,
                                     null=True
                                     )
+    # habitudes
+    preferred_drinks = models.TextField("Boissons préfèrées", max_length=250, default=None, blank=True, null=True)
+    shower_habits = models.TextField("Se soigner", help_text=u"douche, lavé, bain",
+                                     max_length=100, default=None, blank=True, null=True)
+    dressing_habits = models.TextField("Habillements", help_text="Goûts vestimentaires",
+                                       max_length=100, default=None, blank=True, null=True)
+    occupation_habits = models.TextField("Occupations", help_text="Profession, loisirs, sports, lecture, TV, musique, "
+                                                                  "cinéma, sorties...",
+                                         max_length=250, default=None, blank=True, null=True)
+    general_wishes = models.TextField("Souhaits", max_length=250, default=None, blank=True, null=True)
+    family_ties = models.TextField("Famille", max_length=200, default=None, blank=True, null=True)
+    friend_ties = models.TextField("Amis", max_length=200, default=None, blank=True, null=True)
+    important_persons_ties = models.TextField("Personnes importantes", max_length=200, default=None, blank=True,
+                                              null=True)
+    bio_highlights = models.TextField("Important",
+                                      help_text=u"Quelles sont les éléments marquants de votre vie, "
+                                                "qui sont importants pour bien vous soigner ?", max_length=200,
+                                      default=None, blank=True, null=True)
+
     # Habitation
     house_type = models.CharField("Type d'habitation",
                                   max_length=5,
@@ -360,16 +409,18 @@ class PatientAnamnesis(models.Model):
                                   blank=True,
                                   null=True)
     # p
+    preferred_pharmacies = models.TextField("Pharmacie(s)", max_length=500, default=None, blank=True, null=True)
+    preferred_hospital = models.CharField(u"Établissement hospitalier choisi", max_length=50, default=None, blank=True,
+                                          null=True)
     health_care_dossier_location = models.CharField("Dossier de soins se trouve", max_length=50,
                                                     default=None,
                                                     blank=True,
                                                     null=True)
     informal_caregiver = models.CharField("Aidant informel", max_length=50, default=None, blank=True, null=True)
-    dep_insurance = models.BooleanField(u"Assurance dépendance", default=False)
-    pathologies = models.TextField("Pahologies", max_length=500, default=None, blank=True, null=True)
+    pathologies = models.TextField("Pathologies", max_length=500, default=None, blank=True, null=True)
     medical_background = models.TextField(u"Antécédents", max_length=500, default=None, blank=True,
                                           null=True)
-    allergies = models.CharField("Allergies", max_length=50, default=None, blank=True, null=True)
+    allergies = models.TextField("Allergies", max_length=250, default=None, blank=True, null=True)
     # aides techniques
     electrical_bed = models.BooleanField(u"Lit électrique", default=None, blank=True, null=True)
     walking_frame = models.BooleanField(u"Cadre de marche", default=None, blank=True, null=True)
@@ -418,13 +469,13 @@ class PatientAnamnesis(models.Model):
     # Nutrition
     weight = models.PositiveSmallIntegerField("Poids", default=None)
     size = models.PositiveSmallIntegerField("Taille en cm.", default=None)
-    nutrition_autonomy = models.CharField("Sonde PEG", choices=NutrionAutonomyLevel.choices, max_length=5,
+    nutrition_autonomy = models.CharField("Sonde PEG", choices=NutritionAutonomyLevel.choices, max_length=5,
                                           default=None, blank=True, null=True)
     diet = models.CharField(u"Régime", max_length=50, default=None, blank=True, null=True)
     meal_on_wheels = models.BooleanField("Repas sur roues", default=None, blank=True, null=True)
     shopping_management = models.CharField(u"Commissions à faire par", choices=DrugManagement.choices, max_length=5,
                                            default=None, blank=True, null=True)
-    shopping_management_desc = models.CharField(u"Description", max_length=50, default=None, blank=True, null=True)
+    shopping_management_desc = models.TextField(u"Description", max_length=250, default=None, blank=True, null=True)
     # Elimination
     urinary_incontinence = models.BooleanField("Incontinence urinaire", default=None, blank=True, null=True)
     faecal_incontinence = models.BooleanField(u"Incontinence fécale", default=None, blank=True, null=True)
@@ -450,6 +501,30 @@ class PatientAnamnesis(models.Model):
             return [p.assigned_physician for p in AssignedPhysician.objects.filter(anamnesis_id=self.id)]
         return None
 
+    def __str__(self):
+        return "Anamanèse %s " % self.patient
+
+
+class BiographyHabits(models.Model):
+    class Meta:
+        ordering = ['-id']
+        verbose_name = u"Habitudes"
+        verbose_name_plural = u"Habitudes"
+
+    habit_type = models.CharField('Type',
+                                  max_length=7,
+                                  choices=HabitType.choices,
+                                  default=None,
+                                  blank=True,
+                                  null=True
+                                  )
+    habit_time = models.TimeField("Heure")
+    habit_ritual = models.CharField("Rite", max_length=50)
+    habit_preferences = models.CharField(u"Préférences", max_length=50)
+    biography = models.ForeignKey(PatientAnamnesis, related_name='habit_patient_biography',
+                                  help_text='Veuillez saisir les habitudes du bénéficiaire',
+                                  on_delete=models.PROTECT, null=True, blank=True, default=None)
+
 
 class AssignedPhysician(models.Model):
     class Meta:
@@ -463,6 +538,44 @@ class AssignedPhysician(models.Model):
     anamnesis = models.ForeignKey(PatientAnamnesis, related_name='patient_anamnesis',
                                   help_text='Please enter hospitalization dates of the patient',
                                   on_delete=models.PROTECT, null=True, blank=True, default=None)
+
+
+class DependenceInsurance(models.Model):
+    class Meta:
+        ordering = ['-id']
+        verbose_name = "Décision Assurance dépendance"
+        verbose_name_plural = "Décisions Assurance dépendance"
+
+    dep_anamnesis = models.ForeignKey(PatientAnamnesis, related_name='dep_ins_to_anamnesis',
+                                      on_delete=models.PROTECT)
+    evaluation_date = models.DateField(u"Date évaluation", default=None)
+    ack_receipt_date = models.DateField(u"Accusè de réception", default=None, blank=True, null=True)
+    decision_date = models.DateField(u"Date de la décision", default=None, blank=True, null=True)
+    rate_granted = models.CharField(u"Forfait", choices=DependenceInsuranceLevel.choices, default=None, blank=True,
+                                    null=True, max_length=3)
+
+
+class OtherStakeholder(models.Model):
+    class Meta:
+        verbose_name = "Autre intervenant"
+        verbose_name_plural = "Autres intervenants"
+
+    stakeholder_anamnesis = models.ForeignKey(PatientAnamnesis, related_name='stakeholder_to_anamnesis',
+                                              on_delete=models.PROTECT)
+    contact_name = models.CharField("Nom et prénom", max_length=50)
+    contact_pro_spec = models.CharField(u"Spécialité", max_length=20,
+                                        default=None,
+                                        blank=True,
+                                        null=True)
+    contact_private_phone_nbr = models.CharField(u"Tél. privé", max_length=30)
+    contact_business_phone_nbr = models.CharField(u"Tél. bureau", max_length=30,
+                                                  default=None,
+                                                  blank=True,
+                                                  null=True)
+    contact_email = models.EmailField(u"Email", max_length=30,
+                                      default=None,
+                                      blank=True,
+                                      null=True)
 
 
 class ContactPerson(models.Model):
@@ -548,9 +661,9 @@ class Hospitalization(models.Model):
         else:
             messages = {'patient': 'Please fill Patient field'}
 
-        start_date = datetime.combine(data['start_date'], datetime.min.time()).replace(tzinfo=pytz.utc)
+        start_date = datetime.combine(data['start_date'], datetime.min.time()).astimezone(ZoneInfo("Europe/Luxembourg"))
         if data['end_date']:
-            end_date = datetime.combine(data['end_date'], datetime.max.time()).replace(tzinfo=pytz.utc)
+            end_date = datetime.combine(data['end_date'], datetime.max.time()).astimezone(ZoneInfo("Europe/Luxembourg"))
         else:
             end_date = None
 
@@ -589,7 +702,9 @@ class Hospitalization(models.Model):
             messages = {'patient': 'Please fill Patient field'}
 
         date_of_death = patient.date_of_death
-        if date_of_death is not None and data['end_date'] >= date_of_death:
+        if date_of_death and data['end_date'] is None:
+            messages = {'end_date': "Hospitalization end date must be set"}
+        if date_of_death and data['end_date'] > date_of_death:
             messages = {'end_date': "Hospitalization cannot be later than or include Patient's death date"}
 
         return messages
@@ -599,16 +714,23 @@ def update_medical_prescription_filename(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
     if instance.date is None:
         _current_yr_or_prscr_yr = now().date().strftime('%Y')
+        _current_month_or_prscr_month = now().date().strftime('%M')
     else:
         _current_yr_or_prscr_yr = str(instance.date.year)
-    path = os.path.join(CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER, _current_yr_or_prscr_yr)
-    filename = '%s_%s_%s%s' % (instance.patient.name, instance.patient.first_name, str(instance.date), file_extension)
+        _current_month_or_prscr_month = str(instance.date.month)
+    path = os.path.join("Medical Prescription", _current_yr_or_prscr_yr,
+                        _current_month_or_prscr_month)
+    filename = '%s_pour_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
+                                       str(instance.date), file_extension)
 
     return os.path.join(path, filename)
 
 
 def validate_image(image):
-    file_size = image.file.size
+    try:
+        file_size = image.file.size
+    except:
+        return
     limit_kb = 1024
     if file_size > limit_kb * 1024:
         raise ValidationError("Taille maximale du fichier est %s KO" % limit_kb)
@@ -626,9 +748,18 @@ class MedicalPrescription(models.Model):
                                 on_delete=models.CASCADE)
     date = models.DateField('Date ordonnance')
     end_date = models.DateField('Date fin des soins', null=True, blank=True)
+    notes = models.TextField("Notes ou remarques",
+                             help_text="Veuillez mettre le text de l'ordonnance ou des notes concernant les soins prescrits",
+                             max_length=1000,
+                             blank=True, null=True)
     file = models.ImageField(storage=gd_storage, blank=True,
                              upload_to=update_medical_prescription_filename,
                              validators=[validate_image])
+    file_upload = models.FileField(null=True, blank=True, upload_to=update_medical_prescription_filename)
+    # image_file = _modelscloudinary.CloudinaryField('Scan or picture', default=None,
+    #                                                blank=True,
+    #                                                null=True)
+    thumbnail_img = models.ImageField("Aperçu", null=True, blank=True, upload_to=update_medical_prescription_filename)
     _original_file = None
 
     @property
@@ -637,7 +768,29 @@ class MedicalPrescription(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(MedicalPrescription, self).__init__(*args, **kwargs)
-        self._original_file = self.file
+        self._original_file = self.file_upload
+
+    @property
+    def image_preview(self, max_width=None, max_height=None):
+        if max_width is None:
+            max_width = '300'
+        # used in the admin site model as a "thumbnail"
+        # if value:
+        #     r = requests.get(value.url, stream=True)
+        #     encoded = ("data:" +
+        #                r.headers['Content-Type'] + ";" +
+        #                "base64," + base64.b64encode(r.content).decode('utf-8'))  # Convert to a string first
+        #     context = {'imagedata': encoded, 'pdf_url': value.instance.file_upload.url}
+        if not self.thumbnail_img:
+            return '-'
+        r = requests.get(self.thumbnail_img.url, stream=True)
+        encoded = ("data:" +
+                   r.headers['Content-Type'] + ";" +
+                   "base64," + base64.b64encode(r.content).decode('utf-8'))
+        styles = "max-width: %spx; max-height: %spx;" % (max_width, 300)
+        tag = '<img src="{}" style="{}"/>'.format(encoded, styles)
+
+        return mark_safe(tag)
 
     def clean(self):
         logger.info('clean medical prescription %s' % self)
@@ -666,18 +819,6 @@ class MedicalPrescription(models.Model):
 
         return messages
 
-    def image_preview(self, max_width=None, max_height=None):
-        if max_width is None:
-            max_width = '800'
-        if max_height is None:
-            max_height = '800'
-        # used in the admin site model as a "thumbnail"
-        link = self.file.storage.get_thumbnail_link(getattr(self.file, 'name', None))
-        styles = "max-width: %spx; max-height: %spx;" % (max_width, max_height)
-        tag = '<img src="{}" style="{}"/>'.format(link, styles)
-
-        return mark_safe(tag)
-
     def get_original_file(self):
         return self._original_file
 
@@ -686,10 +827,10 @@ class MedicalPrescription(models.Model):
         return 'date', 'prescriptor__name', 'prescriptor__first_name'
 
     def __str__(self):
-        if bool(self.file):
+        if bool(self.file_upload):
             return '%s %s (%s) [%s...]' % (
                 self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
-                self.file.name[:5])
+                self.file_upload.name[:5])
         else:
             return '%s %s (%s) sans fichier' % (
                 self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
@@ -697,22 +838,34 @@ class MedicalPrescription(models.Model):
 
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
 def medical_prescription_clean_gdrive_pre_save(sender, instance, **kwargs):
-    origin_file = instance.get_original_file()
-    if origin_file.name and origin_file != instance.file:
-        gd_storage.delete(origin_file.name)
+    if instance.thumbnail_img:
+        old_file_name = instance.file_upload.name
+        new_file_name = update_medical_prescription_filename(instance, old_file_name)
+        my_file = instance.file_upload.storage.open(old_file_name, 'rb')
+        instance.file_upload.storage.save(new_file_name, my_file)
+        my_file.close()
+        instance.file_upload.delete(save=False)
+        instance.file_upload.name = new_file_name
+    if instance.file_upload:
+        instance.thumbnail_img.delete(save=False)
+        thumbnail_images = convert_from_bytes(instance.file_upload.read(), fmt='png', dpi=200, size=(300, None))
+        instance.thumbnail_img = ImageFile(thumbnail_images[0].fp, name="thubnail.png")
 
 
-@receiver(post_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_save")
-def medical_prescription_clean_gdrive_post_save(sender, instance, **kwargs):
-    if instance.file.name:
-        path = instance.file.name
-        gd_storage.update_file_description(path, instance.file_description)
+# @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_save")
+# def medical_prescription_clean_gdrive_post_save(sender, instance, **kwargs):
+# if instance.file_upload:
+#     pdf = requests.get(instance.file_upload.url, stream=True)
+#     thumbnail_images = convert_from_bytes(pdf.raw.read(), dpi=200, size=(400, None))
+#     instance.thumbnail_img = thumbnail_images[0]
+#     instance.save()
 
 
 @receiver(post_delete, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_delete")
 def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
-    if instance.file.name:
-        gd_storage.delete(instance.file.name)
+    if instance.file_upload.name:
+        instance.file_upload.delete(save=False)
+        instance.thumbnail_img.delete(save=False)
 
 
 def get_default_invoice_number():
@@ -779,9 +932,9 @@ class InvoiceItemBatch(models.Model):
 
 @receiver(pre_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_pre_save")
 def invoiceitembatch_generate_pdf_name(sender, instance, **kwargs):
-    instance.file = InvoiceItemBatchPdf.get_filename(instance)
+    instance.file_upload = InvoiceItemBatchPdf.get_filename(instance)
     origin_file = instance.get_original_file()
-    if origin_file.name and origin_file != instance.file:
+    if origin_file.name and origin_file != instance.file_upload:
         batch_gd_storage.delete(origin_file.name)
 
 
@@ -796,8 +949,18 @@ def invoiceitembatch_generate_pdf_name(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_delete")
 def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
-    if instance.file.name:
-        gd_storage.delete(instance.file.name)
+    if instance.file_upload.name:
+        gd_storage.delete(instance.file_upload.name)
+
+
+class PaymentReference(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    paid_at = models.DateField(blank=True, null=True, default=None)
+    invoice_list = models.CharField(max_length=200)
+
+    def __str__(self):
+        return "%s" % self.invoice_list
 
 
 class InvoiceItem(models.Model):
@@ -842,6 +1005,12 @@ class InvoiceItem(models.Model):
         messages = self.validate(self.id, self.__dict__)
         if messages:
             raise ValidationError(messages)
+
+    @property
+    def number_of_prestations(self):
+        if self.prestations:
+            return self.prestations.count()
+        return "-"
 
     @staticmethod
     def validate(instance_id, data):
@@ -1085,6 +1254,8 @@ class Prestation(models.Model):
             messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
 
         max_limit = InvoiceItem.PRESTATION_LIMIT_MAX
+        if invoice_item.id is None:
+            return messages
         existing_prestations = invoice_item.prestations
         existing_count = existing_prestations.count()
         expected_count = existing_count
@@ -1126,6 +1297,7 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home_paired = instance
             pair.save()
 
+<<<<<<< HEAD
 # @receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
 # def update_prestation_gcalendar_events(sender, instance, **kwargs):
 #     # if config.USE_GDRIVE:
@@ -1137,3 +1309,5 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
 #     # if config.USE_GDRIVE:
 #     prestation_gcalendar.delete_event(instance.id)
 auditlog.register(User)
+=======
+>>>>>>> bd9451ad22f2f4e5e27871fc4c0d2a5059d84f54

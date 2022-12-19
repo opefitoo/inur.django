@@ -1,3 +1,5 @@
+import os
+
 from colorfield.fields import ColorField
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -5,10 +7,39 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models.signals import pre_save, post_delete, post_save
 from django.dispatch import receiver
+from django.utils.timezone import now
+from django_countries.fields import CountryField
+from phonenumber_field.modelfields import PhoneNumberField
 
+from invoices.enums.holidays import ContractType
 from invoices.storages import CustomizedGoogleDriveStorage
+from django.utils.translation import gettext_lazy as _
 
 
+def avatar_storage_location(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.start_contract is None:
+        _current_yr_or_prscr_yr = now().date().strftime('%Y')
+        _current_month_or_prscr_month = now().date().strftime('%M')
+    else:
+        _current_yr_or_prscr_yr = str(instance.start_contract.year)
+        _current_month_or_prscr_month = str(instance.start_contract.month)
+    path = os.path.join("Doc. Admin employes", "%s_%s" % (instance.user.last_name.upper(),
+                                                          instance.user.first_name.capitalize()))
+    filename = '%s_%s_%s_%s%s' % (
+        _current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.abbreviation,
+        "avatar",
+        file_extension)
+    return os.path.join(path, filename)
+
+def validate_avatar(file):
+    try:
+        file_size = file.file.size
+    except:
+        return
+    limit_kb = 10
+    if file_size > limit_kb * 1024 * 1024:
+        raise ValidationError(_("Maximum file size is %s MB" % limit_kb))
 class JobPosition(models.Model):
     class Meta:
         ordering = ['-id']
@@ -16,6 +47,7 @@ class JobPosition(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100, blank=True,
                                    null=True)
+    is_involved_in_health_care = models.BooleanField("Impliqué dans les soins", default=True)
 
     def __str__(self):
         return '%s' % (self.name.strip())
@@ -42,13 +74,30 @@ class Employee(models.Model):
                                     help_text='Enter employee abbreviation, must be unique accross company',
                                     max_length=3,
                                     default='XXX')
+    phone_number = PhoneNumberField(blank=True)
+    bank_account_number = models.CharField("Numéro de compte IBAN", help_text="Code BIC + IBAN",
+                                           max_length=50, blank=True)
+    address = models.TextField("Adresse", max_length=100, blank=True, null=True)
+    access_card_number = models.CharField("Carte Voiture", max_length=20, blank=True, null=True)
+    access_card_code = models.CharField("Code Carte Voiture", max_length=40, blank=True, null=True)
+    sn_code = models.CharField("Matricule sécurité sociale", max_length=40, blank=True, null=True)
+    end_trial_period = models.DateField("Fin période d'essai", blank=True, null=True)
+    citizenship = CountryField(blank_label='...', blank=True, null=True)
     color_cell = ColorField(default='#FF0000')
     color_text = ColorField(default='#FF0000')
 
     birth_place = models.CharField(u'Birth Place',
                                    help_text=u'Enter the City / Country of Birth',
-                                   max_length=30,
+                                   max_length=50,
                                    blank=True)
+    avatar = models.ImageField(upload_to=avatar_storage_location,
+                               validators=[validate_avatar],
+                               help_text=_("You can attach the scan of the declaration"),
+                               null=True, blank=True)
+    bio = models.TextField("Bio", default="Fill in your bio", max_length=200)
+    to_be_published_on_www = models.BooleanField("Public Profile",
+                                                 help_text="If checked then bio and avatar fields become mandatory",
+                                                 blank=True, null=True)
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
@@ -71,7 +120,8 @@ class Employee(models.Model):
         return 'occupation__name', 'user__first_name', 'user__last_name', 'user__username'
 
     def __str__(self):
-        return '%s (%s)' % (self.user.username.strip().capitalize(), self.abbreviation)
+        # return '%s (%s)' % (self.user.username.strip().capitalize(), self.abbreviation)
+        return ' - '.join([self.user.username.strip().capitalize(), self.abbreviation])
 
 
 class EmployeeContractDetail(models.Model):
@@ -79,13 +129,43 @@ class EmployeeContractDetail(models.Model):
     end_date = models.DateField(u'Date fin période', blank=True, null=True)
     number_of_hours = models.PositiveSmallIntegerField(u"Nombre d'heures par semaine",
                                                        validators=[MinValueValidator(5), MaxValueValidator(40)])
+    contract_type = models.CharField("Type contrat",
+                                     max_length=10,
+                                     choices=ContractType.choices,
+                                     default=ContractType.CDI, blank=True, null=True)
+    monthly_wage = models.DecimalField("Salaire Mensuel", max_digits=8, decimal_places=2, blank=True, null=True)
     employee_link = models.ForeignKey(Employee, on_delete=models.CASCADE)
 
     def calculate_current_daily_hours(self):
         return self.number_of_hours / 5
 
     def __str__(self):
-        return u'Du %s au %s : %d heures/semaine' % (self.start_date, self.end_date, self.number_of_hours)
+        if self.end_date:
+            return u'Du %s au %s : %d heures/semaine' % (self.start_date, self.end_date, self.number_of_hours)
+        return u'Du %s : %d heures/semaine' % (self.start_date, self.number_of_hours)
+
+
+def update_filename(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.employee.start_contract is None:
+        _current_yr_or_prscr_yr = now().date().strftime('%Y')
+        _current_month_or_prscr_month = now().date().strftime('%M')
+    else:
+        _current_yr_or_prscr_yr = str(instance.employee.start_contract.year)
+        _current_month_or_prscr_month = str(instance.employee.start_contract.month)
+    path = os.path.join("Doc. Admin employes", "%s_%s" % (instance.employee.user.last_name.upper(),
+                                                          instance.employee.user.first_name.capitalize()))
+    filename = '%s_%s_%s_%s%s' % (
+        _current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.employee.abbreviation,
+        instance.file_description,
+        file_extension)
+    return os.path.join(path, filename)
+
+
+class EmployeeAdminFile(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    file_description = models.CharField("description", max_length=50)
+    file_upload = models.FileField(null=True, blank=True, upload_to=update_filename)
 
 
 @receiver(pre_save, sender=User, dispatch_uid="user_pre_save_gservices_permissions")

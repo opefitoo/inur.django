@@ -1,7 +1,8 @@
-from django.utils import timezone
+from copy import deepcopy
+
 from django.forms import inlineformset_factory, ValidationError
 from django.test import TestCase
-from copy import deepcopy
+from django.utils import timezone
 
 from invoices.forms import ValidityDateFormSet, check_for_periods_intersection, HospitalizationFormSet, \
     PrestationInlineFormSet
@@ -193,8 +194,8 @@ class HospitalizationFormSetTestCase(TestCase):
 
     def test_start_equal_to_end(self):
         self.date_of_death = self.date_of_death.replace(month=9, day=1)
-        self.assertRaises(ValidationError, HospitalizationFormSet.validate_with_patient_date_of_death, self.periods,
-                          self.date_of_death)
+        self.assertIsNone(HospitalizationFormSet.validate_with_patient_date_of_death(self.periods,
+                          self.date_of_death))
 
     def test_after(self):
         self.date_of_death = self.date_of_death.replace(month=11, day=1)

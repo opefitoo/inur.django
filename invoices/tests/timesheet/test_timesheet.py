@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition
+from invoices.enums.generic import HolidayRequestChoice
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.holidays import HolidayRequest
 from invoices.timesheet import TimesheetTask, TimesheetDetail, \
@@ -21,7 +22,7 @@ class EmployeeTestCase(TestCase):
         user = User(username='Some_username')
         employee = Employee(user=user, abbreviation="SU")
 
-        self.assertEqual(str(employee), '%s (%s)' % (employee.user.username.strip(), employee.abbreviation))
+        self.assertEqual(str(employee), '%s - %s' % (employee.user.username.strip(), employee.abbreviation))
 
     def test_autocomplete(self):
         self.assertEqual(Employee.autocomplete_search_fields(),
@@ -105,7 +106,7 @@ class TimesheetDetailTestCase(TestCase):
         holiday_request = HolidayRequest.objects.create(employee=self.user,
                                                         start_date=timezone.now().replace(month=6, day=8),
                                                         end_date=timezone.now().replace(month=6, day=12),
-                                                        half_day=False,
+                                                        requested_period=HolidayRequestChoice.req_full_day,
                                                         reason=1)
         holiday_request.save()
         self.assertEqual(validate_date_range_vs_holiday_requests(data, self.user.id), {})
@@ -121,7 +122,7 @@ class TimesheetDetailTestCase(TestCase):
                                                                                                   day=10),
                                                                 end_date=timezone.now().replace(year=2020, month=6,
                                                                                                 day=12),
-                                                                half_day=False,
+                                                                requested_period=HolidayRequestChoice.req_full_day,
                                                                 reason=1,
                                                                 request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
@@ -139,7 +140,7 @@ class TimesheetDetailTestCase(TestCase):
                                                                                                   day=8),
                                                                 end_date=timezone.now().replace(year=2020, month=6,
                                                                                                 day=20),
-                                                                half_day=False,
+                                                                requested_period=HolidayRequestChoice.req_full_day,
                                                                 reason=1,
                                                                 request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         another_holiday_request.save()
@@ -172,16 +173,16 @@ class TimesheetDetailTestCase(TestCase):
         # }
         # create holiday request but now being validated
         holiday_request = HolidayRequest.objects.create(employee=self.user,
-                                                        start_date=timezone.now().replace(day=19),
-                                                        end_date=timezone.now().replace(day=20),
-                                                        half_day=False,
+                                                        start_date=timezone.now().replace(year=2022, month=11, day=17),
+                                                        end_date=timezone.now().replace(year=2022, month=11, day=18),
+                                                        requested_period=HolidayRequestChoice.req_full_day,
                                                         reason=1,
                                                         request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         holiday_request.save()
 
         simplified_timesheet = SimplifiedTimesheet.objects.create(employee=self.employee,
-                                                                  time_sheet_year=timezone.now().year,
-                                                                  time_sheet_month=timezone.now().month,
+                                                                  time_sheet_year=2022,
+                                                                  time_sheet_month=11,
                                                                   user=self.user)
         simplified_timesheet.save()
         self.assertEqual(6, simplified_timesheet.absence_hours_taken()[0])
@@ -195,7 +196,7 @@ class TimesheetDetailTestCase(TestCase):
         holiday_request = HolidayRequest.objects.create(employee=self.user,
                                                         start_date=timezone.now().replace(month=6, day=1),
                                                         end_date=timezone.now().replace(month=6, day=30),
-                                                        half_day=False,
+                                                        requested_period=HolidayRequestChoice.req_full_day,
                                                         reason=1,
                                                         request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         holiday_request.save()

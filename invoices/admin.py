@@ -1,53 +1,65 @@
+import calendar
+import datetime
+from decimal import Decimal
+from zoneinfo import ZoneInfo
+
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.core.checks import messages
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponseRedirect
+from django.core.exceptions import ValidationError
+from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 from django_csv_exports.admin import CSVExportAdmin
 
+from helpers.timesheet import build_use_case_objects
 from invoices.action import export_to_pdf
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
-from invoices.actions.print_pdf import do_it
-from invoices.models import PatientAnamnesis, ContactPerson
-from invoices.employee import Employee, EmployeeContractDetail, JobPosition
+from invoices.actions.certificates import generate_pdf
+# from invoices.actions.maps import calculate_distance_matrix
+from invoices.actions.print_pdf import do_it, PdfActionType
+from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
+from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
+from invoices.events import EventType, Event, AssignedAdditionalEmployee, ReportPicture, \
+    create_or_update_google_calendar, EventList
+from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
+from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, \
-    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, InvoiceItemForm, EventForm
-from invoices.holidays import HolidayRequest
+    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, InvoiceItemForm, \
+    MedicalPrescriptionForm
+from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
+from invoices.googlemessages import post_webhook
+from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, AssignedPhysician
+from invoices.models import ContactPerson, OtherStakeholder, DependenceInsurance, \
+    BiographyHabits
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.resources import ExpenseCard, Car
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
-from invoices.events import EventType, Event
-
-import datetime
-import calendar
-from django.utils.safestring import mark_safe
 from invoices.utils import EventCalendar
+from invoices.yale.model import DoorEvent
 
 
-class JobPostionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description')
+@admin.register(JobPosition)
+class JobPositionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'is_involved_in_health_care')
 
 
-admin.site.register(JobPosition, JobPostionAdmin)
-
-
+@admin.register(TimesheetTask)
 class TimesheetTaskAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
-
-
-admin.site.register(TimesheetTask, TimesheetTaskAdmin)
 
 
 # Define an inline admin descriptor for Employee model
@@ -88,11 +100,87 @@ class EmployeeContractDetailInline(TabularInline):
     model = EmployeeContractDetail
 
 
+class EmployeeAdminFileInline(TabularInline):
+    extra = 0
+    model = EmployeeAdminFile
+
+
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    inlines = [EmployeeContractDetailInline]
-    list_display = ('user', 'start_contract', 'end_contract', 'occupation')
-    search_fields = ['user', 'occupation']
+    inlines = [EmployeeContractDetailInline, EmployeeAdminFileInline]
+    list_display = ('user', 'start_contract', 'end_contract', 'occupation', 'abbreviation')
+    search_fields = ['user__last_name', 'user__first_name', 'user__email']
+
+    def entry_declaration(self, request, queryset):
+        counter = 1
+        file_data = ""
+        for emp in queryset:
+            if emp.end_contract:
+                pass
+            else:
+                _last_first_name = "%s %s" % (emp.user.last_name.upper(), emp.user.first_name.capitalize())
+                _matricule = "Matricule CNS: %s " % emp.sn_code
+                _occupation = "Occupation: %s" % emp.occupation
+                _address = "Demeurant au: %s" % emp.address
+                _date_entree = "Date Entrée: %s " % emp.start_contract
+                _citizenship = "Nationalité: %s" % emp.citizenship
+                cd = EmployeeContractDetail.objects.filter(employee_link_id=emp.id, end_date__isnull=True).first()
+                _contract_situation = "Contrat %s %s h. / semaine - salaire: %s / mois" % (
+                    cd.contract_type, cd.number_of_hours, cd.monthly_wage)
+                _trial_period = "Date fin période d'essai: %s" % emp.end_trial_period
+                _bank_account_details = "Numéro de compte bancaire: %s" % emp.bank_account_number
+                file_data += _last_first_name + "\n" + _matricule + "\n" + _occupation + "\n" + _citizenship + "\n" \
+                             + _address + "\n" + _date_entree + "\n" + _contract_situation + "\n" + _trial_period \
+                             + "\n" + _bank_account_details + "\n"
+
+            counter += 1
+        response = HttpResponse(file_data, content_type='application/text charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="declaration_entree.txt"'
+        return response
+
+    def work_certificate(self, request, queryset):
+        try:
+            return generate_pdf(queryset)
+        except ValidationError as ve:
+            self.message_user(request, ve.message,
+                              level=messages.ERROR)
+
+    def contracts_situation_certificate(self, request, queryset):
+        counter = 1
+        file_data = ""
+        for emp in queryset:
+            if emp.end_contract:
+                file_data += "%d - %s %s FIN DE CONTRAT LE: %s \n" % (counter, emp.user.last_name.upper(),
+                                                                      emp.user.first_name,
+                                                                      emp.end_contract.strftime("%d/%m/%Y"))
+            else:
+                file_data += "%d - %s %s Occupation: %s Temps de travail: %s\n" % (counter,
+                                                                                   emp.user.last_name.upper(),
+                                                                                   emp.user.first_name,
+                                                                                   emp.occupation,
+                                                                                   emp.employeecontractdetail_set.filter(
+                                                                                       end_date__isnull=True)
+                                                                                   .first())
+            counter += 1
+        response = HttpResponse(file_data, content_type='application/text charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="contract_situation.txt"'
+        return response
+
+    work_certificate.short_description = "Certificat de travail"
+    contracts_situation_certificate.short_description = "Situation des contrats"
+
+    # actions = [work_certificate, 'delete_in_google_calendar']
+    actions = [work_certificate, contracts_situation_certificate, entry_declaration]
+
+    def delete_in_google_calendar(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        counter = 0
+        for e in queryset:
+            calendar_gcalendar = PrestationGoogleCalendarSurLu()
+            counter = calendar_gcalendar.delete_all_events_from_calendar(e.user.email)
+        self.message_user(request, "%s évenements supprimés." % counter,
+                          level=messages.INFO)
 
 
 class ExpenseCardDetailInline(TabularInline):
@@ -103,7 +191,22 @@ class ExpenseCardDetailInline(TabularInline):
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
     inlines = [ExpenseCardDetailInline]
-    list_display = ('name', 'licence_plate', 'pin_codes')
+    list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'car_movement',)
+
+    def geo_localisation_of_car_url(self, obj):
+        _geo_localisation_of_car = obj.geo_localisation_of_car
+        if type(_geo_localisation_of_car) is not tuple and _geo_localisation_of_car.startswith('n/a'):
+            return _geo_localisation_of_car
+        else:
+
+            url = 'https://maps.google.com/?q=%s,%s' % (_geo_localisation_of_car[1],
+                                                        _geo_localisation_of_car[2])
+            address = obj.address
+            return format_html("<a href='%s'>%s</a>" % (url, address))
+        return _geo_localisation_of_car
+
+    geo_localisation_of_car_url.allow_tags = True
+    geo_localisation_of_car_url.short_description = "Dernière position connue"
 
 
 class HospitalizationInline(admin.TabularInline):
@@ -116,10 +219,12 @@ class HospitalizationInline(admin.TabularInline):
 class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     extra = 0
     model = MedicalPrescription
-    readonly_fields = ('scan_preview',)
+    readonly_fields = ('thumbnail_img',)
+    fields = [field.name for field in MedicalPrescription._meta.fields if field.name not in ["id", "file"]]
+    ordering = ['-date']
 
     def scan_preview(self, obj):
-        return obj.image_preview(300, 300)
+        return obj.image_preview
 
     scan_preview.allow_tags = True
 
@@ -138,54 +243,25 @@ class ContactPersonInLine(admin.TabularInline):
               'contact_business_phone_nbr')
 
 
-@admin.register(PatientAnamnesis)
-class PatientAnamnesisAdmin(admin.ModelAdmin):
-    list_display = ('patient',)
-    autocomplete_fields = ['patient']
+class DependenceInsuranceInLine(admin.TabularInline):
+    extra = 0
+    model = DependenceInsurance
+    fields = ('evaluation_date', 'ack_receipt_date', 'decision_date', 'rate_granted')
 
-    fieldsets = (
-        ('Patient', {
-            'fields': ('patient', 'nationality', 'external_doc_link', 'civil_status')
-        }),
-        ('Habitation', {
-            'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door'),
-        }),
-        (None, {
-            'fields': ('health_care_dossier_location', 'informal_caregiver', 'dep_insurance', 'pathologies',
-                       'medical_background', 'allergies'),
-        }),
-        ('Aides techniques', {
-            'fields': ('electrical_bed', 'walking_frame', 'cane', 'aqualift', 'remote_alarm', 'other_technical_help'),
-        }),
-        (u'Prothèses', {
-            'fields': ('dental_prosthesis', 'hearing_aid', 'glasses', 'other_prosthesis'),
-        }),
-        (u'Médicaments', {
-            'fields': ('drugs_managed_by', 'drugs_prepared_by', 'drugs_distribution', 'drugs_ordering',
-                       'pharmacy_visits'),
-        }),
-        (u'Mobilisation', {
-            'fields': ('mobilization', 'mobilization_description'),
-        }),
-        (u"Soins d'hygiène", {
-            'fields': ('hygiene_care_location', 'shower_days', 'hair_wash_days', 'bed_manager', 'bed_sheets_manager',
-                       'laundry_manager','laundry_drop_location','new_laundry_location' ),
-        }),
-        (u"Nutrition", {
-            'fields': ('weight', 'size', 'nutrition_autonomy', 'diet', 'meal_on_wheels', 'shopping_management',
-                       'shopping_management_desc', ),
-        }),
-        (u"Elimination", {
-            'fields': ('urinary_incontinence', 'faecal_incontinence', 'protection', 'day_protection',
-                       'night_protection', 'protection_ordered', 'urinary_catheter', 'crystofix_catheter',
-                       'elimination_addnl_details'),
-        }),
-        (u"Garde/ Course sortie / Foyer", {
-            'fields': ('day_care_center', 'day_care_center_activities', 'household_chores',),
-        }),
-    )
 
-    inlines = [AssignedPhysicianInLine, ContactPersonInLine]
+class OtherStakeholdersInLine(admin.TabularInline):
+    extra = 0
+    model = OtherStakeholder
+    fields = ('contact_name', 'contact_pro_spec', 'contact_private_phone_nbr', 'contact_business_phone_nbr',
+              'contact_email')
+
+
+class BiographyHabitsInLine(admin.TabularInline):
+    extra = 0
+    model = BiographyHabits
+    fields = ('habit_type', 'habit_time', 'habit_ritual', 'habit_preferences')
+    # autocomplete_fields = ['assigned_physician']
+    # fk_name = 'biography'
 
 
 @admin.register(Patient)
@@ -194,17 +270,33 @@ class PatientAdmin(CSVExportAdmin):
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
                   'country', 'phone_number', 'email_address', 'date_of_death']
-    readonly_fields = ('age', 'link_to_invoices')
-    search_fields = ['name', 'first_name', 'code_sn']
+    readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions', 'link_to_events')
+    search_fields = ['name', 'first_name', 'code_sn', 'zipcode']
+    # actions = [calculate_distance_matrix]
     form = PatientForm
-    actions = []
+    # actions = [generate_road_book_2019_mehdi]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
 
     def link_to_invoices(self, instance):
         url = f'{reverse("admin:invoices_invoiceitem_changelist")}?patient__id={instance.id}'
-        return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici"))
+        return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici (%d)" % InvoiceItem.objects.filter(
+            patient_id=instance.id).count()))
 
     link_to_invoices.short_description = "Factures client"
+
+    def link_to_medical_prescriptions(self, instance):
+        url = f'{reverse("admin:invoices_medicalprescription_changelist")}?patient__id={instance.id}'
+        return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici (%d)" % MedicalPrescription.objects.filter(
+            patient_id=instance.id).count()))
+
+    def link_to_events(self, instance):
+        url = f'{reverse("admin:invoices_eventlist_changelist")}?event_type_enum__exact=GENERIC&patient__id={instance.id}'
+        return mark_safe(
+            '<a href="%s">%s</a>' % (url, "Tous les événements Generic du patient ici (%d)" % Event.objects.filter(
+                patient_id=instance.id, event_type_enum__exact=EventTypeEnum.GENERIC).count()))
+
+    link_to_medical_prescriptions.short_description = "Ordonnances client"
+    link_to_events.short_description = "Evénements client"
 
     def has_csv_permission(self, request):
         """Only super users can export as CSV"""
@@ -212,46 +304,85 @@ class PatientAdmin(CSVExportAdmin):
             return True
 
 
-@admin.register(Prestation)
-class PrestationAdmin(admin.ModelAdmin):
-    from invoices.invaction import create_invoice_for_health_insurance
-
-    list_filter = ('invoice_item__patient', 'invoice_item', 'carecode')
-    date_hierarchy = 'date'
-    list_display = ('carecode', 'date')
-    search_fields = ['carecode__code', 'carecode__name']
-    actions = [create_invoice_for_health_insurance]
-
-    def get_changeform_initial_data(self, request):
-        initial = {}
-        user = request.user
-        try:
-            employee = user.employee
-            initial['employee'] = employee.id
-        except ObjectDoesNotExist:
-            pass
-
-        return initial
-
-    def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
-        initial = {}
-        print(initial)
+# @admin.register(Prestation)
+# class PrestationAdmin(admin.ModelAdmin):
+#     # from invoices.invaction import create_invoice_for_health_insurance
+#     def formfield_for_foreignkey(self, db_field, request, **kwargs):
+#         if db_field.name == "employee":
+#             kwargs["queryset"] = Employee.objects.filter(owner=request.user)
+#         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+#
+#     list_filter = ('invoice_item__patient', 'invoice_item', 'carecode')
+#     date_hierarchy = 'date'
+#     list_display = ('carecode', 'date')
+#     search_fields = ['carecode__code', 'carecode__name']
+#     # actions = [create_invoice_for_health_insurance]
+#
+#
+#
+#     def get_changeform_initial_data(self, request):
+#         initial = {}
+#         user = request.user
+#         try:
+#             employee = user.employee
+#             initial['employee'] = employee.id
+#         except ObjectDoesNotExist:
+#             pass
+#
+#         return initial
+#
+#     def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
+#         initial = {}
+#         print(initial)
 
 
 @admin.register(Physician)
 class PhysicianAdmin(admin.ModelAdmin):
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'provider_code')
-    search_fields = ['name', 'first_name', 'code_sn']
+    search_fields = ['name', 'first_name', 'provider_code']
+
+
+# def migrate_from_g_to_cl(modeladmin, request, queryset):
+#     ps = MedicalPrescription.objects.all()
+#     for p in ps:
+#         if p.file and p.file.url and not p.image_file:
+#             print(p.file)
+#             local_storage = FileSystemStorage()
+#             newfile = ContentFile(p.file.read())
+#             relative_path = local_storage.save(p.file.name, newfile)
+#
+#             print("relative path %s" % relative_path)
+#             up = uploader.upload(local_storage.location + "/" + relative_path, folder="medical_prescriptions/")
+#             p.image_file = up.get('public_id')
+#             p.save()
+#             # break
 
 
 @admin.register(MedicalPrescription)
 class MedicalPrescriptionAdmin(admin.ModelAdmin):
-    list_filter = ('date',)
-    list_display = ('date', 'prescriptor', 'patient', 'file')
+    date_hierarchy = 'date'
+    list_filter = ('date', 'prescriptor', 'patient')
+    # list_display = ('date', 'prescriptor', 'patient', 'link_to_invoices', 'image_preview')
+    list_display = ('date', 'prescriptor', 'patient', 'link_to_invoices')
+    fields = ('prescriptor', 'patient', 'date', 'end_date', 'notes', 'file_upload', 'thumbnail_img')
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
-    readonly_fields = ('image_preview',)
+    readonly_fields = ('link_to_invoices',)
     autocomplete_fields = ['prescriptor', 'patient']
+    exclude = ('file',)
+    form = MedicalPrescriptionForm
+
+    # list_per_page = 5
+
+    # actions = [migrate_from_g_to_cl]
+    def link_to_invoices(self, instance):
+        url = f'{reverse("admin:invoices_invoiceitem_changelist")}?medical_prescription__id={instance.id}'
+        if instance.id:
+            return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici (%d)" % InvoiceItem.objects.filter(
+                medical_prescription__id=instance.id).count()))
+        return '-'
+
+    link_to_invoices.short_description = "Factures client"
 
 
 class PrestationInline(TabularInline):
@@ -284,6 +415,11 @@ class PrestationInline(TabularInline):
         url = reverse('delete-prestation')
         return format_html("<a href='%s' class='deletelink' data-prestation_id='%s'>Delete</a>" % (url, obj.id))
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "employee":
+            kwargs["queryset"] = Employee.objects.all().order_by("-end_contract", "abbreviation")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     copy.allow_tags = True
     delete.allow_tags = True
 
@@ -306,13 +442,35 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     from invoices.action_depinsurance import export_to_pdf2
     form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
-    list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent')
-    list_filter = ['invoice_date', 'patient__name', 'invoice_sent']
+    list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
+                    'number_of_prestations', 'invoice_details')
+    list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', 'patient__name']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview',)
     autocomplete_fields = ['patient']
+
+    # search_form = InvoiceItemSearchForm
+
+    def cns_invoice_bis(self, request, queryset):
+        try:
+            return do_it(queryset, action=PdfActionType.CNS)
+        except ValidationError as ve:
+            self.message_user(request, ve.message,
+                              level=messages.ERROR)
+
+    cns_invoice_bis.short_description = "CNS Invoice (new)"
+
+    def pdf_private_invoice_pp_bis(self, request, queryset):
+        try:
+            return do_it(queryset, action=PdfActionType.PERSONAL_PARTICIPATION)
+        except ValidationError as ve:
+            self.message_user(request, ve.message,
+                              level=messages.ERROR)
+
+    pdf_private_invoice_pp_bis.short_description = "Facture client participation personnelle (new)"
+
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
-               pdf_private_invoice, export_to_pdf2, do_it]
+               pdf_private_invoice, export_to_pdf2, cns_invoice_bis, pdf_private_invoice_pp_bis]
     inlines = [PrestationInline]
     fieldsets = (
         (None, {
@@ -465,6 +623,11 @@ class PublicHolidayCalendarAdmin(admin.ModelAdmin):
     verbose_name_plural = u'Congés légaux'
 
 
+class AbsenceRequestFileInline(admin.TabularInline):
+    extra = 1
+    model = AbsenceRequestFile
+
+
 @admin.register(HolidayRequest)
 class HolidayRequestAdmin(admin.ModelAdmin):
     class Media:
@@ -473,10 +636,11 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         }
 
     date_hierarchy = 'start_date'
-    list_filter = ('employee', 'request_status', 'reason')
+    list_filter = ('employee', FilteringYears, FilteringMonths, 'request_status', 'reason')
     ordering = ['-start_date']
     verbose_name = u"Demande d'absence"
     verbose_name_plural = u"Demandes d'absence"
+    inlines = [AbsenceRequestFileInline]
 
     def holiday_request_status(self, obj):
         if HolidayRequestWorkflowStatus.ACCEPTED == obj.request_status:
@@ -490,9 +654,9 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 '<div class="warn">%s</div>' % HolidayRequestWorkflowStatus(obj.request_status).name)
 
     readonly_fields = ('validated_by', 'employee', 'request_creator', 'force_creation',
-                       'request_status', 'validator_notes')
+                       'request_status', 'validator_notes', 'total_days_in_current_year')
     list_display = ('employee', 'start_date', 'end_date', 'reason', 'hours_taken', 'validated_by',
-                    'holiday_request_status', 'request_creator')
+                    'holiday_request_status', 'request_creator', 'total_days_in_current_year')
 
     def accept_request(self, request, queryset):
         if not request.user.is_superuser:
@@ -595,7 +759,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
             if obj.employee.employee.user.id != request.user.id and not 1 != obj.request_status and not request.user.is_superuser:
-                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'validated_by', \
+                return 'employee', 'start_date', 'end_date', 'requested_period', 'reason', 'validated_by', \
                        'hours_taken', 'request_creator'
             elif request.user.is_superuser and not 1 != obj.request_status:
                 return [f for f in self.readonly_fields if f not in ['force_creation', 'employee', 'request_status',
@@ -604,8 +768,8 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 return [f for f in self.readonly_fields if f not in ['force_creation', 'employee',
                                                                      'validator_notes']]
             elif 0 != obj.request_status:
-                return 'employee', 'start_date', 'end_date', 'half_day', 'reason', 'validated_by', \
-                       'hours_taken', 'request_creator', 'request_status', 'validator_notes', 'force_creation'
+                return 'employee', 'start_date', 'end_date', 'requested_period', 'reason', 'validated_by', \
+                       'hours_taken', 'request_creator', 'request_status', 'validator_notes', 'force_creation',
 
         else:
             if request.user.is_superuser:
@@ -640,6 +804,21 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
     formset = SimplifiedTimesheetDetailForm
 
 
+def calculate_balance_for_previous_months(month, year, user_id):
+    today = datetime.date.today()
+    first = today.replace(month=month, year=year).replace(day=1)
+    lastMonth = first - datetime.timedelta(days=1)
+    previous_timsheets = SimplifiedTimesheet.objects.filter(time_sheet_month=lastMonth.month,
+                                                            time_sheet_year=lastMonth.year,
+                                                            employee__user_id=user_id,
+                                                            timesheet_validated=True)
+    for prev_months_tsheet in previous_timsheets:
+        return Decimal(round(prev_months_tsheet.hours_should_work_gross_in_sec / 3600, 2)) \
+               - prev_months_tsheet.extra_hours_paid_current_month \
+               + prev_months_tsheet.extra_hours_balance
+    return 0
+
+
 @admin.register(SimplifiedTimesheet)
 class SimplifiedTimesheetAdmin(CSVExportAdmin):
     ordering = ('-time_sheet_year', '-time_sheet_month')
@@ -647,16 +826,96 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
     csv_fields = ['employee', 'time_sheet_year', 'time_sheet_month',
                   'simplifiedtimesheetdetail__start_date',
                   'simplifiedtimesheetdetail__end_date']
-    list_display = ('timesheet_owner', 'timesheet_validated', 'time_sheet_year', 'time_sheet_month')
-    list_filter = ['employee', ]
+    list_display = ('timesheet_owner', 'timesheet_validated', 'time_sheet_year', 'time_sheet_month',
+                    'extra_hours_balance')
+    list_filter = ['employee', 'time_sheet_year', 'time_sheet_month']
     list_select_related = True
     readonly_fields = ('timesheet_validated', 'total_hours',
                        'total_hours_sundays', 'total_hours_public_holidays', 'total_working_days',
-                       'total_hours_holidays_taken', 'hours_should_work',)
+                       'total_legal_working_hours',
+                       'total_hours_holidays_taken', 'hours_should_work', 'extra_hours_balance',
+                       'extra_hours_paid_current_month', 'created_on', 'updated_on')
     verbose_name = 'Temps de travail'
     verbose_name_plural = 'Temps de travail'
-    actions = ['validate_time_sheets', ]
+    actions = ['validate_time_sheets', 'timesheet_situation', 'force_cache_clearing', 'build_use_case_objects']
     form = SimplifiedTimesheetForm
+
+    def build_use_case_objects(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request,
+                              "Vous n'avez pas le droit de faire cette action des %s." % self.verbose_name_plural)
+            return
+        file_data = build_use_case_objects(queryset)
+        response = HttpResponse(file_data, content_type='application/text charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="test_case.txt"'
+        return response
+
+    def timesheet_situation(self, request, queryset):
+        _counter = 1
+        file_data = ""
+        for tsheet in queryset:
+            if not tsheet.timesheet_validated:
+                self.message_user(request,
+                                  "Timesheet %s n'est pas validée, vous devez la valider avant de pouvoir exporter le "
+                                  "rapport" % tsheet,
+                                  level=messages.ERROR)
+                return
+            else:
+                # take previous months timesheet
+                first = tsheet.get_start_date
+                lastMonth = first - datetime.timedelta(days=1)
+                previous_timsheets = SimplifiedTimesheet.objects.filter(time_sheet_month=lastMonth.month,
+                                                                        time_sheet_year=lastMonth.year,
+                                                                        employee__user_id=tsheet.user.id,
+                                                                        timesheet_validated=True)
+                if len(previous_timsheets) == 0:
+                    file_data += "\n {counter} - {last_name} {first_name}:\n".format(counter=_counter,
+                                                                                     last_name=tsheet.user.last_name.upper(),
+                                                                                     first_name=tsheet.user.first_name)
+                    if tsheet.extra_hours_paid_current_month:
+                        file_data += "\nA travaillé {total_extra} heures supplémentaires.".format(
+                            total_extra=tsheet.extra_hours_paid_current_month)
+                    if tsheet.total_hours_holidays_and_sickness_taken > 0:
+                        file_data += "\n{holidays_sickness_explanation}".format(
+                            holidays_sickness_explanation=tsheet.total_hours_holidays_and_sickness_taken_object.beautiful_explanation())
+                else:
+                    previous_month_tsheet = previous_timsheets.first()
+                    file_data += "\n {counter} - {last_name} {first_name}:\n".format(counter=_counter,
+                                                                                     last_name=tsheet.user.last_name.upper(),
+                                                                                     first_name=tsheet.user.first_name)
+                    if tsheet.total_hours_sundays:
+                        file_data += " \nA travaillé {hours_sunday} heures des Dimanche".format(
+                            hours_sunday=previous_month_tsheet.total_hours_sundays)
+                    if tsheet.total_hours_public_holidays:
+                        file_data += " \nA travaillé {total_hours_public_holidays} heures des Jours fériés.".format(
+                            total_hours_public_holidays=previous_month_tsheet.total_hours_public_holidays)
+                    if tsheet.extra_hours_paid_current_month:
+                        file_data += " \nA travaillé {total_extra} heures supplémentaires.".format(
+                            total_extra=tsheet.extra_hours_paid_current_month)
+                    if tsheet.absence_hours_taken()[0] > 0:
+                        holiday_sickness_explanation = tsheet.absence_hours_taken()[1].beautiful_explanation()
+                        if len(holiday_sickness_explanation) > 0:
+                            file_data += holiday_sickness_explanation
+                    if previous_month_tsheet.absence_hours_taken()[0] > 0:
+                        file_data += "\nPour rappel le mois de %s" % previous_month_tsheet.get_start_date.month
+                        holiday_sickness_explanation = previous_month_tsheet.absence_hours_taken()[
+                            1].beautiful_explanation()
+                        if len(holiday_sickness_explanation) > 0:
+                            file_data += holiday_sickness_explanation
+
+            _counter += 1
+        response = HttpResponse(file_data, content_type='application/text charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="timesheet_situation.txt"'
+        return response
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            if obj.timesheet_validated:
+                return self.readonly_fields
+            elif request.user.is_superuser and not obj.timesheet_validated:
+                return tuple(x for x in self.readonly_fields if x not in ('extra_hours_paid_current_month',
+                                                                          'extra_hours_balance'))
+        return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -681,8 +940,12 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
         obj: SimplifiedTimesheet
         for obj in queryset:
             obj.timesheet_validated = not obj.timesheet_validated
-            obj.save()
             rows_updated = rows_updated + 1
+            obj.extra_hours_balance = calculate_balance_for_previous_months(month=obj.time_sheet_month,
+                                                                            year=obj.time_sheet_year,
+                                                                            user_id=obj.employee.user.id)
+            obj.save()
+
         if rows_updated == 1:
             message_bit = u"1 time sheet a été"
         else:
@@ -705,10 +968,42 @@ class SimplifiedTimesheetAdmin(CSVExportAdmin):
             return False
         return self.has_delete_permission
 
+    def force_cache_clearing(self, request, queryset):
+        if request.user.is_superuser:
+            cache.clear()
+            self.message_user(request, u"Cache refresh OK.", level=messages.INFO)
+        else:
+            self.message_user(request, u"Not super user.", level=messages.WARNING)
+
 
 @admin.register(EventType)
 class EventTypeAdmin(admin.ModelAdmin):
     list_display = ['name']
+
+
+class AssignedAdditionalEmployeeInLine(admin.StackedInline):
+    extra = 0
+    model = AssignedAdditionalEmployee
+    fields = ('assigned_additional_employee',)
+    autocomplete_fields = ['assigned_additional_employee']
+
+
+class ReportPictureInLine(admin.StackedInline):
+    extra = 0
+    model = ReportPicture
+    fields = ('description', 'image',)
+
+    def has_add_permission(self, request, obj):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_view_permission(self, request, obj=None):
+        return True
 
 
 @admin.register(Event)
@@ -719,19 +1014,49 @@ class EventAdmin(admin.ModelAdmin):
         }
         js = [
             "js/conditional-event-address.js",
+            "js/toggle-period.js",
         ]
 
     form = EventForm
 
-    list_display = ['day', 'state', 'event_type', 'notes', 'patient']
+    list_display = ['day', 'state', 'event_type_enum', 'notes', 'patient']
     readonly_fields = ['created_by', 'created_on', 'calendar_url', 'calendar_id']
+    exclude = ('event_type',)
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
+    list_filter = (SmartEmployeeFilter,)
+    inlines = (AssignedAdditionalEmployeeInLine, ReportPictureInLine)
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not request.user.is_superuser:
+            if len(form.base_fields) > 0:
+                form.base_fields["event_report"].required = True
+                form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'))
+
+        class ModelFormWithRequest(form):
+            def __new__(cls, *args, **kwargs):
+                kwargs['request'] = request
+                return form(*args, **kwargs)
+
+        return ModelFormWithRequest
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            if not request.user.is_superuser:
+                fs = [field.name for field in Event._meta.fields if field.name != "id"]
+                if obj.employees is not None and obj.employees.user.id == request.user.id:
+                    return [f for f in fs if f not in ['event_report', 'state']]
+                else:
+                    return fs
+        return self.readonly_fields
 
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):
         after_day = request.GET.get('day__gte', None)
         extra_context = extra_context or {}
+        employee_id = request.GET.get('employee', None)
+        # period = request.GET.get('period', None)
 
         if not after_day:
             d = datetime.date.today()
@@ -758,29 +1083,224 @@ class EventAdmin(admin.ModelAdmin):
             previous_month)
         extra_context['next_month'] = reverse('admin:invoices_event_changelist') + '?day__gte=' + str(next_month)
 
-        cal = EventCalendar()
-        html_calendar = cal.formatmonth(d.year, d.month, withyear=True)
+        cal: EventCalendar = EventCalendar()
+        # if "month" == period:
+        html_calendar = cal.formatmonth(d.year, d.month, withyear=True, employee_id=employee_id)
+        # else:
+        #     # html_calendar = cal.formatweek(d.year, d.month, withyear=True, employee_id=employee_id)
+        #     html_calendar = cal.formatmonth(d.year, d.month, withyear=True, employee_id=employee_id)
         html_calendar = html_calendar.replace('<td ', '<td  width="150" height="150"')
         extra_context['calendar'] = mark_safe(html_calendar)
         return super(EventAdmin, self).changelist_view(request, extra_context)
 
 
-class EventList(Event):
-    class Meta:
-        proxy = True
-
-
 @admin.register(EventList)
-class EventListAdmin(EventAdmin):
-    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type', 'patient', 'employees']
+class EventListAdmin(admin.ModelAdmin):
+    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees']
     change_list_template = 'admin/change_list.html'
-    list_filter = ('employees', 'event_type', 'state', 'patient', 'created_by')
+    list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'
+    exclude = ('event_type',)
 
-    actions = ['safe_delete', ]
+    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
+               'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
+               'send_webhook_message']
+    inlines = (ReportPictureInLine,)
+
+    form = EventForm
 
     def safe_delete(self, request, queryset):
         if not request.user.is_superuser:
             return
         for e in queryset:
             e.delete()
+
+    def send_webhook_message(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        for e in queryset:
+            post_webhook(employees=e.employees, patient=e.patient, event_report=e.event_report, state=e.state,
+                         event_date=datetime.datetime.combine(e.day, e.time_start_event).astimezone(ZoneInfo("Europe"
+                                                                                                             "/Luxembourg")))
+
+    def list_orphan_events(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        for e in queryset:
+            e.display_unconnected_events()
+
+    def cleanup_all_events_on_google(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Must be super user", level=messages.ERROR)
+            return
+        for e in queryset:
+            result = e.cleanup_all_events_on_google(dry_run=False)
+            self.message_user(request, "Deleted %s messages from Google calendar " % len(result),
+                              level=messages.WARNING)
+
+    def force_gcalendar_sync(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        evts_synced = []
+        for e in queryset:
+            cal = create_or_update_google_calendar(e)
+            e.calendar_id = cal.get('id')
+            e.calendar_url = cal.get('htmlLink')
+            evts_synced.append(e.calendar_url)
+            e.save()
+        self.message_user(request, "%s évenements synchronisés. : %s" % (len(evts_synced), evts_synced),
+                          level=messages.INFO)
+
+    def print_unsynced_events(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        evts_not_synced = []
+        for e in queryset:
+            if 'http://a.sur.lu' == e.calendar_url and e.calendar_id == 0:
+                evts_not_synced.append(e)
+        if len(evts_not_synced) > 0:
+            self.message_user(request, "%s évenements non synchronisés. : %s" % (len(evts_not_synced), evts_not_synced),
+                              level=messages.WARNING)
+        else:
+            self.message_user(request, "Tous les évenements sont synchronisés.",
+                              level=messages.INFO)
+
+    def cleanup_events_event_types(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        evts_cleaned = []
+        for e in Event.objects.filter(event_type=EventType.objects.get(id=1)):
+            if e.event_type_enum != EventTypeEnum.BIRTHDAY:
+                e.event_type_enum = EventTypeEnum.BIRTHDAY
+                e.save()
+                evts_cleaned.append(e)
+        if len(evts_cleaned) > 0:
+            self.message_user(request, "%s événements nettoyés. : %s" % (len(evts_cleaned), evts_cleaned),
+                              level=messages.WARNING)
+        else:
+            self.message_user(request, "Tous les évenements sont propres.",
+                              level=messages.INFO)
+
+    def get_queryset(self, request):
+        queryset = super(EventListAdmin, self).get_queryset(request)
+        today = datetime.datetime.now()
+        if request.user.is_superuser:
+            return Event.objects.all()
+        else:
+            # Display only today's events for non admin users
+            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).exclude(state=5).filter(
+                day__year=today.year).filter(day__month=today.month).filter(day__day=today.day)
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not request.user.is_superuser:
+            if len(form.base_fields) > 0:
+                form.base_fields["event_report"].required = True
+                form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'))
+
+        class ModelFormWithRequest(form):
+            def __new__(cls, *args, **kwargs):
+                kwargs['request'] = request
+                return form(*args, **kwargs)
+
+        return ModelFormWithRequest
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            if not request.user.is_superuser:
+                fs = [field.name for field in Event._meta.fields if field.name != "id"]
+                if obj.employees.user.id == request.user.id:
+                    return [f for f in fs if f not in ['event_report', 'state', '']]
+                else:
+                    return fs
+        return self.readonly_fields
+
+    def get_inlines(self, request, obj):
+        return [ReportPictureInLine]
+
+
+class EventWeekList(Event):
+    class Meta:
+        proxy = True
+        verbose_name = "Nouveau Plannig (Ne modifiez pas les événements à partir d'ici)"
+        verbose_name_plural = "Nouveaux Plannigs (Ne modifiez pas les événements à partir d'ici)"
+
+
+@admin.register(EventWeekList)
+class EventWeekListAdmin(admin.ModelAdmin):
+    class Media:
+        css = {
+            "all": ("css/main.min.css",)
+        }
+        js = [
+            "js/main.min.js",
+        ]
+
+    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees']
+    exclude = ('event_type',)
+    change_list_template = 'events/calendar.html'
+    list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
+    date_hierarchy = 'day'
+
+    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events']
+    readonly_fields = ['created_by', 'created_on', 'calendar_url', 'calendar_id']
+
+    context = {}
+    form = EventForm
+
+    @csrf_protect_m
+    def changelist_view(self, request, extra_context=None):
+        raw_list = Event.objects.filter(day__month=datetime.date.today().month).order_by("employees_id")
+        # object_list = (Event.objects
+        #                .values()
+        #                .annotate(employees=Count('employees_id'))
+        #                .order_by()
+        #                )
+        #
+        # results = Event.objects.raw(
+        #     'SELECT ie.employees_id, ie.* FROM invoices_event ie order by ie.employees_id desc')
+        # object_list = {}
+        # for r in raw_list:
+        #     if r.employees:
+        #         l = object_list.get(r.employees.id)
+        #         if l:
+        #             l.append(r)
+        #             # dd[r.employees.id] = l
+        #         else:
+        #             object_list[r.employees.id] = [r]
+
+        extra_context = {'object_list': raw_list, 'form': self.form}
+
+        return super(EventWeekListAdmin, self).changelist_view(request, extra_context)
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not request.user.is_superuser:
+            if len(form.base_fields) > 0:
+                form.base_fields["event_report"].required = True
+                form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'))
+
+        class ModelFormWithRequest(form):
+            def __new__(cls, *args, **kwargs):
+                kwargs['request'] = request
+                return form(*args, **kwargs)
+
+        return ModelFormWithRequest
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            if not request.user.is_superuser:
+                fs = [field.name for field in Event._meta.fields if field.name != "id"]
+                if obj.employees.user.id == request.user.id:
+                    return [f for f in fs if f not in ['event_report', 'state']]
+                else:
+                    return fs
+        return self.readonly_fields
+
+
+@admin.register(DoorEvent)
+class DoorEventAdmin(admin.ModelAdmin):
+    list_filter = ('employee', 'activity_start_time', 'activity_type')
+    list_display = ('employee', 'activity_start_time')
+    date_hierarchy = 'activity_start_time'
+

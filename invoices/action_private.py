@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-import sys
+import decimal
 from io import BytesIO
+from zoneinfo import ZoneInfo
 
+from constance import config
 from django.core.mail import EmailMessage
 from django.http import HttpResponse
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -13,11 +16,6 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-import pytz
-from django.utils.encoding import smart_text
-import decimal
-from constance import config
-from django.utils.translation import gettext_lazy as _
 
 from invoices import settings
 
@@ -54,8 +52,9 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
         _payment_ref = "PR-%s" % _file_name.replace(" ", "")[:10]
 
     recapitulatif_data = []
-
+    _recap_dates = []
     for qs in queryset.order_by("invoice_number"):
+        _recap_dates.append(qs.invoice_date)
         dd = [qs.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
               range(0, len(qs.prestations.all()), 20)]
         for _prestations in dd:
@@ -72,17 +71,21 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
 
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
-
-    _recap_date = now().date().strftime('%d-%m-%Y')
+    if len(_recap_dates) > 0:
+        _recap_date = _recap_dates[-1].strftime('%d-%m-%Y')
+    else:
+        _recap_date = now().date().strftime('%d-%m-%Y')
     elements.extend(_build_recap(_recap_date, _payment_ref, recapitulatif_data))
     doc.build(elements)
 
     if attach_to_email:
         subject = "Votre Facture %s" % _file_name
-        message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe. \nCordialement \n -- \n%s \n%s " \
+        message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe.\nSi ce courrier a croisé votre paiement, veuillez considérer ce message (rappel) comme nul et non avenu.\nCordialement \n -- \n%s \n%s " \
                   "%s\n%s\n%s" % (config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
                                   config.NURSE_PHONE_NUMBER, config.MAIN_BANK_ACCOUNT)
         emails = [qs.patient.email_address]
+        if config.CC_EMAIL_SENT:
+            emails += config.CC_EMAIL_SENT.split(",")
         mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
         mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
 
@@ -110,7 +113,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     patientAddress = ''
 
     data.append(('Num. titre', 'Prestation', 'Date', 'Heure', 'Nombre', 'Brut', 'P. CNS', 'P. Pers', 'Executant'))
-    pytz_luxembourg = pytz.timezone("Europe/Luxembourg")
+    zoneinfo = ZoneInfo("Europe/Luxembourg")
     for presta in prestations:
         i += 1
         patientSocNumber = patient.code_sn
@@ -121,8 +124,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         patientZipCode = patient.zipcode
         patientCity = patient.city
         data.append((i, presta.carecode.code,
-                     (pytz_luxembourg.normalize(presta.date)).strftime('%d/%m/%Y'),
-                     (pytz_luxembourg.normalize(presta.date)).strftime('%H:%M'),
+                     (presta.date.astimezone(zoneinfo)).strftime('%d/%m/%Y'),
+                     (presta.date.astimezone(zoneinfo)).strftime('%H:%M'),
                      presta.quantity,
                      presta.carecode.gross_amount(presta.date) * presta.quantity,
                      presta.carecode.net_amount(presta.date,
@@ -158,13 +161,13 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                                                  config.NURSE_PHONE_NUMBER),
                    'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
                    ],
-                  [u'Matricule patient: %s' % smart_text(patientSocNumber.strip()) + "\n"
-                   + u'Nom et Pr' + smart_text("e") + u'nom du patient: %s' % smart_text(patientNameAndFirstName),
-                   u'Nom: %s' % smart_text(patientName.strip()) + '\n'
-                   + u'Prénom: %s' % smart_text(patientFirstName.strip()) + '\n'
+                  [u'Matricule patient: %s' % patientSocNumber.strip() + "\n"
+                   + u'Nom et Prénom du patient: %s' % patientNameAndFirstName,
+                   u'Nom: %s' % patientName.strip() + '\n'
+                   + u'Prénom: %s' % patientFirstName.strip() + '\n'
                    + u'Rue: %s' % patientAddress.strip() + '\n'
-                   + u'Code postal: %s' % smart_text(patientZipCode.strip()) + '\n'
-                   + u'Ville: %s' % smart_text(patientCity.strip())],
+                   + u'Code postal: %s' % patientZipCode.strip() + '\n'
+                   + u'Ville: %s' % patientCity.strip()],
                   [u'Date accident: %s\n' % (accident_date if accident_date else "")
                    + u'Num. accident: %s' % (accident_id if accident_id else "")]]
 
@@ -276,7 +279,7 @@ def _build_recap(_recap_date, _recap_ref, recaps):
     elements.append(Spacer(1, 18))
 
     elements.append(Spacer(1, 18))
-    _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence: %s " % _recap_ref]], [10 * cm],
+    _infos_iban = Table([[u"Lors du virement, veuillez indiquer la référence suivante: %s " % _recap_ref]], [10 * cm],
                         1 * [0.5 * cm], hAlign='LEFT')
     _date_infos = Table([["Date facture : %s " % _recap_date]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
 

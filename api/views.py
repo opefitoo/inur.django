@@ -1,8 +1,6 @@
-import sys
-
 from constance import config
 from django.contrib.auth.models import User, Group
-from django.http import JsonResponse
+from django.http import HttpResponse
 from django.utils.datetime_safe import datetime
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.decorators import api_view
@@ -10,21 +8,26 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api import serializers
 from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, \
     PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
-    ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, PatientAnamnesisSerializer
+    ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
+    PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
+    EmployeeAvatarSerializer
 from api.utils import get_settings
-from helpers import holidays
+from dependence.models import PatientAnamnesis
+from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation
 from invoices import settings
-from invoices.employee import JobPosition
-from invoices.events import EventType, Event, create_or_update_google_calendar
+from invoices.employee import JobPosition, Employee
+from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch, PatientAnamnesis
+    ValidityDate, InvoiceItemBatch
 from invoices.processors.birthdays import process_and_generate
-from invoices.processors.events import delete_events_created_by_script, async_deletion
+from invoices.processors.events import delete_events_created_by_script
+from invoices.processors.timesheets import get_door_events_for_employee
 from invoices.timesheet import Timesheet, TimesheetTask
 
 
@@ -35,6 +38,13 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
 
+
+class EmployeeAvatarSerializerViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows employees who want to be published on internet to be viewed.
+    """
+    queryset = Employee.objects.filter(to_be_published_on_www=True)
+    serializer_class = EmployeeAvatarSerializer
 
 class GroupViewSet(viewsets.ModelViewSet):
     """
@@ -152,26 +162,57 @@ class PatientAnamnesisViewSet(viewsets.ModelViewSet):
     serializer_class = PatientAnamnesisSerializer
 
 
+class GenericEmployeeEventList(generics.ListCreateAPIView):
+    queryset = Event.objects.all()
+    serializer_class = GenericEmployeeEventSerializer
+
+    def post(self, request, *args, **kwargs):
+        if request.data['employees']:
+            emp_id = get_employee_id_by_abbreviation(request.data['employees']).id
+            request.data['employees'] = emp_id
+            employee_bis = None
+            if request.data['notes'].startswith("+"):
+                employee_bis = get_employee_id_by_abbreviation(request.data['notes'].split("+")[1])
+        result = self.create(request, *args, **kwargs)
+        if result.status_code == status.HTTP_201_CREATED:
+            instance = Event.objects.get(pk=result.data.get('id'))
+            if employee_bis:
+                instance.notes = "En collaboration avec %s %s - Tél %s" % (employee_bis.user.last_name,
+                                                                           employee_bis.user.first_name,
+                                                                           employee_bis.phone_number)
+            assert isinstance(instance, Event)
+        return result
+
+
 class EventList(generics.ListCreateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
 
     def post(self, request, *args, **kwargs):
         if request.data['employees']:
-            emp_id = get_employee_id_by_abbreviation(request.data['employees'])
+            emp_id = get_employee_id_by_abbreviation(request.data['employees']).id
             request.data['employees'] = emp_id
+            employee_bis = None
+            if request.data['notes'].startswith("+"):
+                employee_bis = get_employee_id_by_abbreviation(request.data['notes'].split("+")[1])
         result = self.create(request, *args, **kwargs)
         if result.status_code == status.HTTP_201_CREATED:
             instance = Event.objects.get(pk=result.data.get('id'))
+            if employee_bis:
+                instance.notes = "En collaboration avec %s %s - Tél %s" % (employee_bis.user.last_name,
+                                                                           employee_bis.user.first_name,
+                                                                           employee_bis.phone_number)
             assert isinstance(instance, Event)
-            gmail_event = create_or_update_google_calendar(instance)
-            if gmail_event.get('id'):
-                instance.calendar_id = gmail_event.get('id')
-                instance.calendar_url = gmail_event.get('htmlLink')
-                instance.save()
-            else:
-                instance.delete()
-                return JsonResponse(result.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # if instance.event_type_enum == EventTypeEnum.BIRTHDAY:
+            #     return "Birthday created"
+            # gmail_event = create_or_update_google_calendar(instance)
+            # if gmail_event.get('id'):
+            #     instance.calendar_id = gmail_event.get('id')
+            #     instance.calendar_url = gmail_event.get('htmlLink')
+            #     instance.save()
+            # else:
+            #     instance.delete()
+            #     return JsonResponse(result.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return result
 
@@ -189,10 +230,57 @@ def cleanup_event(request):
 @api_view(['POST'])
 def whois_off(request):
     if 'POST' == request.method:  # user posting data
-        print("Request: %s " % request.data)
-        sys.stdout.flush()
         reqs = holidays.whois_off(datetime.strptime(request.data["day_off"], "%Y-%m-%d"))
         return Response(reqs, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def whois_available(request):
+    if 'POST' == request.method:  # user posting data
+        reqs = holidays.whois_available(datetime.strptime(request.data["working_day"], "%Y-%m-%d"))
+        return Response(reqs, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def which_shift(request):
+    if 'POST' == request.method:  # user posting data
+        reqs = holidays.which_shift(datetime.strptime(request.data["working_day"], "%Y-%m-%d"))
+        return Response(reqs, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_bank_holidays(request):
+    if 'GET' == request.method:  # user posting data
+        reqs = holidays.get_bank_holidays(request.GET.get("year"), request.GET.get("month"))
+        return Response(reqs, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def how_many_care_given(request):
+    if 'GET' == request.method:
+        reqs = Prestation.objects.all().count()
+        return Response(reqs, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def how_many_patients(request):
+    if 'GET' == request.method:
+        reqs = Patient.objects.all().count()
+        return Response(reqs, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def how_many_care_hours(request):
+    if 'GET' == request.method:
+        reqs = Event.objects.all().count() * 2
+        return Response(reqs, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_active_care_plans(request):
+    if 'GET' == request.method:  # user posting data
+        care_plans = careplan.get_active_care_plans()
+        return Response(CarePlanMasterSerializer(care_plans, many=True).data, status=status.HTTP_200_OK)
 
 
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -210,10 +298,24 @@ class EventProcessorView(APIView):
         Calling api this way: http://localhost:8000/api/v1/process/45/
         """
         result = process_and_generate(int(kw['numdays']))
-        items_serializer = EventSerializer(result, many=True)
+        items_serializer = BirthdayEventSerializer(result, many=True)
         items = items_serializer.data
         response = Response(items, status=status.HTTP_200_OK)
         return response
+
+class YaleEventProcessorView(APIView):
+    def get(self, request, *args, **kw):
+         """
+         Calling api this way: http://localhost:8000/api/v1/yale_events/
+         """
+         employees = Employee.objects.filter(end_contract__isnull=True)
+         items = ""
+         for employee in employees:
+             result = get_door_events_for_employee(employee=employee)
+             items += result
+             break
+         response = Response(items, status=status.HTTP_200_OK)
+         return response
 
 
 class SettingViewSet(viewsets.ViewSet):

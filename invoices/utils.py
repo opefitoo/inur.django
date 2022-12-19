@@ -28,7 +28,7 @@ from invoices.events import Event
 
 
 class EventCalendar(HTMLCalendar):
-    def __init__(self, events=None):
+    def __init__(self, events=None) -> HTMLCalendar:
         super(EventCalendar, self).__init__()
         self.events = events
 
@@ -56,13 +56,14 @@ class EventCalendar(HTMLCalendar):
         s = ''.join(self.formatday(d, wd, events) for (d, wd) in theweek)
         return '<tr>%s</tr>' % s
 
-    def formatmonth(self, theyear, themonth, withyear=True):
+    def formatmonth(self, theyear, themonth, withyear=True, employee_id=None):
         """
         Return a formatted month as a table.
         """
-
-        events = Event.objects.filter(day__month=themonth).order_by('-day').order_by('time_start_event')
-
+        if employee_id:
+            events = Event.objects.filter(day__year=theyear, day__month=themonth, employees_id=employee_id).order_by('-day', 'time_start_event')
+        else:
+            events = Event.objects.filter(day__year=theyear, day__month=themonth).order_by('-day', 'time_start_event')
         v = []
         a = v.append
         a('<table border="0" cellpadding="0" cellspacing="0" class="month">')

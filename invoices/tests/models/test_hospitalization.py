@@ -1,9 +1,9 @@
-from django.utils import timezone
-from django.test import TestCase
 from django.contrib.auth.models import User
+from django.test import TestCase
+from django.utils import timezone
 
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Hospitalization
 from invoices.employee import Employee, JobPosition
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Hospitalization
 
 
 class HospitalizationTestCase(TestCase):
@@ -139,7 +139,7 @@ class HospitalizationTestCase(TestCase):
         self.patient.date_of_death = date_of_death
         self.patient.save()
 
-        self.assertEqual(Hospitalization.validate_patient_alive(data), error_msg)
+        self.assertEqual(Hospitalization.validate_patient_alive(data), {})
 
         data['end_date'] = data['end_date'].replace(month=8)
         self.assertEqual(Hospitalization.validate_patient_alive(data), error_msg)

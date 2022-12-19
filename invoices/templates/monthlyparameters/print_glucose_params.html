@@ -1,0 +1,201 @@
+{% load static %}
+<head xmlns="http://www.w3.org/1999/html">
+    <meta charset="utf-8"/>
+    <title>Print All Parameters</title>
+
+    <style>
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            font-size: 12px;
+            line-height: 20px;
+            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            color: #555;
+        }
+
+        .invoice-box table {
+            width: 100%;
+            line-height: inherit;
+            text-align: left;
+        }
+
+        .invoice-box table td {
+            padding: 5px;
+            vertical-align: top;
+        }
+
+{% comment %}        .invoice-box table tr td:nth-child(2) {
+            text-align: right;
+        }{% endcomment %}
+
+        .invoice-box table tr.top table td {
+            padding-bottom: 20px;
+        }
+         .invoice-box table tr.top table td:nth-child(2) {
+            text-align: right;
+        }
+
+        .invoice-box table tr.top table td.title {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 20px;
+            color: #333;
+        }
+
+        .invoice-box table tr.information table td {
+            padding-bottom: 40px;
+            font-size: 14px;
+        }
+
+        .invoice-box table tr.heading td {
+            background: #eee;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .invoice-box table tr.details td {
+            padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.item td {
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+
+        .invoice-box table tr.item.last td {
+            border-bottom: none;
+        }
+
+        .invoice-box table tr.total td:nth-child(2) {
+            border-top: 2px solid #eee;
+            font-weight: bold;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .invoice-box table tr.top table td {
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+
+            .invoice-box table tr.information table td {
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+        }
+
+        /** RTL **/
+        .invoice-box.rtl {
+            direction: rtl;
+            font-family: Tahoma, 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+        }
+
+        .invoice-box.rtl table {
+            text-align: right;
+        }
+
+        .invoice-box.rtl table tr td:nth-child(2) {
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+<div class="invoice-box">
+    <table cellpadding="0" cellspacing="0">
+        <tr class="top">
+            <td colspan="8">
+                <table>
+                    <tr>
+                        <td class="title">
+                            <img src="{% static 'patientanamnesis/images/xyz.png' %}"
+                                 style="width: 100%; max-width: 50px"/>
+                            <div class="information">{{ obj.header_details.0 }} - {{ obj.header_details.1 }} <br/>
+                                {{ obj.header_details.2 }} - {{ obj.header_details.3 }} <br/>
+                                {{ obj.header_details.4 }}</div>
+                        <td>
+
+                            {% if obj.patient.gender == 'MAL' %} Monsieur {% elif obj.patient.gender == 'FEM' %}
+                                Madame {% else %} {% endif %} {{ obj.patient }} <br/>
+                            {{ obj.patient.code_sn }} <br/>
+                            {{ obj.patient.address }} <br/>
+                            {{ obj.patient.zipcode }} {{ obj.patient.city }} <br/>
+                            Tél.: {{ obj.patient.clean_phone_number }} <br/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr class="information">
+            <td colspan="8">
+                <table>
+                    <tr>
+                        <td>
+                            Médecin Traitant:{% with obj.physicians_set|first as first_doc %} <br/>
+                            Dr. {{ first_doc.name }} {{ first_doc.first_name }} / Tél.: {{ first_doc.phone_number }}
+                            <br/>
+                        {% endwith %}<br/>
+                        </td>
+
+                        <td>
+                            Fiche de Suivi Glycémique pour {{ obj.display_month }} / {{ obj.params_year }}<br/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr class="heading">
+            <td>Date/heure</td>
+            <td>Glycémie</td>
+            <td>Tension</td>
+            <td>Pouls</td>
+        </tr>
+        {% for param in obj.parameters_set %}
+            <tr class="item">
+                <td>{{ param.params_date_time }}</td>
+                <td>{% if param.blood_glucose %} {{ param.blood_glucose }} {% else %} - {% endif %}</td>
+                <td>{{ param.systolic_blood_press }}/{{ param.diastolic_blood_press }}</td>
+                <td>{% if param.heart_pulse > 0 %} {{ param.heart_pulse }} {% else %} - {% endif %}</td>
+            </tr>
+        {% endfor %}
+
+        {% comment %}<tr class="heading">
+            <td>Item</td>
+
+            <td>Price</td>
+        </tr>
+
+        <tr class="item">
+            <td>Website design</td>
+
+            <td>$300.00</td>
+        </tr>
+
+        <tr class="item">
+            <td>Hosting (3 months)</td>
+
+            <td>$75.00</td>
+        </tr>
+
+        <tr class="item last">
+            <td>Domain name (1 year)</td>
+
+            <td>$10.00</td>
+        </tr>
+
+        <tr class="total">
+            <td></td>
+
+            <td>Total: $385.00</td>
+        </tr>{% endcomment %}
+    </table>
+</div>
+</body>
+</html>

@@ -2,6 +2,7 @@ import re
 
 from django.utils import timezone
 
+from invoices.enums.event import EventTypeEnum
 from invoices.events import EventType, Event
 from invoices.models import Patient, extract_birth_date, calculate_age
 
@@ -22,18 +23,22 @@ def process_and_generate(num_days: int):
     patients = list_patients_with_birth_date_in_range_still_alive(this_day, last_day)
     for patient in patients:
         patient_birthday = extract_birth_date(patient.code_sn)
-        if patient_birthday.replace(year=last_day.year) <= last_day:
+        if patient_birthday.replace(year=this_day.year) <= last_day:
             searches_date = timezone.now().replace(last_day.year, patient_birthday.month, patient_birthday.day)
             events = Event.objects.filter(day=searches_date).filter(event_type__name='Birthdays')
             if not events:
                 event = Event(
                     day=searches_date,
                     state=1,
+                    time_start_event=timezone.now().replace(hour=8, minute=0, second=0, microsecond=0).time(),
                     event_type=even_type_birthday,
+                    event_type_enum=EventTypeEnum.BIRTHDAY,
                     notes='%s will turn %d \n generated on %s' % (patient,
                                                                   calculate_age(None, patient.code_sn),
                                                                   timezone.now()),
-                    patient=patient
+                    patient=patient,
+                    created_by="cron_process"
+
                 )
                 event.save()
                 events_processed.append(event)
