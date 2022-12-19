@@ -1,5 +1,6 @@
 from constance import config
 from django.contrib.auth.models import User, Group
+from django.http import HttpResponse
 from django.utils.datetime_safe import datetime
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.decorators import api_view
@@ -7,12 +8,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api import serializers
 from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, \
     PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
-    PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer
+    PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
+    EmployeeAvatarSerializer
 from api.utils import get_settings
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
@@ -35,6 +38,13 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
 
+
+class EmployeeAvatarSerializerViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows employees who want to be published on internet to be viewed.
+    """
+    queryset = Employee.objects.filter(to_be_published_on_www=True)
+    serializer_class = EmployeeAvatarSerializer
 
 class GroupViewSet(viewsets.ModelViewSet):
     """

@@ -5,7 +5,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from dependence.careplan import CarePlanMaster, CarePlanDetail
 from dependence.models import PatientAnamnesis, AssignedPhysician
-from invoices.employee import JobPosition
+from invoices.employee import JobPosition, Employee
 from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
@@ -15,7 +15,15 @@ from invoices.timesheet import Timesheet, TimesheetTask
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('url', 'username', 'email')
+        fields = ('first_name', 'last_name')
+
+class EmployeeAvatarSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    class Meta:
+        model = Employee
+        fields = ('user', 'avatar', 'bio', 'occupation')
+        depth = 1
+
 
 
 class GroupSerializer(serializers.ModelSerializer):

@@ -4,6 +4,7 @@ from api import views
 
 router = routers.DefaultRouter()
 # router.register(r'users', views.UserViewSet)
+router.register(r'employees-avatars', views.EmployeeAvatarSerializerViewSet)
 # router.register(r'groups', views.GroupViewSet)
 router.register(r'care-codes', views.CareCodeViewSet)
 router.register(r'patients', views.PatientViewSet)

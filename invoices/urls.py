@@ -92,8 +92,8 @@ urlpatterns = [
         name='event_processor_rest_view'),
     re_path(
         r'^api/v1/yale_events/',
-         login_required(YaleEventProcessorView.as_view()),
-         name='yale_event_processor_rest_view'),
+        login_required(YaleEventProcessorView.as_view()),
+        name='yale_event_processor_rest_view'),
 
 ]
 

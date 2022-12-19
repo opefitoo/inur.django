@@ -13,8 +13,33 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from invoices.enums.holidays import ContractType
 from invoices.storages import CustomizedGoogleDriveStorage
+from django.utils.translation import gettext_lazy as _
 
 
+def avatar_storage_location(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.start_contract is None:
+        _current_yr_or_prscr_yr = now().date().strftime('%Y')
+        _current_month_or_prscr_month = now().date().strftime('%M')
+    else:
+        _current_yr_or_prscr_yr = str(instance.start_contract.year)
+        _current_month_or_prscr_month = str(instance.start_contract.month)
+    path = os.path.join("Doc. Admin employes", "%s_%s" % (instance.user.last_name.upper(),
+                                                          instance.user.first_name.capitalize()))
+    filename = '%s_%s_%s_%s%s' % (
+        _current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.abbreviation,
+        "avatar",
+        file_extension)
+    return os.path.join(path, filename)
+
+def validate_avatar(file):
+    try:
+        file_size = file.file.size
+    except:
+        return
+    limit_kb = 10
+    if file_size > limit_kb * 1024 * 1024:
+        raise ValidationError(_("Maximum file size is %s MB" % limit_kb))
 class JobPosition(models.Model):
     class Meta:
         ordering = ['-id']
@@ -63,8 +88,16 @@ class Employee(models.Model):
 
     birth_place = models.CharField(u'Birth Place',
                                    help_text=u'Enter the City / Country of Birth',
-                                   max_length=30,
+                                   max_length=50,
                                    blank=True)
+    avatar = models.ImageField(upload_to=avatar_storage_location,
+                               validators=[validate_avatar],
+                               help_text=_("You can attach the scan of the declaration"),
+                               null=True, blank=True)
+    bio = models.TextField("Bio", default="Fill in your bio", max_length=200)
+    to_be_published_on_www = models.BooleanField("Public Profile",
+                                                 help_text="If checked then bio and avatar fields become mandatory",
+                                                 blank=True, null=True)
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
@@ -197,3 +230,4 @@ def employee_revoke_gservices_permissions(sender, instance, **kwargs):
         path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
         gd_storage.update_folder_permissions_v3(path, email, has_access)
         gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
+
