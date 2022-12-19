@@ -172,6 +172,8 @@ class FallDeclaration(models.Model):
             config.NURSE_ZIP_CODE_CITY,
             config.NURSE_PHONE_NUMBER,
         ]
+    def __str__(self):
+        return _("Chute de %s en %s") % (self.patient, self.datetimeOfFall)
 
 
 @receiver(post_delete, sender=FallDeclaration, dispatch_uid="fall_decaration_file_upload_clean_s3_post_delete")
