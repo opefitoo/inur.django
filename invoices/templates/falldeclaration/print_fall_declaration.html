@@ -1,0 +1,404 @@
+{% load static %}
+{% load adminfilter %}
+<head xmlns="http://www.w3.org/1999/html">
+    <meta charset="utf-8"/>
+    <title>Imprimer Fall Declaration</title>
+
+      <style>
+        .invoice-box {
+            max-width: 3508px;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            font-size: 12px;
+            line-height: 20px;
+            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            color: #555;
+        }
+
+        .invoice-box table {
+            width: 100%;
+            line-height: inherit;
+            text-align: left;
+        }
+
+        .invoice-box table td {
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .invoice-box table tr.top table td {
+            padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.top table td:nth-child(2) {
+            text-align: right;
+        }
+
+        .invoice-box table tr.top table td.title {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 20px;
+            color: #333;
+        }
+
+        .invoice-box table tr.information table td {
+            padding-bottom: 40px;
+            font-size: 14px;
+        }
+
+        .invoice-box table tr.heading td {
+            background: #eee;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .invoice-box table tr.details td {
+            padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.item td {
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+
+        .invoice-box table tr.item.last td {
+            border-bottom: none;
+        }
+
+        .invoice-box table tr.total td:nth-child(2) {
+            border-top: 2px solid #eee;
+            font-weight: bold;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .invoice-box table tr.top table td {
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+
+            .invoice-box table tr.information table td {
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+        }
+
+        h2 {
+            text-align: center;  
+        }
+        table {
+            border-collapse: collapse;
+            border-spacing:0;
+        }
+
+
+        ul {
+            margin: 3;
+            
+        }
+
+        /** RTL **/
+        .invoice-box.rtl {
+            direction: rtl;
+            font-family: Tahoma, 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+        }
+
+        .invoice-box.rtl table {
+            text-align: right;
+        }
+
+        .invoice-box.rtl table tr td:nth-child(2) {
+            text-align: left;
+        }
+
+    </style>
+  
+</head>
+
+<body >
+<div class="invoice-box">
+    <table cellpadding="0" cellspacing="0">
+        <tr class="top">
+            <td colspan="8">
+                <table>
+                    <tr>
+                        <td class="title">
+                            <img src="{% static 'patientanamnesis/images/xyz.png' %}"
+                                 style="width: 100%; max-width: 50px"/>
+                            <div class="information">{{ obj.header_details.0 }} - {{ obj.header_details.1 }} <br />
+                            {{ obj.header_details.2 }} - {{ obj.header_details.3 }} <br />
+                            {{ obj.header_details.4 }}</div>
+                        </td>
+                        <td>
+
+                            {% if obj.patient.gender == 'MAL' %} Monsieur {% elif obj.patient.gender == 'FEM' %}
+                                Madame {% else %} {% endif %} {{ obj.patient }} <br/>
+                            {{ obj.patient.code_sn }} <br/>
+                            {{ obj.patient.address }} <br/>
+                            {{ obj.patient.zipcode }} {{ obj.patient.city }} <br/>
+                            Tél.: {{ obj.patient.clean_phone_number }} <br/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+       
+    </table>
+</div>
+  <h2 >
+    Formulaire de constat de chute
+  </h2>
+  <p >
+    <span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&Agrave; remplir&nbsp;:</span
+    ><span >&nbsp;apr&egrave;s chaque chute.</span>
+  </p>
+  <p ><span ></span></p>
+  <table cellpadding="0" cellspacing="0" border="0">
+    <tr >
+      <td  colspan="3" rowspan="1">
+        <p >
+          <span >A. Date, heure de la chute:</span
+          ><span >&nbsp;{{ obj.datetimeOfFall }}</span
+          ><span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lieu de la chute:</span
+          ><span >&nbsp;{{ obj.placeOfFall }}</span
+          >
+        </p>
+      </td>
+    </tr>
+    <tr >
+        <td  colspan="3" rowspan="1">
+          <p >
+            <span >&nbsp;&nbsp;&nbsp;Déclaré par:</span
+            ><span >&nbsp;{{ obj.declared_by.user.first_name }}&nbsp;{{ obj.declared_by.user.last_name }}</span
+            ><span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;T&eacute;moins &eacute;ventuels:</span
+            ><span >&nbsp;{% if obj.witnesses %}{{ obj.witnesses }}{% else %}Aucun t&eacute;moin{% endif %}</span
+            >
+          </p>
+        </td>
+    </tr>
+    <tr >
+      <td  colspan="3" rowspan="1">
+        <p >
+          <span >B. Circonstances de la chute </span>
+        </p>
+      </td>
+    </tr>
+    <tr >
+      <td  colspan="1" rowspan="1">
+        <ul >
+          <li >
+            <span>{% if obj.fall_circumstance != "FCI_OTHER_CAUSES" %}{{obj.get_fall_circumstance_display}}{% else %}{{ obj.other_fall_circumstance }}{% endif %}</span>
+          </li>
+        </ul>
+      </td>
+    </tr>
+    <tr >
+      <td  colspan="6" rowspan="1">
+        <p >
+         <span >&nbsp;&nbsp;&nbsp;&nbsp;Circonstances de l&rsquo;incident:</span
+          ><span >&nbsp;</span
+          ><span 
+            >{{obj.incident_circumstance}}</span
+          >
+          <br/><br/>
+        </p>
+      </td>
+    </tr>
+    <tr >
+      <td  colspan="3" rowspan="1">
+        <p >
+          <span >C. Cons&eacute;quences de la</span
+          ><span >&nbsp;chute</span
+          >
+      </td>
+    </tr>
+    <tr >
+        {% for consequence in obj|selected_labels:"fall_consequences" %}
+        <td  colspan="1" rowspan="1">
+            <ul >
+            <li >
+                <span >{{consequence}}</span>
+            </li>
+            </ul>
+        </td>
+        {% endfor %}
+    </tr>
+    <tr >
+        {% if obj.other_fall_consequence %}
+        <td  colspan="1" rowspan="1">
+            <ul >
+            <li >
+                <span >{{obj.other_fall_consequence}}</span>
+            </li>
+            </ul>
+        </td>
+        {% endif %}
+    </tr>
+    <tr >
+      <td  colspan="3" rowspan="1">
+        <p >
+          <span 
+            >D. Actes m&eacute;dicaux et/ou infirmiers requis dans les 24h </span
+          ><span >(plusieurs r&eacute;ponses possibles)</span>
+        </p>
+      </td>
+    </tr>
+    <tr >
+        {% for medical_act in obj|selected_labels:"fall_required_medical_acts" %}
+        <td  colspan="1" rowspan="1">
+            <ul >
+            <li >
+                <span >{{medical_act}}</span>
+            </li>
+            </ul>
+        </td>
+    {% endfor %}
+    </tr>
+    <tr >
+        {% if obj.other_required_medical_act %}
+        <td  colspan="1" rowspan="1">
+            <ul >
+            <li >
+                <span >{{obj.other_required_medical_act}}</span>
+            </li>
+            </ul>
+        </td>
+        {% endif %}
+    </tr>
+    <tr >
+      <td  colspan="3" rowspan="1">
+        <p ><span >E. Facteurs de risque</span></p>
+      </td>
+    </tr>
+    <tr >
+        {% if obj.medications_risk_factor %}
+        <td  colspan="3" rowspan="1">
+        <ul >
+          <li >
+            <span >{{obj.get_medications_risk_factor_display}}</span>
+          </li>
+        </ul>
+        </td>
+      {% endif %}
+    </tr>
+    <tr >
+      <td  colspan="3" rowspan="1">
+        <p >
+          <span >&nbsp;&nbsp;&nbsp;Troubles cognitifs et/ou de l&rsquo;humeur</span>
+        </p>
+      </td>
+    </tr>
+    <tr >
+        {% for trouble in obj|selected_labels:"fall_cognitive_mood_diorders" %}
+        <td  colspan="1" rowspan="1">
+        <ul >
+        <li >
+            <span >{{trouble}}</span>
+        </li>
+        </ul>
+    </td>
+    {% endfor %}
+    </tr>
+    <tr >
+      <td  colspan="1" rowspan="1">
+        <p ><span >&nbsp;&nbsp;&nbsp;Incontinence</span></p>
+      </td>
+    </tr>
+    <tr >
+        {% for incontinence in obj|selected_labels:"fall_incontinences" %}
+        <td  colspan="1" rowspan="1">
+        <ul >
+        <li >
+            <span >{{incontinence}}</span>
+        </li>
+        </ul>
+    </td>
+    {% endfor %}
+    </tr>
+    <tr >
+      <td  colspan="3" rowspan="1">
+        <p >
+          <span 
+            >&nbsp;&nbsp;&nbsp;Incapacit&eacute; concernant les d&eacute;placements</span
+          >
+        </p>
+      </td>
+    </tr>
+    {% if obj.mobility_disability %}
+    <tr >
+      <td  colspan="6" rowspan="1">
+        <ul >
+          <li >
+            <span >{{obj.get_mobility_disability_display}}</span>
+          </li>
+        </ul>
+      </td>
+    </tr>
+    {% endif %}
+    <tr >
+      <td  colspan="1" rowspan="1">
+        <p >
+          <span >&nbsp;&nbsp;&nbsp;Chaussures inadapt&eacute;es:&nbsp;
+            {% if obj.unsuitable_footwear %}
+            Oui
+            {% else %}
+            Non
+            {% endif %}
+            <br/><br/>
+         </span>
+        </p>
+      </td>
+    </tr>
+    
+    {% if obj.other_contributing_factor %}
+    <tr >
+      <td  colspan="6" rowspan="1">
+        <p >
+          <span >&nbsp;&nbsp;&nbsp;Autre facteur favorisant: &nbsp;</span
+          ><span >&nbsp;</span
+          ><span>
+            {{obj.other_contributing_factor}}
+          </span
+          >
+        </p>
+      </td>
+    </tr>
+    {% endif %}
+    <tr >
+      <td  colspan="2" rowspan="1">
+        <p >
+          <span 
+            >F.&nbsp;La chute aurait
+            pu &ecirc;tre pr&eacute;venue&nbsp;:&nbsp;
+            {% if obj.preventable_fall %}
+            Oui
+            {% else %}
+            Non
+            {% endif %}
+          </span>
+        </p>
+      </td>
+    </tr>
+    <tr >
+      <td  colspan="2" rowspan="1">
+        <p >
+          <span 
+            >G.&nbsp;Le
+            m&eacute;decin a &eacute;t&eacute; avis&eacute;&nbsp;:&nbsp;
+            {% if obj.physician_informed %}
+            Oui
+            {% else %}
+            Non
+            {% endif %}
+            </span
+          >
+        </p>
+    </tr>
+  </table>
+  <p ><span ></span></p>
+</body>
+</html>

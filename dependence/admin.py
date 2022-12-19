@@ -1,4 +1,5 @@
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
+from dependence.falldeclaration import  FallDeclaration
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
@@ -10,12 +11,12 @@ from fieldsets_with_inlines import FieldsetsInlineMixin
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
-from dependence.forms import TypeDescriptionGenericInlineFormset, TensionAndTemperatureParametersFormset
+from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, TensionAndTemperatureParametersFormset
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from invoices.employee import JobPosition
 from invoices.models import Patient
-
+from django.utils.translation import gettext_lazy as _
 
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):
@@ -356,3 +357,50 @@ class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'aai/print_aai.html', {'obj': obj})
+
+@admin.register(FallDeclaration)
+class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
+    fields = (  'patient', 
+                'datetimeOfFall',
+                'placeOfFall',
+                'declared_by',
+                'file_upload',
+                'witnesses',
+                'fall_circumstance',
+                'other_fall_circumstance',
+                'incident_circumstance',
+                'fall_consequences',
+                'other_fall_consequence',
+                'fall_required_medical_acts',
+                'other_required_medical_act',
+                'medications_risk_factor',
+                'fall_cognitive_mood_diorders',
+                'fall_incontinences',
+                'mobility_disability',
+                'unsuitable_footwear',
+                'other_contributing_factor',
+                'preventable_fall',
+                'physician_informed',
+            )
+    form = FallDeclarationForm
+    list_display = ('patient', 'datetimeOfFall', 'display_object_actions_list',)
+    autocomplete_fields = ['patient']
+    readonly_fields = ('user', 
+                       'created_on', 
+                       'updated_on',
+                       )
+
+    object_actions = [
+        {
+            'slug': 'print_fall_declaration',
+            'verbose_name': 'Imprimer',
+            'form_method': 'GET',
+            'view': 'print_fall_declaration',
+        },
+    ]
+
+
+    def print_fall_declaration(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'falldeclaration/print_fall_declaration.html', {'obj': obj})
