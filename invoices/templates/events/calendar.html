@@ -227,7 +227,7 @@
                             objectId: '{{ event.id }}',
                             title: '{{ event }}',
                             start: '{{ event.day|date:"Y-m-d" }}T{{ event.time_start_event|date:"H:i:s" }}',
-                            url: '{{ root_url }}/{{ event.get_admin_url }}',
+                            url: '{{ root_url }}{{ event.get_admin_url }}',
                             end: '{{ event.day|date:"Y-m-d" }}T{{ event.time_end_event|date:"H:i:s" }}',
                             extendedProps: {
                                 status: '{{ event.state }}'
