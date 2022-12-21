@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from constance import config
 from django import forms
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
@@ -23,7 +25,7 @@ class Calendar1View(View):
     def get(self, request, *args, **kwargs):
         object_list = Event.objects.filter(day__month=datetime.today().month)
 
-        self.context = {'object_list': object_list, 'form': self.form}
+        self.context = {'object_list': object_list, 'root_url': config.ROOT_URL, 'form': self.form}
 
         return render(request, self.template, self.context)
 

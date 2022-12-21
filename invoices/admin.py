@@ -3,6 +3,7 @@ import datetime
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
+from constance import config
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
@@ -1269,7 +1270,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
         #         else:
         #             object_list[r.employees.id] = [r]
 
-        extra_context = {'object_list': raw_list, 'form': self.form}
+        extra_context = {'object_list': raw_list, 'root_url': config.ROOT_URL, 'form': self.form}
 
         return super(EventWeekListAdmin, self).changelist_view(request, extra_context)
 
