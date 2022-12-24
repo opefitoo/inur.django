@@ -196,6 +196,8 @@ class PrestationGoogleCalendarSurLu:
             description += descr_line % (u'Sur LU ID:', event.id)
         if event.notes and len(event.notes) > 0:
             description += descr_line % ('Notes:', event.notes)
+        if event.event_report and len(event.event_report) > 0:
+            description += descr_line % ('Rapport de soin:', event.event_report)
         if event.employees and event.patient:
             summary = '%s - %s' % (event.patient, event.employees.abbreviation)
         elif event.employees and not event.patient:
@@ -221,9 +223,10 @@ class PrestationGoogleCalendarSurLu:
                     attendees_list.append({'email': '%s' % u.assigned_additional_employee.user.email})
 
             event_body = {
-                'summary': summary,
+                'summary': "! ANNULÉ %s !" % ('\u0336'.join(summary) + '\u0336') if 5 == event.state else summary,
                 'description': description,
                 'location': location,
+                'status': "cancelled" if 5 == event.state else "confirmed",
                 'start': {
                     'dateTime': localized.isoformat(),
                 },
@@ -244,12 +247,14 @@ class PrestationGoogleCalendarSurLu:
                                                0,
                                                0)
             event_body = {
-                'summary': summary,
+                'summary': "! ANNULÉ %s !" % ('\u0336'.join(summary) + '\u0336') if 5 == event.state else summary,
                 'description': description,
                 'location': location,
                 'start': {
                     'dateTime': localized.isoformat(),
                 },
+                # 5 is cancelled
+                'status': "cancelled" if 5 == event.state else "confirmed",
                 'end': {
                     'dateTime': naive_end_date.astimezone(ZoneInfo("Europe/Luxembourg")).isoformat(),
                 },
