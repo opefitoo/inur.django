@@ -103,6 +103,9 @@ class Event(models.Model):
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
+        event_text = str(self)
+        if Event.STATES[4][0] == self.state:
+            event_text = "<del>%s</del>" % str(self)
         if self.time_start_event and self.employees:
             event_id = self.id
             cached_employees = cache.get('event_employees_cache_%s' % event_id)
@@ -113,7 +116,7 @@ class Event(models.Model):
                 cached_employees.color_cell,
                 cached_employees.color_text,
                 url,
-                str(self),
+                event_text,
                 '<span class="evttooltiptext">chez: %s @ %s '
                 '%s</span> '
                 % (
@@ -122,12 +125,12 @@ class Event(models.Model):
                     self.notes))
         if self.event_type_enum == EventTypeEnum.GENERIC:
             return u'<a class="eventtooltip" href="%s">&#9758;%s %s</a>' % (url,
-                                                                            str(self),
+                                                                            event_text,
                                                                             '<span class="evttooltiptext">%s</span> '
                                                                             % self.notes)
 
         return u'<a class="eventtooltip" href="%s">&#9829;%s %s</a>' % (url,
-                                                                        str(self),
+                                                                        event_text,
                                                                         '<span class="evttooltiptext">%s</span> '
                                                                         % self.notes)
 
