@@ -7,7 +7,7 @@ from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, PageBreak, Table, TableStyle, Image
+from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, PageBreak, Table, TableStyle
 
 from dependence.careplan import CarePlanMaster, CarePlanDetail
 from invoices.settings import BASE_DIR
@@ -132,7 +132,7 @@ def myFirstPage(canv, doc):
     # # header
     canv.drawImage(BASE_DIR + "/static/patientanamnesis/images/logo.png", doc.pagesize[0] / 2 - 14.5 * cm,
                    doc.pagesize[1] / 2 + 9.5 * cm,
-                   width=20, height=20)
+                   width=37*1.5, height=15*1.5, mask='auto')
 
     # footer
     signature = 'Signatures: ............................................................'
