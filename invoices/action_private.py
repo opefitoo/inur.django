@@ -13,11 +13,12 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus.doctemplate import SimpleDocTemplate
-from reportlab.platypus.flowables import Spacer, PageBreak
+from reportlab.platypus.flowables import Spacer, PageBreak, Image
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 
 from invoices import settings
+from invoices.settings import BASE_DIR
 
 
 def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
@@ -67,15 +68,18 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
                                       qs.accident_id,
                                       qs.accident_date,
                                       qs.invoice_send_date,
-                                      qs.patient)
+                                      patient=qs.patient,
+                                      invoice_paid=qs.invoice_paid)
 
             elements.extend(_result["elements"])
-            recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
+            if not qs.invoice_paid:
+                recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
     if len(_recap_dates) > 0:
         _recap_date = _recap_dates[-1].strftime('%d-%m-%Y')
     else:
         _recap_date = now().date().strftime('%d-%m-%Y')
-    elements.extend(_build_recap(_recap_date, _payment_ref, recapitulatif_data))
+    if len(recapitulatif_data) > 0:
+        elements.extend(_build_recap(_recap_date, _payment_ref, recapitulatif_data))
     doc.build(elements)
 
     if attach_to_email:
@@ -100,7 +104,7 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
 
 
 def _build_invoices(prestations, invoice_number, invoice_date, prescription_date, accident_id, accident_date,
-                    invoice_send_date, patient):
+                    invoice_send_date, patient, invoice_paid=False):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
     elements = []
@@ -194,7 +198,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
     elements.append(Spacer(1, 18))
-    if (prescription_date is not None):
+    if prescription_date is not None:
         elements.append(Paragraph(u"Mémoire d'Honoraires Num. %s en date du : %s Ordonnance du %s " % (
             invoice_number, invoice_date, prescription_date), styles['Heading4']))
     else:
@@ -222,10 +226,23 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                                           ('BOX', (0, 0), (0, 0), 0.75, colors.black),
                                           ('SPAN', (1, 1), (1, 2)),
                                           ]))
+    _invoice_paid_stample = Table([["", "Facture Acquitée", ""]], [1 * cm, 4 * cm], 1 * [0.5 * cm], hAlign='CENTER')
+    _invoice_paid_stample.setStyle(TableStyle([('ALIGN', (1, 1), (-2, -2), 'RIGHT'),
+                                               ('INNERGRID', (0, 0), (0, 0), 1, colors.red),
+                                               ('FONTSIZE', (0, 0), (-1, -1), 9),
+                                               ('BOX', (0, 0), (1, 1), 1, colors.red),
+                                               ('TEXTCOLOR', (0, 0), (1, 1), colors.red),
+                                               ('SPAN', (1, 1), (3, 2)),
+                                               ]))
     elements.append(Spacer(1, 18))
     elements.append(_2derniers_cases)
     elements.append(Spacer(1, 18))
-
+    if invoice_paid:
+        elements.append(_invoice_paid_stample)
+        signature_img = Image(BASE_DIR + "/static/images/signature_regine_transparent.png")
+        signature_img.drawHeight = 2 * cm
+        signature_img.drawWidth = 2 * cm
+        elements.append(signature_img)
     elements.append(PageBreak())
 
     return {"elements": elements
