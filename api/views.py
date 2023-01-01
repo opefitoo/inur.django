@@ -256,14 +256,14 @@ def get_bank_holidays(request):
 @api_view(['GET'])
 def how_many_care_given(request):
     if 'GET' == request.method:
-        reqs = Prestation.objects.all().count()
+        reqs = Prestation.objects.all().count() + Event.objects.filter(state=3).count()
         return Response(reqs, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 def how_many_patients(request):
     if 'GET' == request.method:
-        reqs = Patient.objects.all().count() + Event.objects.filter(state=3).count()
+        reqs = Patient.objects.all().count()
         return Response(reqs, status=status.HTTP_200_OK)
 
 
