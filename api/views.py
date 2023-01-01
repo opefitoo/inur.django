@@ -1,6 +1,5 @@
 from constance import config
 from django.contrib.auth.models import User, Group
-from django.http import HttpResponse
 from django.utils.datetime_safe import datetime
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.decorators import api_view
@@ -8,7 +7,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api import serializers
 from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, \
     PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
@@ -265,7 +263,7 @@ def how_many_care_given(request):
 @api_view(['GET'])
 def how_many_patients(request):
     if 'GET' == request.method:
-        reqs = Patient.objects.all().count()
+        reqs = Patient.objects.all().count() + Event.objects.filter(state=3).count()
         return Response(reqs, status=status.HTTP_200_OK)
 
 
