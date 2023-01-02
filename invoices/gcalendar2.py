@@ -304,7 +304,11 @@ class PrestationGoogleCalendarSurLu:
         return gmail_event
 
     def delete_event(self, evt_instance):
-        return self.delete_event_by_google_id(calendar_id=evt_instance.employees.user.email,
+        if evt_instance.employees:
+            return self.delete_event_by_google_id(calendar_id=evt_instance.employees.user.email,
+                                              event_id=evt_instance.calendar_id,
+                                              dry_run=False)
+        return self.delete_event_by_google_id(calendar_id=config.GENERAL_CALENDAR_ID,
                                               event_id=evt_instance.calendar_id,
                                               dry_run=False)
 
