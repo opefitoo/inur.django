@@ -61,7 +61,8 @@ class Event(models.Model):
         (2, _('Valid')),
         (3, _('Done')),
         (4, _('Ignored')),
-        (5, _('Not Done'))
+        (5, _('Not Done')),
+        (6, _('Cancelled')),
     ]
 
     day = models.DateField(_('Event day'), help_text=_('Event day'))
@@ -104,7 +105,7 @@ class Event(models.Model):
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
         event_text = str(self)
-        if Event.STATES[4][0] == self.state:
+        if self.state in [Event.STATES[4][0], Event.STATES[5][0]]:
             event_text = "<del>%s</del>" % str(self)
         if self.time_start_event and self.employees:
             event_id = self.id
@@ -489,6 +490,8 @@ def event_report_mandatory_validated_events(data):
 def validate_date_range(instance_id, data):
     messages = {}
     conflicts = None
+    if data['state'] in [5,6]:
+        return messages
     if data['employees_id']:
         conflicts = Event.objects.filter(day=data['day']).filter(
             Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
@@ -497,7 +500,7 @@ def validate_date_range(instance_id, data):
             Q(time_start_event__lte=data['time_end_event'], time_end_event__gte=data['time_end_event'])
         ).filter(
             employees_id=data['employees_id']).exclude(
-            pk=instance_id)
+            pk=instance_id).exclude(state=Event.STATES[5][0]).exclude(state=Event.STATES[4][0])
     elif data['patient_id'] and data['employees_id'] is None:
         conflicts = Event.objects.filter(day=data['day']).filter(
             Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
@@ -506,7 +509,7 @@ def validate_date_range(instance_id, data):
             Q(time_start_event__lte=data['time_end_event'], time_end_event__gte=data['time_end_event'])
         ).filter(
             employees_id=data['patient_id']).exclude(
-            pk=instance_id)
+            pk=instance_id).exclude(state=Event.STATES[5][0]).exclude(state=Event.STATES[4][0])
     if conflicts and 0 < conflicts.count():
         messages = {'state': _("Intersection with other %s, here : %s from %s to %s") %
                                         (Event._meta.verbose_name_plural, conflicts[0], conflicts[0].time_start_event,

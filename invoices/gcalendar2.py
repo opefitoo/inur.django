@@ -223,7 +223,7 @@ class PrestationGoogleCalendarSurLu:
                     attendees_list.append({'email': '%s' % u.assigned_additional_employee.user.email})
 
             event_body = {
-                'summary': "! ANNULÉ %s !" % ('\u0336'.join(summary) + '\u0336') if 5 == event.state else summary,
+                'summary': "! ANNULÉ %s !" % ('\u0336'.join(summary) + '\u0336') if event.state in [5,6] else summary,
                 'description': description,
                 'location': location,
                 'status': "cancelled" if 5 == event.state else "confirmed",
@@ -247,7 +247,7 @@ class PrestationGoogleCalendarSurLu:
                                                0,
                                                0)
             event_body = {
-                'summary': "! ANNULÉ %s !" % ('\u0336'.join(summary) + '\u0336') if 5 == event.state else summary,
+                'summary': "! ANNULÉ %s !" % ('\u0336'.join(summary) + '\u0336') if event.state in [5,6] else summary,
                 'description': description,
                 'location': location,
                 'start': {
