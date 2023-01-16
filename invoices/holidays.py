@@ -63,6 +63,8 @@ class HolidayRequest(models.Model):
     force_creation = models.BooleanField(default=False, help_text=u"Si vous êtes manager vous pouvez forcer la "
                                                                   "création de congés même si conflits avec d#autre "
                                                                   "employés")
+    do_not_notify = models.BooleanField(default=False, help_text="Do not send email notifications",
+                                        blank=True, null=True, verbose_name="Do not notify")
     start_date = models.DateField(u'Date début')
     end_date = models.DateField(u'Date fin')
     requested_period = models.CharField("Période",

@@ -654,10 +654,19 @@ class HolidayRequestAdmin(admin.ModelAdmin):
             return format_html(
                 '<div class="warn">%s</div>' % HolidayRequestWorkflowStatus(obj.request_status).name)
 
+    def sanity_check(self, obj):
+        if obj.start_date.year != obj.end_date.year:
+            return format_html(
+                '<div class="warn">Attention, la demande concerne deux années différentes.</div>')
+        else:
+            return ''
+
+
     readonly_fields = ('validated_by', 'employee', 'request_creator', 'force_creation',
-                       'request_status', 'validator_notes', 'total_days_in_current_year')
+                       'request_status', 'validator_notes', 'total_days_in_current_year', 'do_not_notify',)
     list_display = ('employee', 'start_date', 'end_date', 'reason', 'hours_taken', 'validated_by',
-                    'holiday_request_status', 'request_creator', 'total_days_in_current_year')
+                    'holiday_request_status', 'request_creator', 'total_days_in_current_year',
+                    'sanity_check')
 
     def accept_request(self, request, queryset):
         if not request.user.is_superuser:
@@ -763,19 +772,20 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 return 'employee', 'start_date', 'end_date', 'requested_period', 'reason', 'validated_by', \
                        'hours_taken', 'request_creator'
             elif request.user.is_superuser and not 1 != obj.request_status:
-                return [f for f in self.readonly_fields if f not in ['force_creation', 'employee', 'request_status',
+                return [f for f in self.readonly_fields if f not in ['force_creation', 'do_not_notify', 'employee',
+                                                                     'request_status',
                                                                      'validator_notes']]
             elif request.user.is_superuser:
-                return [f for f in self.readonly_fields if f not in ['force_creation', 'employee',
+                return [f for f in self.readonly_fields if f not in ['force_creation', 'do_not_notify', 'employee',
                                                                      'validator_notes']]
             elif 0 != obj.request_status:
                 return 'employee', 'start_date', 'end_date', 'requested_period', 'reason', 'validated_by', \
-                       'hours_taken', 'request_creator', 'request_status', 'validator_notes', 'force_creation',
+                       'hours_taken', 'request_creator', 'request_status', 'validator_notes', 'force_creation', 'do_not_notify'
 
         else:
             if request.user.is_superuser:
-                return [f for f in self.readonly_fields if f not in ['force_creation', 'employee', 'request_status',
-                                                                     'validator_notes']]
+                return [f for f in self.readonly_fields if f not in ['force_creation', 'do_not_notify', 'employee',
+                                                                     'request_status', 'validator_notes']]
         return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
