@@ -665,10 +665,11 @@ class HolidayRequestAdmin(admin.ModelAdmin):
 
 
     readonly_fields = ('validated_by', 'employee', 'request_creator', 'force_creation',
-                       'request_status', 'validator_notes', 'total_days_in_current_year', 'do_not_notify',)
+                       'request_status', 'validator_notes', 'total_days_in_current_year', 'do_not_notify',
+                       'total_hours_off_available')
     list_display = ('employee', 'start_date', 'end_date', 'reason', 'hours_taken', 'validated_by',
                     'holiday_request_status', 'request_creator', 'total_days_in_current_year',
-                    'sanity_check')
+                    'sanity_check', 'total_hours_off_available')
 
     def accept_request(self, request, queryset):
         if not request.user.is_superuser:

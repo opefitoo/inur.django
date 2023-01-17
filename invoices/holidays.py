@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 from constance import config
 from django.contrib.auth.models import User
@@ -160,6 +160,54 @@ class HolidayRequest(models.Model):
             calculation += holiday_req.hours_calculations(same_year_only=True, holiday_request=holiday_req).num_days
         return calculation
 
+    @property
+    def total_hours_off_available(self, year=None):
+        """
+        For a specific year, returns the number of hours off available for the employee.
+        :return: the number of hours off available for the employee
+        @return:
+        """
+        if year is None:
+            year = self.start_date.year
+        # if employee contract detail end date is None or at least one contract detail date end is after the year
+        # we are looking for, we can assume that the employee is still working for the company
+        if Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(end_date__isnull=True).exists() or \
+                Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(end_date__year=year).exists():
+            hours_off_available = 0
+            # if self.start_date.year equals year then for month in range to as of now
+            # else for month in range 1 to 12
+            if self.start_date.year == year:
+                #
+                for month in range(1, self.end_date.month + 1):
+                    hours_off_available += self.hours_off_available_per_month(month, year)
+            else:
+                for month in range(1, 13):
+                    hours_off_available += self.hours_off_available_per_month(month, year)
+            return hours_off_available
+
+    def hours_off_available_per_month(self, month, year):
+        """
+        For a specific month and year, returns the number of hours off available for the employee.
+        @param month:
+        @param year:
+        @return:
+        """
+        hours_off_available = 0
+        employee_contract_details = Employee.objects.get(
+                    user_id=self.employee.id).employeecontractdetail_set.filter(
+                    start_date__lte=datetime(year, month, 1), end_date__isnull=True).first()
+        if employee_contract_details is None:
+            employee_contract_details = Employee.objects.get(
+                user_id=self.employee.id).employeecontractdetail_set.filter(
+                start_date__lte=datetime(year, month, 1), end_date__gt=datetime(year=year, month=month, day=1)).first()
+        if employee_contract_details is not None:
+            number_of_hours_off_for_the_month = employee_contract_details.number_of_hours * 0.43333333333333335
+            hours_off_available += number_of_hours_off_for_the_month
+            # round to 2 decimals commercial
+            return round(hours_off_available, 2)
+        else:
+            return 0
+
     def clean(self, *args, **kwargs):
         exclude = []
 
@@ -197,6 +245,7 @@ class HolidayRequest(models.Model):
     def __str__(self):
         return u'%s de %s - du  %s au %s' % (
             self.REASONS[self.reason - 1][1], self.employee, self.start_date, self.end_date)
+
 
 
 def update_absence_request_filename(instance, filename):
