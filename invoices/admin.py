@@ -20,7 +20,8 @@ from django.utils.translation import gettext_lazy as _
 from django_csv_exports.admin import CSVExportAdmin
 
 from helpers.timesheet import build_use_case_objects
-from invoices.action import export_to_pdf
+from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_paid, set_invoice_as_not_paid, \
+    set_invoice_as_not_sent
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
@@ -471,7 +472,8 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     pdf_private_invoice_pp_bis.short_description = "Facture client participation personnelle (new)"
 
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
-               pdf_private_invoice, export_to_pdf2, cns_invoice_bis, pdf_private_invoice_pp_bis]
+               pdf_private_invoice, export_to_pdf2, cns_invoice_bis, pdf_private_invoice_pp_bis, set_invoice_as_sent,
+               set_invoice_as_paid, set_invoice_as_not_paid, set_invoice_as_not_sent]
     inlines = [PrestationInline]
     fieldsets = (
         (None, {
