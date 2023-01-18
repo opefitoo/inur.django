@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from typing import List
 
+import pytz
 import requests
 from constance import config
 from django.core.cache import cache
@@ -150,7 +151,7 @@ class Car(models.Model):
         data = json.loads(r.text)
 
         time_converter = datetime.strptime(position_time, '%Y-%m-%dT%H:%M:%S%z')
-        heure_luxembourg = str(time_converter.astimezone(timezone('Europe/Luxembourg')))
+        heure_luxembourg = str(time_converter.astimezone(pytz.timezone('Europe/Luxembourg')))
         if "features" in data:
             address = data["features"][0]['properties']['label']
             return "%s - màj: %s" % (address, heure_luxembourg)
