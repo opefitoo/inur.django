@@ -42,7 +42,7 @@ from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
-    Hospitalization, InvoiceItemBatch, AssignedPhysician
+    Hospitalization, InvoiceItemBatch, AssignedPhysician, InvoiceItemEmailLog
 from invoices.models import ContactPerson, OtherStakeholder, DependenceInsurance, \
     BiographyHabits
 from invoices.modelspackage import InvoicingDetails
@@ -576,7 +576,15 @@ class InvoiceItemBatchAdmin(admin.ModelAdmin):
 
 admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
 
-
+@admin.register(InvoiceItemEmailLog)
+class InvoiceItemEmailLogAdmin(admin.ModelAdmin):
+    list_display = ('item', 'sent_at', 'recipient', 'subject')
+    list_filter = ('sent_at',)
+    search_fields = ('item__invoice_number', 'recipient', 'subject')
+    ## display the foreign key as a link
+    raw_id_fields = ('item',)
+    ## all fields are read-only
+    readonly_fields = [f.name for f in InvoiceItemEmailLog._meta.fields]
 class TimesheetDetailInline(admin.TabularInline):
     extra = 1
     model = TimesheetDetail

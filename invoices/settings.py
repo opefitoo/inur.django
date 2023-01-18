@@ -259,6 +259,7 @@ if 'EMAIL_HOST' in os.environ:
     EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_HOST_USER = 'noreply@localhost'
 
 LOGGING = {
     'version': 1,

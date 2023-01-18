@@ -1064,6 +1064,23 @@ class InvoiceItem(models.Model):
     def autocomplete_search_fields():
         return 'invoice_number',
 
+class InvoiceItemEmailLog(models.Model):
+    item = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, related_name='emails')
+    sent_at = models.DateTimeField(auto_now_add=True)
+    recipient = models.EmailField()
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    cc = models.CharField(max_length=200, blank=True)
+    bcc = models.CharField(max_length=200, blank=True)
+    attachments = models.CharField(max_length=200, blank=True)
+    status = models.CharField(max_length=200, blank=True)
+    error = models.TextField(blank=True)
+
+    def __str__(self):
+        # return recipient, subject, datetime
+        return self.recipient + ' - ' + self.subject + ' - ' + self.sent_at.strftime("%d/%m/%Y %H:%M:%S")
+
+
 
 class Prestation(models.Model):
     class Meta:

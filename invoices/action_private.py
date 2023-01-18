@@ -18,6 +18,7 @@ from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 
 from invoices import settings
+from invoices.models import InvoiceItemEmailLog
 from invoices.settings import BASE_DIR
 
 
@@ -83,6 +84,8 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
     doc.build(elements)
 
     if attach_to_email:
+        if queryset.order_by("invoice_number").count() > 1:
+            raise Exception("Cannot attach multiple invoices to email")
         subject = "Votre Facture %s" % _file_name
         message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe.\nSi ce courrier a croisé votre paiement, veuillez considérer ce message (rappel) comme nul et non avenu.\nCordialement \n -- \n%s \n%s " \
                   "%s\n%s\n%s" % (config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
@@ -94,9 +97,14 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
         mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
 
         try:
-            mail.send(fail_silently=False)
-            return True
-        except:
+            status = mail.send(fail_silently=False)
+            InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
+                                               subject=subject, body=message, cc=emails, status=status)
+            return status
+        except Exception as e:
+            print(e)
+            InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
+                                               subject=subject, body=message, cc=emails, status=0, error=e)
             return False
         finally:
             io_buffer.close()
