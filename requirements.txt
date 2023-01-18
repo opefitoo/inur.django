@@ -62,3 +62,4 @@ django-select2==8.0.0
 pdf2image==1.16.2
 -e git+https://github.com/mehditerraneen/yalexs.git@1dfc5292261dc646d1ce3e1a76d1b2875f1fe97b#egg=yalexs
 wtforms==3.0.1
+vininfo==1.7.0
