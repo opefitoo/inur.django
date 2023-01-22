@@ -24,6 +24,13 @@ class EmployeeAvatarSerializer(serializers.ModelSerializer):
         fields = ('user', 'avatar', 'bio', 'occupation')
         depth = 1
 
+class EmployeeSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    class Meta:
+        model = Employee
+        fields = ('user', 'address', 'occupation')
+        depth = 1
+
 
 
 class GroupSerializer(serializers.ModelSerializer):

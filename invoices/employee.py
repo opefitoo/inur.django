@@ -8,12 +8,12 @@ from django.db import models
 from django.db.models.signals import pre_save, post_delete, post_save
 from django.dispatch import receiver
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from invoices.enums.holidays import ContractType
 from invoices.storages import CustomizedGoogleDriveStorage
-from django.utils.translation import gettext_lazy as _
 
 
 def avatar_storage_location(instance, filename):
@@ -99,6 +99,8 @@ class Employee(models.Model):
                                                  help_text="If checked then bio and avatar fields become mandatory",
                                                  blank=True, null=True)
 
+    def get_current_contract(self):
+        return self.contract_set.filter(end_date__isnull=True).first()
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
         is_has_gdrive_access_valid, message = self.is_has_gdrive_access_valid(self.has_gdrive_access, self.user)

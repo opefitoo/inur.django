@@ -121,6 +121,13 @@ urlpatterns += [
     re_path(r'^api/v1/event_list/(?P<pk>[0-9]+)/$', api.views.EventDetail.as_view()),
 ]
 urlpatterns += [
+    re_path(
+        r'^api/v1/get_employee_details/$',
+        api.views.get_employee_details,
+        name='get_employee_details',
+    ),
+]
+urlpatterns += [
     re_path(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
 ]
 urlpatterns += [

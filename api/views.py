@@ -13,7 +13,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
-    EmployeeAvatarSerializer
+    EmployeeAvatarSerializer, EmployeeSerializer
 from api.utils import get_settings
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
@@ -225,6 +225,15 @@ def cleanup_event(request):
     return Response(event_serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+def get_employee_details(request):
+    if 'POST' != request.method:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    employee = get_employee_id_by_abbreviation(request.data.get('abbreviation'))
+    if employee:
+        return Response(EmployeeSerializer(employee).data, status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 @api_view(['POST'])
 def whois_off(request):
     if 'POST' == request.method:  # user posting data
