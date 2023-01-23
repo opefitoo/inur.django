@@ -189,8 +189,14 @@ class Car(models.Model):
     def __str__(self):
         if self.vin_number:
             vin = Vin(self.vin_number)
-            if vin.validate():
-                return "%s %s %s" % (vin.year, vin.make, vin.model)
+            if vin.validate(self.vin_number):
+                # get values in vin annotate_titles to get the full name of the field
+                resource_name = " - %s" % self.licence_plate
+                for k in vin.annotate_titles:
+                    vin.__dict__[k] = vin.annotate_titles[k]
+                    if vin.__getattribute__(k) and len(vin.__getattribute__(k)) > 0:
+                        resource_name += " %s: %s " % (k, vin.__getattribute__(k))
+                return resource_name
             else:
                 return '%s - %s (VIN error)' % (self.name, self.licence_plate)
         return '%s - %s' % (self.name, self.licence_plate)
