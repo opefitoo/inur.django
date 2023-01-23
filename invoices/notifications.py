@@ -1,11 +1,12 @@
 from json import dumps
 
-from constance import config, settings
+from constance import config
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from httplib2 import Http
 
 from helpers.employee import get_admin_emails
+from invoices import settings
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 
 
@@ -41,8 +42,9 @@ def send_email_notification(subject, message, to_emails):
     send_mail(
         subject,
         message,
-        'noreply@opefitoo.org',
-        to_emails,
+        from_email=settings.EMAIL_HOST_USER,
+        auth_user=settings.EMAIL_AUTH_USER,
+        recipient_list=to_emails,
     )
 
 
