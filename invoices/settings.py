@@ -16,6 +16,9 @@ import os
 import sys
 
 import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv(verbose=True)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -258,6 +261,7 @@ if 'EMAIL_HOST' in os.environ:
     EMAIL_PORT = 587
     EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
     EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+    EMAIL_AUTH_USER = os.environ['EMAIL_HOST_USER']
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     EMAIL_HOST_USER = 'noreply@localhost'
@@ -295,9 +299,6 @@ LOGGING = {
     }
 }
 
-from dotenv import load_dotenv
-
-load_dotenv(verbose=True)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
