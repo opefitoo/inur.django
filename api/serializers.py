@@ -28,7 +28,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     class Meta:
         model = Employee
-        fields = ('user', 'address', 'occupation')
+        fields = ('user', 'address', 'occupation', 'birth_date', 'birth_place', 'gender')
         depth = 1
 
 

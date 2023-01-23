@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from invoices.enums.generic import GenderType
 from invoices.enums.holidays import ContractType
 from invoices.storages import CustomizedGoogleDriveStorage
 
@@ -52,8 +53,16 @@ class JobPosition(models.Model):
     def __str__(self):
         return '%s' % (self.name.strip())
 
-
 class Employee(models.Model):
+    class Meta:
+        ordering = ['-id']
+    gender = models.CharField("Sex",
+                              max_length=5,
+                              choices=GenderType.choices,
+                              default=None,
+                              blank=True,
+                              null=True
+                              )
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_contract = models.DateField(u'start date')
     end_contract = models.DateField(u'end date', blank=True,
@@ -71,9 +80,9 @@ class Employee(models.Model):
                                               max_length=20,
                                               blank=True)
     abbreviation = models.CharField('Abbreviation',
-                                    help_text='Enter employee abbreviation, must be unique accross company',
+                                    help_text='Enter employee abbreviation, must be unique across company',
                                     max_length=3,
-                                    default='XXX')
+                                    default="XXX")
     phone_number = PhoneNumberField(blank=True)
     bank_account_number = models.CharField("Numéro de compte IBAN", help_text="Code BIC + IBAN",
                                            max_length=50, blank=True)
@@ -85,6 +94,7 @@ class Employee(models.Model):
     citizenship = CountryField(blank_label='...', blank=True, null=True)
     color_cell = ColorField(default='#FF0000')
     color_text = ColorField(default='#FF0000')
+    birth_date = models.DateField(u'birth date', blank=True, null=True)
 
     birth_place = models.CharField(u'Birth Place',
                                    help_text=u'Enter the City / Country of Birth',
@@ -136,6 +146,10 @@ class EmployeeContractDetail(models.Model):
                                      choices=ContractType.choices,
                                      default=ContractType.CDI, blank=True, null=True)
     monthly_wage = models.DecimalField("Salaire Mensuel", max_digits=8, decimal_places=2, blank=True, null=True)
+    index = models.DecimalField("Index", max_digits=8, decimal_places=2, blank=True, null=True)
+    number_of_days_holidays = models.PositiveSmallIntegerField(u"Nombre de jours de congés",
+                                                               validators=[MinValueValidator(0),
+                                                                           MaxValueValidator(36)])
     employee_link = models.ForeignKey(Employee, on_delete=models.CASCADE)
 
     def calculate_current_daily_hours(self):
