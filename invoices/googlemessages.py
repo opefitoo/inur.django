@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from json import dumps
 
 from httplib2 import Http
@@ -43,6 +43,10 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
     if state not in [3, 5]:
         return
     string_event_date = ""
+    # if event date in more than 2 days in the past, we do nothing
+    if event_date:
+        if event_date.date() < datetime.now().date() - timedelta(days=2):
+            return
     if event_date:
         if event_date.date() < datetime.now().date():
             string_event_date = "du %s programmé à %s" % (event_date.date().strftime('%d-%h-%Y'),
