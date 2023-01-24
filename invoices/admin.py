@@ -222,6 +222,7 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     extra = 0
     model = MedicalPrescription
     readonly_fields = ('thumbnail_img',)
+    autocomplete_fields = ['prescriptor']
     fields = [field.name for field in MedicalPrescription._meta.fields if field.name not in ["id", "file"]]
     ordering = ['-date']
 
