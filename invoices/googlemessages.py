@@ -58,7 +58,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
                                                                patient.name,
                                                                event_report)
     # FIXME: remove hardcoded value for state
-    elif 5 == state:
+    elif  state in [5,6]:
         message = "Passage %s pour *%s* annulé  chez *%s* : %s" % (string_event_date, employees.user.first_name,
                                                                    patient.name,
                                                                    event_report)

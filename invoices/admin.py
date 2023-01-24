@@ -1126,7 +1126,7 @@ class EventListAdmin(admin.ModelAdmin):
 
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
-               'send_webhook_message']
+               'send_webhook_message' ]
     inlines = (ReportPictureInLine,)
 
     form = EventForm
@@ -1218,7 +1218,7 @@ class EventListAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             if len(form.base_fields) > 0:
                 form.base_fields["event_report"].required = True
-                form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'))
+                form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'), (6, _('Cancelled')))
 
         class ModelFormWithRequest(form):
             def __new__(cls, *args, **kwargs):
