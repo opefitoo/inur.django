@@ -1218,7 +1218,7 @@ class EventListAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             if len(form.base_fields) > 0:
                 form.base_fields["event_report"].required = True
-                form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'), (6, _('Cancelled')))
+                form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done')), (6, _('Cancelled'))
 
         class ModelFormWithRequest(form):
             def __new__(cls, *args, **kwargs):
