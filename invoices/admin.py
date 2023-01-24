@@ -42,7 +42,7 @@ from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
-    Hospitalization, InvoiceItemBatch, AssignedPhysician, InvoiceItemEmailLog
+    Hospitalization, InvoiceItemBatch, AssignedPhysician, InvoiceItemEmailLog, PatientAdminFile
 from invoices.models import ContactPerson, OtherStakeholder, DependenceInsurance, \
     BiographyHabits
 from invoices.modelspackage import InvoicingDetails
@@ -218,6 +218,10 @@ class HospitalizationInline(admin.TabularInline):
     fields = ('start_date', 'end_date', 'description')
 
 
+class PatientAdminFileInline(admin.TabularInline):
+    extra = 0
+    model = PatientAdminFile
+    
 class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     extra = 0
     model = MedicalPrescription
@@ -278,7 +282,7 @@ class PatientAdmin(CSVExportAdmin):
     # actions = [calculate_distance_matrix]
     form = PatientForm
     # actions = [generate_road_book_2019_mehdi]
-    inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin]
+    inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline,]
 
     def link_to_invoices(self, instance):
         url = f'{reverse("admin:invoices_invoiceitem_changelist")}?patient__id={instance.id}'

@@ -16,6 +16,7 @@ from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django_countries.fields import CountryField
@@ -824,6 +825,23 @@ class MedicalPrescription(models.Model):
         else:
             return '%s %s (%s) sans fichier' % (
                 self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
+
+def update_patient_admin_filename(instance, filename):
+    # if file_date is None:
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.file_date is None:
+        return 'patient_admin/%s/%s/%s/%s' % (str(instance.patient),timezone.now().year,
+                                              timezone.now().month,
+                                              filename)
+    else:
+        return 'patient_admin/%s/%s/%s/%s' % (str(instance.patient), instance.file_date.year, instance.file_date.month,
+                                              filename)
+
+class PatientAdminFile(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    file_description = models.CharField("description", max_length=50)
+    file_date = models.DateField("date du fichier", null=True, blank=True)
+    file_upload = models.FileField(null=True, blank=True, upload_to=update_patient_admin_filename)
 
 
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
