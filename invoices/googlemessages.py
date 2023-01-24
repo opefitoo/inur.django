@@ -40,7 +40,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
     # FIXME: remove hardcoded value for state
     if patient is None:
         return
-    if state not in [3, 5]:
+    if state not in [3, 5, 6]:
         return
     string_event_date = ""
     # if event date in more than 2 days in the past, we do nothing
