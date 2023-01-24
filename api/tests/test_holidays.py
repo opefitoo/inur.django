@@ -49,7 +49,7 @@ class HolidayHelpersRequestTestCase(TestCase):
         employee_detail_2 = EmployeeContractDetail.objects.create(
             start_date=timezone.now().replace(year=2017, month=1, day=1),
             number_of_hours=40,
-            employee_link=self.employee_u2)
+            employee_link=self.employee_u2, number_of_days_holidays=26)
         employee_detail_2.save()
 
     def tearDown(self):
