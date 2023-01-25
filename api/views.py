@@ -13,11 +13,12 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
-    EmployeeAvatarSerializer, EmployeeSerializer
+    EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer
 from api.utils import get_settings
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
-from helpers.employee import get_employee_id_by_abbreviation
+from helpers.employee import get_employee_id_by_abbreviation, \
+    get_current_employee_contract_details_by_employee_abbreviation
 from invoices import settings
 from invoices.employee import JobPosition, Employee
 from invoices.events import EventType, Event
@@ -234,6 +235,18 @@ def get_employee_details(request):
         return Response(EmployeeSerializer(employee).data, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+def get_employee_contract_details_by_abbreviation(request):
+    if 'POST' != request.method:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    employee = get_current_employee_contract_details_by_employee_abbreviation(request.data.get('abbreviation'))
+    if employee:
+        return Response(EmployeeContractSerializer(employee).data, status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
 @api_view(['POST'])
 def whois_off(request):
     if 'POST' == request.method:  # user posting data

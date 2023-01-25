@@ -128,6 +128,13 @@ urlpatterns += [
     ),
 ]
 urlpatterns += [
+    re_path(
+        r'^api/v1/get_employee_contract_details_by_abbreviation/$',
+        api.views.get_employee_contract_details_by_abbreviation,
+        name='get_employee_contract_details_by_abbreviation',
+    ),
+]
+urlpatterns += [
     re_path(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
 ]
 urlpatterns += [
