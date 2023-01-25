@@ -116,6 +116,9 @@ class Employee(models.Model):
         is_has_gdrive_access_valid, message = self.is_has_gdrive_access_valid(self.has_gdrive_access, self.user)
         if not is_has_gdrive_access_valid:
             raise ValidationError({'has_gdrive_access': message})
+        ## if self.address contains line breaks, replace them with spaces
+        if self.address:
+            self.address = self.address.replace('\n', ' ').replace('\r', '').replace('  ', ' ')
 
     @staticmethod
     def is_has_gdrive_access_valid(has_gdrive_access, user):
