@@ -143,6 +143,20 @@ class Employee(models.Model):
         return ' - '.join([self.user.username.strip().capitalize(), self.abbreviation])
 
 
+def contract_storage_location(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.start_date:
+        _current_yr_or_prscr_yr = instance.start_date.year
+        _current_month_or_prscr_month = instance.start_date.month
+    else:
+        _current_yr_or_prscr_yr = str(instance.employee_link.start_contract.year)
+        _current_month_or_prscr_month = str(instance.employee_link.start_contract.month)
+    path = os.path.join("Doc. Admin employes", "%s_%s" % (instance.employee_link.user.last_name.upper(),
+                                                          instance.employee_link.user.first_name.capitalize()))
+    filename = '%s_%s_%s_%s%s' % (
+        _current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.employee_link.abbreviation,
+        "contract", file_extension)
+    return os.path.join(path, filename)
 class EmployeeContractDetail(models.Model):
     start_date = models.DateField(u'Date début période')
     end_date = models.DateField(u'Date fin période', blank=True, null=True)
@@ -158,6 +172,13 @@ class EmployeeContractDetail(models.Model):
                                                                validators=[MinValueValidator(0),
                                                                            MaxValueValidator(36)])
     employee_link = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee_contract_file = models.FileField(upload_to=contract_storage_location,
+                                              help_text=_("You can attach the scan of the contract"),
+                                              null=True, blank=True)
+    contract_signed_date = models.DateField(u'Date signature contrat', blank=True, null=True)
+    contract_date = models.DateField(u'Date contrat', blank=True, null=True)
+    employee_trial_period_text = models.TextField("Texte période d'essai", max_length=200, blank=True, null=True)
+    employee_special_conditions_text = models.TextField("Texte conditions spéciales", max_length=200, blank=True, null=True)
 
     def calculate_current_daily_hours(self):
         return self.number_of_hours / 5
