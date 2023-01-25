@@ -119,6 +119,10 @@ class Employee(models.Model):
         ## if self.address contains line breaks, replace them with spaces
         if self.address:
             self.address = self.address.replace('\n', ' ').replace('\r', '').replace('  ', ' ')
+        ## if abbreviation is not unique, raise error, except if abbreviation is 'XXX'
+        if self.abbreviation and self.abbreviation != 'XXX':
+            if Employee.objects.filter(abbreviation=self.abbreviation).exclude(id=self.id).exists():
+                raise ValidationError({'abbreviation': 'Abbreviation must be unique across company'})
 
     @staticmethod
     def is_has_gdrive_access_valid(has_gdrive_access, user):
