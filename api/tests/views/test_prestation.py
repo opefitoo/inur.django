@@ -1,13 +1,11 @@
-from django.utils.datetime_safe import datetime
-
-from api.tests.views.base import BaseTestCase
 from django.utils import timezone
+from django.utils.datetime_safe import datetime
 from rest_framework.test import APITestCase
-from constance import config
 
 from api.serializers import PrestationSerializer
-from invoices.models import CareCode, Patient, InvoiceItem, Prestation
+from api.tests.views.base import BaseTestCase
 from invoices.employee import Employee, JobPosition
+from invoices.models import CareCode, Patient, InvoiceItem, Prestation
 
 
 class PrestationTestCase(BaseTestCase, APITestCase):

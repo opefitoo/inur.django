@@ -49,7 +49,7 @@ def send_email_notification(subject, message, to_emails):
 
 
 def notify_system_via_google_webhook(message):
-    url = settings.GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL
+    url = config.GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL
     bot_message = {
         'text': message}
     message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
