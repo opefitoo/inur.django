@@ -300,9 +300,10 @@ class PrestationGoogleCalendarSurLu:
             try:
                 gmail_event = self._service.events().delete(calendarId=calendar_id,
                                                         eventId=event_id).execute()
+                return gmail_event
             except HttpError as e:
                 raise ValueError("Problem de connexion", e)
-        return gmail_event
+        return event
 
     def delete_event(self, evt_instance):
         if evt_instance.employees:
