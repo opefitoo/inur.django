@@ -294,7 +294,7 @@ class PrestationGoogleCalendarSurLu:
             print("Pretending that I delete event: %s on Google %s" % (event_id, e))
             return e
         event = self.get_event(calendar_id=calendar_id, event_id=event_id)
-        if 'cancelled' == event['status']:
+        if event and 'cancelled' == event['status']:
             return
         try:
             gmail_event = self._service.events().delete(calendarId=calendar_id,
