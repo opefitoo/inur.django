@@ -302,7 +302,11 @@ class PrestationGoogleCalendarSurLu:
                                                         eventId=event_id).execute()
                 return gmail_event
             except HttpError as e:
-                raise ValueError("Problem de connexion", e)
+                if e.resp.status == 410 and 'Resource has been deleted' in e.content:
+                     print("Event %s already deleted" % event_id)
+                     return
+                else:
+                    raise ValueError("Problem de connexion", e)
         return event
 
     def delete_event(self, evt_instance):
