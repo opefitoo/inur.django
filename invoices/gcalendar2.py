@@ -296,11 +296,12 @@ class PrestationGoogleCalendarSurLu:
         event = self.get_event(calendar_id=calendar_id, event_id=event_id)
         if event and 'cancelled' == event['status']:
             return
-        try:
-            gmail_event = self._service.events().delete(calendarId=calendar_id,
+        if event:
+            try:
+                gmail_event = self._service.events().delete(calendarId=calendar_id,
                                                         eventId=event_id).execute()
-        except HttpError as e:
-            raise ValueError("Problem de connexion", e)
+            except HttpError as e:
+                raise ValueError("Problem de connexion", e)
         return gmail_event
 
     def delete_event(self, evt_instance):
