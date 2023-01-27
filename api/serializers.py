@@ -219,7 +219,7 @@ class GenericEmployeeEventSerializer(serializers.ModelSerializer):
         time_start_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
         time_end_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
         fields = ('id', 'day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'notes',
-                  'employees', 'created_by', "event_address")
+                  'employees', 'created_by', "event_address", "calendar_url")
         validators = [
             UniqueTogetherValidator(
                 queryset=Event.objects.all(),
