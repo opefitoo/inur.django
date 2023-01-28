@@ -77,7 +77,7 @@ class Event(models.Model):
                                        choices=EventTypeEnum.choices, default=EventTypeEnum.CARE)
     employees = models.ForeignKey(Employee, related_name='event_link_to_employee', blank=True, null=True,
                                   help_text=_('Please select an employee'),
-                                  on_delete=models.CASCADE, limit_choices_to=limit_to_active_employees)
+                                  on_delete=models.DO_NOTHING, limit_choices_to=limit_to_active_employees)
 
     notes = models.TextField(
         _('Notes'),
@@ -515,3 +515,13 @@ def validate_date_range(instance_id, data):
                                         (Event._meta.verbose_name_plural, conflicts[0], conflicts[0].time_start_event,
                                          conflicts[0].time_end_event)}
     return messages
+
+# @receiver(post_save, sender=Patient, dispatch_uid="sync_future_events_adresses_when_patient_address_changed")
+# def sync_future_events_addresses_when_patient_address_changed(sender, instance, **kwargs):
+#     if instance.address is not None:
+#         # get futures events for patient where event address is not set
+#         future_events = Event.objects.filter(patient=instance, day__gte=timezone.now().date(),
+#                                              event_address="")
+#         for event in future_events:
+#             event.address = instance.address
+#             event.save()
