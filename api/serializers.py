@@ -230,6 +230,7 @@ class GenericEmployeeEventSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
+        order_by = ('day', 'time_start_event')
         model = Event
         day = serializers.DateField(format="%Y-%m-%d")
         # for DateTimeField
