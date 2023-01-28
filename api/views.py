@@ -184,7 +184,7 @@ class GenericEmployeeEventList(generics.ListCreateAPIView):
 
 
 class EventList(generics.ListCreateAPIView):
-    queryset = Event.objects.all()
+    queryset = Event.objects.all().order_by("day", "time_start_event")
     serializer_class = EventSerializer
 
     def post(self, request, *args, **kwargs):
