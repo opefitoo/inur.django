@@ -177,7 +177,7 @@ class EmployeeContractDetail(models.Model):
                                               null=True, blank=True)
     contract_signed_date = models.DateField(u'Date signature contrat', blank=True, null=True)
     contract_date = models.DateField(u'Date contrat', blank=True, null=True)
-    employee_trial_period_text = models.TextField("Texte période d'essai", max_length=200, blank=True, null=True)
+    employee_trial_period_text = models.TextField("Texte période d'essai", max_length=800, blank=True, null=True)
     employee_special_conditions_text = models.TextField("Texte conditions spéciales", max_length=200, blank=True, null=True)
 
     def calculate_current_daily_hours(self):
