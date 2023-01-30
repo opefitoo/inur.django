@@ -124,6 +124,22 @@ class Employee(models.Model):
             if Employee.objects.filter(abbreviation=self.abbreviation).exclude(id=self.id).exists():
                 raise ValidationError({'abbreviation': 'Abbreviation must be unique across company'})
 
+    # when employee is saved, create a new contract on google contacts
+    def save(self, *args, **kwargs):
+        super(Employee, self).save(*args, **kwargs)
+        if self.has_gcalendar_access:
+            self.create_or_update_gcalendar_contract()
+
+    def create_or_update_gcalendar_contract(self):
+        # get current contract
+        current_contract = self.get_current_contract()
+        # if current contract exists, update it
+        if current_contract:
+            current_contract.update_gcalendar_contract()
+        # else create a new contract
+        else:
+            Contract.objects.create(employee=self, start_date=self.start_contract, end_date=self.end_contract)
+
     @staticmethod
     def is_has_gdrive_access_valid(has_gdrive_access, user):
         is_valid = True
@@ -170,7 +186,7 @@ class EmployeeContractDetail(models.Model):
     index = models.PositiveIntegerField("Index", blank=True, null=True)
     number_of_days_holidays = models.PositiveSmallIntegerField(u"Nombre de jours de congés",
                                                                validators=[MinValueValidator(0),
-                                                                           MaxValueValidator(36)])
+                                                                           MaxValueValidator(37)])
     employee_link = models.ForeignKey(Employee, on_delete=models.CASCADE)
     employee_contract_file = models.FileField(upload_to=contract_storage_location,
                                               help_text=_("You can attach the scan of the contract"),
