@@ -167,7 +167,7 @@ class EmployeeContractDetail(models.Model):
                                      choices=ContractType.choices,
                                      default=ContractType.CDI, blank=True, null=True)
     monthly_wage = models.DecimalField("Salaire Mensuel", max_digits=8, decimal_places=2, blank=True, null=True)
-    index = models.DecimalField("Index", max_digits=8, decimal_places=2, blank=True, null=True)
+    index = models.PositiveIntegerField("Index", blank=True, null=True)
     number_of_days_holidays = models.PositiveSmallIntegerField(u"Nombre de jours de congés",
                                                                validators=[MinValueValidator(0),
                                                                            MaxValueValidator(36)])
