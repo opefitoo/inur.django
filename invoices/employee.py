@@ -124,21 +124,6 @@ class Employee(models.Model):
             if Employee.objects.filter(abbreviation=self.abbreviation).exclude(id=self.id).exists():
                 raise ValidationError({'abbreviation': 'Abbreviation must be unique across company'})
 
-    # when employee is saved, create a new contract on google contacts
-    def save(self, *args, **kwargs):
-        super(Employee, self).save(*args, **kwargs)
-        if self.has_gcalendar_access:
-            self.create_or_update_gcalendar_contract()
-
-    def create_or_update_gcalendar_contract(self):
-        # get current contract
-        current_contract = self.get_current_contract()
-        # if current contract exists, update it
-        if current_contract:
-            current_contract.update_gcalendar_contract()
-        # else create a new contract
-        else:
-            Contract.objects.create(employee=self, start_date=self.start_contract, end_date=self.end_contract)
 
     @staticmethod
     def is_has_gdrive_access_valid(has_gdrive_access, user):
