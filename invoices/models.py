@@ -4,6 +4,7 @@ import logging
 import os
 from copy import deepcopy
 from datetime import datetime
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 import requests
@@ -711,8 +712,9 @@ def update_medical_prescription_filename(instance, filename):
         _current_month_or_prscr_month = str(instance.date.month)
     path = os.path.join("Medical Prescription", _current_yr_or_prscr_yr,
                         _current_month_or_prscr_month)
-    filename = '%s_pour_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
-                                       str(instance.date), file_extension)
+    uuid = str(uuid4())
+    filename = '%s_pour_%s_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
+                                       str(instance.date), uuid, file_extension)
 
     return os.path.join(path, filename)
 
