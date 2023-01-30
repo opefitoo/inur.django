@@ -182,6 +182,16 @@ class GenericEmployeeEventList(generics.ListCreateAPIView):
             assert isinstance(instance, Event)
         return result
 
+    def get_queryset(self):
+        queryset = Event.objects.all()
+        employee = self.request.query_params.get('employee', None)
+        year = self.request.query_params.get('year', None)
+        if employee is not None:
+            queryset = queryset.filter(employees__id=employee)
+        if year is not None:
+            queryset = queryset.filter(day__year=year)
+        return queryset
+
 
 class EventList(generics.ListCreateAPIView):
     queryset = Event.objects.all().order_by("day", "time_start_event")
