@@ -179,9 +179,11 @@ class EmployeeContractDetail(models.Model):
     contract_date = models.DateField(u'Date contrat', blank=True, null=True)
     employee_trial_period_text = models.TextField("Texte période d'essai", max_length=800, blank=True, null=True)
     employee_special_conditions_text = models.TextField("Texte conditions spéciales", max_length=200, blank=True, null=True)
-    career_rank = models.CharField("Grade", max_length=10, blank=True, null=True)
+    career_rank = models.CharField("Grade", help_text="Sous format Grade / Ancienneté Carrière", max_length=10, blank=True, null=True)
     anniversary_career_rank = models.DateField(u'Date anniversaire grade', blank=True, null=True)
-
+    weekly_work_organization = models.TextField("Organisation du travail hebdomadaire",
+                                                help_text="Veuillez saisir ce champ sous format: 8h/j 5 jours par semaine",
+                                                max_length=80, blank=True, null=True)
     def calculate_current_daily_hours(self):
         return self.number_of_hours / 5
 
