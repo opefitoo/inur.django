@@ -199,10 +199,13 @@ class EventList(generics.ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         employee = self.request.query_params.get('employee', None)
         year = self.request.query_params.get('year', None)
+        ordering = self.request.query_params.get('ordering', None)
         if employee is not None:
             self.queryset = self.queryset.filter(employees__id=employee)
         if year is not None:
             self.queryset = self.queryset.filter(day__year=year)
+        if ordering is not None:
+            self.queryset = self.queryset.order_by(ordering)
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
