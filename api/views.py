@@ -182,20 +182,28 @@ class GenericEmployeeEventList(generics.ListCreateAPIView):
             assert isinstance(instance, Event)
         return result
 
-    def get_queryset(self):
-        queryset = Event.objects.all()
+    def get(self, request, *args, **kwargs):
         employee = self.request.query_params.get('employee', None)
         year = self.request.query_params.get('year', None)
         if employee is not None:
-            queryset = queryset.filter(employees__id=employee)
+            self.queryset = self.queryset.filter(employees__id=employee)
         if year is not None:
-            queryset = queryset.filter(day__year=year)
-        return queryset
+            self.queryset = self.queryset.filter(day__year=year)
+        return self.list(request, *args, **kwargs)
 
 
 class EventList(generics.ListCreateAPIView):
     queryset = Event.objects.all().order_by("day", "time_start_event")
     serializer_class = EventSerializer
+
+    def get(self, request, *args, **kwargs):
+        employee = self.request.query_params.get('employee', None)
+        year = self.request.query_params.get('year', None)
+        if employee is not None:
+            self.queryset = self.queryset.filter(employees__id=employee)
+        if year is not None:
+            self.queryset = self.queryset.filter(day__year=year)
+        return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         if request.data['employees']:
