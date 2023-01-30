@@ -35,7 +35,7 @@ class EmployeeContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeContractDetail
         fields = ('start_date', 'number_of_hours', 'number_of_days_holidays', 'monthly_wage', 'contract_date',
-                  'contract_signed_date', 'employee_trial_period_text', 'employee_special_conditions_text')
+                  'contract_signed_date', 'employee_trial_period_text', 'employee_special_conditions_text', 'index',)
         depth = 1
 
 
