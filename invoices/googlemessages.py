@@ -58,7 +58,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
                                                                patient.name,
                                                                event_report)
     # FIXME: remove hardcoded value for state
-    elif state in [5,6]:
+    elif state in [5, 6]:
         # if date is in the future, message will contain the date
         if event_date.date() > datetime.now().date():
             string_event_date = "du %s programmé à %s" % (event_date.date().strftime('%d-%h-%Y'),
@@ -67,11 +67,19 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
             string_event_date = "d'aujourd'hui programmé à %s" % event_date.time().strftime("%Hh%M")
         else:
             # or in the past
-            string_event_date = "du %s à " % (event_date.date().strftime('%d-%h-%Y'), event_date.time().strftime("%Hh%M"))
+            string_event_date = "du %s à " % (
+            event_date.date().strftime('%d-%h-%Y'), event_date.time().strftime("%Hh%M"))
+        if state == 5:
+            message = 'Attention *ANNULÉ* le passage %s pour *%s* chez *%s* : %s' % (
+            string_event_date, employees.user.first_name,
+            patient.name,
+            event_report)
+        else:
+            message = 'Attention *NON FAIT* le assage %s pour *%s* chez *%s* : %s' % (string_event_date,
+                                                                                      employees.user.first_name,
+                                                                                      patient.name,
+                                                                                      event_report)
 
-        message = 'Passage %s FAIT par *%s* chez *%s* : %s' % (string_event_date, employees.user.first_name,
-                                                               patient.name,
-                                                               event_report)
     url = settings.GOOGLE_CHAT_WEBHOOK_URL
     if event_pictures_urls:
         counter_pictures = 0
