@@ -75,7 +75,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
             patient.name,
             event_report)
         else:
-            message = 'Attention *NON FAIT* le assage %s pour *%s* chez *%s* : %s' % (string_event_date,
+            message = 'Attention *NON FAIT* le passage %s pour *%s* chez *%s* : %s' % (string_event_date,
                                                                                       employees.user.first_name,
                                                                                       patient.name,
                                                                                       event_report)
