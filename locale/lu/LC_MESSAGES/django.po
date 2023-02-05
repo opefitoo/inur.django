@@ -352,3 +352,81 @@ msgstr ""
 #: dependence/forms.py:95
 msgid "You have a duplicate choice in the \"%s\", you can't select the same choice twice"
 msgstr ""
+
+msgid "Network"
+msgstr "Reseau"
+
+msgid "Autonomous"
+msgstr "Autonom"
+
+msgid "Family"
+msgstr "Famill"
+
+msgid "Third party"
+msgstr "Drëtt Partei"
+
+msgid "With technical help"
+msgstr "Mat technesch Hëllef"
+
+msgid "With third party"
+msgstr "Mat drëtt Partei"
+
+msgid "Bedridden"
+msgstr "Im Bett"
+
+msgid "Both Technical help and third party"
+msgstr "Beide technesch Hëllef an drëtt Partei"
+
+msgid "Singles"
+msgstr "Eenzel"
+
+msgid "Married"
+msgstr "Verheiratet"
+
+msgid "Widow"
+msgstr "Widder"
+
+msgid "Pacs"
+msgstr "Pacs"
+
+msgid "Divorced"
+msgstr "Gescheid"
+
+msgid "Separated"
+msgstr "Gescheid"
+
+msgid "Other"
+msgstr "Aner"
+
+msgid "High"
+msgstr "Héich"
+
+msgid "Low"
+msgstr "Niddreg"
+
+msgid "Complete"
+msgstr "Komplett"
+
+msgid "Tube"
+msgstr "Tub"
+
+msgid "Right"
+msgstr "Rechts"
+
+msgid "Left"
+msgstr "Lénks"
+
+msgid "Both"
+msgstr "Beide"
+
+msgid "Flat"
+msgstr "Appartement"
+
+msgid "House"
+msgstr "Haus"
+
+msgid "Male"
+msgstr "Mann"
+
+msgid "Female"
+msgstr "Frau"
