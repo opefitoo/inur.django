@@ -226,7 +226,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
             'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door','domestic_animals',
                        'elevator'),
         }),
-        ('Divers', {
+        ('Informations médicales', {
             'fields': ('health_care_dossier_location', 'preferred_hospital',
                        'informal_caregiver', 'pathologies', 'medical_background', 'treatments','allergies'),
         }),
@@ -238,7 +238,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
             'fields': ('dental_prosthesis', 'hearing_aid', 'glasses', 'other_prosthesis'),
         }),
         (u'Médicaments', {
-            'fields': ('treatments','drugs_managed_by', 'drugs_prepared_by', 'drugs_distribution', 'drugs_ordering',
+            'fields': ('drugs_managed_by', 'drugs_prepared_by', 'drugs_distribution', 'drugs_ordering',
                        'pharmacy_visits', 'preferred_pharmacies'),
         }),
         (u'Mobilisation', {

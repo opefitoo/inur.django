@@ -143,7 +143,14 @@ MEDIA_URL = '/media/'
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-# LANGUAGE_CODE = 'fr'
+LANGUAGE_CODE = 'fr'
+
+LANGUAGES = (
+    ('fr', 'Français'),
+    ('en', 'English'),
+    ('de', 'Deutsch'),
+    ('lu', 'Letzebuergesch'),
+)
 
 TIME_ZONE = 'Europe/Luxembourg'
 
