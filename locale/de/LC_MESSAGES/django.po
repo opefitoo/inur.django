@@ -410,9 +410,6 @@ msgstr "Geschieden"
 msgid "Separated"
 msgstr "Getrennt"
 
-msgid "Other"
-msgstr "Andere"
-
 msgid "High"
 msgstr "Hoch"
 

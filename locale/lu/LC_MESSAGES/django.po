@@ -395,9 +395,6 @@ msgstr "Gescheid"
 msgid "Separated"
 msgstr "Gescheid"
 
-msgid "Other"
-msgstr "Aner"
-
 msgid "High"
 msgstr "Héich"
 

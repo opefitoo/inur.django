@@ -406,9 +406,6 @@ msgstr "Divorcé(e)"
 msgid "Separated"
 msgstr "Séparé(e)"
 
-msgid "Other"
-msgstr "Autre"
-
 msgid "High"
 msgstr "Haut"
 
