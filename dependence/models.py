@@ -8,7 +8,7 @@ from django_countries.fields import CountryField
 from invoices.db.fields import CurrentUserField
 from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
     MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType, \
-    MonthsNames, StoolsQty, VisualAnalogueScaleLvl
+    MonthsNames, StoolsQty, VisualAnalogueScaleLvl, HelpForCleaning
 from invoices.models import Patient, Physician
 
 
@@ -153,6 +153,42 @@ class PatientAnamnesis(models.Model):
                                     blank=True,
                                     null=True
                                     )
+    plan_of_share = models.CharField(u"Plan de partage", #
+                                     max_length=45,
+                                     blank=True,
+                                     null=True
+                                     )
+    help_for_cleaning = models.CharField(u"Aide pour le ménage", #
+                                         max_length=10,
+                                         choices=HelpForCleaning.choices,
+                                         default=None,
+                                         blank=True,
+                                         null=True
+                                         )
+    reason_for_dependence = models.CharField(u"Motif de prise en charge", #
+                                             max_length=45,
+                                             blank=True,
+                                             null=True
+                                             )
+    anticipated_directives = models.CharField(u"Directives anticipées", #
+                                             max_length=45,
+                                             blank=True,
+                                             null=True
+                                             )
+    anticipated_directives_doc_link = models.FileField(u"Doc. directives anticipées", #
+                                                      upload_to='documents/anticipated_directives',
+                                                      default=None,
+                                                      blank=True,
+                                                      null=True
+                                                      )
+    religious_beliefs = models.CharField(u"Religion", #
+                                         max_length=45,
+                                         blank=True,
+                                         null=True
+                                         )
+
+
+
     # habitudes
     preferred_drinks = models.TextField("Boissons préfèrées", max_length=250, default=None, blank=True, null=True)
     # shower_habits = models.TextField("Se soigner", help_text=u"douche, lavé, bain",
@@ -184,6 +220,10 @@ class PatientAnamnesis(models.Model):
                                                     default=None,
                                                     blank=True,
                                                     null=True)
+    elevator = models.BooleanField(u"Ascenseur", default=None, #
+                                      blank=True,
+                                      null=True)
+
     ppl_circle = models.CharField("Entourage",
                                   max_length=50,
                                   default=None,
@@ -197,8 +237,12 @@ class PatientAnamnesis(models.Model):
                                   default=None,
                                   blank=True,
                                   null=True)
+    domestic_animals = models.CharField(u"Animaux domestiques", max_length=50, #
+                                        default=None,
+                                        blank=True,
+                                        null=True)
+
     # p
-    preferred_pharmacies = models.TextField("Pharmacie(s)", max_length=500, default=None, blank=True, null=True)
     preferred_hospital = models.CharField(u"Établissement hospitalier choisi", max_length=50, default=None, blank=True,
                                           null=True)
     health_care_dossier_location = models.CharField("Dossier de soins se trouve", max_length=50,
@@ -207,8 +251,12 @@ class PatientAnamnesis(models.Model):
                                                     null=True)
     informal_caregiver = models.CharField("Aidant informel", max_length=50, default=None, blank=True, null=True)
     pathologies = models.TextField("Pathologies", max_length=500, default=None, blank=True, null=True)
+    technical_help = models.TextField("Aides techniques", max_length=500, default=None, blank=True, null=True) #
+
+
     medical_background = models.TextField(u"Antécédents", max_length=500, default=None, blank=True,
                                           null=True)
+    treatments = models.TextField("Traitements", max_length=500, default=None, blank=True, null=True) #
     allergies = models.TextField("Allergies", max_length=250, default=None, blank=True, null=True)
     # aides techniques
     electrical_bed = models.BooleanField(u"Lit électrique", default=None, blank=True, null=True)
@@ -233,8 +281,11 @@ class PatientAnamnesis(models.Model):
     drugs_distribution = models.CharField("Distribution", max_length=30, default=None, blank=True, null=True)
     drugs_ordering = models.CharField(u"Commande des médicaments", max_length=30, default=None, blank=True, null=True)
     pharmacy_visits = models.CharField(u"Passages en pharmacie", max_length=30, default=None, blank=True, null=True)
+    preferred_pharmacies = models.TextField("Pharmacie(s)", max_length=500, default=None, blank=True, null=True) #
+
     # Mobilisation
-    mobilization = models.CharField(u"Mobilisation", choices=MobilizationsType.choices, max_length=5, default=None,
+    mobilization = models.CharField(u"Mobilisation", choices=MobilizationsType.choices,
+                                    max_length=15, default=None,
                                     blank=True,
                                     null=True)
     mobilization_description = models.TextField("Description", max_length=250, default=None, blank=True,
@@ -281,7 +332,7 @@ class PatientAnamnesis(models.Model):
                                                  blank=True, null=True)
     # Garde/ Course sortie / Foyer
     day_care_center = models.CharField(u"Foyer de jour", max_length=50, default=None, blank=True, null=True)
-    day_care_center_activities = models.CharField(u"Activités", max_length=50, default=None, blank=True, null=True)
+    day_care_center_activities = models.TextField(u"Activités", max_length=500, default=None, blank=True, null=True)
     household_chores = models.BooleanField(u"Tâches domestiques", default=None, blank=True, null=True)
 
     @property

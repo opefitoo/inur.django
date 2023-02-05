@@ -437,7 +437,7 @@ class PatientAnamnesis(models.Model):
     drugs_ordering = models.CharField(u"Commande des médicaments", max_length=30, default=None, blank=True, null=True)
     pharmacy_visits = models.CharField(u"Passages en pharmacie", max_length=30, default=None, blank=True, null=True)
     # Mobilisation
-    mobilization = models.CharField(u"Mobilisation", choices=MobilizationsType.choices, max_length=5, default=None,
+    mobilization = models.CharField(u"Mobilisation", choices=MobilizationsType.choices, max_length=15, default=None,
                                     blank=True,
                                     null=True)
     mobilization_description = models.TextField("Description", max_length=250, default=None, blank=True,

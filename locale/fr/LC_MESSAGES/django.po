@@ -363,3 +363,81 @@ msgstr "Selon votre sélection, il faut laisser champ \"Autre circonstances de l
 #: dependence/forms.py:95
 msgid "You have a duplicate choice in the \"%s\", you can't select the same choice twice"
 msgstr "Vous avez un choix en double dans le \"%s\", vous ne pouvez pas sélectionner deux fois le même choix"
+
+msgid "Network"
+msgstr "Réseau"
+
+msgid "Autonomous"
+msgstr "Autonome"
+
+msgid "Family"
+msgstr "Famille ou proches"
+
+msgid "Third party"
+msgstr "Tierce personne"
+
+msgid "With technical help"
+msgstr "Avec aide technique"
+
+msgid "With third party"
+msgstr "Avec tierce personne"
+
+msgid "Bedridden"
+msgstr "Alité"
+
+msgid "Both Technical help and third party"
+msgstr "Avec aide technique et tierce personne"
+
+msgid "Singles"
+msgstr "Célibataire"
+
+msgid "Married"
+msgstr "Marié(e)"
+
+msgid "Widow"
+msgstr "Veuf(ve)"
+
+msgid "Pacs"
+msgstr "Pacs"
+
+msgid "Divorced"
+msgstr "Divorcé(e)"
+
+msgid "Separated"
+msgstr "Séparé(e)"
+
+msgid "Other"
+msgstr "Autre"
+
+msgid "High"
+msgstr "Haut"
+
+msgid "Low"
+msgstr "Bas"
+
+msgid "Complete"
+msgstr "Complet"
+
+msgid "Tube"
+msgstr "Intubé(e)"
+
+msgid "Right"
+msgstr "Droite"
+
+msgid "Left"
+msgstr "Gauche"
+
+msgid "Both"
+msgstr "Les deux"
+
+msgid "Flat"
+msgstr "Appartement"
+
+msgid "House"
+msgstr "Maison"
+
+msgid "Male"
+msgstr "Homme"
+
+msgid "Female"
+msgstr "Femme"

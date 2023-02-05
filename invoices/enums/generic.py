@@ -7,12 +7,16 @@ class CivilStatus(models.TextChoices):
     MARRIED = 'MARRIED', _('Married')
     WIDOW = 'WIDOW', _('Widow')
     PACS = 'PACS', _('Pacs')
+    DIV = 'DIV', _('Divorced')
+    SEP = 'SEP', _('Separated')
+    OTH = 'OTH', _('Other')
 
 
 class RemoteAlarm(models.TextChoices):
     RK = 'RK', ('Roude Knap')
     SDHM = 'SDHM', ('Secher Doheem')
     HLP = 'HLP', ('Help')
+    OTH = 'OTH', ('Other')
 
 
 class DentalProsthesis(models.TextChoices):
@@ -25,6 +29,11 @@ class DrugManagement(models.TextChoices):
     AUTNM = 'AUTNM', _('Autonomous')
     FML = 'FML', _('Family')
     NTWRK = 'NTWRK', _('Network')
+
+class HelpForCleaning(models.TextChoices):
+    FML = 'FML', _('Family')
+    NTWRK = 'NTWRK', _('Network')
+    TRD = 'TRD', _('Third party')
 
 
 class DependenceInsuranceLevel(models.TextChoices):
@@ -56,6 +65,7 @@ class MobilizationsType(models.TextChoices):
     TCNQ = 'TCNQ', _('With technical help')
     TRD = 'TRD', _('With third party')
     BD = 'BD', _('Bedridden')
+    TCNQ_TRD = 'TCNQ_TRD', _('Both Technical help and third party')
 
 
 class HearingAid(models.TextChoices):

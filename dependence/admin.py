@@ -1,5 +1,4 @@
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
-from dependence.falldeclaration import  FallDeclaration
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
@@ -11,12 +10,14 @@ from fieldsets_with_inlines import FieldsetsInlineMixin
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
-from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, TensionAndTemperatureParametersFormset
+from dependence.falldeclaration import FallDeclaration
+from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
+    TensionAndTemperatureParametersFormset
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from invoices.employee import JobPosition
 from invoices.models import Patient
-from django.utils.translation import gettext_lazy as _
+
 
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):
@@ -216,24 +217,29 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
     fieldsets_with_inlines = [
         ('Patient', {
             'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link',
+                       'plan_of_share', 'help_for_cleaning', 'reason_for_dependence', 'anticipated_directives',
+                       'anticipated_directives_doc_link',
+                       'religious_beliefs',
                        'created_on', 'updated_on', 'display_object_actions_detail')
         }),
         ('Habitation', {
-            'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door'),
+            'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door','domestic_animals',
+                       'elevator'),
         }),
-        (None, {
-            'fields': ('health_care_dossier_location', 'preferred_pharmacies', 'preferred_hospital',
-                       'informal_caregiver', 'pathologies', 'medical_background', 'allergies'),
+        ('Divers', {
+            'fields': ('health_care_dossier_location', 'preferred_hospital',
+                       'informal_caregiver', 'pathologies', 'medical_background', 'treatments','allergies'),
         }),
         ('Aides techniques', {
-            'fields': ('electrical_bed', 'walking_frame', 'cane', 'aqualift', 'remote_alarm', 'other_technical_help'),
+            'fields': ('electrical_bed', 'walking_frame', 'cane', 'aqualift', 'remote_alarm', 'technical_help',
+                       'other_technical_help'),
         }),
         (u'Prothèses', {
             'fields': ('dental_prosthesis', 'hearing_aid', 'glasses', 'other_prosthesis'),
         }),
         (u'Médicaments', {
-            'fields': ('drugs_managed_by', 'drugs_prepared_by', 'drugs_distribution', 'drugs_ordering',
-                       'pharmacy_visits'),
+            'fields': ('treatments','drugs_managed_by', 'drugs_prepared_by', 'drugs_distribution', 'drugs_ordering',
+                       'pharmacy_visits', 'preferred_pharmacies'),
         }),
         (u'Mobilisation', {
             'fields': ('mobilization', 'mobilization_description'),
