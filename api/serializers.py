@@ -20,19 +20,24 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('first_name', 'last_name')
 
+
 class EmployeeAvatarSerializer(serializers.ModelSerializer):
     user = UserSerializer()
+
     class Meta:
         model = Employee
         fields = ('user', 'avatar', 'bio', 'occupation')
         depth = 1
 
+
 class EmployeeSerializer(serializers.ModelSerializer):
     user = UserSerializer()
+
     class Meta:
         model = Employee
         fields = ('user', 'address', 'occupation', 'birth_date', 'birth_place', 'gender', 'address')
         depth = 1
+
 
 class EmployeeContractSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,7 +46,6 @@ class EmployeeContractSerializer(serializers.ModelSerializer):
                   'contract_signed_date', 'employee_trial_period_text', 'employee_special_conditions_text', 'index',
                   'career_rank', 'anniversary_career_rank', 'weekly_work_organization')
         depth = 1
-
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -257,9 +261,11 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()
     color = serializers.SerializerMethodField()
     textcolor = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+
     class Meta:
         model = Event
-        fields = ['id', 'title', 'start', 'end', 'color', 'textcolor']
+        fields = ['id', 'title', 'start', 'end', 'color', 'textcolor', 'description']
 
     def get_start(self, obj):
         if obj.time_start_event is None:
@@ -267,7 +273,6 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
         else:
             start_time = datetime.datetime.combine(obj.day, obj.time_start_event)
         return timezone.datetime.combine(obj.day, start_time.time()).strftime("%Y-%m-%dT%H:%M:%S%z")
-
 
     def get_end(self, obj):
         if obj.time_end_event is None:
@@ -294,6 +299,22 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
             # default color is black
             return "#000000"
         return obj.employees.color_text
+
+    # description is the notes of the event + event_report if it exists + patient name + patient first name + event state from STATES
+    def get_description(self, obj):
+        description = obj.notes
+        if obj.event_report is not None:
+            description += "    " + obj.event_report
+        if obj.patient is not None:
+            description += "    " + obj.patient.name + " " + obj.patient.first_name
+        if obj.state is not None and obj.state != "":
+            if 0 <= obj.state < len(Event.STATES):
+                description += "    " + Event.STATES[obj.state - 1][1]
+            else:
+                description += "    " + str(obj.state)
+                print("state not in STATES dictionary: %s and id: %s" % (obj.state, obj.id))
+        return description + "(%s)" % obj.id
+
 
 class BirthdayEventSerializer(serializers.ModelSerializer):
     class Meta:
