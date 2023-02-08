@@ -1,4 +1,7 @@
+import datetime
+
 from django.contrib.auth.models import User, Group
+from django.utils import timezone
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
@@ -247,6 +250,50 @@ class EventSerializer(serializers.ModelSerializer):
             )
         ]
 
+
+class FullCalendarEventSerializer(serializers.ModelSerializer):
+    start = serializers.SerializerMethodField()
+    end = serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
+    color = serializers.SerializerMethodField()
+    textcolor = serializers.SerializerMethodField()
+    class Meta:
+        model = Event
+        fields = ['id', 'title', 'start', 'end', 'color', 'textcolor']
+
+    def get_start(self, obj):
+        if obj.time_start_event is None:
+            start_time = datetime.datetime.combine(obj.day, datetime.time(0, 0))
+        else:
+            start_time = datetime.datetime.combine(obj.day, obj.time_start_event)
+        return timezone.datetime.combine(obj.day, start_time.time()).strftime("%Y-%m-%dT%H:%M:%S%z")
+
+
+    def get_end(self, obj):
+        if obj.time_end_event is None:
+            end_time = datetime.datetime.combine(obj.day, obj.time_start_event)
+            end_time += datetime.timedelta(hours=1)
+        else:
+            end_time = datetime.datetime.combine(obj.day, obj.time_end_event)
+            return timezone.datetime.combine(obj.day, end_time.time()).strftime("%Y-%m-%dT%H:%M:%S%z")
+
+    def get_title(self, obj):
+        # call the __str__ method of the model
+        return str(obj)
+
+    def get_color(self, obj):
+        # background color of the event is the same as the color of the event type employee
+        if obj.employees is None:
+            # default color is blue
+            return "#0000FF"
+        return obj.employees.color_cell
+
+    def get_textcolor(self, obj):
+        # color of the event is the same as the color of the event type employee
+        if obj.employees is None:
+            # default color is black
+            return "#000000"
+        return obj.employees.color_text
 
 class BirthdayEventSerializer(serializers.ModelSerializer):
     class Meta:

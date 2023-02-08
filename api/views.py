@@ -1,5 +1,8 @@
+import json
+
 from constance import config
 from django.contrib.auth.models import User, Group
+from django.http import HttpResponse
 from django.utils.datetime_safe import datetime
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.decorators import api_view
@@ -13,7 +16,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
-    EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer
+    EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer
 from api.utils import get_settings
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
@@ -190,6 +193,37 @@ class GenericEmployeeEventList(generics.ListCreateAPIView):
         if year is not None:
             self.queryset = self.queryset.filter(day__year=year)
         return self.list(request, *args, **kwargs)
+
+
+
+class FullCalendarEventViewSet(generics.ListCreateAPIView):
+    queryset = Event.objects.all()
+    serializer_class = FullCalendarEventSerializer
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        json_data = json.dumps(serializer.data)
+        return HttpResponse(json_data, content_type='application/json')
+
+    def get_queryset(self, *args, **kwargs):
+        # parameters look like 'start': ['2023-02-05T00:00:00'], 'end': ['2023-02-12T00:00:00']
+        # we need to convert them to python date
+        start = datetime.strptime(self.request.query_params['start'], '%Y-%m-%dT%H:%M:%S').date()
+        end = datetime.strptime(self.request.query_params['end'], '%Y-%m-%dT%H:%M:%S').date()
+        queryset = Event.objects.filter(day__gte=start, day__lte=end)
+        return queryset
+
+    def patch(self, request, *args, **kwargs):
+        event = Event.objects.get(pk=request.data['id'])
+        # convert is json date to python date
+        # '2023-02-09T07:00:00.000Z'
+        event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
+        event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
+        if request.data['end']:
+            event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
+        event.save()
+        return HttpResponse("OK")
 
 
 class EventList(generics.ListCreateAPIView):
