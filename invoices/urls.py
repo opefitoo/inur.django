@@ -9,7 +9,7 @@ from rest_framework.authtoken import views as authtoken_views
 import api
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
     get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView, \
-    FullCalendarEventViewSet
+    FullCalendarEventViewSet, AvailableEmployeeList
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
 from invoices.views import delete_prestation, yale_configuration_view
@@ -132,6 +132,10 @@ urlpatterns += [
 
 urlpatterns += [
     re_path('fullcalendar-events/', FullCalendarEventViewSet.as_view(), name='fullcalendar-events-list'),
+]
+
+urlpatterns += [
+    re_path('available-employees/', AvailableEmployeeList.as_view(), name='available-employees'),
 ]
 
 urlpatterns += [

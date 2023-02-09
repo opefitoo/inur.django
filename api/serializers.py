@@ -30,6 +30,14 @@ class EmployeeAvatarSerializer(serializers.ModelSerializer):
         depth = 1
 
 
+
+class FullCalendarEmployeeSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    class Meta:
+        model = Employee
+        fields = ('id', 'abbreviation', 'user')
+        depth = 1
+
 class EmployeeSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
@@ -262,10 +270,11 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
     color = serializers.SerializerMethodField()
     textcolor = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
+    resourceId = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
-        fields = ['id', 'title', 'start', 'end', 'color', 'textcolor', 'description']
+        fields = ['id', 'title', 'start', 'end', 'color', 'textcolor', 'description', 'resourceId']
 
     def get_start(self, obj):
         if obj.time_start_event is None:
@@ -314,6 +323,11 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
                 description += "    " + str(obj.state)
                 print("state not in STATES dictionary: %s and id: %s" % (obj.state, obj.id))
         return description + "(%s)" % obj.id
+    # resource id is the id of the employee
+    def get_resourceId(self, obj):
+        if obj.employees is None:
+            return None
+        return obj.employees.id
 
 
 class BirthdayEventSerializer(serializers.ModelSerializer):

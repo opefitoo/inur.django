@@ -16,7 +16,8 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
-    EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer
+    EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
+    FullCalendarEmployeeSerializer
 from api.utils import get_settings
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
@@ -24,7 +25,9 @@ from helpers.employee import get_employee_id_by_abbreviation, \
     get_current_employee_contract_details_by_employee_abbreviation
 from invoices import settings
 from invoices.employee import JobPosition, Employee
+from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event
+from invoices.holidays import HolidayRequest
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.processors.birthdays import process_and_generate
@@ -204,6 +207,7 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         json_data = json.dumps(serializer.data)
+        print(json_data)
         return HttpResponse(json_data, content_type='application/json')
 
     def get_queryset(self, *args, **kwargs):
@@ -220,12 +224,50 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         # '2023-02-09T07:00:00.000Z'
         event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
         event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
+        if request.data['employee_id']:
+            employee = Employee.objects.get(request.data['employee_id'])
+            event.employees = employee
         if request.data['end']:
             event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
         event.save()
         return HttpResponse("OK")
 
 
+
+class AvailableEmployeeList(generics.ListCreateAPIView):
+    queryset = Employee.objects.all()
+    serializer_class = FullCalendarEmployeeSerializer
+
+    # for a specific day and time, return the list of available employees
+    # parameters are day start_time end_time
+    # employee must not be on holiday and must be assigned to another event at the same time
+    # holiday HolidayRequestWorkflowStatus must be VALIDATED
+    def get(self, request, *args, **kwargs):
+        start = datetime.strptime(self.request.query_params['start'], '%Y-%m-%dT%H:%M:%S')
+        if self.request.query_params['end']:
+            end = datetime.strptime(self.request.query_params['end'], '%Y-%m-%dT%H:%M:%S')
+        else:
+            end = start
+        day = start.date()
+        start_time = start.time()
+        end_time = end.time()
+        # get the list of employees on holiday
+        # get holidays with start date and end date include day
+        holiday_list = HolidayRequest.objects.filter(start_date__lte=day, end_date__gte=day,
+                                                     request_status=HolidayRequestWorkflowStatus.ACCEPTED)
+        # get the list of employees assigned to an event at the same time
+        event_list = Event.objects.filter(day=day, time_start_event__lte=end_time, time_end_event__gte=start_time)
+        # get the list of employees not on holiday and not assigned to an event at the same time
+        queryset = Employee.objects.exclude(id__in=holiday_list.values_list('employee', flat=True)).exclude(
+            id__in=event_list.values_list('employees', flat=True))
+        queryset = Employee.objects.all()
+        serializer = self.get_serializer(queryset, many=True)
+        json_data = json.dumps(serializer.data)
+        return HttpResponse(json_data, content_type='application/json')
+
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
 class EventList(generics.ListCreateAPIView):
     queryset = Event.objects.all().order_by("day", "time_start_event")
     serializer_class = EventSerializer
