@@ -220,15 +220,20 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
 
     def patch(self, request, *args, **kwargs):
         event = Event.objects.get(pk=request.data['id'])
-        # convert is json date to python date
-        # '2023-02-09T07:00:00.000Z'
-        event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
-        event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
-        if request.data['employee_id']:
-            employee = Employee.objects.get(request.data['employee_id'])
+        # if request.data['start'] contains Z, it means it is a json date
+        if request.data['start'].endswith('Z'):
+            event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
+            event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
+        else:
+            event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M').date()
+            event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M').time()
+        if request.data.get('employee_id', None):
+            employee = Employee.objects.get(id=request.data['employee_id'])
             event.employees = employee
-        if request.data['end']:
+        if request.data['end'].endswith('Z'):
             event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
+        else:
+            event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M').time()
         event.save()
         return HttpResponse("OK")
 
@@ -255,12 +260,14 @@ class AvailableEmployeeList(generics.ListCreateAPIView):
         # get holidays with start date and end date include day
         holiday_list = HolidayRequest.objects.filter(start_date__lte=day, end_date__gte=day,
                                                      request_status=HolidayRequestWorkflowStatus.ACCEPTED)
-        # get the list of employees assigned to an event at the same time
-        event_list = Event.objects.filter(day=day, time_start_event__lte=end_time, time_end_event__gte=start_time)
+        # get the list of employees assigned to an event at the same time, must remove current event otherwise it will be
+        # removed from the list
+        event_list = Event.objects.filter(day=day, time_start_event__lte=end_time, time_end_event__gte=start_time).exclude(
+            id=self.request.query_params['id'])
         # get the list of employees not on holiday and not assigned to an event at the same time
+        # take only employees who still have a contract
         queryset = Employee.objects.exclude(id__in=holiday_list.values_list('employee', flat=True)).exclude(
-            id__in=event_list.values_list('employees', flat=True))
-        queryset = Employee.objects.all()
+                id__in=event_list.values_list('employees', flat=True)).exclude(end_contract__lt=day)
         serializer = self.get_serializer(queryset, many=True)
         json_data = json.dumps(serializer.data)
         return HttpResponse(json_data, content_type='application/json')
