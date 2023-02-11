@@ -71,55 +71,56 @@
                         right: 'dayGridMonth,timeGridWeek,timeGridDay'
                     },
                     eventDidMount: function (info) {
-                        // if event resource id is not null
-                        //if (info.event.resourceId) {
-                        //alert("eventDidMount " + info.event);
-                        /*setTimeout(function () {
-                            console.log(info.event);
-                        }, 3);*/
-                        //}
+                        /* var selectEl = $("#employee-id");
+                         var uniqueId = `select-${info.event.id}`;
 
-                        let event = info.event;
-                        $.ajax({
-                            url: '/api/v1/available-employees/',
-                            type: 'GET',
-                            data: {
-                                start: event.startStr,
-                                end: event.endStr
-                            },
-                            success: function (data) {
+                         selectEl.attr('id', uniqueId);
+                         selectEl.attr('data-event-id', info.event.id);
 
-                                // Use the response data to build the select list options
-                                let selectOptions = '';
-                                data.forEach(function (employee) {
-                                    const selected = employee.id === event.resourceId ? 'selected' : '';
-                                    const optionStyle = "background-color:" + employee.color + " !important"
-                                    selectOptions += `<option value="${employee.id}" ${selected} ${optionStyle}>${employee.abbreviation}</option>`;
-                                });
-                                // Update the select list with the options
-                                $(info.el).find('.employee-id').html(selectOptions);
+                         // set the selected employee based on the event's assigned employee
+                         selectEl.val(info.event.extendedProps.resourceId);
 
-                                const select = $("#employee-id");
-                                /*  $.each(data, function (index, employee) {
-                                      const option = $("<option></option>")
-                                          .val(employee.id)
-                                          .text(employee.abbreviation + " - " + employee.user.first_name)
-                                      // Set the 'selected' attribute if this is the current assigned employee
-                                      if (employee.id === currentAssignedEmployeeId) {
-                                          option.attr("selected", "selected");
-                                      }
-                                      // Add custom styles for each option
-                                      option.css("background-color", employee.color + " !important");
-                                      option.css("color", employee.textcolor + " !important");
-                                      option.css("color", employee.textcolor + " !important");
-                                      select.append(option);
-                                  });*/
-                            },
-                            error: function (error) {
-                                console.error("Failed to fetch employee data:", error);
-                            }
-                        });
-
+                         let event = info.event;
+                         $.ajax({
+                             url: '/api/v1/available-employees/',
+                             type: 'GET',
+                             data: {
+                                 start: event.startStr,
+                                 end: event.endStr
+                             },
+                             success: function (eventData) {
+                                 // Use the response data to build the select list options
+                                 selectEl.empty();
+                                 let selectOptions = '<option>...</option>';
+                                 eventData.forEach(function (employee) {
+                                     var selected = employee.id === info.event.extendedProps.resourceId ? 'selected' : '';
+                                     //selectOptions += `<option value="${employee.id}" ${selected}>${employee.user.first_name}</option>`;
+                                     //selectEl.append('<option value="${employee.id}" ${selected}>${employee.user.first_name}</option>');
+                                     selectEl.append($("<option></option>").attr("value", employee.id).text(employee.user.first_name).attr("selected", selected));
+                                 });
+                                 // Update the select list with the options
+                                 //selectEl.html(selectOptions);
+                                 //alert("selectEl =" + selectEl.html());
+                                 /!*  $.each(data, function (index, employee) {
+                                       const option = $("<option></option>")
+                                           .val(employee.id)
+                                           .text(employee.abbreviation + " - " + employee.user.first_name)
+                                       // Set the 'selected' attribute if this is the current assigned employee
+                                       if (employee.id === currentAssignedEmployeeId) {
+                                           option.attr("selected", "selected");
+                                       }
+                                       // Add custom styles for each option
+                                       option.css("background-color", employee.color + " !important");
+                                       option.css("color", employee.textcolor + " !important");
+                                       option.css("color", employee.textcolor + " !important");
+                                       select.append(option);
+                                   });*!/
+                             },
+                             error: function (error) {
+                                 console.error("Failed to fetch employee data:", error);
+                             }
+                         });
+ */
                         $(info.el).tooltip({
                             title: info.event.extendedProps.description,
                             container: 'body',
@@ -134,7 +135,7 @@
                     now: new Date(),
                     slotMinTime: '05:30:00',
                     slotMaxTime: '22:30:00',
-                    slotDuration: '00:15:00',
+                    slotDuration: '00:10:00',
                     timeZone: 'Europe/Paris',
                     businessHours: {
                         startTime: '06:00',
@@ -154,45 +155,40 @@
                         console.log(info.event.end.toISOString());
                     },
                     eventClick: function (info) {
-                        // Get the selected event information
-                        let event = info.event
-                        /*;
-                        let currentAssignedEmployeeId = info.event.resourceId;
+
+                        var selectEl = $("#employee-id");
+
                         $.ajax({
                             url: '/api/v1/available-employees/',
                             type: 'GET',
                             data: {
-                                start: event.startStr,
-                                end: event.endStr
+                                start: info.event.startStr,
+                                end: info.event.endStr
                             },
-                            success: function (data) {
-                                const select = $("#employee-id");
-                                $.each(data, function (index, employee) {
-                                    const option = $("<option></option>")
-                                        .val(employee.id)
-                                        .text(employee.abbreviation + " - " + employee.user.first_name)
-                                    // Set the 'selected' attribute if this is the current assigned employee
-                                    if (employee.id === currentAssignedEmployeeId) {
-                                        option.attr("selected", "selected");
+                            success: function (eventData) {
+                                // Use the response data to build the select list options
+                                selectEl.empty();
+                                selectEl.append($("<option></option>").attr("value", "").text("..."));
+                                let selected = '';
+                                eventData.forEach(function (employee) {
+                                    if (employee.id === info.event.extendedProps.resourceId) {
+                                        selectEl.append($("<option></option>").attr("value", employee.id).text(employee.user.first_name).attr("selected", selected));
+                                    } else {
+                                        selectEl.append($("<option></option>").attr("value", employee.id).text(employee.user.first_name));
                                     }
-                                    // Add custom styles for each option
-                                    option.css("background-color", employee.color + " !important");
-                                    option.css("color", employee.textcolor + " !important");
-                                    option.css("color", employee.textcolor + " !important");
-                                    select.append(option);
                                 });
                             },
-                            error: function (error) {
-                                console.error("Failed to fetch employee data:", error);
-                            }
-                        });*/
+                        });
+
+                        // Get the selected event information
+                        let event = info.event
                         // Show the Bootstrap modal
                         $('#editEventModal').modal('show');
                         // Fill the form fields with the event information
                         $('#eventId').val(event.id);
                         $('#eventTitle').val(event.title);
                         // select the employee
-                        $('#employee-id').val(event.resourceId);
+                        //$('#employee-id').val(event.resourceId);
                         // ...
                     },
                     eventSources:
