@@ -104,7 +104,7 @@ def build_doc_per_care_plan(care_plan: CarePlanMaster):
     for detail in CarePlanDetail.objects.filter(care_plan_to_master_id=care_plan.pk).order_by("id").all():
         i += 1
         data.append(
-            (Paragraph(u"%s de %s à %s" % (','.join(str(o).upper() for o in detail.params_occurrence.all()), detail.time_start.strftime("%H:%M"), detail.time_end.strftime("%H:%M")), smallstyle),
+            (Paragraph(u"%s vers %s" % (','.join(str(o).upper() for o in detail.params_occurrence.all()), detail.time_start.strftime("%H:%M")), smallstyle),
              Paragraph(str(detail.care_actions).replace('\n', '<br />\n'), smallstyle)))
 
     elements.append(Spacer(1, 18))
