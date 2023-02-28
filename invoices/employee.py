@@ -33,6 +33,7 @@ def avatar_storage_location(instance, filename):
         file_extension)
     return os.path.join(path, filename)
 
+
 def validate_avatar(file):
     try:
         file_size = file.file.size
@@ -41,6 +42,8 @@ def validate_avatar(file):
     limit_kb = 10
     if file_size > limit_kb * 1024 * 1024:
         raise ValidationError(_("Maximum file size is %s MB" % limit_kb))
+
+
 class JobPosition(models.Model):
     class Meta:
         ordering = ['-id']
@@ -53,9 +56,11 @@ class JobPosition(models.Model):
     def __str__(self):
         return '%s' % (self.name.strip())
 
+
 class Employee(models.Model):
     class Meta:
         ordering = ['-id']
+
     gender = models.CharField("Sex",
                               max_length=5,
                               choices=GenderType.choices,
@@ -108,9 +113,13 @@ class Employee(models.Model):
     to_be_published_on_www = models.BooleanField("Public Profile",
                                                  help_text="If checked then bio and avatar fields become mandatory",
                                                  blank=True, null=True)
+    virtual_career_anniversary_date = models.DateField("Date anniversaire carrière virtuelle",
+                                                       help_text="Pour les carrières sous convention SAS",
+                                                       blank=True, null=True)
 
     def get_current_contract(self):
         return self.contract_set.filter(end_date__isnull=True).first()
+
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
         is_has_gdrive_access_valid, message = self.is_has_gdrive_access_valid(self.has_gdrive_access, self.user)
@@ -123,7 +132,6 @@ class Employee(models.Model):
         if self.abbreviation and self.abbreviation != 'XXX':
             if Employee.objects.filter(abbreviation=self.abbreviation).exclude(id=self.id).exists():
                 raise ValidationError({'abbreviation': 'Abbreviation must be unique across company'})
-
 
     @staticmethod
     def is_has_gdrive_access_valid(has_gdrive_access, user):
@@ -158,6 +166,8 @@ def contract_storage_location(instance, filename):
         _current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.employee_link.abbreviation,
         "contract", file_extension)
     return os.path.join(path, filename)
+
+
 class EmployeeContractDetail(models.Model):
     start_date = models.DateField(u'Date début période')
     end_date = models.DateField(u'Date fin période', blank=True, null=True)
@@ -179,12 +189,15 @@ class EmployeeContractDetail(models.Model):
     contract_signed_date = models.DateField(u'Date signature contrat', blank=True, null=True)
     contract_date = models.DateField(u'Date contrat', blank=True, null=True)
     employee_trial_period_text = models.TextField("Texte période d'essai", max_length=800, blank=True, null=True)
-    employee_special_conditions_text = models.TextField("Texte conditions spéciales", max_length=200, blank=True, null=True)
-    career_rank = models.CharField("Grade", help_text="Sous format Grade / Ancienneté Carrière", max_length=10, blank=True, null=True)
+    employee_special_conditions_text = models.TextField("Texte conditions spéciales", max_length=200, blank=True,
+                                                        null=True)
+    career_rank = models.CharField("Grade", help_text="Sous format Grade / Ancienneté Carrière", max_length=10,
+                                   blank=True, null=True)
     anniversary_career_rank = models.DateField(u'Date anniversaire grade', blank=True, null=True)
     weekly_work_organization = models.TextField("Organisation du travail hebdomadaire",
                                                 help_text="Veuillez saisir ce champ sous format: 8h/j 5 jours par semaine",
                                                 max_length=80, blank=True, null=True)
+
     def calculate_current_daily_hours(self):
         return self.number_of_hours / 5
 
@@ -213,7 +226,8 @@ def update_filename(instance, filename):
 
 class EmployeeAdminFile(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    file_description = models.CharField("description", max_length=50)
+    file_description = models.CharField("description", max_length=60)
+    document_expiry_date = models.DateField(u'Date d\'expiration du document', blank=True, null=True)
     file_upload = models.FileField(null=True, blank=True, upload_to=update_filename)
 
 
@@ -279,4 +293,3 @@ def employee_revoke_gservices_permissions(sender, instance, **kwargs):
         path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
         gd_storage.update_folder_permissions_v3(path, email, has_access)
         gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
-
