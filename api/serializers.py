@@ -43,7 +43,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        fields = ('user', 'address', 'occupation', 'birth_date', 'birth_place', 'gender', 'address')
+        fields = ('user', 'address', 'occupation', 'birth_date', 'birth_place', 'gender', 'address',
+                  'virtual_career_anniversary_date')
         depth = 1
 
 
@@ -262,7 +263,10 @@ class EventSerializer(serializers.ModelSerializer):
             )
         ]
 
-
+class FullCalendarPatientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ['id', 'name', 'first_name']
 class FullCalendarEventSerializer(serializers.ModelSerializer):
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
@@ -271,10 +275,17 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
     textcolor = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     resourceId = serializers.SerializerMethodField()
+    patient = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
-        fields = ['id', 'title', 'start', 'end', 'color', 'textcolor', 'description', 'resourceId']
+        fields = ['id', 'title', 'start', 'end', 'color', 'textcolor', 'description', 'resourceId', 'patient',
+                  'event_type_enum']
+
+    def get_patient(self, obj):
+        if obj.patient is not None:
+            return obj.patient.id
+        return None
 
     def get_start(self, obj):
         if obj.time_start_event is None:

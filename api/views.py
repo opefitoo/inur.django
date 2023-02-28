@@ -17,7 +17,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
-    FullCalendarEmployeeSerializer
+    FullCalendarEmployeeSerializer, FullCalendarPatientSerializer
 from api.utils import get_settings
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
@@ -25,6 +25,7 @@ from helpers.employee import get_employee_id_by_abbreviation, \
     get_current_employee_contract_details_by_employee_abbreviation
 from invoices import settings
 from invoices.employee import JobPosition, Employee
+from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event
 from invoices.holidays import HolidayRequest
@@ -238,6 +239,22 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         return HttpResponse("OK")
 
 
+class AvailablePatientList(generics.ListCreateAPIView):
+    queryset = Patient.objects.all()
+    serializer_class = FullCalendarPatientSerializer
+
+    def get(self, request, *args, **kwargs):
+        event_type = self.request.query_params['event_type']
+        if self.request.query_params['end']:
+            end = datetime.strptime(self.request.query_params['end'], '%Y-%m-%dT%H:%M:%S')
+        if EventTypeEnum.ASS_DEP == event_type:
+            queryset = Patient.objects.filter(is_under_dependence_insurance=True,
+                                              date_of_death__lte=end)
+        else:
+            queryset = Patient.objects.filter(date_of_death__lte=end)
+        serializer = self.get_serializer(queryset, many=True)
+        json_data = json.dumps(serializer.data)
+        return HttpResponse(json_data, content_type='application/json')
 
 class AvailableEmployeeList(generics.ListCreateAPIView):
     queryset = Employee.objects.all()
