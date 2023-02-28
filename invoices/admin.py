@@ -1133,6 +1133,7 @@ class EventListAdmin(admin.ModelAdmin):
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
                'send_webhook_message' ]
     inlines = (ReportPictureInLine,)
+    autocomplete_fields = ['patient']
 
     form = EventForm
 
