@@ -33,6 +33,10 @@ class LongTermCare(models.Model):
         return "Echanges électroniques Assurance dépendance pour le patient %s" % self.patient
 
 
+def long_term_care_declaration_file_path_for_return(instance, filename):
+    return f"long_term_care_declaration/{instance.link_to_long_term_care.patient.code_sn}/{filename}"
+
+
 def long_term_care_declaration_file_path(instance, filename):
     # Ainsi le nom des fichiers commence toujours :
     # - par la lettre ‘D’ pour les fichiers de l’assurance dépendance
@@ -54,7 +58,10 @@ def long_term_care_declaration_file_path(instance, filename):
     # format integer to display 2 digits
     month_of_count = f"{instance.month_of_count:02d}"
     year_of_count = f"{instance.year_of_count:04d}"
-    reference_interne = f"{instance.id:04d}"
+    if instance.id:
+        reference_interne = f"{instance.id:04d}"
+    else:
+        reference_interne = f"{instance.link_to_long_term_care.patient.id:04d}"
     newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_DCL_001_{reference_interne}.xml"
     # newfilename, file_extension = os.path.splitext(filename)
     return f"long_term_care_declaration/{instance.link_to_long_term_care.patient.code_sn}/{newfilename}"
@@ -79,7 +86,7 @@ class LongTermCareDeclaration(models.Model):
                                         help_text=_(
                                             "Le prestataire est libre de choisir son système de référencement des déclarations"))
     # IdentifiantChangementOrganisme
-    change_organism_identifier = models.CharField(_("Change organism identifier"), max_length=50,
+    change_organism_identifier = models.CharField(_("Change organism identifier"), max_length=50, blank=True, null=True,
                                                   help_text=_("Correspond à la référence donnée à la déclaration par "
                                                               "l’organisme gestionnaire. Celui-ci sera renseigné dans le"
                                                               " fichier retour. Ce champ doit obligatoirement être "
@@ -97,6 +104,9 @@ class LongTermCareDeclaration(models.Model):
                                               upload_to=long_term_care_declaration_file_path, blank=True, null=True)
     # generated_xml_version is an incremental number that is incremented each time the xml is generated, and is readonly
     generated_xml_version = models.IntegerField(_("Generated XML version"), default=0)
+    generated_return_xml = models.FileField(_("Retour CNS return XML"),
+                                            upload_to=long_term_care_declaration_file_path_for_return, blank=True,
+                                            null=True)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         # increment the version number, only if data has changed and the object is not new
@@ -159,8 +169,9 @@ class LongTermCareDeclaration(models.Model):
         ReferenceChangement = ElementTree.SubElement(Changements, "ReferenceChangement")
         ReferenceChangement.text = self.change_reference
         # create sub element IdentifiantChangementOrganisme
-        IdentifiantChangementOrganisme = ElementTree.SubElement(Changements, "IdentifiantChangementOrganisme")
-        IdentifiantChangementOrganisme.text = self.change_organism_identifier
+        if self.change_organism_identifier:
+            IdentifiantChangementOrganisme = ElementTree.SubElement(Changements, "IdentifiantChangementOrganisme")
+            IdentifiantChangementOrganisme.text = self.change_organism_identifier
         # create sub element DateChangement
         PersonneProtegee = ElementTree.SubElement(Changements, "PersonneProtegee")
         PersonneProtegee.text = self.link_to_long_term_care.patient.code_sn
