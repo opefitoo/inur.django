@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.db.models import Count, ManyToManyField
 from django.forms import ModelMultipleChoiceField, CheckboxSelectMultiple
 from fieldsets_with_inlines import FieldsetsInlineMixin
@@ -10,7 +11,7 @@ from fieldsets_with_inlines import FieldsetsInlineMixin
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
-from dependence.dependanceinsurance import LongTermCare, LongTermCareDeclaration
+from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetail, generate_xml_using_xmlschema
 from dependence.falldeclaration import FallDeclaration
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
     TensionAndTemperatureParametersFormset
@@ -20,15 +21,31 @@ from invoices.employee import JobPosition
 from invoices.models import Patient
 
 
-class LongTermCareDeclarationInline(admin.TabularInline):
-    model = LongTermCareDeclaration
+class DeclarationDetailInline(admin.TabularInline):
+    model = DeclarationDetail
     extra = 0
-@admin.register(LongTermCare)
-class LongTermCareAdmin(admin.ModelAdmin):
-    model = LongTermCare
-    inlines = [LongTermCareDeclarationInline]
-    list_display = ('patient', 'created_on', 'updated_on')
 
+@admin.register(ChangeDeclarationFile)
+class ChangeDeclarationFileAdmin(admin.ModelAdmin):
+    inlines = [DeclarationDetailInline]
+    list_display = ('provider_date_of_sending', 'created_on', 'updated_on')
+    list_filter = ('provider_date_of_sending',)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        print(self)
+        cleaned_data = form.cleaned_data
+        inlines_cleaned_data = []
+        for formset in formsets:
+            for form in formset:
+                if not cleaned_data.get('DELETE', False):
+                    inlines_cleaned_data.append(form.cleaned_data)
+        generated_xml = generate_xml_using_xmlschema(cleaned_data, inlines_cleaned_data)
+        # save generated xml to database
+        content_file = ContentFile(generated_xml, name='long_term_care_declaration.xml')
+        # save generated xml to file
+        #ChangeDeclarationFile.objects.filter(pk=form.instance.pk).update(generated_xml=content_file)
+        # display message that file was correctly generated
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):
     model = CareOccurrence
