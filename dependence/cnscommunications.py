@@ -73,65 +73,6 @@ def generate_xml_using_xmlschema_using_instance(instance):
         xsd_schema.validate(mydata)
     return mydata
 
-def generate_xml_using_xmlschema(cleaned_data, inlines_cleaned_data):
-    # Load the XSD schema file
-    xsd_schema = xmlschema.XMLSchema('dependence/xsd/ad-declaration-14.xsd')
-    # create element tree object
-    root = ElementTree.Element("Declarations")
-    # create sub element Type
-    Type = ElementTree.SubElement(root, "Type")
-    # create sub element CadreLegal
-    CadreLegal = ElementTree.SubElement(Type, "CadreLegal")
-    CadreLegal.text = "ASD"
-    # create sub element Layout
-    Layout = ElementTree.SubElement(Type, "Layout")
-    Layout.text = "1"
-    # create sub element Type
-    Type = ElementTree.SubElement(Type, "Type")
-    Type.text = "DCL"
-    # create sub element Organisme
-    Organisme = ElementTree.SubElement(root, "Organisme")
-    Organisme.text = "19"
-    # create sub element DateEnvoiPrestataire
-    DateEnvoiPrestataire = ElementTree.SubElement(root, "DateEnvoiPrestataire")
-    DateEnvoiPrestataire.text = cleaned_data['provider_date_of_sending'].strftime("%Y-%m-%d")
-    # create sub element Prestataire
-    Prestataire = ElementTree.SubElement(root, "Prestataire")
-    Prestataire.text = config.CODE_PRESTATAIRE
-    for change in inlines_cleaned_data:
-        # create sub element Changement
-        Changements = ElementTree.SubElement(root, "Changements")
-        # create sub element TypeChangement
-        TypeChangement = ElementTree.SubElement(Changements, "TypeChangement")
-        if change['change_type'] == ChangeTypeChoices.ENTRY:
-            TypeChangement.text = "ENTREE"
-        elif change['change_type'] == ChangeTypeChoices.EXIT:
-            TypeChangement.text = "SORTIE"
-        elif change['change_type'] == ChangeTypeChoices.CORRECTION:
-            TypeChangement.text = "CORRECTION"
-        # create sub element Reference
-        ReferenceChangement = ElementTree.SubElement(Changements, "ReferenceChangement")
-        ReferenceChangement.text = change['change_reference']
-        # create sub element IdentifiantChangementOrganisme
-        if change['change_organism_identifier']:
-            IdentifiantChangementOrganisme = ElementTree.SubElement(Changements, "IdentifiantChangementOrganisme")
-            IdentifiantChangementOrganisme.text = change['change_organism_identifier']
-        # create sub element DateChangement
-        PersonneProtegee = ElementTree.SubElement(Changements, "PersonneProtegee")
-        PersonneProtegee.text = change['patient'].code_sn
-        DateChangement = ElementTree.SubElement(Changements, "DateChangement")
-        # format date to string 'YYYY-MM-DD'
-        DateChangement.text = change['change_date'].strftime("%Y-%m-%d")
-        # create sub element Information
-        Information = ElementTree.SubElement(Changements, "Information")
-        Information.text = change['information']
-    # create a new XML file with the results
-    mydata = ElementTree.tostring(root)
-    if xsd_schema.is_valid(mydata):
-        print("The XML instance is valid!")
-    else:
-        xsd_schema.validate(mydata)
-    return mydata
 
 def long_term_care_declaration_file_path_for_return(instance, filename):
     return f"long_term_care_declaration/{instance.link_to_long_term_care.patient.code_sn}/{filename}"
