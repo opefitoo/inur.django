@@ -124,16 +124,28 @@ class EmployeeAdmin(admin.ModelAdmin):
                 _matricule = "Matricule CNS: %s " % emp.sn_code
                 _occupation = "Occupation: %s" % emp.occupation
                 _address = "Demeurant au: %s" % emp.address
-                _date_entree = "Date Entrée: %s " % emp.start_contract
+                # format all dates to dd/mm/yyyy
+                _date_entree = "Date Entrée: %s " % emp.start_contract.strftime("%d/%m/%Y")
+                # format date to dd/mm/yyyy
+                if emp.virtual_career_anniversary_date:
+                    _career_anniversary = "Anniversaire de carrière virtuelle: %s" % emp.virtual_career_anniversary_date.strftime(
+                        "%d/%m/%Y")
+                else:
+                    _career_anniversary = "Anniversaire de carrière virtuelle: %s" % "Non défini"
                 _citizenship = "Nationalité: %s" % emp.citizenship
                 cd = EmployeeContractDetail.objects.filter(employee_link_id=emp.id, end_date__isnull=True).first()
                 _contract_situation = "Contrat %s %s h. / semaine - salaire: %s / mois" % (
                     cd.contract_type, cd.number_of_hours, cd.monthly_wage)
-                _trial_period = "Date fin période d'essai: %s" % emp.end_trial_period
+                if emp.end_trial_period:
+                    _trial_period = "Date fin période d'essai: %s" % emp.end_trial_period.strftime("%d/%m/%Y")
+                else:
+                    _trial_period = "Date fin période d'essai: %s" % "Non définie"
+                _career_rank = "Grade: %s indice %s" % (cd.career_rank, cd.index)
                 _bank_account_details = "Numéro de compte bancaire: %s" % emp.bank_account_number
-                file_data += _last_first_name + "\n" + _matricule + "\n" + _occupation + "\n" + _citizenship + "\n" \
-                             + _address + "\n" + _date_entree + "\n" + _contract_situation + "\n" + _trial_period \
-                             + "\n" + _bank_account_details + "\n"
+                file_data += f"{_last_first_name} \n {_matricule} \n {_occupation} \n {_citizenship} \n {_address} \n " \
+                             f"{_date_entree} {_career_anniversary}\n {_career_rank} \n {_contract_situation} \n " \
+                             f"{_trial_period} \n " \
+                             f"{_bank_account_details} \n"
 
             counter += 1
         response = HttpResponse(file_data, content_type='application/text charset=utf-8')
@@ -221,7 +233,8 @@ class HospitalizationInline(admin.TabularInline):
 class PatientAdminFileInline(admin.TabularInline):
     extra = 0
     model = PatientAdminFile
-    
+
+
 class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     extra = 0
     model = MedicalPrescription
@@ -282,7 +295,7 @@ class PatientAdmin(CSVExportAdmin):
     # actions = [calculate_distance_matrix]
     form = PatientForm
     # actions = [generate_road_book_2019_mehdi]
-    inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline,]
+    inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, ]
 
     def link_to_invoices(self, instance):
         url = f'{reverse("admin:invoices_invoiceitem_changelist")}?patient__id={instance.id}'
@@ -581,6 +594,7 @@ class InvoiceItemBatchAdmin(admin.ModelAdmin):
 
 admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
 
+
 @admin.register(InvoiceItemEmailLog)
 class InvoiceItemEmailLogAdmin(admin.ModelAdmin):
     list_display = ('item', 'sent_at', 'recipient', 'subject')
@@ -590,6 +604,8 @@ class InvoiceItemEmailLogAdmin(admin.ModelAdmin):
     raw_id_fields = ('item',)
     ## all fields are read-only
     readonly_fields = [f.name for f in InvoiceItemEmailLog._meta.fields]
+
+
 class TimesheetDetailInline(admin.TabularInline):
     extra = 1
     model = TimesheetDetail
@@ -675,7 +691,6 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                 '<div class="warn">Attention, la demande concerne deux années différentes.</div>')
         else:
             return ''
-
 
     readonly_fields = ('validated_by', 'employee', 'request_creator', 'force_creation',
                        'request_status', 'validator_notes', 'total_days_in_current_year', 'do_not_notify',
@@ -786,7 +801,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         if obj is not None:
             if obj.employee.employee.user.id != request.user.id and not 1 != obj.request_status and not request.user.is_superuser:
                 return 'employee', 'start_date', 'end_date', 'requested_period', 'reason', 'validated_by', \
-                       'hours_taken', 'request_creator'
+                    'hours_taken', 'request_creator'
             elif request.user.is_superuser and not 1 != obj.request_status:
                 return [f for f in self.readonly_fields if f not in ['force_creation', 'do_not_notify', 'employee',
                                                                      'request_status',
@@ -796,7 +811,7 @@ class HolidayRequestAdmin(admin.ModelAdmin):
                                                                      'validator_notes']]
             elif 0 != obj.request_status:
                 return 'employee', 'start_date', 'end_date', 'requested_period', 'reason', 'validated_by', \
-                       'hours_taken', 'request_creator', 'request_status', 'validator_notes', 'force_creation', 'do_not_notify'
+                    'hours_taken', 'request_creator', 'request_status', 'validator_notes', 'force_creation', 'do_not_notify'
 
         else:
             if request.user.is_superuser:
@@ -841,8 +856,8 @@ def calculate_balance_for_previous_months(month, year, user_id):
                                                             timesheet_validated=True)
     for prev_months_tsheet in previous_timsheets:
         return Decimal(round(prev_months_tsheet.hours_should_work_gross_in_sec / 3600, 2)) \
-               - prev_months_tsheet.extra_hours_paid_current_month \
-               + prev_months_tsheet.extra_hours_balance
+            - prev_months_tsheet.extra_hours_paid_current_month \
+            + prev_months_tsheet.extra_hours_balance
     return 0
 
 
@@ -1131,7 +1146,7 @@ class EventListAdmin(admin.ModelAdmin):
 
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
-               'send_webhook_message' ]
+               'send_webhook_message']
     inlines = (ReportPictureInLine,)
     autocomplete_fields = ['patient']
 
@@ -1331,4 +1346,3 @@ class DoorEventAdmin(admin.ModelAdmin):
     list_filter = ('employee', 'activity_start_time', 'activity_type')
     list_display = ('employee', 'activity_start_time')
     date_hierarchy = 'activity_start_time'
-
