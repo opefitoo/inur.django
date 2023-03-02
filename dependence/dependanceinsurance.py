@@ -25,9 +25,13 @@ class LongTermCare(models.Model):
         on_delete=models.CASCADE,
         limit_choices_to={"is_under_dependence_insurance": True},
     )
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
     def __str__(self):
         return "Echanges électroniques Assurance dépendance pour le patient %s" % self.patient
+
 
 def long_term_care_declaration_file_path(instance, filename):
     # Ainsi le nom des fichiers commence toujours :
@@ -52,8 +56,10 @@ def long_term_care_declaration_file_path(instance, filename):
     year_of_count = f"{instance.year_of_count:04d}"
     reference_interne = f"{instance.id:04d}"
     newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_DCL_001_{reference_interne}.xml"
-    #newfilename, file_extension = os.path.splitext(filename)
+    # newfilename, file_extension = os.path.splitext(filename)
     return f"long_term_care_declaration/{instance.link_to_long_term_care.patient.code_sn}/{newfilename}"
+
+
 class LongTermCareDeclaration(models.Model):
     link_to_long_term_care = models.ForeignKey(
         LongTermCare,
@@ -62,12 +68,12 @@ class LongTermCareDeclaration(models.Model):
         on_delete=models.CASCADE,
     )
     # Année de décompte
-    year_of_count = models.IntegerField(_("Year of count"), default=timezone.now().year)
+    year_of_count = models.IntegerField(_("Year of count"))
     # Mois de décompte
-    month_of_count = models.IntegerField(_("Month of count"), default=timezone.now().month)
+    month_of_count = models.IntegerField(_("Month of count"))
 
     # DateEnvoiPrestataire
-    provider_date_of_sending = models.DateField(_("Provider date of sending"), default=timezone.now)
+    provider_date_of_sending = models.DateField(_("Provider date of sending"))
     change_type = models.CharField(_("Change type"), max_length=10, choices=ChangeTypeChoices.choices)
     change_reference = models.CharField(_("Change reference"), max_length=50,
                                         help_text=_(

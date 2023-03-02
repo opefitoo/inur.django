@@ -245,6 +245,9 @@ class Patient(models.Model):
                                           help_text="Vous pouvez mettre par exemple les numéros de carte adapto ou tout autre info utile.",
                                           max_length=500,
                                           default=None, blank=True, null=True)
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
     @property
     def anamnesis_set(self):
@@ -714,7 +717,7 @@ def update_medical_prescription_filename(instance, filename):
                         _current_month_or_prscr_month)
     uuid = str(uuid4())
     filename = '%s_pour_%s_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
-                                       str(instance.date), uuid, file_extension)
+                                          str(instance.date), uuid, file_extension)
 
     return os.path.join(path, filename)
 
@@ -828,16 +831,18 @@ class MedicalPrescription(models.Model):
             return '%s %s (%s) sans fichier' % (
                 self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
 
+
 def update_patient_admin_filename(instance, filename):
     # if file_date is None:
     file_name, file_extension = os.path.splitext(filename)
     if instance.file_date is None:
-        return 'patient_admin/%s/%s/%s/%s' % (str(instance.patient),timezone.now().year,
+        return 'patient_admin/%s/%s/%s/%s' % (str(instance.patient), timezone.now().year,
                                               timezone.now().month,
                                               filename)
     else:
         return 'patient_admin/%s/%s/%s/%s' % (str(instance.patient), instance.file_date.year, instance.file_date.month,
                                               filename)
+
 
 class PatientAdminFile(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
@@ -1084,6 +1089,7 @@ class InvoiceItem(models.Model):
     def autocomplete_search_fields():
         return 'invoice_number',
 
+
 class InvoiceItemEmailLog(models.Model):
     item = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, related_name='emails')
     sent_at = models.DateTimeField(auto_now_add=True)
@@ -1099,7 +1105,6 @@ class InvoiceItemEmailLog(models.Model):
     def __str__(self):
         # return recipient, subject, datetime
         return self.recipient + ' - ' + self.subject + ' - ' + self.sent_at.strftime("%d/%m/%Y %H:%M:%S")
-
 
 
 class Prestation(models.Model):
@@ -1323,4 +1328,3 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home = False
             pair.at_home_paired = instance
             pair.save()
-
