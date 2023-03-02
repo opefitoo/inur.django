@@ -58,10 +58,10 @@ def long_term_care_declaration_file_path(instance, filename):
     # format integer to display 2 digits
     month_of_count = f"{instance.month_of_count:02d}"
     year_of_count = f"{instance.year_of_count:04d}"
-    if instance.id:
-        reference_interne = f"{instance.id:04d}"
-    else:
+    if instance.link_to_long_term_care.patient.id:
         reference_interne = f"{instance.link_to_long_term_care.patient.id:04d}"
+    else:
+        reference_interne = "0000"
     newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_DCL_001_{reference_interne}.xml"
     # newfilename, file_extension = os.path.splitext(filename)
     return f"long_term_care_declaration/{instance.link_to_long_term_care.patient.code_sn}/{newfilename}"

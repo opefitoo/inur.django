@@ -27,6 +27,7 @@ class LongTermCareDeclarationInline(admin.TabularInline):
 class LongTermCareAdmin(admin.ModelAdmin):
     model = LongTermCare
     inlines = [LongTermCareDeclarationInline]
+    list_display = 'patient'
 
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):
