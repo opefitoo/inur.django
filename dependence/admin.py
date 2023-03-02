@@ -10,6 +10,7 @@ from fieldsets_with_inlines import FieldsetsInlineMixin
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
+from dependence.dependanceinsurance import LongTermCare, LongTermCareDeclaration
 from dependence.falldeclaration import FallDeclaration
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
     TensionAndTemperatureParametersFormset
@@ -18,6 +19,14 @@ from dependence.models import AssignedPhysician, ContactPerson, DependenceInsura
 from invoices.employee import JobPosition
 from invoices.models import Patient
 
+
+class LongTermCareDeclarationInline(admin.TabularInline):
+    model = LongTermCareDeclaration
+    extra = 0
+@admin.register(LongTermCare)
+class LongTermCareAdmin(admin.ModelAdmin):
+    model = LongTermCare
+    inlines = [LongTermCareDeclarationInline]
 
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):

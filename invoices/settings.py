@@ -84,6 +84,11 @@ MIDDLEWARE = (
 
 MIDDLEWARE += ('crum.CurrentRequestUserMiddleware',)
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'api.views.exception_handler.custom_exception_handler',
+}
+
+
 #
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
@@ -215,6 +220,7 @@ CONSTANCE_CONFIG = {
          'Nom et adresse du prestataire de soins (apparait sur les factures)', str),
     'BIS_NURSE_CODE': (
         '', "Code infirmier secondaire pour les soins", str),
+    'CODE_PRESTATAIRE': ("", "Code du prestataire de soins sur 8 positions", str),
     'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select'),
     'CC_EMAIL_SENT': ("",
                       "Lors de l'envoi d'un email au client, envoi à cette adresse en CC (pour en mettre plusieurs veuillez les séparer d'une virgule ',')",
@@ -239,6 +245,7 @@ CONSTANCE_CONFIG_FIELDSETS = {
     'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE', 'ROOT_URL', 'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL'),
     'Options de Facturation': (
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
+        'CODE_PRESTATAIRE',
         'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT', 'GENERAL_CALENDAR_ID'),
     'Options API Convadis': ('CONVADIS_ORG_ID', 'CONVADIS_CLIENT_ID', 'CONVADIS_SECRET_ID', 'CONVADIS_URL',
                              'OPENROUTE_SERVICE_API_KEY'),
