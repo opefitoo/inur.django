@@ -4,6 +4,7 @@ from ftplib import FTP
 import lxml.etree as ElementTree
 import xmlschema
 from constance import config
+from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models.signals import post_save
@@ -130,9 +131,19 @@ class ChangeDeclarationFile(models.Model):
     generated_return_xml = models.FileField(_("Retour CNS return XML"),
                                             upload_to=long_term_care_declaration_file_path_for_return, blank=True,
                                             null=True)
+    # date time sent to ftp server
+    sent_to_ftp_server = models.DateTimeField(_("Sent to FTP server"), blank=True, null=True)
+    # send status to ftp server
+    send_status_to_ftp_server = models.CharField(_("Send status to FTP server"), max_length=50, blank=True, null=True)
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+    # internal_reference must be unique
+    def clean(self):
+        if self.__class__.objects.filter(internal_reference=self.internal_reference).exclude(pk=self.pk).exists():
+            raise ValidationError({'internal_reference': [_("Internal reference must be unique")]})
+
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         # increment the version number, only if data has changed and the object is not new
@@ -207,23 +218,24 @@ class ChangeDeclarationFile(models.Model):
         return "Echanges électroniques envoyés le %s ref. %s" % (self.provider_date_of_sending, self.internal_reference)
 
     def send_xml_to_ftp(self):
-        # connect to the ftp server
-        ftp = FTP(config.FTP_HOST)
-        #print("FTP connection closed, password was: %s" % base64.b64decode(config.FTP_PASSWORD).decode("utf-8"))
-        ftp.login(user=config.FTP_USER, passwd=base64.b64decode(config.FTP_PASSWORD).decode("utf-8"))
-        # change directory to the one containing the xml files
-        ftp.cwd(config.FTP_XML_DIRECTORY)
-        # print list of files in the current directory
-        print(ftp.dir())
-        # send the xml file but remember that this backend doesn't support absolute paths.
-        # So you can't use os.path.join here.
-        # the file looks like 'long_term_care_declaration/HC002/D30249751202303_ASD_DCL_001_HC002.xml' but we don't need the
-        # first part of the path
-        file_name = self.generated_xml.name.split('/')[-1]
-        ftp.storbinary('STOR %s' % file_name, self.generated_xml)
-        # close the connection
-        # password is base64 encoded, decode it before printing
-        ftp.quit()
+        try:
+            # connect to the ftp server
+            ftp = FTP(config.FTP_HOST)
+            #print("FTP connection closed, password was: %s" % base64.b64decode(config.FTP_PASSWORD).decode("utf-8"))
+            ftp.login(user=config.FTP_USER, passwd=base64.b64decode(config.FTP_PASSWORD).decode("utf-8"))
+            # change directory to the one containing the xml files
+            ftp.cwd(config.FTP_XML_DIRECTORY)
+            # send the xml file but remember that this backend doesn't support absolute paths.
+            # So you can't use os.path.join here.
+            # the file looks like 'long_term_care_declaration/HC002/D30249751202303_ASD_DCL_001_HC002.xml' but we don't need the
+            # first part of the path
+            file_name = self.generated_xml.name.split('/')[-1]
+            ftp.storbinary('STOR %s' % file_name, self.generated_xml)
+            # close the connection
+            # password is base64 encoded, decode it before printing
+            ftp.quit()
+        except Exception as e:
+            self.send_status_to_ftp_server = e
 class DeclarationDetail(models.Model):
     link_to_chg_dec_file = models.ForeignKey(
         ChangeDeclarationFile,
