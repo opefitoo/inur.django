@@ -27,8 +27,9 @@ class DeclarationDetailInline(admin.TabularInline):
 @admin.register(ChangeDeclarationFile)
 class ChangeDeclarationFileAdmin(admin.ModelAdmin):
     inlines = [DeclarationDetailInline]
-    list_display = ('provider_date_of_sending', 'created_on', 'updated_on')
+    list_display = ('provider_date_of_sending', 'internal_reference', 'generated_xml', 'generated_return_xml', 'created_on', 'updated_on')
     list_filter = ('provider_date_of_sending',)
+    readonly_fields = ('created_on', 'updated_on', 'generated_xml', )
 
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):

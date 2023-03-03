@@ -3,7 +3,7 @@ import xmlschema
 from constance import config
 from django.core.files.base import ContentFile
 from django.db import models
-from django.db.models.signals import pre_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -113,6 +113,10 @@ class ChangeDeclarationFile(models.Model):
     # DateEnvoiPrestataire
     provider_date_of_sending = models.DateField(_("Provider date of sending"))
     internal_reference = models.CharField(_("Internal reference"), max_length=10)
+    # boolean to force the generation of the xml file
+    force_xml_generation = models.BooleanField(_("Force XML generation"),
+                                               help_text=_("Force the generation of the XML file, don't forget to check the checkbox before saving the form"),
+                                               default=False)
     # generated_xml file
     generated_xml = models.FileField(_("Generated XML"),
                                      upload_to=long_term_care_declaration_file_path, blank=True, null=True)
@@ -236,8 +240,10 @@ class DeclarationDetail(models.Model):
                                    help_text=_("Ce champ est optionnel et peut contenir du texte libre."))
 
 
-@receiver(pre_save, sender=ChangeDeclarationFile, dispatch_uid="generate_xml_file_and_notify_via_chat")
+@receiver(post_save, sender=ChangeDeclarationFile, dispatch_uid="generate_xml_file_and_notify_via_chat")
 def generate_xml_file_and_notify_via_chat(sender, instance, **kwargs):
+    if not instance.force_xml_generation:
+        return
     message = f"Le fichier de déclaration de changement {instance} a été généré avec succès."
     try:
         # generate the xml file
