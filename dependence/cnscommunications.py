@@ -1,3 +1,5 @@
+from ftplib import FTP
+
 import lxml.etree as ElementTree
 import xmlschema
 from constance import config
@@ -201,8 +203,18 @@ class ChangeDeclarationFile(models.Model):
         return mydata
 
     def __str__(self):
-        return "Echanges électroniques envoyés le %s" % self.provider_date_of_sending
+        return "Echanges électroniques envoyés le %s ref. %s" % (self.provider_date_of_sending, self.internal_reference)
 
+    def send_xml_to_ftp(self):
+        # connect to the ftp server
+        ftp = FTP(config.FTP_HOST)
+        ftp.login(user=config.FTP_USER, passwd=config.FTP_PASSWORD)
+        # change directory to the one containing the xml files
+        ftp.cwd(config.FTP_XML_DIRECTORY)
+        # send the xml file
+        ftp.storbinary('STOR ' + self.generated_xml.name, open(self.generated_xml.path, 'rb'))
+        # close the connection
+        ftp.quit()
 class DeclarationDetail(models.Model):
     link_to_chg_dec_file = models.ForeignKey(
         ChangeDeclarationFile,

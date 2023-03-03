@@ -239,6 +239,10 @@ CONSTANCE_CONFIG = {
     'YALE_PASSWORD': ('NOT_SET', 'Yale password', str),
     'YALE_HOUSE_ID': ('NOT_SET', 'House ID', str),
     'YALE_VERIFICATION_CODE': ('NOT_SET', 'Yale verification code', str),
+    'FTP_HOST': ('NOT_SET', 'FTP host', str),
+    'FTP_USER': ('NOT_SET', 'FTP user', str),
+    'FTP_PASSWORD': ('NOT_SET', 'FTP password', str),
+    'FTP_XML_DIRECTORY': ('NOT_SET', 'FTP xml directory', str),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
@@ -247,6 +251,7 @@ CONSTANCE_CONFIG_FIELDSETS = {
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
         'CODE_PRESTATAIRE',
         'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT', 'GENERAL_CALENDAR_ID'),
+    'Options FTP': ('FTP_HOST', 'FTP_USER', 'FTP_PASSWORD', 'FTP_XML_DIRECTORY'),
     'Options API Convadis': ('CONVADIS_ORG_ID', 'CONVADIS_CLIENT_ID', 'CONVADIS_SECRET_ID', 'CONVADIS_URL',
                              'OPENROUTE_SERVICE_API_KEY'),
     'Options API Yale': ('YALE_USERNAME', 'YALE_PASSWORD', 'YALE_VERIFICATION_CODE', 'YALE_HOUSE_ID')

@@ -30,6 +30,16 @@ class ChangeDeclarationFileAdmin(admin.ModelAdmin):
     list_display = ('provider_date_of_sending', 'internal_reference', 'generated_xml', 'generated_return_xml', 'created_on', 'updated_on')
     list_filter = ('provider_date_of_sending',)
     readonly_fields = ('created_on', 'updated_on', 'generated_xml', )
+    actions = ['send_xml_to_ftp']
+
+    def send_xml_to_ftp(self, request, queryset):
+        for obj in queryset:
+            obj.send_xml_to_ftp()
+            self.message_user(request, "XML sent to FTP")
+    send_xml_to_ftp.short_description = "Send XML to FTP"
+
+
+    #
 
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):
