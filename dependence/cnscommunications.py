@@ -1,3 +1,4 @@
+import base64
 from ftplib import FTP
 
 import lxml.etree as ElementTree
@@ -208,12 +209,20 @@ class ChangeDeclarationFile(models.Model):
     def send_xml_to_ftp(self):
         # connect to the ftp server
         ftp = FTP(config.FTP_HOST)
-        ftp.login(user=config.FTP_USER, passwd=config.FTP_PASSWORD)
+        #print("FTP connection closed, password was: %s" % base64.b64decode(config.FTP_PASSWORD).decode("utf-8"))
+        ftp.login(user=config.FTP_USER, passwd=base64.b64decode(config.FTP_PASSWORD).decode("utf-8"))
         # change directory to the one containing the xml files
         ftp.cwd(config.FTP_XML_DIRECTORY)
-        # send the xml file
-        ftp.storbinary('STOR ' + self.generated_xml.name, open(self.generated_xml.path, 'rb'))
+        # print list of files in the current directory
+        print(ftp.dir())
+        # send the xml file but remember that this backend doesn't support absolute paths.
+        # So you can't use os.path.join here.
+        # the file looks like 'long_term_care_declaration/HC002/D30249751202303_ASD_DCL_001_HC002.xml' but we don't need the
+        # first part of the path
+        file_name = self.generated_xml.name.split('/')[-1]
+        ftp.storbinary('STOR %s' % file_name, self.generated_xml)
         # close the connection
+        # password is base64 encoded, decode it before printing
         ftp.quit()
 class DeclarationDetail(models.Model):
     link_to_chg_dec_file = models.ForeignKey(
