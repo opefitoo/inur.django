@@ -75,7 +75,7 @@ def generate_xml_using_xmlschema_using_instance(instance):
 
 
 def long_term_care_declaration_file_path_for_return(instance, filename):
-    return f"long_term_care_declaration/{instance.link_to_long_term_care.patient.code_sn}/{filename}"
+    return f"long_term_care_declaration/{instance.internal_reference}/{filename}"
 
 
 def long_term_care_declaration_file_path(instance, filename):
