@@ -13,23 +13,83 @@ from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
 from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetail
+from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCareSummaryPerPatientDetail, \
+    SharedMedicalCareSummaryPerPatientDetail
 from dependence.falldeclaration import FallDeclaration
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
     TensionAndTemperatureParametersFormset
+from dependence.longtermcareitem import LongTermCareItem
+from dependence.medicalcaresummary import MedicalCareSummary
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from invoices.employee import JobPosition
 from invoices.models import Patient
 
 
+@admin.register(LongTermCareItem)
+class LongTermCareItemAdmin(admin.ModelAdmin):
+    list_display = ('code', 'description')
+
+
+class SharedMedicalCareSummaryPerPatientDetailInline(admin.TabularInline):
+    model = SharedMedicalCareSummaryPerPatientDetail
+    extra = 0
+    can_delete = False
+    readonly_fields = ('item', 'medical_care_summary_per_patient', 'number_of_care', 'periodicity')
+
+
+class MedicalCareSummaryPerPatientDetailInline(admin.TabularInline):
+    model = MedicalCareSummaryPerPatientDetail
+    extra = 0
+    can_delete = False
+    readonly_fields = ('item', 'medical_care_summary_per_patient', 'number_of_care', 'periodicity')
+
+
+class FilteringPatientsForMedicalCareSummaryPerPatient(SimpleListFilter):
+    title = 'Patient'
+    parameter_name = 'patient'
+
+    def lookups(self, request, model_admin):
+        years = MedicalCareSummaryPerPatient.objects.values('patient').annotate(dcount=Count('patient')).order_by()
+        years_tuple = []
+        for year in years:
+            years_tuple.append(
+                (year['patient'], "%s (%s)" % (Patient.objects.get(pk=year['patient']), str(year['dcount']))))
+        return tuple(years_tuple)
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value is not None:
+            return queryset.filter(patient__id=value)
+        return queryset
+@admin.register(MedicalCareSummaryPerPatient)
+class MedicalCareSummaryPerPatientAdmin(admin.ModelAdmin):
+    inlines = [MedicalCareSummaryPerPatientDetailInline, SharedMedicalCareSummaryPerPatientDetailInline]
+    list_display = ('patient', 'date_of_request', 'referent', 'date_of_evaluation', 'date_of_notification',
+                    'plan_number', 'decision_number', 'level_of_needs', 'start_of_support', 'end_of_support',)
+    # all fields are readonly
+    readonly_fields = ('created_on', 'updated_on', 'patient', 'date_of_request', 'referent', 'date_of_evaluation',
+                       'date_of_notification', 'plan_number', 'decision_number', 'level_of_needs', 'start_of_support',
+                       'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
+                       'fmi_right', 'sn_code_aidant')
+    #list_filter = (FilteringPatientsForMedicalCareSummaryPerPatient,)
+
+@admin.register(MedicalCareSummary)
+class MedicalCareSummaryAdmin(admin.ModelAdmin):
+    readonly_fields = ('created_on', 'updated_on', 'parsing_date', 'count_of_supported_persons', 'date_of_submission')
+
+
 class DeclarationDetailInline(admin.TabularInline):
     model = DeclarationDetail
     extra = 0
 
+
 @admin.register(ChangeDeclarationFile)
 class ChangeDeclarationFileAdmin(admin.ModelAdmin):
     inlines = [DeclarationDetailInline]
-    list_display = ('provider_date_of_sending', 'internal_reference', 'generated_xml', 'generated_return_xml', 'created_on', 'updated_on')
+    list_display = (
+    'provider_date_of_sending', 'internal_reference', 'generated_xml', 'generated_return_xml', 'created_on',
+    'updated_on')
     list_filter = ('provider_date_of_sending',)
     readonly_fields = ('created_on', 'updated_on', 'generated_xml', 'sent_to_ftp_server')
     actions = ['send_xml_to_ftp']
@@ -40,10 +100,11 @@ class ChangeDeclarationFileAdmin(admin.ModelAdmin):
             # datetime sent to the FTP server
             obj.sent_to_ftp_server = timezone.now()
             self.message_user(request, "XML sent to FTP")
+
     send_xml_to_ftp.short_description = "Send XML to FTP"
 
-
     #
+
 
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):
@@ -249,12 +310,12 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
                        'created_on', 'updated_on', 'display_object_actions_detail')
         }),
         ('Habitation', {
-            'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door','domestic_animals',
+            'fields': ('house_type', 'floor_number', 'ppl_circle', 'door_key', 'entry_door', 'domestic_animals',
                        'elevator'),
         }),
         ('Informations médicales', {
             'fields': ('health_care_dossier_location', 'preferred_hospital',
-                       'informal_caregiver', 'pathologies', 'medical_background', 'treatments','allergies'),
+                       'informal_caregiver', 'pathologies', 'medical_background', 'treatments', 'allergies'),
         }),
         ('Aides techniques', {
             'fields': ('electrical_bed', 'walking_frame', 'cane', 'aqualift', 'remote_alarm', 'technical_help',
@@ -390,35 +451,36 @@ class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'aai/print_aai.html', {'obj': obj})
 
+
 @admin.register(FallDeclaration)
 class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
-    fields = (  'patient', 
-                'datetimeOfFall',
-                'placeOfFall',
-                'declared_by',
-                'file_upload',
-                'witnesses',
-                'fall_circumstance',
-                'other_fall_circumstance',
-                'incident_circumstance',
-                'fall_consequences',
-                'other_fall_consequence',
-                'fall_required_medical_acts',
-                'other_required_medical_act',
-                'medications_risk_factor',
-                'fall_cognitive_mood_diorders',
-                'fall_incontinences',
-                'mobility_disability',
-                'unsuitable_footwear',
-                'other_contributing_factor',
-                'preventable_fall',
-                'physician_informed',
-            )
+    fields = ('patient',
+              'datetimeOfFall',
+              'placeOfFall',
+              'declared_by',
+              'file_upload',
+              'witnesses',
+              'fall_circumstance',
+              'other_fall_circumstance',
+              'incident_circumstance',
+              'fall_consequences',
+              'other_fall_consequence',
+              'fall_required_medical_acts',
+              'other_required_medical_act',
+              'medications_risk_factor',
+              'fall_cognitive_mood_diorders',
+              'fall_incontinences',
+              'mobility_disability',
+              'unsuitable_footwear',
+              'other_contributing_factor',
+              'preventable_fall',
+              'physician_informed',
+              )
     form = FallDeclarationForm
     list_display = ('patient', 'datetimeOfFall', 'display_object_actions_list',)
     autocomplete_fields = ['patient']
-    readonly_fields = ('user', 
-                       'created_on', 
+    readonly_fields = ('user',
+                       'created_on',
                        'updated_on',
                        )
 
@@ -430,7 +492,6 @@ class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
             'view': 'print_fall_declaration',
         },
     ]
-
 
     def print_fall_declaration(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse

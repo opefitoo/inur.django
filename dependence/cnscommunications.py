@@ -145,6 +145,8 @@ class ChangeDeclarationFile(models.Model):
             raise ValidationError({'internal_reference': [_("Internal reference must be unique")]})
 
 
+
+
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         # increment the version number, only if data has changed and the object is not new
         if self.pk:
@@ -290,4 +292,5 @@ def generate_xml_file_and_notify_via_chat(sender, instance, **kwargs):
         print(e)
     finally:
         notify_system_via_google_webhook(message)
+        instance.force_xml_generation = False
 
