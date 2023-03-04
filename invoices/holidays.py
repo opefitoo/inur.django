@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+from collections import namedtuple
 from datetime import date, timedelta, datetime
 
 from constance import config
@@ -110,6 +111,11 @@ class HolidayRequest(models.Model):
     def hours_calculations(self, same_year_only=False, holiday_request=None):
         import holidays
         lu_holidays = holidays.Luxembourg()
+        # if holiday end date is before employee start_contract date then return 0
+        if holiday_request.end_date < Employee.objects.get(user_id=holiday_request.employee.id).start_contract:
+            Computation = namedtuple('Computation', 'num_days num_days_sickness hours_jour jours_feries')
+            computation = Computation(0, 0, 0, 0)
+            return computation
         counter_holidays = 0
         counter_sickness_leaves = 0
         if same_year_only and holiday_request.end_date.year != holiday_request.start_date.year:
@@ -162,7 +168,7 @@ class HolidayRequest(models.Model):
         if employee_contract_details.count() == 0:
             raise Exception("No contract for this employee %s for holiday request %s" % (holiday_request.employee, holiday_request))
         hours_jour = employee_contract_details.first().number_of_hours / 5
-        from collections import namedtuple
+
         Computation = namedtuple('Computation', 'num_days num_days_sickness hours_jour jours_feries')
         computation = Computation(counter_holidays, counter_sickness_leaves, hours_jour, jours_feries)
         return computation
