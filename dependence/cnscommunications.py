@@ -7,7 +7,7 @@ from constance import config
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -275,7 +275,7 @@ class DeclarationDetail(models.Model):
                                    help_text=_("Ce champ est optionnel et peut contenir du texte libre."))
 
 
-@receiver(post_save, sender=ChangeDeclarationFile, dispatch_uid="generate_xml_file_and_notify_via_chat")
+@receiver(pre_save, sender=ChangeDeclarationFile, dispatch_uid="generate_xml_file_and_notify_via_chat")
 def generate_xml_file_and_notify_via_chat(sender, instance, **kwargs):
     if not instance.force_xml_generation:
         return
