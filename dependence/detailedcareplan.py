@@ -57,6 +57,9 @@ class MedicalCareSummaryPerPatient(models.Model):
 
 # model Prestatations
 class MedicalCareSummaryPerPatientDetail(models.Model):
+    class Meta:
+        verbose_name = _("Prestation Prestataire")
+        verbose_name_plural = _("Prestations Prestataire")
     # Fields
     # field patient
     # one to one relation to LongTermCareItem
@@ -79,6 +82,9 @@ class MedicalCareSummaryPerPatientDetail(models.Model):
 
 
 class SharedMedicalCareSummaryPerPatientDetail(models.Model):
+    class Meta:
+        verbose_name = _("Prestation Aidant")
+        verbose_name_plural = _("Prestations Aidant")
 
     item = models.ForeignKey(LongTermCareItem, on_delete=models.CASCADE,
                              related_name='shared_medical_care_summary_per_patient_detail_item')
