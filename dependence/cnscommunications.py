@@ -107,19 +107,20 @@ def long_term_care_declaration_file_path(instance, filename):
     # newfilename, file_extension = os.path.splitext(filename)
     return f"long_term_care_declaration/{instance.internal_reference}/{newfilename}"
 
+
 class ChangeDeclarationFile(models.Model):
     class Meta:
         ordering = ["provider_date_of_sending"]
         verbose_name = _("Fichier de déclaration de changement")
         verbose_name_plural = _("Fichiers de déclaration de changement")
 
-
     # DateEnvoiPrestataire
     provider_date_of_sending = models.DateField(_("Provider date of sending"))
     internal_reference = models.CharField(_("Internal reference"), max_length=10)
     # boolean to force the generation of the xml file
     force_xml_generation = models.BooleanField(_("Force XML generation"),
-                                               help_text=_("Force the generation of the XML file, don't forget to check the checkbox before saving the form"),
+                                               help_text=_(
+                                                   "Force the generation of the XML file, don't forget to check the checkbox before saving the form"),
                                                default=False)
     # generated_xml file
     generated_xml = models.FileField(_("Generated XML"),
@@ -138,22 +139,62 @@ class ChangeDeclarationFile(models.Model):
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+    updates_log = models.TextField(_("Updates log"), blank=True, null=True)
 
     # internal_reference must be unique
     def clean(self):
         if self.__class__.objects.filter(internal_reference=self.internal_reference).exclude(pk=self.pk).exists():
             raise ValidationError({'internal_reference': [_("Internal reference must be unique")]})
 
-
-
-
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         # increment the version number, only if data has changed and the object is not new
         if self.pk:
             self.generated_xml_version += 1
         # also generate the xml file
-        #data = self.generate_xml_using_xmlschema()
-        #self.generated_xml = ContentFile(data, name='long_term_care_declaration.xml')
+        # data = self.generate_xml_using_xmlschema()
+        # self.generated_xml = ContentFile(data, name='long_term_care_declaration.xml')
+        if self.generated_return_xml:
+            print("self.generated_return_xml")
+            xsd_schema = xmlschema.XMLSchema('dependence/xsd/ad-declaration-14.xsd')
+            xml_file = self.generated_return_xml
+            xml_file.open()
+            xml_data = xml_file.read()
+            xml_file.close()
+            xsd_schema.validate(xml_data)
+            # Get the data from the XML file
+            xml_data = xsd_schema.to_dict(xml_data)
+            print(xml_data)
+            if xml_data['Type']['Type'] == 'RETDCL':
+                for changement in xml_data['Changements']:
+                    print(changement)
+                    identifiant_changement_organisme = changement['IdentifiantChangementOrganisme']
+                    declaration_changes = DeclarationDetail.objects.filter(
+                        change_reference=changement['ReferenceChangement'],
+                        patient__code_sn=changement['PersonneProtegee'])
+                    for declaration_change in declaration_changes:
+                        if changement.get('AnomalieChangement'):
+                            for anomaly in changement['AnomalieChangement']:
+                                change_anomaly_string = f"{anomaly['type']} Code : {anomaly['code']} Motif : {anomaly['motif']}"
+                                if declaration_change.change_anomaly != change_anomaly_string:
+                                    declaration_change.change_anomaly = change_anomaly_string
+                                    if self.updates_log:
+                                        self.updates_log += f"{declaration_change.change_anomaly} Fait le {timezone.now()}\n"
+                                    else:
+                                        self.updates_log = f"{declaration_change.change_anomaly} Fait le {timezone.now()}\n"
+                        if declaration_change.change_organism_identifier != identifiant_changement_organisme:
+                            declaration_change.change_organism_identifier = identifiant_changement_organisme
+                            # previous value of change can be None then we need to display as "Not set" in the logs
+                            if declaration_change.change_organism_identifier:
+                                previous_value = declaration_change.change_organism_identifier
+                            else:
+                                previous_value = "Not set"
+                            if self.updates_log:
+                                self.updates_log += f"Changement from {previous_value} to {identifiant_changement_organisme} on {declaration_change} Fait le {timezone.now()}\n"
+                            else:
+                                self.updates_log = f"Changement from {previous_value} to {identifiant_changement_organisme} on {declaration_change} Fait le {timezone.now()}\n"
+                        declaration_change.save()
+            print("self.generated_return_xml")
+
         super().save(force_insert, force_update, using, update_fields)
 
     def generate_xml_using_xmlschema(self):
@@ -223,7 +264,7 @@ class ChangeDeclarationFile(models.Model):
         try:
             # connect to the ftp server
             ftp = FTP(config.FTP_HOST)
-            #print("FTP connection closed, password was: %s" % base64.b64decode(config.FTP_PASSWORD).decode("utf-8"))
+            # print("FTP connection closed, password was: %s" % base64.b64decode(config.FTP_PASSWORD).decode("utf-8"))
             ftp.login(user=config.FTP_USER, passwd=base64.b64decode(config.FTP_PASSWORD).decode("utf-8"))
             # change directory to the one containing the xml files
             ftp.cwd(config.FTP_XML_DIRECTORY)
@@ -238,6 +279,8 @@ class ChangeDeclarationFile(models.Model):
             ftp.quit()
         except Exception as e:
             self.send_status_to_ftp_server = e
+
+
 class DeclarationDetail(models.Model):
     link_to_chg_dec_file = models.ForeignKey(
         ChangeDeclarationFile,
@@ -273,6 +316,35 @@ class DeclarationDetail(models.Model):
     # Information
     information = models.TextField(_("Information"), max_length=50,
                                    help_text=_("Ce champ est optionnel et peut contenir du texte libre."))
+    # AnomalieChangement
+    change_anomaly = models.TextField(_("Change anomaly"), max_length=80, blank=True, null=True,
+                                      help_text=_("Ce champ est optionnel et peut contenir du texte libre."))
+    # validate unicity of the combination of patient, change_reference
+    class Meta:
+        unique_together = ('patient', 'change_reference')
+        verbose_name = _("Déclarations assurance dépendance")
+        verbose_name_plural = _("Déclarations assurance dépendance")
+
+    def __str__(self):
+        return f"Patient {self.patient} - {self.change_type} - {self.change_reference} - {self.change_date}"
+
+    # also validate model fields
+    def clean(self):
+        # look for previous changes with the same reference and same patient but different id
+        previous_change = DeclarationDetail.objects.filter(
+            patient=self.patient,
+            change_reference=self.change_reference,
+        ).exclude(id=self.id).first()
+        if previous_change:
+            # throw error mentioning the id of the previous change and also the id of link_to_chg_dec_file
+            raise ValidationError(
+                _("A change with the same reference already exists for this patient. "
+                  "The id of the previous change is %(previous_change_id)s and the id of the file containing the "
+                  "previous change is %(previous_change_file_id)s"),
+                code='invalid',
+                params={'previous_change_id': previous_change.id,
+                        'previous_change_file_id': previous_change.link_to_chg_dec_file},
+            )
 
 
 @receiver(pre_save, sender=ChangeDeclarationFile, dispatch_uid="generate_xml_file_and_notify_via_chat")
@@ -293,4 +365,3 @@ def generate_xml_file_and_notify_via_chat(sender, instance, **kwargs):
     finally:
         notify_system_via_google_webhook(message)
         instance.force_xml_generation = False
-

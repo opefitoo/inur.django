@@ -79,9 +79,10 @@ class MedicalCareSummaryAdmin(admin.ModelAdmin):
     readonly_fields = ('created_on', 'updated_on', 'parsing_date', 'count_of_supported_persons', 'date_of_submission')
 
 
-class DeclarationDetailInline(admin.TabularInline):
+class DeclarationDetailInline(admin.StackedInline):
     model = DeclarationDetail
     extra = 0
+    readonly_fields = ('change_anomaly',)
 
 
 @admin.register(ChangeDeclarationFile)
@@ -91,7 +92,7 @@ class ChangeDeclarationFileAdmin(admin.ModelAdmin):
     'provider_date_of_sending', 'internal_reference', 'generated_xml', 'generated_return_xml', 'created_on',
     'updated_on')
     list_filter = ('provider_date_of_sending',)
-    readonly_fields = ('created_on', 'updated_on', 'generated_xml', 'sent_to_ftp_server')
+    readonly_fields = ('created_on', 'updated_on', 'generated_xml', 'sent_to_ftp_server', 'updates_log',)
     actions = ['send_xml_to_ftp']
 
     def send_xml_to_ftp(self, request, queryset):
