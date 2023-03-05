@@ -7,6 +7,8 @@ from django.core.checks import messages
 from django.core.exceptions import ValidationError
 from django.db.models import Count, ManyToManyField
 from django.forms import ModelMultipleChoiceField, CheckboxSelectMultiple
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 from fieldsets_with_inlines import FieldsetsInlineMixin
 
 from dependence.aai import AAITransmission, AAITransDetail
@@ -71,13 +73,40 @@ class MedicalCareSummaryPerPatientAdmin(admin.ModelAdmin):
     readonly_fields = ('created_on', 'updated_on', 'patient', 'date_of_request', 'referent', 'date_of_evaluation',
                        'date_of_notification', 'plan_number', 'decision_number', 'level_of_needs', 'start_of_support',
                        'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
-                       'fmi_right', 'sn_code_aidant')
+                       'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail')
+
+    def link_to_declaration_detail(self, instance):
+        url = f'{reverse("admin:dependence_declarationdetail_changelist")}?patient__id={instance.patient.id}'
+        return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici (%d)" % DeclarationDetail.objects.filter(
+            patient_id=instance.patient.id).count()))
+
+    link_to_declaration_detail.short_description = "Echanges client"
     #list_filter = (FilteringPatientsForMedicalCareSummaryPerPatient,)
 
 @admin.register(MedicalCareSummary)
 class MedicalCareSummaryAdmin(admin.ModelAdmin):
     readonly_fields = ('created_on', 'updated_on', 'parsing_date', 'count_of_supported_persons', 'date_of_submission')
 
+
+@admin.register(DeclarationDetail)
+class DeclarationDetailAdmin(admin.ModelAdmin):
+    list_display = ('patient', 'year_of_count', 'month_of_count', 'change_type', 'change_reference', 'change_date')
+    # all fields are readonly
+    readonly_fields = ('patient', 'year_of_count', 'month_of_count', 'change_type', 'change_reference', 'change_date',
+                       'change_organism_identifier','change_anomaly', 'information',)
+    # cannot delete
+    can_delete = False
+    # cannot add
+    def has_add_permission(self, request):
+        return False
+
+    # cannot edit
+    def has_change_permission(self, request, obj=None):
+        return False
+    # cannot delete and hide delete button
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
 
 class DeclarationDetailInline(admin.StackedInline):
     model = DeclarationDetail

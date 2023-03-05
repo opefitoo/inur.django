@@ -148,6 +148,8 @@ class ChangeDeclarationFile(models.Model):
             raise ValidationError({'internal_reference': [_("Internal reference must be unique")]})
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        # Call full_clean to run all the field validators
+        self.full_clean()
         # increment the version number, only if data has changed and the object is not new
         if self.pk:
             self.generated_xml_version += 1
