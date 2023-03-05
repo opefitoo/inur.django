@@ -1,5 +1,6 @@
 import base64
 from ftplib import FTP
+from io import TextIOWrapper
 
 import lxml.etree as ElementTree
 import xmlschema
@@ -154,16 +155,23 @@ class ChangeDeclarationFile(models.Model):
         # data = self.generate_xml_using_xmlschema()
         # self.generated_xml = ContentFile(data, name='long_term_care_declaration.xml')
         if self.generated_return_xml:
-            print("self.generated_return_xml")
             xsd_schema = xmlschema.XMLSchema('dependence/xsd/ad-declaration-14.xsd')
-            xml_file = self.generated_return_xml
-            xml_file.open()
-            xml_data = xml_file.read()
-            xml_file.close()
+
+            read_file = TextIOWrapper(self.generated_return_xml, encoding='UTF-8')
+            xml_data = read_file.read()
             xsd_schema.validate(xml_data)
             # Get the data from the XML file
             xml_data = xsd_schema.to_dict(xml_data)
-            print(xml_data)
+
+
+
+            #xml_file = self.generated_return_xml
+            #xml_file.open()
+            #xml_data = xml_file.read()
+            #xml_file.close()
+            #xsd_schema.validate(xml_data)
+            # Get the data from the XML file
+            #xml_data = xsd_schema.to_dict(xml_data)
             if xml_data['Type']['Type'] == 'RETDCL':
                 for changement in xml_data['Changements']:
                     print(changement)
@@ -193,8 +201,10 @@ class ChangeDeclarationFile(models.Model):
                             else:
                                 self.updates_log = f"Changement from {previous_value} to {identifiant_changement_organisme} on {declaration_change} Fait le {timezone.now()}\n"
                         declaration_change.save()
-            print("self.generated_return_xml")
-
+            else:
+                raise ValidationError({'generated_return_xml': [_("The XML file is not a return file")]})
+            # Here use detach
+            read_file.detach()
         super().save(force_insert, force_update, using, update_fields)
 
     def generate_xml_using_xmlschema(self):
