@@ -88,9 +88,5 @@ target/
 .xxxgitsecret/keys/random_seed
 
 .DS_Store
-<<<<<<< HEAD
-python-app-venv/*
-=======
 .venv
 .vscode
->>>>>>> bd9451ad22f2f4e5e27871fc4c0d2a5059d84f54
