@@ -196,6 +196,8 @@ class PrestationGoogleCalendarSurLu:
             description += descr_line % (u'Sur LU ID:', event.id)
         if event.notes and len(event.notes) > 0:
             description += descr_line % ('Notes:', event.notes)
+        if event.event_report and len(event.event_report) > 0:
+            description += descr_line % ('Rapport de soin:', event.event_report)
         if event.employees and event.patient:
             summary = '%s - %s' % (event.patient, event.employees.abbreviation)
         elif event.employees and not event.patient:
@@ -221,9 +223,10 @@ class PrestationGoogleCalendarSurLu:
                     attendees_list.append({'email': '%s' % u.assigned_additional_employee.user.email})
 
             event_body = {
-                'summary': summary,
+                'summary': "! ANNULÉ %s !" % ('\u0336'.join(summary) + '\u0336') if event.state in [5,6] else summary,
                 'description': description,
                 'location': location,
+                'status': "cancelled" if 5 == event.state else "confirmed",
                 'start': {
                     'dateTime': localized.isoformat(),
                 },
@@ -244,12 +247,14 @@ class PrestationGoogleCalendarSurLu:
                                                0,
                                                0)
             event_body = {
-                'summary': summary,
+                'summary': "! ANNULÉ %s !" % ('\u0336'.join(summary) + '\u0336') if event.state in [5,6] else summary,
                 'description': description,
                 'location': location,
                 'start': {
                     'dateTime': localized.isoformat(),
                 },
+                # 5 is cancelled
+                'status': "cancelled" if 5 == event.state else "confirmed",
                 'end': {
                     'dateTime': naive_end_date.astimezone(ZoneInfo("Europe/Luxembourg")).isoformat(),
                 },
@@ -289,17 +294,27 @@ class PrestationGoogleCalendarSurLu:
             print("Pretending that I delete event: %s on Google %s" % (event_id, e))
             return e
         event = self.get_event(calendar_id=calendar_id, event_id=event_id)
-        if 'cancelled' == event['status']:
+        if event and 'cancelled' == event['status']:
             return
-        try:
-            gmail_event = self._service.events().delete(calendarId=calendar_id,
+        if event:
+            try:
+                gmail_event = self._service.events().delete(calendarId=calendar_id,
                                                         eventId=event_id).execute()
-        except HttpError as e:
-            raise ValueError("Problem de connexion", e)
-        return gmail_event
+                return gmail_event
+            except HttpError as e:
+                if e.resp.status == 410 and 'Resource has been deleted' in e.content:
+                     print("Event %s already deleted" % event_id)
+                     return
+                else:
+                    raise ValueError("Problem de connexion", e)
+        return event
 
     def delete_event(self, evt_instance):
-        return self.delete_event_by_google_id(calendar_id=evt_instance.employees.user.email,
+        if evt_instance.employees:
+            return self.delete_event_by_google_id(calendar_id=evt_instance.employees.user.email,
+                                              event_id=evt_instance.calendar_id,
+                                              dry_run=False)
+        return self.delete_event_by_google_id(calendar_id=config.GENERAL_CALENDAR_ID,
                                               event_id=evt_instance.calendar_id,
                                               dry_run=False)
 

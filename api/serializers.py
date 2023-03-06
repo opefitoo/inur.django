@@ -1,11 +1,14 @@
+import datetime
+
 from django.contrib.auth.models import User, Group
+from django.utils import timezone
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from dependence.careplan import CarePlanMaster, CarePlanDetail
 from dependence.models import PatientAnamnesis, AssignedPhysician
-from invoices.employee import JobPosition, Employee
+from invoices.employee import JobPosition, Employee, EmployeeContractDetail
 from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
@@ -17,13 +20,41 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('first_name', 'last_name')
 
+
 class EmployeeAvatarSerializer(serializers.ModelSerializer):
     user = UserSerializer()
+
     class Meta:
         model = Employee
         fields = ('user', 'avatar', 'bio', 'occupation')
         depth = 1
 
+
+
+class FullCalendarEmployeeSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    class Meta:
+        model = Employee
+        fields = ('id', 'abbreviation', 'user')
+        depth = 1
+
+class EmployeeSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = Employee
+        fields = ('user', 'address', 'occupation', 'birth_date', 'birth_place', 'gender', 'address',
+                  'virtual_career_anniversary_date')
+        depth = 1
+
+
+class EmployeeContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmployeeContractDetail
+        fields = ('start_date', 'number_of_hours', 'number_of_days_holidays', 'monthly_wage', 'contract_date',
+                  'contract_signed_date', 'employee_trial_period_text', 'employee_special_conditions_text', 'index',
+                  'career_rank', 'anniversary_career_rank', 'weekly_work_organization')
+        depth = 1
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -206,7 +237,7 @@ class GenericEmployeeEventSerializer(serializers.ModelSerializer):
         time_start_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
         time_end_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
         fields = ('id', 'day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'notes',
-                  'employees', 'created_by', "event_address")
+                  'employees', 'created_by', "event_address", "calendar_url")
         validators = [
             UniqueTogetherValidator(
                 queryset=Event.objects.all(),
@@ -217,19 +248,97 @@ class GenericEmployeeEventSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
+        order_by = ('day', 'time_start_event')
         model = Event
         day = serializers.DateField(format="%Y-%m-%d")
         # for DateTimeField
         time_start_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
         time_end_event = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
         fields = ('id', 'day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'notes', 'patient',
-                  'employees', 'created_by')
+                  'employees', 'created_by', "event_address", "calendar_url")
         validators = [
             UniqueTogetherValidator(
                 queryset=Event.objects.all(),
                 fields=['day', 'event_type_enum', 'time_start_event', 'time_end_event', 'patient', 'employees']
             )
         ]
+
+class FullCalendarPatientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ['id', 'name', 'first_name']
+class FullCalendarEventSerializer(serializers.ModelSerializer):
+    start = serializers.SerializerMethodField()
+    end = serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
+    color = serializers.SerializerMethodField()
+    textcolor = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+    resourceId = serializers.SerializerMethodField()
+    patient = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Event
+        fields = ['id', 'title', 'start', 'end', 'color', 'textcolor', 'description', 'resourceId', 'patient',
+                  'event_type_enum']
+
+    def get_patient(self, obj):
+        if obj.patient is not None:
+            return obj.patient.id
+        return None
+
+    def get_start(self, obj):
+        if obj.time_start_event is None:
+            start_time = datetime.datetime.combine(obj.day, datetime.time(0, 0))
+        else:
+            start_time = datetime.datetime.combine(obj.day, obj.time_start_event)
+        return timezone.datetime.combine(obj.day, start_time.time()).strftime("%Y-%m-%dT%H:%M:%S%z")
+
+    def get_end(self, obj):
+        if obj.time_end_event is None:
+            end_time = datetime.datetime.combine(obj.day, obj.time_start_event)
+            end_time += datetime.timedelta(hours=1)
+        else:
+            end_time = datetime.datetime.combine(obj.day, obj.time_end_event)
+            return timezone.datetime.combine(obj.day, end_time.time()).strftime("%Y-%m-%dT%H:%M:%S%z")
+
+    def get_title(self, obj):
+        # call the __str__ method of the model
+        return str(obj)
+
+    def get_color(self, obj):
+        # background color of the event is the same as the color of the event type employee
+        if obj.employees is None:
+            # default color is blue
+            return "#0000FF"
+        return obj.employees.color_cell
+
+    def get_textcolor(self, obj):
+        # color of the event is the same as the color of the event type employee
+        if obj.employees is None:
+            # default color is black
+            return "#000000"
+        return obj.employees.color_text
+
+    # description is the notes of the event + event_report if it exists + patient name + patient first name + event state from STATES
+    def get_description(self, obj):
+        description = obj.notes
+        if obj.event_report is not None:
+            description += "    " + obj.event_report
+        if obj.patient is not None:
+            description += "    " + obj.patient.name + " " + obj.patient.first_name
+        if obj.state is not None and obj.state != "":
+            if 0 <= obj.state < len(Event.STATES):
+                description += "    " + Event.STATES[obj.state - 1][1]
+            else:
+                description += "    " + str(obj.state)
+                print("state not in STATES dictionary: %s and id: %s" % (obj.state, obj.id))
+        return description + "(%s)" % obj.id
+    # resource id is the id of the employee
+    def get_resourceId(self, obj):
+        if obj.employees is None:
+            return None
+        return obj.employees.id
 
 
 class BirthdayEventSerializer(serializers.ModelSerializer):

@@ -7,7 +7,7 @@ from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, PageBreak, Table, TableStyle, Image
+from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, PageBreak, Table, TableStyle
 
 from dependence.careplan import CarePlanMaster, CarePlanDetail
 from invoices.settings import BASE_DIR
@@ -104,7 +104,7 @@ def build_doc_per_care_plan(care_plan: CarePlanMaster):
     for detail in CarePlanDetail.objects.filter(care_plan_to_master_id=care_plan.pk).order_by("id").all():
         i += 1
         data.append(
-            (Paragraph(u"%s de %s à %s" % (','.join(str(o).upper() for o in detail.params_occurrence.all()), detail.time_start.strftime("%H:%M"), detail.time_end.strftime("%H:%M")), smallstyle),
+            (Paragraph(u"%s vers %s" % (','.join(str(o).upper() for o in detail.params_occurrence.all()), detail.time_start.strftime("%H:%M")), smallstyle),
              Paragraph(str(detail.care_actions).replace('\n', '<br />\n'), smallstyle)))
 
     elements.append(Spacer(1, 18))
@@ -132,7 +132,7 @@ def myFirstPage(canv, doc):
     # # header
     canv.drawImage(BASE_DIR + "/static/patientanamnesis/images/logo.png", doc.pagesize[0] / 2 - 14.5 * cm,
                    doc.pagesize[1] / 2 + 9.5 * cm,
-                   width=20, height=20)
+                   width=37*1.5, height=15*1.5, mask='auto')
 
     # footer
     signature = 'Signatures: ............................................................'

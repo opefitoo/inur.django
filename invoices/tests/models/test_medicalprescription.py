@@ -1,7 +1,7 @@
 import os
 
-from django.utils import timezone
 from django.test import TestCase
+from django.utils import timezone
 
 from invoices.models import Physician, MedicalPrescription, Patient, update_medical_prescription_filename
 from invoices.storages import CustomizedGoogleDriveStorage
@@ -71,4 +71,5 @@ class UpdateMedicalPrescriptionFilenameTestCase(TestCase):
         expected_name = os.path.join(path, filename)
 
         generated_name = update_medical_prescription_filename(prescription, filename)
-        self.assertEqual(generated_name, expected_name)
+        # because of uuid it's not possible to test the exact name
+        self.assertTrue(os.path.splitext(generated_name)[0].startswith(os.path.splitext(expected_name)[0]))

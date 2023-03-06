@@ -1,3 +1,5 @@
+import json
+
 from constance import config
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse
@@ -8,21 +10,25 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api import serializers
 from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, \
     PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
     TimesheetTaskSerializer, PhysicianSerializer, MedicalPrescriptionSerializer, HospitalizationSerializer, \
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
-    EmployeeAvatarSerializer
+    EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
+    FullCalendarEmployeeSerializer, FullCalendarPatientSerializer
 from api.utils import get_settings
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
-from helpers.employee import get_employee_id_by_abbreviation
+from helpers.employee import get_employee_id_by_abbreviation, \
+    get_current_employee_contract_details_by_employee_abbreviation
 from invoices import settings
 from invoices.employee import JobPosition, Employee
+from invoices.enums.event import EventTypeEnum
+from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event
+from invoices.holidays import HolidayRequest
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
 from invoices.processors.birthdays import process_and_generate
@@ -183,10 +189,124 @@ class GenericEmployeeEventList(generics.ListCreateAPIView):
             assert isinstance(instance, Event)
         return result
 
+    def get(self, request, *args, **kwargs):
+        employee = self.request.query_params.get('employee', None)
+        year = self.request.query_params.get('year', None)
+        if employee is not None:
+            self.queryset = self.queryset.filter(employees__id=employee)
+        if year is not None:
+            self.queryset = self.queryset.filter(day__year=year)
+        return self.list(request, *args, **kwargs)
 
-class EventList(generics.ListCreateAPIView):
+
+
+class FullCalendarEventViewSet(generics.ListCreateAPIView):
     queryset = Event.objects.all()
+    serializer_class = FullCalendarEventSerializer
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        json_data = json.dumps(serializer.data)
+        print(json_data)
+        return HttpResponse(json_data, content_type='application/json')
+
+    def get_queryset(self, *args, **kwargs):
+        # parameters look like 'start': ['2023-02-05T00:00:00'], 'end': ['2023-02-12T00:00:00']
+        # we need to convert them to python date
+        start = datetime.strptime(self.request.query_params['start'], '%Y-%m-%dT%H:%M:%S').date()
+        end = datetime.strptime(self.request.query_params['end'], '%Y-%m-%dT%H:%M:%S').date()
+        queryset = Event.objects.filter(day__gte=start, day__lte=end)
+        return queryset
+
+    def patch(self, request, *args, **kwargs):
+        event = Event.objects.get(pk=request.data['id'])
+        # if request.data['start'] contains Z, it means it is a json date
+        if request.data['start'].endswith('Z'):
+            event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
+            event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
+        else:
+            event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M').date()
+            event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M').time()
+        if request.data.get('employee_id', None):
+            employee = Employee.objects.get(id=request.data['employee_id'])
+            event.employees = employee
+        if request.data['end'].endswith('Z'):
+            event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
+        else:
+            event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M').time()
+        event.save()
+        return HttpResponse("OK")
+
+
+class AvailablePatientList(generics.ListCreateAPIView):
+    queryset = Patient.objects.all()
+    serializer_class = FullCalendarPatientSerializer
+
+    def get(self, request, *args, **kwargs):
+        event_type = self.request.query_params['event_type']
+        if self.request.query_params['end']:
+            end = datetime.strptime(self.request.query_params['end'], '%Y-%m-%dT%H:%M:%S')
+        if EventTypeEnum.ASS_DEP == event_type:
+            queryset = Patient.objects.filter(is_under_dependence_insurance=True,
+                                              date_of_death__lte=end)
+        else:
+            queryset = Patient.objects.filter(date_of_death__lte=end)
+        serializer = self.get_serializer(queryset, many=True)
+        json_data = json.dumps(serializer.data)
+        return HttpResponse(json_data, content_type='application/json')
+
+class AvailableEmployeeList(generics.ListCreateAPIView):
+    queryset = Employee.objects.all()
+    serializer_class = FullCalendarEmployeeSerializer
+
+    # for a specific day and time, return the list of available employees
+    # parameters are day start_time end_time
+    # employee must not be on holiday and must be assigned to another event at the same time
+    # holiday HolidayRequestWorkflowStatus must be VALIDATED
+    def get(self, request, *args, **kwargs):
+        start = datetime.strptime(self.request.query_params['start'], '%Y-%m-%dT%H:%M:%S')
+        if self.request.query_params['end']:
+            end = datetime.strptime(self.request.query_params['end'], '%Y-%m-%dT%H:%M:%S')
+        else:
+            end = start
+        day = start.date()
+        start_time = start.time()
+        end_time = end.time()
+        # get the list of employees on holiday
+        # get holidays with start date and end date include day
+        holiday_list = HolidayRequest.objects.filter(start_date__lte=day, end_date__gte=day,
+                                                     request_status=HolidayRequestWorkflowStatus.ACCEPTED)
+        # get the list of employees assigned to an event at the same time, must remove current event otherwise it will be
+        # removed from the list
+        event_list = Event.objects.filter(day=day, time_start_event__lte=end_time, time_end_event__gte=start_time).exclude(
+            id=self.request.query_params['id'])
+        # get the list of employees not on holiday and not assigned to an event at the same time
+        # take only employees who still have a contract
+        queryset = Employee.objects.exclude(id__in=holiday_list.values_list('employee', flat=True)).exclude(
+                id__in=event_list.values_list('employees', flat=True)).exclude(end_contract__lt=day)
+        serializer = self.get_serializer(queryset, many=True)
+        json_data = json.dumps(serializer.data)
+        return HttpResponse(json_data, content_type='application/json')
+
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+class EventList(generics.ListCreateAPIView):
+    queryset = Event.objects.all().order_by("day", "time_start_event")
     serializer_class = EventSerializer
+
+    def get(self, request, *args, **kwargs):
+        employee = self.request.query_params.get('employee', None)
+        year = self.request.query_params.get('year', None)
+        ordering = self.request.query_params.get('ordering', None)
+        if employee is not None:
+            self.queryset = self.queryset.filter(employees__id=employee)
+        if year is not None:
+            self.queryset = self.queryset.filter(day__year=year)
+        if ordering is not None:
+            self.queryset = self.queryset.order_by(ordering)
+        return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         if request.data['employees']:
@@ -228,6 +348,27 @@ def cleanup_event(request):
 
 
 @api_view(['POST'])
+def get_employee_details(request):
+    if 'POST' != request.method:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    employee = get_employee_id_by_abbreviation(request.data.get('abbreviation'))
+    if employee:
+        return Response(EmployeeSerializer(employee).data, status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+def get_employee_contract_details_by_abbreviation(request):
+    if 'POST' != request.method:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    employee = get_current_employee_contract_details_by_employee_abbreviation(request.data.get('abbreviation'))
+    if employee:
+        return Response(EmployeeContractSerializer(employee).data, status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
 def whois_off(request):
     if 'POST' == request.method:  # user posting data
         reqs = holidays.whois_off(datetime.strptime(request.data["day_off"], "%Y-%m-%d"))
@@ -258,7 +399,7 @@ def get_bank_holidays(request):
 @api_view(['GET'])
 def how_many_care_given(request):
     if 'GET' == request.method:
-        reqs = Prestation.objects.all().count()
+        reqs = Prestation.objects.all().count() + Event.objects.filter(state=3).count()
         return Response(reqs, status=status.HTTP_200_OK)
 
 

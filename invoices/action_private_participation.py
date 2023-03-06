@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import decimal
-from django.core.mail import EmailMessage
 from io import BytesIO
 
 from constance import config
+from django.core.mail import EmailMessage
 from django.http import HttpResponse
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -13,10 +15,9 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
 
 from invoices import settings
+from invoices.models import InvoiceItemEmailLog
 
 
 def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False):
@@ -80,9 +81,14 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False)
         mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
 
         try:
-            mail.send(fail_silently=False)
-            return True
-        except:
+            status = mail.send(fail_silently=False)
+            InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
+                                               subject=subject, body=message, cc=emails, status=status)
+            return status
+        except Exception as e:
+            print(e)
+            InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
+                                               subject=subject, body=message, cc=emails, status=0, error=e)
             return False
         finally:
             io_buffer.close()

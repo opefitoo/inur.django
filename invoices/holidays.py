@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
-from datetime import date, timedelta
+from collections import namedtuple
+from datetime import date, timedelta, datetime
 
 from constance import config
 from django.contrib.auth.models import User
@@ -63,6 +64,8 @@ class HolidayRequest(models.Model):
     force_creation = models.BooleanField(default=False, help_text=u"Si vous êtes manager vous pouvez forcer la "
                                                                   "création de congés même si conflits avec d#autre "
                                                                   "employés")
+    do_not_notify = models.BooleanField(default=False, help_text="Do not send email notifications",
+                                        blank=True, null=True, verbose_name="Do not notify")
     start_date = models.DateField(u'Date début')
     end_date = models.DateField(u'Date fin')
     requested_period = models.CharField("Période",
@@ -108,10 +111,16 @@ class HolidayRequest(models.Model):
     def hours_calculations(self, same_year_only=False, holiday_request=None):
         import holidays
         lu_holidays = holidays.Luxembourg()
+        # if holiday end date is before employee start_contract date then return 0
+        if holiday_request.end_date < Employee.objects.get(user_id=holiday_request.employee.id).start_contract:
+            Computation = namedtuple('Computation', 'num_days num_days_sickness hours_jour jours_feries')
+            computation = Computation(0, 0, 0, 0)
+            return computation
         counter_holidays = 0
         counter_sickness_leaves = 0
         if same_year_only and holiday_request.end_date.year != holiday_request.start_date.year:
-            delta = holiday_request.end_date.replace(year=holiday_request.start_date.year, month=12, day=31) - holiday_request.start_date
+            delta = holiday_request.end_date.replace(year=holiday_request.start_date.year, month=12,
+                                                     day=31) - holiday_request.start_date
         else:
             delta = holiday_request.end_date - holiday_request.start_date
         date_comp = holiday_request.start_date
@@ -137,12 +146,29 @@ class HolidayRequest(models.Model):
                     jours_feries = jours_feries + 1
                 date_comp = date_comp + timedelta(days=1)
 
-        if Employee.objects.get(user_id=holiday_request.employee.id).employeecontractdetail_set.filter(
-                start_date__lte=holiday_request.start_date).first() is None:
-            return "définir les heures de travail contractuels svp."
-        hours_jour = Employee.objects.get(user_id=holiday_request.employee.id).employeecontractdetail_set.filter(
-            start_date__lte=holiday_request.start_date).first().number_of_hours / 5
-        from collections import namedtuple
+        employee_contract_details = Employee.objects.get(
+            user_id=holiday_request.employee.id).employeecontractdetail_set.filter(
+            start_date__lte=holiday_request.start_date, end_date__isnull=True)
+        if employee_contract_details.count() > 1:
+            raise Exception("More than one contract for employee when calculating holiday request %s" % (holiday_request, holiday_request.id))
+        if employee_contract_details.count() == 0:
+            employee_contract_details = Employee.objects.get(
+                user_id=holiday_request.employee.id).employeecontractdetail_set.filter(
+                start_date__lte=holiday_request.start_date, end_date__gte=holiday_request.start_date)
+
+            if employee_contract_details.count() == 0:
+                # for employees who have a contract than ended before the start date of the holiday request
+                employee_contract_details = Employee.objects.get(
+                    user_id=holiday_request.employee.id).employeecontractdetail_set.filter(
+                    start_date__lte=holiday_request.start_date, end_date__lte=holiday_request.start_date).order_by("-end_date")
+                if employee_contract_details.count() == 0:
+                    raise Exception("No contract for employee when calculating holiday request %s id %s" % (holiday_request, holiday_request.id))
+            if employee_contract_details.count() > 1:
+                raise Exception("More than one contract for this employee %s for holiday request %s" % (holiday_request.employee, holiday_request))
+        if employee_contract_details.count() == 0:
+            raise Exception("No contract for this employee %s for holiday request %s" % (holiday_request.employee, holiday_request))
+        hours_jour = employee_contract_details.first().number_of_hours / 5
+
         Computation = namedtuple('Computation', 'num_days num_days_sickness hours_jour jours_feries')
         computation = Computation(counter_holidays, counter_sickness_leaves, hours_jour, jours_feries)
         return computation
@@ -157,6 +183,56 @@ class HolidayRequest(models.Model):
         for holiday_req in holidays_taken_same_year:
             calculation += holiday_req.hours_calculations(same_year_only=True, holiday_request=holiday_req).num_days
         return calculation
+
+    @property
+    def total_hours_off_available(self, year=None):
+        """
+        For a specific year, returns the number of hours off available for the employee.
+        :return: the number of hours off available for the employee
+        @return:
+        """
+        if year is None:
+            year = self.start_date.year
+        # if employee contract detail end date is None or at least one contract detail date end is after the year
+        # we are looking for, we can assume that the employee is still working for the company
+        if Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
+                end_date__isnull=True).exists() or \
+                Employee.objects.get(user_id=self.employee.id).employeecontractdetail_set.filter(
+                    end_date__year=year).exists():
+            hours_off_available = 0
+            # if self.start_date.year equals year then for month in range to as of now
+            # else for month in range 1 to 12
+            if self.start_date.year == year:
+                #
+                for month in range(1, self.end_date.month + 1):
+                    hours_off_available += self.hours_off_available_per_month(month, year)
+            else:
+                for month in range(1, 13):
+                    hours_off_available += self.hours_off_available_per_month(month, year)
+            return hours_off_available
+
+    def hours_off_available_per_month(self, month, year):
+        """
+        For a specific month and year, returns the number of hours off available for the employee.
+        @param month:
+        @param year:
+        @return:
+        """
+        hours_off_available = 0
+        employee_contract_details = Employee.objects.get(
+            user_id=self.employee.id).employeecontractdetail_set.filter(
+            start_date__lte=datetime(year, month, 1), end_date__isnull=True).first()
+        if employee_contract_details is None:
+            employee_contract_details = Employee.objects.get(
+                user_id=self.employee.id).employeecontractdetail_set.filter(
+                start_date__lte=datetime(year, month, 1), end_date__gt=datetime(year=year, month=month, day=1)).first()
+        if employee_contract_details is not None:
+            number_of_hours_off_for_the_month = employee_contract_details.number_of_hours * 0.43333333333333335
+            hours_off_available += number_of_hours_off_for_the_month
+            # round to 2 decimals commercial
+            return round(hours_off_available, 2)
+        else:
+            return 0
 
     def clean(self, *args, **kwargs):
         exclude = []

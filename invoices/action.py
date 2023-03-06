@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse
-from invoices.invoiceitem_pdf import get_doc_elements
+from django.utils.translation import gettext_lazy as _
 from reportlab.lib.units import cm
 from reportlab.platypus.doctemplate import SimpleDocTemplate
-from django.utils.translation import gettext_lazy as _
+
+from invoices.invoiceitem_pdf import get_doc_elements
 
 
 def export_to_pdf(modeladmin, request, queryset):
@@ -28,6 +29,39 @@ def export_to_pdf(modeladmin, request, queryset):
 
 
 export_to_pdf.short_description = _("CNS Invoice")
+
+def set_invoice_as_paid(modeladmin, request, queryset):
+    if request.user.is_superuser:
+        queryset.update(invoice_paid=True)
+        modeladmin.message_user(request, _("Invoice(s) marked as paid"))
+    else:
+        modeladmin.message_user(request, _("You are not allowed to do this action"))
+set_invoice_as_paid.short_description = _("Mark invoice(s) as paid")
+
+def set_invoice_as_not_sent(modeladmin, request, queryset):
+    if request.user.is_superuser:
+        queryset.update(invoice_sent=False)
+        modeladmin.message_user(request, _("Invoice(s) marked as not sent"))
+    else:
+        modeladmin.message_user(request, _("You are not allowed to do this action"))
+
+set_invoice_as_not_sent.short_description=_("Mark invoice(s) as not sent")
+
+def set_invoice_as_sent(modeladmin, request, queryset):
+    if request.user.is_superuser:
+        queryset.update(invoice_sent=True)
+        modeladmin.message_user(request, _("Invoice(s) marked as sent"))
+    else:
+        modeladmin.message_user(request, _("You are not allowed to do this action"))
+set_invoice_as_sent.short_description = _("Mark invoice(s) as sent")
+
+def set_invoice_as_not_paid(modeladmin, request, queryset):
+    if request.user.is_superuser:
+        queryset.update(invoice_paid=False)
+        modeladmin.message_user(request, _("Invoice(s) marked as not paid"))
+    else:
+        modeladmin.message_user(request, _("You are not allowed to do this action"))
+set_invoice_as_not_paid.short_description = _("Mark invoice(s) as not paid")
 
 
 def export_to_pdf_with_medical_prescription_files(modeladmin, request, queryset):

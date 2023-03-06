@@ -27,7 +27,7 @@ class TimesheetDetailTestCase(TestCase):
         employee_detail = EmployeeContractDetail.objects.create(
             start_date=timezone.now().replace(year=2018, month=6, day=1),
             number_of_hours=40,
-            employee_link=self.employee)
+            employee_link=self.employee, number_of_days_holidays=26)
         employee_detail.save()
 
     def tearDown(self):

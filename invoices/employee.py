@@ -8,12 +8,13 @@ from django.db import models
 from django.db.models.signals import pre_save, post_delete, post_save
 from django.dispatch import receiver
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from invoices.enums.generic import GenderType
 from invoices.enums.holidays import ContractType
 from invoices.storages import CustomizedGoogleDriveStorage
-from django.utils.translation import gettext_lazy as _
 
 
 def avatar_storage_location(instance, filename):
@@ -32,6 +33,7 @@ def avatar_storage_location(instance, filename):
         file_extension)
     return os.path.join(path, filename)
 
+
 def validate_avatar(file):
     try:
         file_size = file.file.size
@@ -40,6 +42,8 @@ def validate_avatar(file):
     limit_kb = 10
     if file_size > limit_kb * 1024 * 1024:
         raise ValidationError(_("Maximum file size is %s MB" % limit_kb))
+
+
 class JobPosition(models.Model):
     class Meta:
         ordering = ['-id']
@@ -54,6 +58,16 @@ class JobPosition(models.Model):
 
 
 class Employee(models.Model):
+    class Meta:
+        ordering = ['-id']
+
+    gender = models.CharField("Sex",
+                              max_length=5,
+                              choices=GenderType.choices,
+                              default=None,
+                              blank=True,
+                              null=True
+                              )
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_contract = models.DateField(u'start date')
     end_contract = models.DateField(u'end date', blank=True,
@@ -71,9 +85,9 @@ class Employee(models.Model):
                                               max_length=20,
                                               blank=True)
     abbreviation = models.CharField('Abbreviation',
-                                    help_text='Enter employee abbreviation, must be unique accross company',
+                                    help_text='Enter employee abbreviation, must be unique across company',
                                     max_length=3,
-                                    default='XXX')
+                                    default="XXX")
     phone_number = PhoneNumberField(blank=True)
     bank_account_number = models.CharField("Numéro de compte IBAN", help_text="Code BIC + IBAN",
                                            max_length=50, blank=True)
@@ -85,6 +99,7 @@ class Employee(models.Model):
     citizenship = CountryField(blank_label='...', blank=True, null=True)
     color_cell = ColorField(default='#FF0000')
     color_text = ColorField(default='#FF0000')
+    birth_date = models.DateField(u'birth date', blank=True, null=True)
 
     birth_place = models.CharField(u'Birth Place',
                                    help_text=u'Enter the City / Country of Birth',
@@ -98,12 +113,25 @@ class Employee(models.Model):
     to_be_published_on_www = models.BooleanField("Public Profile",
                                                  help_text="If checked then bio and avatar fields become mandatory",
                                                  blank=True, null=True)
+    virtual_career_anniversary_date = models.DateField("Date anniversaire carrière virtuelle",
+                                                       help_text="Pour les carrières sous convention SAS",
+                                                       blank=True, null=True)
+
+    def get_current_contract(self):
+        return self.contract_set.filter(end_date__isnull=True).first()
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
         is_has_gdrive_access_valid, message = self.is_has_gdrive_access_valid(self.has_gdrive_access, self.user)
         if not is_has_gdrive_access_valid:
             raise ValidationError({'has_gdrive_access': message})
+        ## if self.address contains line breaks, replace them with spaces
+        if self.address:
+            self.address = self.address.replace('\n', ' ').replace('\r', '').replace('  ', ' ')
+        ## if abbreviation is not unique, raise error, except if abbreviation is 'XXX'
+        if self.abbreviation and self.abbreviation != 'XXX':
+            if Employee.objects.filter(abbreviation=self.abbreviation).exclude(id=self.id).exists():
+                raise ValidationError({'abbreviation': 'Abbreviation must be unique across company'})
 
     @staticmethod
     def is_has_gdrive_access_valid(has_gdrive_access, user):
@@ -124,6 +152,22 @@ class Employee(models.Model):
         return ' - '.join([self.user.username.strip().capitalize(), self.abbreviation])
 
 
+def contract_storage_location(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.start_date:
+        _current_yr_or_prscr_yr = instance.start_date.year
+        _current_month_or_prscr_month = instance.start_date.month
+    else:
+        _current_yr_or_prscr_yr = str(instance.employee_link.start_contract.year)
+        _current_month_or_prscr_month = str(instance.employee_link.start_contract.month)
+    path = os.path.join("Doc. Admin employes", "%s_%s" % (instance.employee_link.user.last_name.upper(),
+                                                          instance.employee_link.user.first_name.capitalize()))
+    filename = '%s_%s_%s_%s%s' % (
+        _current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.employee_link.abbreviation,
+        "contract", file_extension)
+    return os.path.join(path, filename)
+
+
 class EmployeeContractDetail(models.Model):
     start_date = models.DateField(u'Date début période')
     end_date = models.DateField(u'Date fin période', blank=True, null=True)
@@ -134,7 +178,25 @@ class EmployeeContractDetail(models.Model):
                                      choices=ContractType.choices,
                                      default=ContractType.CDI, blank=True, null=True)
     monthly_wage = models.DecimalField("Salaire Mensuel", max_digits=8, decimal_places=2, blank=True, null=True)
+    index = models.PositiveIntegerField("Index", blank=True, null=True)
+    number_of_days_holidays = models.PositiveSmallIntegerField(u"Nombre de jours de congés",
+                                                               validators=[MinValueValidator(0),
+                                                                           MaxValueValidator(37)])
     employee_link = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee_contract_file = models.FileField(upload_to=contract_storage_location,
+                                              help_text=_("You can attach the scan of the contract"),
+                                              null=True, blank=True)
+    contract_signed_date = models.DateField(u'Date signature contrat', blank=True, null=True)
+    contract_date = models.DateField(u'Date contrat', blank=True, null=True)
+    employee_trial_period_text = models.TextField("Texte période d'essai", max_length=800, blank=True, null=True)
+    employee_special_conditions_text = models.TextField("Texte conditions spéciales", max_length=200, blank=True,
+                                                        null=True)
+    career_rank = models.CharField("Grade", help_text="Sous format Grade / Ancienneté Carrière", max_length=10,
+                                   blank=True, null=True)
+    anniversary_career_rank = models.DateField(u'Date anniversaire grade', blank=True, null=True)
+    weekly_work_organization = models.TextField("Organisation du travail hebdomadaire",
+                                                help_text="Veuillez saisir ce champ sous format: 8h/j 5 jours par semaine",
+                                                max_length=80, blank=True, null=True)
 
     def calculate_current_daily_hours(self):
         return self.number_of_hours / 5
@@ -164,7 +226,8 @@ def update_filename(instance, filename):
 
 class EmployeeAdminFile(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    file_description = models.CharField("description", max_length=50)
+    file_description = models.CharField("description", max_length=60)
+    document_expiry_date = models.DateField(u'Date d\'expiration du document', blank=True, null=True)
     file_upload = models.FileField(null=True, blank=True, upload_to=update_filename)
 
 
@@ -230,4 +293,3 @@ def employee_revoke_gservices_permissions(sender, instance, **kwargs):
         path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
         gd_storage.update_folder_permissions_v3(path, email, has_access)
         gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
-

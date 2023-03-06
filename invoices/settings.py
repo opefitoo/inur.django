@@ -16,20 +16,24 @@ import os
 import sys
 
 import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv(verbose=True)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'pc_pf1h+5n4h(ayu2)j@2_c+qgumxfa5xeplar6*eq8x745lg!'
+SECRET_KEY = "CHANGE_ME!!!! (P.S. the SECRET_KEY environment variable will be used, if set, instead)."
+
+if 'SECRET_KEY' in os.environ:
+    SECRET_KEY = os.environ["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 # Do not Allow all host headers
-# TODO: fix this hard coded value
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.sur.lu', '.herokuapp.com']
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
@@ -88,6 +92,11 @@ MIDDLEWARE = (
 )
 
 MIDDLEWARE += ('crum.CurrentRequestUserMiddleware',)
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'api.views.exception_handler.custom_exception_handler',
+}
+
 
 #
 LOCALE_PATHS = (
@@ -148,7 +157,14 @@ MEDIA_URL = '/media/'
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-# LANGUAGE_CODE = 'fr'
+LANGUAGE_CODE = 'fr'
+
+LANGUAGES = (
+    ('fr', 'Français'),
+    ('en', 'English'),
+    ('de', 'Deutsch'),
+    ('lu', 'Letzebuergesch'),
+)
 
 TIME_ZONE = 'Europe/Luxembourg'
 
@@ -213,13 +229,14 @@ CONSTANCE_CONFIG = {
          'Nom et adresse du prestataire de soins (apparait sur les factures)', str),
     'BIS_NURSE_CODE': (
         '', "Code infirmier secondaire pour les soins", str),
+    'CODE_PRESTATAIRE': ("", "Code du prestataire de soins sur 8 positions", str),
     'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select'),
     'CC_EMAIL_SENT': ("",
                       "Lors de l'envoi d'un email au client, envoi à cette adresse en CC (pour en mettre plusieurs veuillez les séparer d'une virgule ',')",
                       str),
     'GENERAL_CALENDAR_ID': ("",
-                      "Identifiant de l'agenda Google de configuration générale",
-                      str),
+                            "Identifiant de l'agenda Google de configuration générale",
+                            str),
     'CONVADIS_CLIENT_ID': ('NOT_SET', 'Client ID pour authentification oauth2 convadis services', str),
     'CONVADIS_SECRET_ID': ('NOT_SET', 'Secret ID pour authentification oauth2 convadis services', str),
     'CONVADIS_URL': ('NOT_SET', 'Url pour authentification oauth2 convadis services', str),
@@ -231,19 +248,23 @@ CONSTANCE_CONFIG = {
     'YALE_PASSWORD': ('NOT_SET', 'Yale password', str),
     'YALE_HOUSE_ID': ('NOT_SET', 'House ID', str),
     'YALE_VERIFICATION_CODE': ('NOT_SET', 'Yale verification code', str),
+    'FTP_HOST': ('NOT_SET', 'FTP host', str),
+    'FTP_USER': ('NOT_SET', 'FTP user', str),
+    'FTP_PASSWORD': ('NOT_SET', 'FTP password', str),
+    'FTP_XML_DIRECTORY': ('NOT_SET', 'FTP xml directory', str),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
     'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE', 'ROOT_URL', 'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL'),
     'Options de Facturation': (
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
+        'CODE_PRESTATAIRE',
         'NURSE_PHONE_NUMBER', 'MAIN_BANK_ACCOUNT', 'ALTERNATE_BANK_ACCOUNT', 'CC_EMAIL_SENT', 'GENERAL_CALENDAR_ID'),
+    'Options FTP': ('FTP_HOST', 'FTP_USER', 'FTP_PASSWORD', 'FTP_XML_DIRECTORY'),
     'Options API Convadis': ('CONVADIS_ORG_ID', 'CONVADIS_CLIENT_ID', 'CONVADIS_SECRET_ID', 'CONVADIS_URL',
                              'OPENROUTE_SERVICE_API_KEY'),
     'Options API Yale': ('YALE_USERNAME', 'YALE_PASSWORD', 'YALE_VERIFICATION_CODE', 'YALE_HOUSE_ID')
 }
-
-
 
 INTERNAL_IPS = {'127.0.0.1', }
 
@@ -266,8 +287,10 @@ if 'EMAIL_HOST' in os.environ:
     EMAIL_PORT = 587
     EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
     EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+    EMAIL_AUTH_USER = os.environ['EMAIL_HOST_USER']
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_HOST_USER = 'noreply@localhost'
 
 LOGGING = {
     'version': 1,
@@ -302,10 +325,6 @@ LOGGING = {
     }
 }
 
-from dotenv import load_dotenv
-
-load_dotenv(verbose=True)
-
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # AWS S3 Contabo Configuration
@@ -331,3 +350,21 @@ if 'GOOGLE_APPLICATION_CREDENTIALS2' in os.environ and not os.path.exists(GOOGLE
     credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS2']
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2, 'w') as outfile:
         json.dump(json.loads(credentials), outfile)
+
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn="https://8e73556ef21c4c73a6ecec31b9d742cc@o4504561450287104.ingest.sentry.io/4504561450287104",
+    integrations=[
+        DjangoIntegration(),
+    ],
+
+    #     # Set traces_sample_rate to 1.0 to capture 100%
+    #     # of transactions for performance monitoring.
+    #     # We recommend adjusting this value in production.
+    traces_sample_rate=1.0,
+    #     # If you wish to associate users to errors (assuming you are using
+    #     # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True
+)

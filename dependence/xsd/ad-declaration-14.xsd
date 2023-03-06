@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2018 sp1 (x64) (http://www.altova.com) by  (Centre Commun de la Securite) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:simpleType name="T_CodeFournisseur">
+		<xs:annotation>
+			<xs:documentation>Format pour un code Fournisseur à 8 positions</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:whiteSpace value="collapse"/>
+			<xs:minInclusive value="100000"/>
+			<xs:maxInclusive value="99999999"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="T_AccidentMetier">
+		<xs:annotation>
+			<xs:documentation>Accident</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="NrAccident" type="xs:string" nillable="false" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Nr Accident</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DateAccident" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Date Accident</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_ActivitesIndividuelles">
+		<xs:annotation>
+			<xs:documentation> Les Actes et leur fréquence d'un plan de prise en charge</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="TypeActivite">
+				<xs:annotation>
+					<xs:documentation>Type de l'activite</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="DECLARATION"/>
+						<xs:enumeration value="CORRECTION"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="PersonneProtegee" type="T_IdUnique">
+				<xs:annotation>
+					<xs:documentation>Identifiant Unique de la personne protégée</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ReferenceActivite" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Référence de l'activité</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IdentifiantActiviteOrganisme" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Identifiant de l'activité de l'organisme</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Activite" type="T_Activite" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Activité</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AnomalieActivites" type="T_Anomalie" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Anomalie des activités</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Activite">
+		<xs:sequence>
+			<xs:element name="TypeActivite">
+				<xs:annotation>
+					<xs:documentation>Type d'activité</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="AEV"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="DateActivite" type="T_Date">
+				<xs:annotation>
+					<xs:documentation>Date prestataion</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AnomalieActivite" type="T_Anomalie" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Anomalie de l'activité</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Anomalie">
+		<xs:annotation>
+			<xs:documentation>Type composé pour un message retour au prestataire sur base d'une anomalie</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="type" type="xs:string" nillable="false">
+				<xs:annotation>
+					<xs:documentation>Type de message</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="code" type="xs:string" nillable="false">
+				<xs:annotation>
+					<xs:documentation>Code du motif de contestation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="motif" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Motif optionnel pour les anomalies qui disposent d'un motif non-standard</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_EntreeSortie">
+		<xs:annotation>
+			<xs:documentation>Entrée ou sortie</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="TypeChangement">
+				<xs:annotation>
+					<xs:documentation>Type de changement</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="ENTREE"/>
+						<xs:enumeration value="SORTIE"/>
+						<xs:enumeration value="CORRECTION"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="ReferenceChangement" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>reference du changement</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IdentifiantChangementOrganisme" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>identifiant du changement de l'organisme</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PersonneProtegee" type="T_IdUnique">
+				<xs:annotation>
+					<xs:documentation>Identifiant Unique de la personne protégée</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DateChangement" type="T_Date">
+				<xs:annotation>
+					<xs:documentation>Date d'entrée  ou de sortie</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Information" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Information par rapport au changement</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AnomalieChangement" type="T_Anomalie" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Anomalie du changement</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_TypeUTMetier">
+		<xs:annotation>
+			<xs:documentation>Type composé qui permet d'identifier le type du fichier en entrée</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CadreLegal">
+				<xs:annotation>
+					<xs:documentation>Cadre légal Valeur obligatoire "ASD"</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="3"/>
+						<xs:pattern value="ASD"/>
+					</xs:restriction>
+				</xs:simpleType>
+
+			</xs:element>
+			<xs:element name="Layout">
+				<xs:annotation>
+					<xs:documentation>Version du layout. Indique la version du layout utilisée pour le fichier</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:pattern value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Type">
+				<xs:annotation>
+					<xs:documentation>Type Valeur obligatoire : DCL (Déclaration) / RETDCL (Retour Declaration)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="3"/>
+						<xs:maxLength value="6"/>
+						<xs:pattern value="DCL"/>
+						<xs:pattern value="RETDCL"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="T_Heure">
+		<xs:annotation>
+			<xs:documentation>Format d'une heure</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:time"/>
+	</xs:simpleType>
+	<xs:simpleType name="T_Date">
+		<xs:annotation>
+			<xs:documentation>Format d'une Date</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:date">
+			<xs:minInclusive value="1900-01-01"/>
+			<xs:maxInclusive value="3000-12-31" fixed="false"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_IdUnique">
+		<xs:annotation>
+			<xs:documentation>Format d'identifiant unique pour un patient</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="13"/>
+			<xs:pattern value="[123456789]\p{Nd}{12}">
+				<xs:annotation>
+					<xs:documentation>Premier chiffre (1 à 9) suivi de 12 chiffres (0 à 9)</xs:documentation>
+				</xs:annotation>
+			</xs:pattern>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_OrganismeAssDep">
+		<xs:annotation>
+			<xs:documentation>Organisme Assurance Dépendance</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:int">
+			<xs:minInclusive value="19"/>
+			<xs:maxInclusive value="19"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="T_DemandeSortie">
+		<xs:annotation>
+			<xs:documentation>Demande sortie</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="TypeDemande">
+				<xs:annotation>
+					<xs:documentation>Type de demande</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="SORTIE"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="ReferenceChangement" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>reference de la demande</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IdentifiantChangementOrganisme" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>identifiant du changement de l'organisme</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PersonneProtegee" type="T_IdUnique">
+				<xs:annotation>
+					<xs:documentation>Identifiant Unique de la personne protégée</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Motif" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Motif</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="Declarations">
+		<xs:annotation>
+			<xs:documentation>Déclarations</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Type" type="T_TypeUTMetier">
+					<xs:annotation>
+						<xs:documentation>Type UT</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Organisme" type="T_OrganismeAssDep">
+					<xs:annotation>
+						<xs:documentation>Organisme Assurance Dépendance - valeur obligatoire "19"</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DateEnvoiPrestataire" type="T_Date">
+					<xs:annotation>
+						<xs:documentation>Date d'envoi du prestataire</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Prestataire" type="T_CodeFournisseur">
+					<xs:annotation>
+						<xs:documentation>Code du prestataire à 8 positions (300000)</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Changements" type="T_EntreeSortie" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Changement entrée sortie à faire</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Activites" type="T_ActivitesIndividuelles" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Activités effectuées</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="IndisponibilitesAidant" type="T_IndisponibiliteAidant" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Indisponibilités des aidants</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Demandes" type="T_DemandeSortie" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Demande sortie à faire</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="T_IndisponibiliteAidant">
+		<xs:annotation>
+			<xs:documentation>Indisponibilité de l'aidant</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="TypeIndisponibilite">
+				<xs:annotation>
+					<xs:documentation>Type de l'indisponibilité</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="DEBUT"/>
+						<xs:enumeration value="RETOUR"/>
+						<xs:enumeration value="CORRECTION"/>
+						<xs:enumeration value="DEFINITIVE"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="ReferenceIndisponibilite" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Reference de l'indisponibilité</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IdentifiantIndisponibiliteOrganisme" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Identifiant de l'indisponibilité de l'organisme</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PersonneProtegee" type="T_IdUnique">
+				<xs:annotation>
+					<xs:documentation>Personne protégée</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Aidant" type="T_IdUnique">
+				<xs:annotation>
+					<xs:documentation>Matricule de l'aidant</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DateIndisponibilite" type="T_Date">
+				<xs:annotation>
+					<xs:documentation>Date de l'indisponibilité</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AnomalieIndisponibilite" type="T_Anomalie" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Anomalie de l'indisponibilité</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>
+

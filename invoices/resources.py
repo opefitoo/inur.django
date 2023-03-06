@@ -1,14 +1,18 @@
 import json
-import requests
+import os
+from datetime import datetime
 from typing import List
+
+import pytz
+import requests
 from constance import config
 from django.core.cache import cache
-
 from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from oauthlib.oauth2 import LegacyApplicationClient, TokenExpiredError
 from requests_oauthlib import OAuth2Session
-from datetime import datetime
-from pytz import timezone
+from vininfo import Vin
 
 
 def get_last_token():
@@ -60,6 +64,14 @@ def vehicle_mileage(convadis_identifier, mil):
         if mil["vehicleId"] == int(convadis_identifier):
             return mil["totalMileage"]["value"]
 
+def registration_card_storage_location(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    path = os.path.join("Doc. Resources", "%s" % instance.licence_plate)
+    filename = '%s_%s_%s_%s%s' % (
+        instance.licence_plate, timezone.now().date().strftime('%Y'), timezone.now().date().strftime('%b'),
+        "carte_grise", file_extension)
+    return os.path.join(path, filename)
+
 
 class Car(models.Model):
     class Meta:
@@ -71,6 +83,11 @@ class Car(models.Model):
     licence_plate = models.CharField(max_length=8)
     is_connected_to_convadis = models.BooleanField(default=False)
     convadis_identifier = models.CharField(max_length=20, default=None, blank=True, null=True)
+    registration_card = models.FileField(upload_to=registration_card_storage_location,
+                               help_text=_("You can attach the scan of the registration card of the car"),
+                               null=True, blank=True)
+    vin_number = models.CharField(max_length=20, default=None, blank=True, null=True)
+
 
     @property
     def geo_localisation_of_car(self):
@@ -134,7 +151,7 @@ class Car(models.Model):
         data = json.loads(r.text)
 
         time_converter = datetime.strptime(position_time, '%Y-%m-%dT%H:%M:%S%z')
-        heure_luxembourg = str(time_converter.astimezone(timezone('Europe/Luxembourg')))
+        heure_luxembourg = str(time_converter.astimezone(pytz.timezone('Europe/Luxembourg')))
         if "features" in data:
             address = data["features"][0]['properties']['label']
             return "%s - màj: %s" % (address, heure_luxembourg)
@@ -170,6 +187,18 @@ class Car(models.Model):
         return pin_codes
 
     def __str__(self):
+        if self.vin_number:
+            vin = Vin(self.vin_number)
+            if vin.validate(self.vin_number):
+                # get values in vin annotate_titles to get the full name of the field
+                resource_name = " - %s" % self.licence_plate
+                for k in vin.annotate_titles:
+                    vin.__dict__[k] = vin.annotate_titles[k]
+                    if vin.__getattribute__(k) and len(vin.__getattribute__(k)) > 0:
+                        resource_name += " %s: %s " % (k, vin.__getattribute__(k))
+                return resource_name
+            else:
+                return '%s - %s (VIN error)' % (self.name, self.licence_plate)
         return '%s - %s' % (self.name, self.licence_plate)
 
     @property

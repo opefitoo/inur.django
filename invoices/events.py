@@ -61,7 +61,8 @@ class Event(models.Model):
         (2, _('Valid')),
         (3, _('Done')),
         (4, _('Ignored')),
-        (5, _('Not Done'))
+        (5, _('Not Done')),
+        (6, _('Cancelled')),
     ]
 
     day = models.DateField(_('Event day'), help_text=_('Event day'))
@@ -76,7 +77,7 @@ class Event(models.Model):
                                        choices=EventTypeEnum.choices, default=EventTypeEnum.CARE)
     employees = models.ForeignKey(Employee, related_name='event_link_to_employee', blank=True, null=True,
                                   help_text=_('Please select an employee'),
-                                  on_delete=models.CASCADE, limit_choices_to=limit_to_active_employees)
+                                  on_delete=models.DO_NOTHING, limit_choices_to=limit_to_active_employees)
 
     notes = models.TextField(
         _('Notes'),
@@ -103,6 +104,9 @@ class Event(models.Model):
 
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
+        event_text = str(self)
+        if self.state in [Event.STATES[4][0], Event.STATES[5][0]]:
+            event_text = "<del>%s</del>" % str(self)
         if self.time_start_event and self.employees:
             event_id = self.id
             cached_employees = cache.get('event_employees_cache_%s' % event_id)
@@ -113,7 +117,7 @@ class Event(models.Model):
                 cached_employees.color_cell,
                 cached_employees.color_text,
                 url,
-                str(self),
+                event_text,
                 '<span class="evttooltiptext">chez: %s @ %s '
                 '%s</span> '
                 % (
@@ -122,12 +126,12 @@ class Event(models.Model):
                     self.notes))
         if self.event_type_enum == EventTypeEnum.GENERIC:
             return u'<a class="eventtooltip" href="%s">&#9758;%s %s</a>' % (url,
-                                                                            str(self),
+                                                                            event_text,
                                                                             '<span class="evttooltiptext">%s</span> '
                                                                             % self.notes)
 
         return u'<a class="eventtooltip" href="%s">&#9829;%s %s</a>' % (url,
-                                                                        str(self),
+                                                                        event_text,
                                                                         '<span class="evttooltiptext">%s</span> '
                                                                         % self.notes)
 
@@ -486,6 +490,8 @@ def event_report_mandatory_validated_events(data):
 def validate_date_range(instance_id, data):
     messages = {}
     conflicts = None
+    if data['state'] in [5,6]:
+        return messages
     if data['employees_id']:
         conflicts = Event.objects.filter(day=data['day']).filter(
             Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
@@ -494,7 +500,7 @@ def validate_date_range(instance_id, data):
             Q(time_start_event__lte=data['time_end_event'], time_end_event__gte=data['time_end_event'])
         ).filter(
             employees_id=data['employees_id']).exclude(
-            pk=instance_id)
+            pk=instance_id).exclude(state=Event.STATES[5][0]).exclude(state=Event.STATES[4][0])
     elif data['patient_id'] and data['employees_id'] is None:
         conflicts = Event.objects.filter(day=data['day']).filter(
             Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
@@ -503,9 +509,19 @@ def validate_date_range(instance_id, data):
             Q(time_start_event__lte=data['time_end_event'], time_end_event__gte=data['time_end_event'])
         ).filter(
             employees_id=data['patient_id']).exclude(
-            pk=instance_id)
+            pk=instance_id).exclude(state=Event.STATES[5][0]).exclude(state=Event.STATES[4][0])
     if conflicts and 0 < conflicts.count():
         messages = {'state': _("Intersection with other %s, here : %s from %s to %s") %
                                         (Event._meta.verbose_name_plural, conflicts[0], conflicts[0].time_start_event,
                                          conflicts[0].time_end_event)}
     return messages
+
+# @receiver(post_save, sender=Patient, dispatch_uid="sync_future_events_adresses_when_patient_address_changed")
+# def sync_future_events_addresses_when_patient_address_changed(sender, instance, **kwargs):
+#     if instance.address is not None:
+#         # get futures events for patient where event address is not set
+#         future_events = Event.objects.filter(patient=instance, day__gte=timezone.now().date(),
+#                                              event_address="")
+#         for event in future_events:
+#             event.address = instance.address
+#             event.save()

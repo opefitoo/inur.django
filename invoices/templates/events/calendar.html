@@ -1,335 +1,383 @@
 <!DOCTYPE html>
-<html lang="en" id="page">
-
+<html lang='en'>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nouveau Plannig (BETA)</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet"/>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .loading-spinner {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+    <meta charset='utf-8'/>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
-
+            integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.13.0/css/all.css"
+          integrity="sha384-Bfad6CLCknfcloXFOyFnlgtENryhrpZCe29RTifKEixXQZ38WheV+i/6YWSzkz3V" crossorigin="anonymous">
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css' rel='stylesheet'>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css' rel='stylesheet'>
     <script>
 
+        function getCookie(name) {
+            const value = "; " + document.cookie;
+            const parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+
+        function updateEvent(event) {
+            console.log("event =" + event);
+            console.log("event id =" + event.id);
+            $.ajax({
+                url: '/api/v1/fullcalendar-events/',
+                type: 'PATCH',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    id: event.id,
+                    title: event.title,
+                    start: event.start,
+                    end: event.end
+                }),
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                    xhr.setRequestHeader('Authorization', 'Token ' + localStorage.getItem('token'));
+                },
+                success: function (response) {
+                    console.log('Event updated successfully:', response);
+                },
+                error: function (response) {
+                    console.error('Error updating event:', response);
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
-            let doubleClick = 0;
-            let clickTimer = 0;
             const calendarEl = document.getElementById('calendar');
             const calendar = new FullCalendar.Calendar(calendarEl, {
-                slotDuration: '00:10:00',
-                slotMinTime: '06:00:00',
-                slotMaxTime: '22:30:00',
-                nowIndicator: true,
-                selectable: true,
-                unselectAuto: true,
-                selectOverlap: true,
-                navLinks: true,
-                dayMaxEvents: true,
-                initialView: 'timeGridWeek',
-                // selectMinDistance: 2,
-                headerToolbar: {
-                    left: 'prev,next today,addEventButton',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek', // buttons for switching between views /*dayGridWeek,timeGridFiveDay,*/
-                },
-                eventDidMount: function (info) {
-                    $(info.el).tooltip({
-                        title: info.event.extendedProps.description,
-                        container: 'body',
-                        delay: {"show": 50, "hide": 50}
-                    });
-                },
-
-                businessHours: [ // specify an array instead
-                    {
-                        daysOfWeek: [1, 2, 3, 4, 5, 6, 7], // Monday, Tuesday, Wednesday
-                        startTime: '06:00', // 8am
-                        endTime: '22:00' // 6pm
-                    }
-                ],
-
-                select: function (info) {
-                    console.log('select', info);
-
-                    const _start = new Date(info.startStr);
-                    _start.setDate(_start.getDate() + 1);
-                    const _end = new Date(info.endStr);
-
-                    console.log(_start)
-                    console.log(_end)
-
-                    let g_date = _start.getFullYear() + '-' + (_start.getMonth() + 1) + '-' + _start.getDate();
-                    let g_time = _start.getHours() + ":" + _start.getMinutes() + ":" + _start.getSeconds();
-                    let g_start = g_date + ' ' + g_time;
-                    console.log(g_start);
-
-                    let scheduled = document.getElementById('id_scheduled_datetime');
-                    let effective = document.getElementById('id_effective_datetime');
-                    let url = '{% url 'load-calendar-form' %}'
-
-                    if (info.allDay) {
-                        if (_start.getDate() !== _end.getDate()) {
-                            console.log('Select and hold! allDay true');
-
-                            $.ajax({
-                                type: 'POST',
-                                async: true,
-                                url: url,
-                                headers: {
-                                    "X-CSRFToken": '{{ csrf_token }}'
-                                },
-                                data: {
-                                    'start_date': g_start,
-                                    'end_date': _end,
-                                },
-                                success: function (data) {
-                                    console.log("SUCCESS!")
-                                    $('#modal-form').html(data)
-
-                                    // Display Modal
-                                    $('#exampleModal').modal('show');
-                                },
-                                error: function (data) {
-                                    console.log("ERROR: ", data)
-                                }
-                            });
-                        }
-                    } else {
-                        console.log('Select and allDay false');
-                        $.ajax({
-                            type: 'POST',
-                            async: true,
-                            url: url,
-                            headers: {
-                                "X-CSRFToken": '{{ csrf_token }}'
-                            },
-                            data: {
-                                'start_date': g_start,
-                                'end_date': _end,
-                            },
-                            success: function (data) {
-                                console.log("SUCCESS!")
-                                $('#modal-form').html(data)
-
-                                // Display Modal
-                                $('#exampleModal').modal('show');
-                            },
-                            error: function (data) {
-                                console.log("ERROR: ", data)
-                            }
-                        });
-                    }
-                },
-
-                dateClick: function (info) {
-                    console.log('dateClick', info);
-                    var singleClick = info.date.toUTCString();
-
-                    if (doubleClick == singleClick) {
-                        console.log('Double-click!');
-
-                        let url = '{% url 'load-calendar-form' %}'
-                        $.ajax({
-                            type: 'POST',
-                            async: true,
-                            url: url,
-                            headers: {
-                                "X-CSRFToken": '{{ csrf_token }}'
-                            },
-                            data: {
-                                'start_date': info.dateStr,
-                            },
-                            success: function (data) {
-                                console.log("SUCCESS: ", data)
-                                $('#modal-form').html(data)
-                                $('#exampleModal').modal('show'); // Display Modal
-                            },
-                            error: function (data) {
-                                console.log("ERROR: ", data)
-                            }
-                        });
-
-                        doubleClick = null;
-                    } else {
-                        doubleClick = info.date.toUTCString();
-                        clearInterval(clickTimer);
-                        clickTimer = setInterval(function () {
-                            doubleClick = null;
-                            clearInterval(clickTimer);
-                        }, 500);
-                    }
-                },
-
-                eventClick: function (info) {
-                    info.jsEvent.preventDefault(); // don't let the browser navigate
-                    console.log(info);
-
-                    if (info.event.url) {
-                        // window.open(info.event.url);
-                    }
-                    ;
-
-                    console.log(info.event.extendedProps.objectId);
-
-                    if (info.event.extendedProps.objectId) {
-                        let url = '{% url 'update-calendar-form' %}'
-                        $.ajax({
-                            type: 'POST',
-                            async: true,
-                            url: url,
-                            headers: {
-                                "X-CSRFToken": '{{ csrf_token }}'
-                            },
-                            data: {
-                                'object_id': info.event.extendedProps.objectId,
-                            },
-                            success: function (data) {
-                                console.log("SUCCESS: ", data)
-                                $('#modal-form').html(data)
-
-                                // Display Modal
-                                $('#exampleModal').modal('show')
-                            },
-                            error: function (data) {
-                                console.log("ERROR: ", data)
-                            }
-                        });
-                    }
-                },
-
-                /*selectAllow: function(info) {
-                  console.log(info)
-                },*/
-
-                customButtons: {
-                    addEventButton: {
-                        text: 'Schedule an event',
-                        click: function () {
-                            // Display Modal
-                            $('#exampleModal').modal('show');
-                        }
-                    }
-                },
-                {% comment %} eventSources: [
-                     {% for k, v  in object_list.items %}
-                     {{% endcomment %}
-                events: [
-
-                    {% for event in object_list %}
-                        {
-                            objectId: '{{ event.id }}',
-                            title: '{{ event }}',
-                            start: '{{ event.day|date:"Y-m-d" }}T{{ event.time_start_event|date:"H:i:s" }}',
-                            url: 'https://sandbox02.host309.weberp.xyz:2374/calendars/2',
-                            end: '{{ event.day|date:"Y-m-d" }}T{{ event.time_end_event|date:"H:i:s" }}',
-                            extendedProps: {
-                                status: '{{ event.state }}'
-                            },
-                            color: '{{event.employees.color_cell}}',
-                            textColor: '{{event.employees.color_text}}',
-                            description: '{{event}}{{event.print_html_safe_notes}}',
-                            type: '{{ event.event_type_enum }}'
-                        },
-
-                    {% endfor %}
-                ],
-                {% comment %} color: 'yellow',
-                 textColor: 'black'
-         }
-         {% endfor %}
-     ],{% endcomment %}
-
-                // events: 'https://fullcalendar.io/api/demo-feeds/events.json',
-                views: {
-                    dayGridMonth: {
-                        dayMaxEventRows: 6 // adjust to 6 only for timeGridWeek/timeGridDay
+                    themeSystem: 'bootstrap5',
+                    initialView: 'timeGridWeek',
+                    editable: true,
+                    eventResizableFromStart: false,
+                    locale: 'fr',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
                     },
-                    timeGridWeek: {
-                        dayMaxEventRows: 6, // adjust to 6 only for timeGridWeek/timeGridDay
-                        selectMirror: true,
+                    eventDidMount: function (info) {
+                        /* var selectEl = $("#employee-id");
+                         var uniqueId = `select-${info.event.id}`;
+
+                         selectEl.attr('id', uniqueId);
+                         selectEl.attr('data-event-id', info.event.id);
+
+                         // set the selected employee based on the event's assigned employee
+                         selectEl.val(info.event.extendedProps.resourceId);
+
+                         let event = info.event;
+                         $.ajax({
+                             url: '/api/v1/available-employees/',
+                             type: 'GET',
+                             data: {
+                                 start: event.startStr,
+                                 end: event.endStr
+                             },
+                             success: function (eventData) {
+                                 // Use the response data to build the select list options
+                                 selectEl.empty();
+                                 let selectOptions = '<option>...</option>';
+                                 eventData.forEach(function (employee) {
+                                     var selected = employee.id === info.event.extendedProps.resourceId ? 'selected' : '';
+                                     //selectOptions += `<option value="${employee.id}" ${selected}>${employee.user.first_name}</option>`;
+                                     //selectEl.append('<option value="${employee.id}" ${selected}>${employee.user.first_name}</option>');
+                                     selectEl.append($("<option></option>").attr("value", employee.id).text(employee.user.first_name).attr("selected", selected));
+                                 });
+                                 // Update the select list with the options
+                                 //selectEl.html(selectOptions);
+                                 //alert("selectEl =" + selectEl.html());
+                                 /!*  $.each(data, function (index, employee) {
+                                       const option = $("<option></option>")
+                                           .val(employee.id)
+                                           .text(employee.abbreviation + " - " + employee.user.first_name)
+                                       // Set the 'selected' attribute if this is the current assigned employee
+                                       if (employee.id === currentAssignedEmployeeId) {
+                                           option.attr("selected", "selected");
+                                       }
+                                       // Add custom styles for each option
+                                       option.css("background-color", employee.color + " !important");
+                                       option.css("color", employee.textcolor + " !important");
+                                       option.css("color", employee.textcolor + " !important");
+                                       select.append(option);
+                                   });*!/
+                             },
+                             error: function (error) {
+                                 console.error("Failed to fetch employee data:", error);
+                             }
+                         });
+ */
+                        $(info.el).tooltip({
+                            title: info.event.extendedProps.description,
+                            container: 'body',
+                            delay: {"show": 50, "hide": 50}
+                        });
+                    },
+                    firstDay: 1,
+                    droppable: true,
+                    editable: true,
+                    selectable: true,
+                    snapDuration: moment.duration(15, 'minutes'),
+                    nowIndicator: true,
+                    now: new Date(),
+                    slotMinTime: '05:30:00',
+                    slotMaxTime: '22:30:00',
+                    slotDuration: '00:10:00',
+                    timeZone: 'Europe/Paris',
+                    businessHours: {
+                        startTime: '06:00',
+                        endTime: '23:00',
+                        dow: [1, 2, 3, 4, 5, 6, 7]
+                    },
+                    weekends: {
+                        // display weekends in a different color
+                        color: 'blue'
+                    },
+                    eventDrop: function (info) {
+                        updateEvent(info.event);
+                        console.log(info.event.start.toISOString());
+                    },
+                    eventResize: function (info) {
+                        updateEvent(info.event);
+                        console.log(info.event.end.toISOString());
+                    },
+                    select: function (info) {
+                        // Creates a new event on a day when it is clicked
+                        var title = prompt('Enter Event Title:');
+                        calendar.addEvent({
+                            title: title,
+                            start: info.start,
+                            end: info.end,
+                        });
+                    },
+                    eventClick: function (info) {
+
+                        var selectEl = $("#employee-id");
+
+                        $.ajax({
+                            url: '/api/v1/available-employees/',
+                            type: 'GET',
+                            data: {
+                                start: info.event.startStr,
+                                end: info.event.endStr,
+                                id: info.event.id
+                            },
+                            success: function (eventData) {
+                                // Use the response data to build the select list options
+                                selectEl.empty();
+                                selectEl.append($("<option></option>").attr("value", "").text("..."));
+                                let selected = '';
+                                eventData.forEach(function (employee) {
+                                    if (employee.id === info.event.extendedProps.resourceId) {
+                                        selectEl.append($("<option></option>").attr("value", employee.id).text(employee.user.first_name).attr("selected", selected));
+                                    } else {
+                                        selectEl.append($("<option></option>").attr("value", employee.id).text(employee.user.first_name));
+                                    }
+                                });
+                            },
+                            error: function (error) {
+                                if (error.data) {
+                                    var message = error.data.message;
+                                    // Display the error message on the modal form
+                                    $('#editEventModal .modal-body .alert').text(message).show();
+                                } else {
+                                    console.error("Failed to fetch employee data:", error);
+                                }
+                            }
+                        });
+
+                        // Get the selected event information
+                        let event = info.event
+                        // Show the Bootstrap modal
+                        $('#editEventModal').modal('show');
+                        // Fill the form fields with the event information
+                        $('#eventId').val(event.id);
+                        $('#eventTitle').val(event.title);
+                        $('#start').val(event.startStr);
+                        $('#end').val(event.endStr);
+                        // select the employee
+                        $('#employee-id').val(event.resourceId);
+                        // ...
+                    },
+                    eventSources:
+                        [{
+                            failure: function () {
+
+                            },
+                            events: function (info, successCallback, failureCallback) {
+                                $.ajax({
+                                    url: '/api/v1/fullcalendar-events/',
+                                    type: 'GET',
+                                    data: {
+                                        start: info.startStr,
+                                        end: info.endStr
+                                    },
+                                    beforeSend: function () {
+                                        $('.loading-spinner').show();
+                                    },
+                                    success: function (events) {
+                                        $('.loading-spinner').hide();
+                                        for (let i = 0; i < events.length; i++) {
+                                            console.log(events[i].backgroundColor);
+                                            console.log(events[i].title);
+                                            events[i].color = events[i].color;
+                                            events[i].textColor = events[i].textcolor;
+                                        }
+                                        successCallback(events);
+                                    },
+                                    error: function () {
+                                        $('.loading-spinner').hide();
+                                        failureCallback();
+                                    },
+                                    failure: function () {
+                                        $('.loading-spinner').hide();
+                                        failureCallback();
+                                    },
+                                    datesRender: function (info) {
+                                        calendar.refetchEvents();
+                                    },
+
+                                });
+                            }
+                        }],
+                })
+            ;
+
+            $("#saveEventChanges").click(function () {
+                const event_id = $("#eventId").val();
+                const employee_id = $("#employee-id").val();
+                const start = $("#start").val();
+                const end = $("#end").val();
+                alert(employee_id);
+                $.ajax({
+                    url: '/api/v1/fullcalendar-events/',
+                    type: 'PATCH',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        id: event_id,
+                        title: employee_id,
+                        start: start,
+                        end: end,
+                        employee_id: employee_id
+                    }),
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+                        xhr.setRequestHeader('Authorization', 'Token ' + localStorage.getItem('token'));
+                    },
+                    success: function (result) {
+                        $('#editEventModal').modal('hide');
+                        // Refresh the calendar with the updated event
+                        calendar.refetchEvents();
+                    },
+                    error: function (xhr, status, error) {
+                        if (error) {
+                            // remove d-none class from #error-alert
+                            $('#error-alert').removeClass('d-none');
+                            $('#error-alert-msg').text(error).show();
+                            // make it smooth fade out after 3 seconds
+                            $('#error-alert').fadeTo(2000, 500).slideUp(500, function () {
+                                $('#error-alert').slideUp(500).addClass('d-none');
+                            });
+                        } else {
+                            console.error("Failed to update event:", error);
+                        }
                     }
-                },
-                /*events: [
-                        {
-                          title: 'Meeting',
-                          start: '2022-03-22T14:30:00',
-                          extendedProps: {
-                            status: 'done'
-                          }
-                        },
-                        {
-                          title: 'Birthday Party',
-                          start: '2022-03-23T07:00:00',
-                          backgroundColor: 'green',
-                          borderColor: 'green'
-                        }
-                      ],*/
-                /*
-                eventDidMount: function(info) {
-                        if (info.event.extendedProps.status === 'done') {
-
-                          // Change background color of row
-                          info.el.style.backgroundColor = 'red';
-
-                          // Change color of dot marker
-                          var dotEl = info.el.getElementsByClassName('fc-event-dot')[0];
-                          if (dotEl) {
-                            dotEl.style.backgroundColor = 'white';
-                          }
-                        }
-                      }
-                      */
+                });
+            });
+            $("#closeEventChanges").click(function () {
+                $('#editEventModal').modal('hide');
             });
             calendar.render();
-        });
+        })
+        ;
+
     </script>
 </head>
-
-<body class="d-flex h-100">
-<div class="container-fluid">
-    <div class="d-flex justify-content-center m-3">
-        <h1>Nouveau Planning (version lecture seule BETA !!!)</h1>
-    </div>
-    <hr>
-    <div class="row my-3">
-        <div class="col">
-            <div id='calendar'></div>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Schedule an event</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<body>
+<!-- Edit Event Modal -->
+<div class="modal fade" id="editEventModal" tabindex="-1" role="dialog">
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+        </symbol>
+        <symbol id="info-fill" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+        </symbol>
+        <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </symbol>
+    </svg>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Event</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="success-alert" class="alert alert-success d-flex align-items-center d-none" role="alert">
+                <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:">
+                    <use xlink:href="#check-circle-fill"/>
+                </svg>
+                <div id="success-alert-msg">
+                    An example success alert with an icon
                 </div>
-                <div id="modal-form">
-                    <form action="" method="post">{% csrf_token %}
-                        <div class="modal-body">
-                            {{ form.as_p }}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save on calendar</button>
-                        </div>
-                    </form>
+            </div>
+            <div id="error-alert" class="alert alert-danger d-flex align-items-center d-none" role="alert">
+                <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:">
+                    <use xlink:href="#exclamation-triangle-fill"/>
+                </svg>
+                <div id="error-alert-msg">
+                    An example danger alert with an icon
                 </div>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <!-- Event ID -->
+                    <input type="hidden" id="eventId" name="eventId">
+                    <!-- Event Title -->
+                    <div class="form-group">
+                        <label for="eventTitle">Title</label>
+                        <input type="text" class="form-control" id="eventTitle" name="eventTitle" readonly="true">
+                        <input type="datetime-local" class="form-control" id="start" name="start" readonly="true">
+                        <input type="datetime-local" class="form-control" id="end" name="end" readonly="true">
+                        <label for="employee-id">Assigned Employee</label>
+                        <select class="form-control" id="employee-id">
+                            <option>...</option>
+                        </select>
+                    </div>
+                    <!-- ... -->
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="closeEventChanges">Close
+                </button>
+                <button type="button" class="btn btn-primary" id="saveEventChanges">Save changes</button>
             </div>
         </div>
     </div>
 </div>
 
-
-
+<!-- Loading spinner -->
+<div class="loading-spinner">
+    <p>Loading...</p>
+    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+</div>
+<div id='calendar'></div>
 </body>
-
 </html>

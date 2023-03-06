@@ -11,4 +11,6 @@ class Command(BaseCommand):
         process_result = process_and_generate(30)
         message = "Process result %s" % process_result
         self.stdout.write(self.style.SUCCESS('Process result %s') % process_result)
-        return notify_system_via_google_webhook(message)
+        # log output notify_system_via_google_webhook execution result
+        exec_result = notify_system_via_google_webhook(message)
+        self.stdout.write(self.style.SUCCESS('Notify result %s') % exec_result)

@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2018 sp1 (x64) (http://www.altova.com) by  (Centre Commun de la Securite) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:simpleType name="T_CodeFournisseur">
+		<xs:annotation>
+			<xs:documentation>Format pour un code Fournisseur à 8 positions</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="5"/>
+			<xs:maxLength value="8"/>
+			<xs:whiteSpace value="collapse"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="T_Anomalie">
+		<xs:annotation>
+			<xs:documentation>Type composé pour un message retour au prestataire sur base d'une anomalie</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="type" type="xs:string" nillable="false">
+				<xs:annotation>
+					<xs:documentation>Type de message</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="code" type="xs:string" nillable="false">
+				<xs:annotation>
+					<xs:documentation>Code du motif de contestation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="motif" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Motif optionnel pour les anomalies qui disposent d'un motif non-standard</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_TypeUTMetier">
+		<xs:annotation>
+			<xs:documentation>Type composé qui permet d'identifier le type du fichier en entrée</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CadreLegal">
+				<xs:annotation>
+					<xs:documentation>Cadre légal Valeur obligatoire "ASD"</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="3"/>
+						<xs:pattern value="ASD"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Layout">
+				<xs:annotation>
+					<xs:documentation>Version du layout. Indique la version du layout utilisée pour le fichier</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:pattern value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Type">
+				<xs:annotation>
+					<xs:documentation>Type Valeur obligatoire : SPC (Syntèse de prise en charge)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="3"/>
+						<xs:pattern value="SPC"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="T_Heure">
+		<xs:annotation>
+			<xs:documentation>Format d'une heure</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:time"/>
+	</xs:simpleType>
+	<xs:simpleType name="T_Date">
+		<xs:annotation>
+			<xs:documentation>Format d'une Date</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:date">
+			<xs:minInclusive value="1900-01-01"/>
+			<xs:maxInclusive value="3000-12-31" fixed="false"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_IdUnique">
+		<xs:annotation>
+			<xs:documentation>Format d'identifiant unique pour un patient</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="13"/>
+			<xs:pattern value="[123456789]\p{Nd}{12}">
+				<xs:annotation>
+					<xs:documentation>Premier chiffre (1 à 9) suivi de 12 chiffres (0 à 9)</xs:documentation>
+				</xs:annotation>
+			</xs:pattern>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:element name="Synthese">
+		<xs:annotation>
+			<xs:documentation>Synthèse de prise en charges</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Type" type="T_TypeUTMetier">
+					<xs:annotation>
+						<xs:documentation>Type Fichier</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Organisme" type="T_OrganismeAssDep">
+					<xs:annotation>
+						<xs:documentation>Organisme Assurance Dépendance - valeur obligatoire "19"</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DateEnvoiPrestataire" type="T_Date">
+					<xs:annotation>
+						<xs:documentation>Date d'envoi du prestataire</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Prestataire" type="T_CodeFournisseur">
+					<xs:annotation>
+						<xs:documentation>Code du prestataire à 8 positions (300000)</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="NbPriseEnCharges" type="xs:integer">
+					<xs:annotation>
+						<xs:documentation>Nombre de prise en charge</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="PriseEnCharge" type="T_PriseEnCharge" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Prise en charge</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="T_PriseEnCharge">
+		<xs:sequence>
+			<xs:element name="Patient" type="T_IdUnique">
+				<xs:annotation>
+					<xs:documentation>Identifiant unique de la personne protégée</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DateDemande" type="T_Date">
+				<xs:annotation>
+					<xs:documentation>Date de la demande</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Referent" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Nom du référent de l'évaluation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DateEvaluation" type="T_Date">
+				<xs:annotation>
+					<xs:documentation>Date d'évaluation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Prestatations" type="T_Acte" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Pretstations</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DroitFMI" type="T_OuiNon">
+				<xs:annotation>
+					<xs:documentation>Droit au FMI O/N</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Partage" type="T_Partage" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Plan de partage</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Descriptions" type="T_Description" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Descriptions des aides à fournir</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DateNotification" type="T_Date">
+				<xs:annotation>
+					<xs:documentation>Date notification de la personne protégée</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Decision" type="T_Decision"/>
+			<xs:element name="NoPlan" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>No du Plan exporté</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="NoDecision" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>No Decision exporté</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="T_NiveauPN">
+		<xs:annotation>
+			<xs:documentation>Niveau Prestation en nature</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="0"/>
+			<xs:maxInclusive value="15"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_NiveauPE">
+		<xs:annotation>
+			<xs:documentation>Niveau Prestation en espèces</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="10"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_Niveau">
+		<xs:annotation>
+			<xs:documentation>Niveau de dépendance</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="780"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="T_Domaine">
+		<xs:annotation>
+			<xs:documentation>Domaine de prestations</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CodeDomaine" type="xs:string"/>
+			<xs:element name="Actes" type="T_Acte" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Acte">
+		<xs:annotation>
+			<xs:documentation>Acte</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CodeActe" type="T_CodeActe">
+				<xs:annotation>
+					<xs:documentation>Code de l'acte</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Frequence" type="T_Frequence">
+				<xs:annotation>
+					<xs:documentation>Fréquence de l'acte ou nombre d'heures de l'acte</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_ActePartage">
+		<xs:annotation>
+			<xs:documentation>Acte partagé</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CodeActe" type="T_CodeActe">
+				<xs:annotation>
+					<xs:documentation>Code de l'acte</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Frequence" type="T_Frequence">
+				<xs:annotation>
+					<xs:documentation>Fréquence de l'acte</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="T_CodeActe">
+		<xs:annotation>
+			<xs:documentation>Code de l'acte</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:complexType name="T_Partage">
+		<xs:sequence>
+			<xs:element name="Aidant" type="T_IdUnique" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Identifiant unique de l'aidant</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PrestationsAidant" type="T_ActePartage" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Prestatations partagées</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PrestationsPrestataire" type="T_ActePartage" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Prestatations partagées</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="T_OuiNon">
+		<xs:annotation>
+			<xs:documentation>Oui / Non</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="O"/>
+			<xs:pattern value="N"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_FrequenceActe">
+		<xs:annotation>
+			<xs:documentation>Frequence d'un acte</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_OrganismeAssDep">
+		<xs:annotation>
+			<xs:documentation>Organisme Assurance Dépendance</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:int">
+			<xs:minInclusive value="19"/>
+			<xs:maxInclusive value="19"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="T_Decision">
+		<xs:annotation>
+			<xs:documentation>Décision de la CNS</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Accord" type="T_Accord" minOccurs="0"/>
+			<xs:element name="Refus" type="T_Refus" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Accord">
+		<xs:annotation>
+			<xs:documentation>Accord</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="NiveauBesoins" type="T_Niveau">
+				<xs:annotation>
+					<xs:documentation>Niveau de prise en charge</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DebutPriseEnCharge" type="T_Date">
+				<xs:annotation>
+					<xs:documentation>Date début de la prise en charge</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DateDecision" type="T_Date">
+				<xs:annotation>
+					<xs:documentation>Date de la Décision</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ForfaitPE" type="T_NiveauPE" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Forfait Prestation en espèces</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ForfaitPN" type="T_NiveauPN" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Forfait Prestation en nature</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ForfaitSpecial" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Forfait Special Deces / Soins Paliatif</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:pattern value="AEVFSP"/>
+						<xs:pattern value="AEVFDC"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="FinPriseEnCharge" type="T_Date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Date fin de prise en charge</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Refus">
+		<xs:annotation>
+			<xs:documentation>Refus</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="DateDecision" type="T_Date">
+				<xs:annotation>
+					<xs:documentation>Date de la Décision</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MotifRefus" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Motif du refus</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Frequence">
+		<xs:annotation>
+			<xs:documentation>Frequence</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Nombre" type="xs:integer">
+				<xs:annotation>
+					<xs:documentation>Nombre</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Periodicite">
+				<xs:annotation>
+					<xs:documentation>Périodicité dans le temps SEMAINE / ANNEE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="SEMAINE"/>
+						<xs:enumeration value="ANNEE"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Description">
+		<xs:annotation>
+			<xs:documentation>Description de l'aide à faire</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CodeActe" type="T_CodeActe">
+				<xs:annotation>
+					<xs:documentation>Code de l'acte</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Description" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Description de l'aide à fournir</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>
+

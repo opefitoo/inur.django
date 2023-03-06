@@ -25,3 +25,9 @@ def get_pks_all_active_employees():
 
 def get_employee_id_by_abbreviation(abr):
     return Employee.objects.get(abbreviation=abr)
+def get_current_employee_contract_details_by_employee_abbreviation(abr):
+    # Get employee contract details by employee abbreviation where the contract is active
+    # end_date is null
+    if Employee.objects.get(abbreviation=abr).employeecontractdetail_set.filter(end_date__isnull=True).count() > 1:
+        raise Exception("More than one active contract for employee with abbreviation: " + abr)
+    return Employee.objects.get(abbreviation=abr).employeecontractdetail_set.filter(end_date__isnull=True).first()

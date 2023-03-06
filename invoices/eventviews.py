@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from constance import config
 from django import forms
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
@@ -23,7 +25,7 @@ class Calendar1View(View):
     def get(self, request, *args, **kwargs):
         object_list = Event.objects.filter(day__month=datetime.today().month)
 
-        self.context = {'object_list': object_list, 'form': self.form}
+        self.context = {'object_list': object_list, 'root_url': config.ROOT_URL, 'form': self.form}
 
         return render(request, self.template, self.context)
 
@@ -83,7 +85,8 @@ def load_calendar_form(request):  # AJAX CALL
 def update_calendar_form(request):  # AJAX CALL
     object_id = None
 
-    if request.is_ajax():
+    # checks if the request is ajax
+    if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
         object_id = request.POST.get('object_id')
         print("AJAX")
 
@@ -98,16 +101,12 @@ def update_calendar_form(request):  # AJAX CALL
         if obj:
             print(obj)
             form = EventForm(instance=obj)
-            form.fields['scheduled_datetime'].widget = forms.DateTimeInput(
-                attrs={
-                    'class': 'form-control',
-                })
-            form.fields['effective_datetime'].widget = forms.DateTimeInput(
+            form.fields['time_start_event'].widget = forms.DateTimeInput(
                 attrs={
                     'class': 'form-control',
                 })
 
-    return render(request, 'event_update_form.html', {
+    return render(request, 'events/event_update_form.html', {
         'form': form,
         'object': obj
     })

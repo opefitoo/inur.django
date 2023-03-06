@@ -13,6 +13,7 @@ from django.contrib.auth.models import User
 import os
 from copy import deepcopy
 from datetime import datetime
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 >>>>>>> bd9451ad22f2f4e5e27871fc4c0d2a5059d84f54
 
@@ -26,6 +27,7 @@ from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django_countries.fields import CountryField
@@ -253,6 +255,9 @@ class Patient(models.Model):
                                           help_text="Vous pouvez mettre par exemple les numéros de carte adapto ou tout autre info utile.",
                                           max_length=500,
                                           default=None, blank=True, null=True)
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
     @property
     def anamnesis_set(self):
@@ -445,7 +450,7 @@ class PatientAnamnesis(models.Model):
     drugs_ordering = models.CharField(u"Commande des médicaments", max_length=30, default=None, blank=True, null=True)
     pharmacy_visits = models.CharField(u"Passages en pharmacie", max_length=30, default=None, blank=True, null=True)
     # Mobilisation
-    mobilization = models.CharField(u"Mobilisation", choices=MobilizationsType.choices, max_length=5, default=None,
+    mobilization = models.CharField(u"Mobilisation", choices=MobilizationsType.choices, max_length=15, default=None,
                                     blank=True,
                                     null=True)
     mobilization_description = models.TextField("Description", max_length=250, default=None, blank=True,
@@ -720,8 +725,9 @@ def update_medical_prescription_filename(instance, filename):
         _current_month_or_prscr_month = str(instance.date.month)
     path = os.path.join("Medical Prescription", _current_yr_or_prscr_yr,
                         _current_month_or_prscr_month)
-    filename = '%s_pour_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
-                                       str(instance.date), file_extension)
+    uuid = str(uuid4())
+    filename = '%s_pour_%s_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
+                                          str(instance.date), uuid, file_extension)
 
     return os.path.join(path, filename)
 
@@ -834,6 +840,25 @@ class MedicalPrescription(models.Model):
         else:
             return '%s %s (%s) sans fichier' % (
                 self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
+
+
+def update_patient_admin_filename(instance, filename):
+    # if file_date is None:
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.file_date is None:
+        return 'patient_admin/%s/%s/%s/%s' % (str(instance.patient), timezone.now().year,
+                                              timezone.now().month,
+                                              filename)
+    else:
+        return 'patient_admin/%s/%s/%s/%s' % (str(instance.patient), instance.file_date.year, instance.file_date.month,
+                                              filename)
+
+
+class PatientAdminFile(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    file_description = models.CharField("description", max_length=50)
+    file_date = models.DateField("date du fichier", null=True, blank=True)
+    file_upload = models.FileField(null=True, blank=True, upload_to=update_patient_admin_filename)
 
 
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
@@ -1075,6 +1100,23 @@ class InvoiceItem(models.Model):
         return 'invoice_number',
 
 
+class InvoiceItemEmailLog(models.Model):
+    item = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, related_name='emails')
+    sent_at = models.DateTimeField(auto_now_add=True)
+    recipient = models.EmailField()
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    cc = models.CharField(max_length=200, blank=True)
+    bcc = models.CharField(max_length=200, blank=True)
+    attachments = models.CharField(max_length=200, blank=True)
+    status = models.CharField(max_length=200, blank=True)
+    error = models.TextField(blank=True)
+
+    def __str__(self):
+        # return recipient, subject, datetime
+        return self.recipient + ' - ' + self.subject + ' - ' + self.sent_at.strftime("%d/%m/%Y %H:%M:%S")
+
+
 class Prestation(models.Model):
     class Meta:
         ordering = ['-date']
@@ -1296,6 +1338,7 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home = False
             pair.at_home_paired = instance
             pair.save()
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 # @receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
@@ -1311,3 +1354,5 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
 auditlog.register(User)
 =======
 >>>>>>> bd9451ad22f2f4e5e27871fc4c0d2a5059d84f54
+=======
+>>>>>>> 2be8930fa5678c8523c11d8c6e5c5f4419880371
