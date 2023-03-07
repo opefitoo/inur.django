@@ -191,15 +191,6 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
             newData.append(('', '', '', 'Sous-Total', _gross_sum, _net_sum, '', '', ''))
     newData.append(('', '', '', 'Total', _compute_sum(data[1:], 4), _compute_sum(data[1:], 5), '', '', ''))
 
-    # provider_code = models.CharField(max_length=10)
-    # name = models.CharField(max_length=30)
-    # address = models.TextField(max_length=50)
-    # zipcode_city = models.CharField(max_length=20)
-    # country = CountryField(blank_label='...', blank=True, null=True, default="LU")
-    # phone_number = models.CharField(max_length=30)
-    # email_address = models.EmailField(default=None, blank=True, null=True, validators=[EmailValidator])
-    # bank_account
-
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
                    + "{0}\n{1}\n{2}\n{3}".format(invoicing_details.name, invoicing_details.address,
                                                  invoicing_details.zipcode_city,
