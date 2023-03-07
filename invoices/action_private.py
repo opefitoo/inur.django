@@ -19,11 +19,34 @@ from reportlab.platypus.tables import Table, TableStyle
 
 from invoices import settings
 from invoices.models import InvoiceItemEmailLog
+from invoices.modelspackage import InvoicingDetails
 from invoices.settings import BASE_DIR
+
+
+class Footer:
+    def __init__(self, legal_mention):
+        self.legal_mention = legal_mention
+
+    def __call__(self, canvas, doc):
+        canvas.saveState()
+        canvas.setFont('Helvetica', 8)
+        canvas.drawString(1 * cm, 0.8 * cm, self.legal_mention)
+
+        # Draw logo
+        logo = 'invoices/static/images/logo_sur.lu.png'
+        # resize image but keep ratio
+        img = Image(logo)
+        img.drawHeight = 1.75 * cm * img.drawHeight / img.drawWidth
+        img.drawWidth = 1.75 * cm
+        img.wrapOn(canvas, doc.width, doc.topMargin)
+        # draw on right, vertical-align middle
+        img.drawOn(canvas, doc.width - 0.25 * cm, (doc.bottomMargin - img.drawHeight) / 2 + 1 * cm)
+        canvas.restoreState()
 
 
 def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
     # Create the HttpResponse object with the appropriate PDF headers.
+    invoicing_details = None
     response = HttpResponse(content_type='application/pdf')
     # Append invoice number and invoice date
     if len(queryset) != 1:
@@ -56,6 +79,11 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
     recapitulatif_data = []
     _recap_dates = []
     for qs in queryset.order_by("invoice_number"):
+        if invoicing_details is None:
+            invoicing_details = qs.invoice_details
+        elif invoicing_details != qs.invoice_details:
+            raise Exception("Invoices must have the same invoicing details found %s and %s" % (
+                invoicing_details, qs.invoice_details))
         _recap_dates.append(qs.invoice_date)
         dd = [qs.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
               range(0, len(qs.prestations.all()), 20)]
@@ -70,26 +98,41 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
                                       qs.accident_date,
                                       qs.invoice_send_date,
                                       patient=qs.patient,
-                                      invoice_paid=qs.invoice_paid)
+                                      invoice_paid=qs.invoice_paid,
+                                      invoicing_details=invoicing_details, )
 
             elements.extend(_result["elements"])
             if not qs.invoice_paid:
-                recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
+                recapitulatif_data.append(
+                    (_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
     if len(_recap_dates) > 0:
         _recap_date = _recap_dates[-1].strftime('%d-%m-%Y')
     else:
         _recap_date = now().date().strftime('%d-%m-%Y')
     if len(recapitulatif_data) > 0:
-        elements.extend(_build_recap(_recap_date, _payment_ref, recapitulatif_data))
-    doc.build(elements)
+        elements.extend(_build_recap(_recap_date, _payment_ref, recapitulatif_data, invoicing_details))
+    # pass parameter to footer
+    # build a string with invoicing details with the name of the company, zipcode address, phone number and bank account
+    if invoicing_details is None:
+        invoicing_details = InvoicingDetails.objects.get(default_invoicing=True)
+    # if both invoicing_details af and aa are empty, do not display them
+    if invoicing_details.af == "" and invoicing_details.aa == "" and invoicing_details.rc == "":
+        legal_mention = f"{invoicing_details.name} {invoicing_details.address} {invoicing_details.zipcode_city} " \
+                        f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account}"
+    else:
+        legal_mention = f"{invoicing_details.name} {invoicing_details.address} {invoicing_details.zipcode_city} " \
+                        f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account} rc:{invoicing_details.rc} autorisations:{invoicing_details.af}-{invoicing_details.aa}"
+    footer2 = Footer(legal_mention)
+
+    doc.build(elements, onFirstPage=footer2, onLaterPages=footer2)
 
     if attach_to_email:
         if queryset.order_by("invoice_number").count() > 1:
             raise Exception("Cannot attach multiple invoices to email")
         subject = "Votre Facture %s" % _file_name
         message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe.\nSi ce courrier a croisé votre paiement, veuillez considérer ce message (rappel) comme nul et non avenu.\nCordialement \n -- \n%s \n%s " \
-                  "%s\n%s\n%s" % (config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
-                                  config.NURSE_PHONE_NUMBER, config.MAIN_BANK_ACCOUNT)
+                  "%s\n%s\n%s" % (invoicing_details.name, invoicing_details.address, invoicing_details.zipcode_city,
+                                  invoicing_details.phone_number, invoicing_details.bank_account)
         emails = [qs.patient.email_address]
         if config.CC_EMAIL_SENT:
             emails += config.CC_EMAIL_SENT.split(",")
@@ -112,7 +155,7 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
 
 
 def _build_invoices(prestations, invoice_number, invoice_date, prescription_date, accident_id, accident_date,
-                    invoice_send_date, patient, invoice_paid=False):
+                    invoice_send_date, patient, invoice_paid=False, invoicing_details=None):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
     elements = []
@@ -169,9 +212,9 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         _compute_sum(data[1:], 7), ''))
 
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + "{0}\n{1}\n{2}\n{3}".format(config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
-                                                 config.NURSE_PHONE_NUMBER),
-                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
+                   + "{0}\n{1}\n{2}\n{3}".format(invoicing_details.name, invoicing_details.address,
+                                                 invoicing_details.zipcode_city, invoicing_details.phone_number),
+                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(invoicing_details.provider_code),
                    ],
                   [u'Matricule patient: %s' % patientSocNumber.strip() + "\n"
                    + u'Nom et Prénom du patient: %s' % patientNameAndFirstName,
@@ -270,7 +313,7 @@ def _compute_sum(data, position):
     return round(sum, 2)
 
 
-def _build_recap(_recap_date, _recap_ref, recaps):
+def _build_recap(_recap_date, _recap_ref, recaps, invoicing_details):
     """
     """
     elements = []
@@ -317,7 +360,8 @@ def _build_recap(_recap_date, _recap_ref, recaps):
     elements.append(_total_a_payer)
     elements.append(Spacer(1, 18))
 
-    _infos_iban = Table([[u"Numéro IBAN: %s" % config.MAIN_BANK_ACCOUNT]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
+    _infos_iban = Table([[u"Numéro IBAN: %s" % invoicing_details.bank_account]], [10 * cm], 1 * [0.5 * cm],
+                        hAlign='LEFT')
     elements.append(_infos_iban)
 
     return elements
