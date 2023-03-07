@@ -1,8 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 from django.db import models
-from django_countries.fields import CountryField
 from django.utils.translation import gettext_lazy as _
+from django_countries.fields import CountryField
 
 
 class InvoicingDetails(models.Model):
@@ -19,6 +19,12 @@ class InvoicingDetails(models.Model):
     phone_number = models.CharField(max_length=30)
     email_address = models.EmailField(default=None, blank=True, null=True, validators=[EmailValidator])
     bank_account = models.CharField(max_length=50)
+    # registre de commerce
+    rc = models.CharField("Registre de commerce", max_length=50, null=True, blank=True)
+    # autorisation ministère de la famille activités soins à domicile
+    af = models.CharField("Autorisation ministère de la famille activités soins à domicile" , max_length=50, null=True, blank=True)
+    # autorisation ministère de la famille activités aides à domicile
+    aa = models.CharField("Autorisation ministère de la famille activités aides à domicile", max_length=50, null=True, blank=True)
     default_invoicing = models.BooleanField(default=False)
 
     def clean(self):
