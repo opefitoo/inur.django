@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import sys
+import decimal
 import os
-
+import sys
 from io import BytesIO
 from zoneinfo import ZoneInfo
 
@@ -10,19 +10,22 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
+from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak, Image
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-from reportlab.platypus.doctemplate import SimpleDocTemplate
-import decimal
-from constance import config
 
 
 def get_doc_elements(queryset, med_p=False):
     elements = []
     summary_data = []
     already_added_images = []
+    invoicing_details = None
     for qs in queryset.order_by("invoice_number"):
+        if invoicing_details is None:
+            invoicing_details = qs.invoice_details
+        elif invoicing_details != qs.invoice_details:
+            raise Exception("Invoices must have the same invoicing details")
         dd = [qs.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
               range(0, len(qs.prestations.all()), 20)]
         for _prestations in dd:
@@ -32,7 +35,8 @@ def get_doc_elements(queryset, med_p=False):
                                       _inv,
                                       qs.invoice_date,
                                       qs.accident_id,
-                                      qs.accident_date)
+                                      qs.accident_date,
+                                      qs.invoice_details)
 
             elements.extend(_result["elements"])
             summary_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
@@ -45,7 +49,7 @@ def get_doc_elements(queryset, med_p=False):
     recap_data = _build_recap(summary_data)
     elements.extend(recap_data[0])
     elements.append(PageBreak())
-    elements.extend(_build_final_page(recap_data[1], recap_data[2]))
+    elements.extend(_build_final_page(recap_data[1], recap_data[2], invoicing_details))
 
     return elements
 
@@ -72,7 +76,7 @@ def _build_recap(recaps):
     return elements, total, i
 
 
-def _build_final_page(total, order_number):
+def _build_final_page(total, order_number, invoicing_details):
     elements = []
     data = [["RELEVE DES NOTES D’HONORAIRES DES"],
             ["ACTES ET SERVICES DES INFIRMIERS"]]
@@ -85,10 +89,10 @@ def _build_final_page(total, order_number):
                                ]))
     elements.append(table)
     elements.append(Spacer(1, 18))
-    data2 = [[u"Identification du fournisseur de", config.NURSE_NAME, "", u"réservé à l’union des caisses de maladie"],
+    data2 = [[u"Identification du fournisseur de", invoicing_details.name, "", u"réservé à l’union des caisses de maladie"],
              [u"soins de santé", "", "", ""],
-             [u"Coordonnées bancaires :", config.MAIN_BANK_ACCOUNT, "", ""],
-             ["Code: ", config.MAIN_NURSE_CODE, "", ""]]
+             [u"Coordonnées bancaires :", invoicing_details.bank_account, "", ""],
+             ["Code: ", invoicing_details.provider_code, "", ""]]
     table2 = Table(data2, [5 * cm, 3 * cm, 3 * cm, 7 * cm], [1.25 * cm, 0.5 * cm, 1.25 * cm, 1.25 * cm])
     table2.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                 ('ALIGN', (3, 0), (3, 0), 'CENTER'),
@@ -140,7 +144,7 @@ def _build_final_page(total, order_number):
     return elements
 
 
-def _build_invoices(prestations, invoice_number, invoice_date, accident_id, accident_date):
+def _build_invoices(prestations, invoice_number, invoice_date, accident_id, accident_date, invoicing_details):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
     # import pydevd; pydevd.settrace()
@@ -187,10 +191,20 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
             newData.append(('', '', '', 'Sous-Total', _gross_sum, _net_sum, '', '', ''))
     newData.append(('', '', '', 'Total', _compute_sum(data[1:], 4), _compute_sum(data[1:], 5), '', '', ''))
 
+    # provider_code = models.CharField(max_length=10)
+    # name = models.CharField(max_length=30)
+    # address = models.TextField(max_length=50)
+    # zipcode_city = models.CharField(max_length=20)
+    # country = CountryField(blank_label='...', blank=True, null=True, default="LU")
+    # phone_number = models.CharField(max_length=30)
+    # email_address = models.EmailField(default=None, blank=True, null=True, validators=[EmailValidator])
+    # bank_account
+
     headerData = [['IDENTIFICATION DU FOURNISSEUR DE SOINS DE SANTE\n'
-                   + "{0}\n{1}\n{2}\n{3}".format(config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
-                                                 config.NURSE_PHONE_NUMBER),
-                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(config.MAIN_NURSE_CODE)
+                   + "{0}\n{1}\n{2}\n{3}".format(invoicing_details.name, invoicing_details.address,
+                                                 invoicing_details.zipcode_city,
+                                                 invoicing_details.phone_number),
+                   'CODE DU FOURNISSEUR DE SOINS DE SANTE\n{0}'.format(invoicing_details.provider_code),
                    ],
                   [u'Matricule patient: %s' % patientSocNumber.strip() + "\n"
                    + u'Nom et Prénom du patient: %s' % patientNameAndFirstName,
