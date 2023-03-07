@@ -1,21 +1,11 @@
 # -*- coding: utf-8 -*-
 import base64
 import logging
-<<<<<<< HEAD
-import pytz
-import os
-from copy import deepcopy
-from datetime import datetime
-from auditlog.registry import auditlog
-from auditlog.models import LogEntry
-from django.contrib.auth.models import User
-=======
 import os
 from copy import deepcopy
 from datetime import datetime
 from uuid import uuid4
 from zoneinfo import ZoneInfo
->>>>>>> bd9451ad22f2f4e5e27871fc4c0d2a5059d84f54
 
 import requests
 from constance import config
@@ -1338,21 +1328,3 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home = False
             pair.at_home_paired = instance
             pair.save()
-<<<<<<< HEAD
-
-<<<<<<< HEAD
-# @receiver(post_save, sender=Prestation, dispatch_uid="update_prestation_gcalendar_events")
-# def update_prestation_gcalendar_events(sender, instance, **kwargs):
-#     # if config.USE_GDRIVE:
-#     prestation_gcalendar.update_event(instance)
-#
-#
-# @receiver(post_delete, sender=Prestation, dispatch_uid="delete_prestation_gcalendar_events")
-# def delete_prestation_gcalendar_events(sender, instance, **kwargs):
-#     # if config.USE_GDRIVE:
-#     prestation_gcalendar.delete_event(instance.id)
-auditlog.register(User)
-=======
->>>>>>> bd9451ad22f2f4e5e27871fc4c0d2a5059d84f54
-=======
->>>>>>> 2be8930fa5678c8523c11d8c6e5c5f4419880371
