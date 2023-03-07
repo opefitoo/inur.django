@@ -25,7 +25,7 @@ def get_doc_elements(queryset, med_p=False):
         if invoicing_details is None:
             invoicing_details = qs.invoice_details
         elif invoicing_details != qs.invoice_details:
-            raise Exception("Invoices must have the same invoicing details")
+            raise Exception("Invoices must have the same invoicing details found %s and %s" % (invoicing_details, qs.invoice_details))
         dd = [qs.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
               range(0, len(qs.prestations.all()), 20)]
         for _prestations in dd:
