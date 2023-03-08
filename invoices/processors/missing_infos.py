@@ -1,10 +1,11 @@
 from django.apps import apps
 from django.db.models import  Q
 from django.urls import reverse
+from sqlalchemy import false
 
 DEFAULT_APP_LABEL = 'invoices'
 DEFAULT_IMPORTANT_FIELDS = [
-    ('employee','driving_licence_number')
+    ('employee','driving_licence_numbers')
 ]
 BASE_URL = 'http://127.0.0.1:8000'
 
@@ -14,6 +15,9 @@ def search_for_missing_important_infos(important_fields = DEFAULT_IMPORTANT_FIEL
         field_model = field_info[0]
         field_name = field_info[1]
         records_with_missing_infos = search_for_missing_important_infos_for_field(field_model, field_name, app_label)
+        if (records_with_missing_infos==False):
+            print('invalide app/model/field combination for %s/%s/%s' % (app_label, field_model, field_name ))
+            continue
         field_verbose_name = records_with_missing_infos.model._meta.get_field(field_name)._verbose_name
         field_model_verbose_name = records_with_missing_infos.model._meta.verbose_name
         for rec in records_with_missing_infos:
@@ -30,7 +34,30 @@ def search_for_missing_important_infos(important_fields = DEFAULT_IMPORTANT_FIEL
     return rslt
 
 def search_for_missing_important_infos_for_field(field_model, field_name, app_label):
+    if not(validate_app_model_field(field_model, field_name, app_label)): 
+        return False
     my_model = apps.get_model(app_label,model_name=field_model)
     field_name_isnull = field_name+'__isnull'
     srch = my_model.objects.filter(Q(**{field_name_isnull:True}) | Q(**{field_name:''}))
     return srch
+
+def validate_app_model_field(field_model, field_name, app_label):
+    if not (apps.is_installed(app_label)):
+        print('no such application %s' % app_label)
+        return False
+    model_found = False
+    for model in apps.get_app_config(app_label).get_models():
+        if model._meta.model_name==field_model:
+            model_found=True
+    if not (model_found):
+        print('no such model %s' % field_model)
+        return False
+    field_found = False
+    for field in apps.get_model(app_label,model_name=field_model)._meta.get_fields():
+        if field.name==field_name:
+            field_found=True
+    if not (field_found):
+        print('no such field %s' % field_name)
+        return False
+
+    return True
