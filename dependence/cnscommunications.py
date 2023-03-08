@@ -104,7 +104,7 @@ def long_term_care_declaration_file_path(instance, filename):
     # format integer to display 2 digits
     month_of_count = f"{instance.provider_date_of_sending.month:02d}"
     year_of_count = f"{instance.provider_date_of_sending.year:04d}"
-    newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_DCL_001_{instance.internal_reference}.xml"
+    newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_DCL_001_{instance.internal_reference}{instance.generated_xml_version}.xml"
     # newfilename, file_extension = os.path.splitext(filename)
     return f"long_term_care_declaration/{instance.internal_reference}/{newfilename}"
 
@@ -270,7 +270,11 @@ class ChangeDeclarationFile(models.Model):
         return mydata
 
     def __str__(self):
-        return "Echanges électroniques envoyés le %s ref. %s" % (self.provider_date_of_sending, self.internal_reference)
+        # take only last part of the path to the file
+        filename = self.generated_xml.name.split('/')[-1]
+        return "Echanges électroniques envoyés le %s ref. %s (%s)" % (self.provider_date_of_sending,
+                                                                      self.internal_reference,
+                                                                      filename)
 
     def send_xml_to_ftp(self):
         try:
@@ -363,7 +367,7 @@ class DeclarationDetail(models.Model):
 def generate_xml_file_and_notify_via_chat(sender, instance, **kwargs):
     if not instance.force_xml_generation:
         return
-    message = f"Le fichier de déclaration de changement {instance} a été généré avec succès."
+    message = f"Le fichier de déclaration de changement {instance} a été généré avec succès. Date heure : {timezone.now()}"
     try:
         # generate the xml file
         xml = generate_xml_using_xmlschema_using_instance(instance)
