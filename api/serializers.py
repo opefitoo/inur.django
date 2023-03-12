@@ -11,7 +11,7 @@ from dependence.models import PatientAnamnesis, AssignedPhysician
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail
 from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch, extract_birth_date_fr
+    ValidityDate, InvoiceItemBatch, extract_birth_date_iso
 from invoices.timesheet import Timesheet, TimesheetTask
 
 
@@ -135,7 +135,7 @@ class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
 
     def get_birth_date(self, obj):
         # get extracted birth date from patient and serialize it as a date
-        return extract_birth_date_fr(obj.code_sn)
+        return extract_birth_date_iso(obj.code_sn)
 
 
     class Meta:
