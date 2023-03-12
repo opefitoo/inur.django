@@ -174,6 +174,9 @@ def extract_birth_date(code_sn) -> object:
 def extract_birth_date_fr(code_sn) -> str:
     return datetime.strftime(extract_birth_date(code_sn), "%d/%m/%Y")
 
+def extract_birth_date_iso(code_sn) -> str:
+    return datetime.strftime(extract_birth_date(code_sn), '%Y-%m-%d')
+
 
 def calculate_age(care_date, code_sn):
     if care_date is None:
