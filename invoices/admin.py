@@ -42,9 +42,7 @@ from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
-    Hospitalization, InvoiceItemBatch, AssignedPhysician, InvoiceItemEmailLog, PatientAdminFile
-from invoices.models import ContactPerson, OtherStakeholder, DependenceInsurance, \
-    BiographyHabits
+    Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.resources import ExpenseCard, Car
@@ -247,41 +245,6 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
         return obj.image_preview
 
     scan_preview.allow_tags = True
-
-
-class AssignedPhysicianInLine(admin.TabularInline):
-    extra = 0
-    model = AssignedPhysician
-    fields = ('assigned_physician',)
-    autocomplete_fields = ['assigned_physician']
-
-
-class ContactPersonInLine(admin.TabularInline):
-    extra = 0
-    model = ContactPerson
-    fields = ('priority', 'contact_name', 'contact_relationship', 'contact_private_phone_nbr',
-              'contact_business_phone_nbr')
-
-
-class DependenceInsuranceInLine(admin.TabularInline):
-    extra = 0
-    model = DependenceInsurance
-    fields = ('evaluation_date', 'ack_receipt_date', 'decision_date', 'rate_granted')
-
-
-class OtherStakeholdersInLine(admin.TabularInline):
-    extra = 0
-    model = OtherStakeholder
-    fields = ('contact_name', 'contact_pro_spec', 'contact_private_phone_nbr', 'contact_business_phone_nbr',
-              'contact_email')
-
-
-class BiographyHabitsInLine(admin.TabularInline):
-    extra = 0
-    model = BiographyHabits
-    fields = ('habit_type', 'habit_time', 'habit_ritual', 'habit_preferences')
-    # autocomplete_fields = ['assigned_physician']
-    # fk_name = 'biography'
 
 
 @admin.register(Patient)
