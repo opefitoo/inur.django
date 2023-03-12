@@ -1347,3 +1347,4 @@ class DoorEventAdmin(admin.ModelAdmin):
     list_filter = ('employee', 'activity_start_time', 'activity_type')
     list_display = ('employee', 'activity_start_time')
     date_hierarchy = 'activity_start_time'
+

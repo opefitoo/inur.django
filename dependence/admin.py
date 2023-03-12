@@ -2,6 +2,11 @@ from datetime import timezone
 
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from django.contrib import admin
+from django.http import HttpResponse
+# report lab library
+
+from reportlab.pdfgen import canvas
+
 from django.contrib.admin import SimpleListFilter
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
@@ -527,3 +532,30 @@ class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'falldeclaration/print_fall_declaration.html', {'obj': obj})
+    
+    
+    actions = ['print_document']
+
+    def print_document(self, request, queryset):
+        response = generate_pdf(queryset)
+        return response
+
+    print_document.short_description = "Print selected objects as PDF"
+    
+    def generate_pdf(objects):
+        # Create a new PDF object
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="my_document.pdf"'
+        # Create the PDF object, using the response object as its "file."
+        p = canvas.Canvas(response)
+        # Add the objects to the PDF
+        for obj in objects:
+            p.drawString(100, 100, str(obj))
+        # Close the PDF object cleanly, and we're done.
+        p.showPage()
+        p.save()
+        return response
+    
+    
+
+
