@@ -7,9 +7,11 @@ from django.core.checks import messages
 from django.core.exceptions import ValidationError
 from django.db.models import Count, ManyToManyField
 from django.forms import ModelMultipleChoiceField, CheckboxSelectMultiple
+from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from fieldsets_with_inlines import FieldsetsInlineMixin
+from reportlab.pdfgen import canvas
 
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
@@ -24,6 +26,7 @@ from dependence.longtermcareitem import LongTermCareItem
 from dependence.medicalcaresummary import MedicalCareSummary
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
+from dependence.pdf.basedata import basedata_view
 from invoices.employee import JobPosition
 from invoices.models import Patient
 
@@ -106,7 +109,7 @@ class DeclarationDetailAdmin(admin.ModelAdmin):
     # cannot delete and hide delete button
     def has_delete_permission(self, request, obj=None):
         return False
-    
+
 
 class DeclarationDetailInline(admin.StackedInline):
     model = DeclarationDetail
@@ -309,7 +312,7 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
 
 @admin.register(PatientAnamnesis)
 class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, admin.ModelAdmin):
-    list_display = ('patient', 'display_object_actions_list',)
+    list_display = ('patient', 'display_object_actions_list', )
     autocomplete_fields = ['patient']
 
     object_actions = [
@@ -325,6 +328,13 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
             'form_method': 'GET',
             'view': 'print_cover',
         },
+        {
+            'slug': 'generate_report',
+            'verbose_name': 'Generate Report',
+            'icon': 'fas fa-file-pdf',
+            'form_method': 'GET',
+            'view': 'generate_report',
+        },
     ]
 
     readonly_fields = ("created_on", "updated_on",
@@ -334,6 +344,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
     fieldsets_with_inlines = [
         ('Patient', {
             'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link',
+                       'birth_place', 'contract_start_date', 'contract_end_date', 'contract_signed_date','contract_file',
                        'plan_of_share', 'help_for_cleaning', 'reason_for_dependence', 'anticipated_directives',
                        'anticipated_directives_doc_link',
                        'religious_beliefs',
@@ -443,6 +454,16 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
 
     # inlines = [BiographyHabitsInLine, AssignedPhysicianInLine, ContactPersonInLine, OtherStakeholdersInLine,
     #            DependenceInsuranceInLine]
+
+    def generate_report(self, request, object_id, form_url='', extra_context=None, action=None):
+        response = HttpResponse(content_type='application/pdf')
+        obj = self.get_object(request, object_id)
+        response['Content-Disposition'] = f'attachment; filename="{obj.patient.name}.pdf"'
+
+        p = canvas.Canvas(response, pagesize=(792, 612))
+        p.drawString(100, 100, f"Name: {obj.patient.name}")
+        p.save()
+        return basedata_view(request, obj)
 
     def print_view(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse

@@ -110,7 +110,8 @@ class AssignedPhysician(serializers.ModelSerializer):
 
 
 class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
-    anamnesis_set = PatientAnamnesisSerializer(required=False)
+    #anamnesis_set = PatientAnamnesisSerializer(required=False)
+    anamnesis_set = serializers.SerializerMethodField()
     full_address = serializers.CharField(required=False)
 
     def validate(self, data):
@@ -123,6 +124,14 @@ class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
             raise serializers.ValidationError(messages)
 
         return data
+
+    def get_anamnesis_set(self, obj):
+        anamnesis = PatientAnamnesis.objects.filter(patient=obj).order_by('-id').first()
+        if anamnesis is not None:
+            return PatientAnamnesisSerializer(anamnesis).data
+        else:
+            return None
+
 
     class Meta:
         model = Patient

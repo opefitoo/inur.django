@@ -23,6 +23,7 @@ from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation, \
     get_current_employee_contract_details_by_employee_abbreviation
+from helpers.patient import get_patient_by_id
 from invoices import settings
 from invoices.employee import JobPosition, Employee
 from invoices.enums.event import EventTypeEnum
@@ -365,6 +366,16 @@ def get_employee_contract_details_by_abbreviation(request):
     employee = get_current_employee_contract_details_by_employee_abbreviation(request.data.get('abbreviation'))
     if employee:
         return Response(EmployeeContractSerializer(employee).data, status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+def get_patient_details_by_id(request):
+    if 'POST' != request.method:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    patient = get_patient_by_id(request.data.get('id'))
+    if patient:
+        return Response(PatientSerializer(patient).data, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
