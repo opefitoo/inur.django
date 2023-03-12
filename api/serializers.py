@@ -11,7 +11,7 @@ from dependence.models import PatientAnamnesis, AssignedPhysician
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail
 from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch
+    ValidityDate, InvoiceItemBatch, extract_birth_date_fr
 from invoices.timesheet import Timesheet, TimesheetTask
 
 
@@ -112,6 +112,7 @@ class AssignedPhysician(serializers.ModelSerializer):
 class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
     #anamnesis_set = PatientAnamnesisSerializer(required=False)
     anamnesis_set = serializers.SerializerMethodField()
+    birth_date = serializers.SerializerMethodField()
     full_address = serializers.CharField(required=False)
 
     def validate(self, data):
@@ -131,6 +132,10 @@ class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
             return PatientAnamnesisSerializer(anamnesis).data
         else:
             return None
+
+    def get_birth_date(self, obj):
+        # get extracted birth date from patient and serialize it as a date
+        return extract_birth_date_fr(obj.code_sn)
 
 
     class Meta:
