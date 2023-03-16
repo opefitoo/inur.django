@@ -345,7 +345,7 @@ if 'GOOGLE_APPLICATION_CREDENTIALS2' in os.environ and not os.path.exists(GOOGLE
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-if os.environ["SENTRY_DSN"]:
+if os.environ.get("SENTRY_DSN", None):
     sentry_sdk.init(
         dsn=os.environ["SENTRY_DSN"],
         integrations=[DjangoIntegration()],

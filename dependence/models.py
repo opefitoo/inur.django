@@ -262,7 +262,7 @@ class PatientAnamnesis(models.Model):
 
     medical_background = models.TextField(u"Antécédents", max_length=500, default=None, blank=True,
                                           null=True)
-    treatments = models.TextField("Traitements", max_length=500, default=None, blank=True, null=True) #
+    treatments = models.TextField("Traitements", max_length=1000, default=None, blank=True, null=True) #
     allergies = models.TextField("Allergies", max_length=250, default=None, blank=True, null=True)
     # aides techniques
     electrical_bed = models.BooleanField(u"Lit électrique", default=None, blank=True, null=True)
