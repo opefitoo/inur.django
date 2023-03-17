@@ -130,9 +130,9 @@ def myFirstPage(canv, doc):
     canv.setTitle(doc.title)
 
     # # header
-    canv.drawImage(BASE_DIR + "/static/patientanamnesis/images/logo.png", doc.pagesize[0] / 2 - 14.5 * cm,
-                   doc.pagesize[1] / 2 + 9.5 * cm,
-                   width=37*1.5, height=15*1.5, mask='auto')
+    canv.drawImage(BASE_DIR + "/static/patientanamnesis/images/logo.png", doc.pagesize[0] / 2 - 13.5 * cm,
+                   doc.pagesize[1] / 2 + 8.5 * cm,
+                   width=37*1.8, height=15*1.8, mask='auto')
 
     # footer
     signature = 'Signatures: ............................................................'
