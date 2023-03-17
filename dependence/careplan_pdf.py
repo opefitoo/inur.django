@@ -43,38 +43,38 @@ def build_doc_per_care_plan(care_plan: CarePlanMaster):
     styles.add(ParagraphStyle(name='Left', alignment=TA_LEFT))
     patientstyle = ParagraphStyle('patientstyle',
                                   fontName="Helvetica",
-                                  fontSize=12,
+                                  fontSize=14,
                                   parent=styles['Heading6'],
                                   alignment=TA_RIGHT,
                                   spaceAfter=5)
     normalstyle = ParagraphStyle('normalstyle',
                                  fontName="Helvetica",
-                                 fontSize=12,
+                                 fontSize=14,
                                  parent=styles['Heading6'],
                                  alignment=TA_LEFT,
                                  spaceAfter=5)
     smallstyle = ParagraphStyle('smallstyle',
                                 fontName="Helvetica",
-                                fontSize=8,
+                                fontSize=12,
                                 parent=styles['Normal'],
                                 alignment=TA_LEFT,
                                 spaceAfter=0)
     smallstyle_gray = ParagraphStyle('smallstyle_gray',
                                      fontName="Helvetica",
                                      textColor=darkgray,
-                                     fontSize=7,
+                                     fontSize=10,
                                      parent=styles['Normal'],
                                      alignment=TA_LEFT,
                                      spaceAfter=0)
     elements.append(Paragraph(
-        u"patient: %s" % care_plan.patient,
+        u"Patient: %s" % care_plan.patient,
         patientstyle))
     elements.append(Paragraph(
-        u"matricule: %s" % care_plan.patient.code_sn,
+        u"Matricule: %s" % care_plan.patient.code_sn,
         patientstyle))
     titlist = ParagraphStyle('titlist',
                              fontName="Helvetica-Bold",
-                             fontSize=16,
+                             fontSize=18,
                              parent=styles['Heading2'],
                              alignment=TA_CENTER,
                              spaceAfter=14)
