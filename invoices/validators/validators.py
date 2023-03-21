@@ -3,6 +3,7 @@ from django.core.validators import RegexValidator
 from django.utils.deconstruct import deconstructible
 
 from invoices.enums.generic import HolidayRequestChoice
+from invoices.holidays import HolidayRequest
 from invoices.timesheet import SimplifiedTimesheetDetail
 
 
@@ -44,4 +45,23 @@ def validate_full_day_request(data):
             'requested_period': "Vous ne pouvez demander une demi journée que sur une période d'une journée seulement",
             'start_date': "Vous ne pouvez demander une demi journée que sur une période d'une journée seulement",
             'end_date': "Vous ne pouvez demander une demi journée que sur une période d'une journée seulement"}
+    return messages
+
+
+def validate_only_one_desiderata_per_month_per_employee(data):
+    messages = {}
+    if data['reason'] == HolidayRequest.REASONS[3][0]:
+            if HolidayRequest.objects.filter(
+                    start_date__year=data['start_date'].year,
+                    start_date__month=data['start_date'].month,
+                    employee_id=data['employee_id'],
+                    reason=HolidayRequest.REASONS[3][0]).exists():
+                messages = {'reason': "Vous ne pouvez avoir qu'un seul désiderata par mois"}
+    return messages
+
+def validate_desiderata_cannot_be_more_than_one_day(data):
+    messages = {}
+    if data['reason'] == HolidayRequest.REASONS[3][0]:
+        if data['start_date'] != data['end_date']:
+            messages = {'reason': "Un désiderata ne peut pas dépasser une journée"}
     return messages
