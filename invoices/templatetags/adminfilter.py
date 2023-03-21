@@ -5,7 +5,8 @@ register = template.Library()
 #FIXME remove hardcoded profile !!!
 @register.filter(name='is_company_admin')
 def is_company_admin(u):
-    return 'administratrice'.lower() == u.employee.occupation.name.lower()
+    if u.employee.occupation.name.lower() in ['administrateur', 'administratrice']:
+        return True
 
 @register.filter(name='selected_labels')
 def selected_labels(instance, field):
