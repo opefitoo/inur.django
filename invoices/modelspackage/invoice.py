@@ -42,4 +42,11 @@ class InvoicingDetails(models.Model):
 
 
 def get_default_invoicing_details():
-    return InvoicingDetails.objects.get(default_invoicing=True).id
+    # if rc column does not exist, return None
+    if not InvoicingDetails._meta.get_field('rc'):
+        return None
+    # if called before migration, return None
+    try:
+        return InvoicingDetails.objects.get(default_invoicing=True)
+    except Exception:
+        return None

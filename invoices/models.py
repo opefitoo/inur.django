@@ -174,6 +174,7 @@ def extract_birth_date(code_sn) -> object:
 def extract_birth_date_fr(code_sn) -> str:
     return datetime.strftime(extract_birth_date(code_sn), "%d/%m/%Y")
 
+
 def extract_birth_date_iso(code_sn) -> str:
     return datetime.strftime(extract_birth_date(code_sn), '%Y-%m-%d')
 
@@ -250,7 +251,6 @@ class Patient(models.Model):
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
-
 
     @property
     def full_address(self):
@@ -335,9 +335,6 @@ class Patient(models.Model):
 
     def clean_first_name(self):
         return self.cleaned_data['first_name'].capitalize()
-
-
-
 
 
 class Hospitalization(models.Model):
@@ -758,6 +755,8 @@ class InvoiceItem(models.Model):
     medical_prescription = models.ForeignKey(MedicalPrescription, related_name='invoice_items', null=True, blank=True,
                                              help_text='Please choose a Medical Prescription',
                                              on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def clean(self, *args, **kwargs):
         super(InvoiceItem, self).clean_fields()
@@ -832,6 +831,23 @@ class InvoiceItem(models.Model):
     @staticmethod
     def autocomplete_search_fields():
         return 'invoice_number',
+
+
+class InvoiceItemPrescriptionsList(models.Model):
+    # verbose name is Liste des ordonnances
+    class Meta:
+        verbose_name = 'Liste des ordonnances'
+        verbose_name_plural = 'Liste des ordonnances'
+
+    invoice_item = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, related_name='prescriptions')
+    medical_prescription = models.ForeignKey(MedicalPrescription, verbose_name="Ordonnance",
+                                             on_delete=models.CASCADE,
+                                             related_name='med_prescription_multi_invoice_items', blank=True,
+                                             null=True)
+
+    def __str__(self):
+        return self.invoice_item.invoice_number + ' - ' + str(self.medical_prescription.patient) + ' - ' + \
+            str(self.medical_prescription)
 
 
 class InvoiceItemEmailLog(models.Model):
