@@ -51,12 +51,13 @@ def validate_full_day_request(data):
 def validate_only_one_desiderata_per_month_per_employee(data):
     messages = {}
     if data['reason'] == HolidayRequest.REASONS[3][0]:
-            if HolidayRequest.objects.filter(
-                    start_date__year=data['start_date'].year,
-                    start_date__month=data['start_date'].month,
-                    employee_id=data['employee_id'],
-                    reason=HolidayRequest.REASONS[3][0]).exists():
-                messages = {'reason': "Vous ne pouvez avoir qu'un seul désiderata par mois"}
+        holiday_requests = HolidayRequest.objects.filter(
+            start_date__year=data['start_date'].year,
+            start_date__month=data['start_date'].month,
+            employee_id=data['employee_id'],
+            reason=HolidayRequest.REASONS[3][0]).exclude(id=data['id'])
+        if holiday_requests.exists():
+            messages = {'reason': "Vous ne pouvez avoir qu'un seul désiderata par mois, il y en a déjà un pour ce mois %s" % str(holiday_requests[0])}
     return messages
 
 def validate_desiderata_cannot_be_more_than_one_day(data):
