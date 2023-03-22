@@ -116,8 +116,10 @@ class CarePlanDetail(models.Model):
     time_end = models.TimeField("A")
     care_actions = models.TextField(u"Actions à prévoir", max_length=500)
     req_skills = models.ManyToManyField(JobPosition, related_name="care_job_position", verbose_name="Qualif.", )
-    required_technical_resources = models.TextField("Ressources techniques requises", max_length=500,
-                                                    null=True, blank=True, default=None)
+    # Many to Many relation to LongTermCareItem
+    long_term_care_items = models.ManyToManyField('LongTermCareItem',
+                                                    related_name="care_plan_detail_to_long_term_care_item",
+                                                    verbose_name="Prestations Assurance dépendance", blank=True)
     care_plan_to_master = models.ForeignKey(CarePlanMaster, related_name="care_plan_detail_to_master",
                                             on_delete=models.CASCADE, null=True, blank=True, default=None)
 

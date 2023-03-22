@@ -21,13 +21,12 @@ from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCar
     SharedMedicalCareSummaryPerPatientDetail
 from dependence.falldeclaration import FallDeclaration
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
-    TensionAndTemperatureParametersFormset
+    TensionAndTemperatureParametersFormset, CarePlanDetailForm
 from dependence.longtermcareitem import LongTermCareItem
 from dependence.medicalcaresummary import MedicalCareSummary
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from dependence.pdf.basedata import basedata_view
-from invoices.employee import JobPosition
 from invoices.models import Patient
 
 
@@ -148,10 +147,10 @@ class CareOccurrenceAdmin(admin.ModelAdmin):
 class CarePlanDetailInLine(admin.TabularInline):
     extra = 0
     model = CarePlanDetail
+    form = CarePlanDetailForm
     params_occurrence = ModelMultipleChoiceField(widget=CheckboxSelectMultiple(), queryset=CareOccurrence.objects.all(),
                                                  required=True)
-    required_skills = ModelMultipleChoiceField(widget=CheckboxSelectMultiple(), queryset=JobPosition.objects.all(),
-                                               required=True, limit_choices_to={'is_involved_in_health_care': True})
+
     formfield_overrides = {
         ManyToManyField: {'widget': CheckboxSelectMultiple},
     }

@@ -1,12 +1,32 @@
-from dataclasses import fields
-from django.core.exceptions import ValidationError
-from django.forms import BaseInlineFormSet
-from django.core.validators import EMPTY_VALUES
 from django import forms
-from dependence.enums.falldeclaration_enum import FallCircumstances, FallCognitiveMoodDiorders, FallConsequences, FallIncontinences, FallRequiredMedicalActs
-
-from dependence.falldeclaration import FallDeclaration
+from django.core.exceptions import ValidationError
+from django.core.validators import EMPTY_VALUES
+from django.forms import BaseInlineFormSet, ModelMultipleChoiceField, SelectMultiple
 from django.utils.translation import gettext_lazy as _
+
+from dependence.careplan import CarePlanDetail
+from dependence.enums.falldeclaration_enum import FallCircumstances, FallCognitiveMoodDiorders, FallConsequences, \
+    FallIncontinences, FallRequiredMedicalActs
+from dependence.falldeclaration import FallDeclaration
+from dependence.longtermcareitem import LongTermCareItem
+from invoices.employee import JobPosition
+
+
+class CarePlanDetailForm(forms.ModelForm):
+    long_term_care_items = ModelMultipleChoiceField(
+        queryset=LongTermCareItem.objects.all(),
+        widget=SelectMultiple,
+        required=False
+    )
+
+    req_skills = ModelMultipleChoiceField(
+        queryset=JobPosition.objects.filter(is_involved_in_health_care=True),
+        widget=SelectMultiple,
+        required=False
+    )
+    class Meta:
+        model = CarePlanDetail
+        fields = '__all__'
 
 class TypeDescriptionGenericInlineFormset(BaseInlineFormSet):
 
