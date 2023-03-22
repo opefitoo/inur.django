@@ -438,3 +438,6 @@ msgstr "Homme"
 
 msgid "Female"
 msgstr "Femme"
+
+msgid "Print"
+msgstr "Imprimer"

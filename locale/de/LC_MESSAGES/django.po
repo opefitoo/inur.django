@@ -442,3 +442,6 @@ msgstr "Mann"
 
 msgid "Female"
 msgstr "Frau"
+
+msgid "Print"
+msgstr "Drucken"
