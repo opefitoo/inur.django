@@ -243,6 +243,7 @@ class Patient(models.Model):
     participation_statutaire = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
     is_under_dependence_insurance = models.BooleanField(u"Assurance dépendance", default=False)
+    is_eligible_to_parameter_surveillance = models.BooleanField(u"Suivre Paramètres", default=False)
     date_of_death = models.DateField(u"Date de décès", default=None, blank=True, null=True)
     additional_details = models.TextField(u"Détails additionels",
                                           help_text="Vous pouvez mettre par exemple les numéros de carte adapto ou tout autre info utile.",

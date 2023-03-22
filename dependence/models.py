@@ -3,6 +3,7 @@ from datetime import date, datetime
 from constance import config
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django_countries.fields import CountryField
 
 from dependence.detailedcareplan import MedicalCareSummaryPerPatient, SharedMedicalCareSummaryPerPatientDetail
@@ -37,7 +38,7 @@ class MonthlyParameters(models.Model):
     # Patient
     patient = models.ForeignKey(Patient, related_name='health_params_to_patient',
                                 on_delete=models.PROTECT,
-                                limit_choices_to={'is_under_dependence_insurance': True})
+                                limit_choices_to=Q(is_under_dependence_insurance=True) | Q(is_eligible_to_parameter_surveillance=True))
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1)
 
     def clean(self):
