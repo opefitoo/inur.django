@@ -201,14 +201,12 @@ def generate_pdf(objects):
 
         date_fall = fall_declaration.datetimeOfFall
         formatted_date_fall = datetime.strftime(date_fall, "%d %B %Y %H:%M")
-        # p.drawString(30, A_y, f"A. Date, heure de la chute: {formatted_date_fall}")
+
         place_fall = fall_declaration.placeOfFall
-        # p.drawString(380, A_y , f"Lieu de la chute:  {place_fall}")
 
         declared_by_fall_f = fall_declaration.declared_by.user.first_name
         declared_by_fall_n = fall_declaration.declared_by.user.last_name
 
-        # p.drawString(40, A_y - 15 , f"Déclaré par:{declared_by_fall_f} {declared_by_fall_n}")
         witness_fall = fall_declaration.witnesses
 
         def witnesses_value():
@@ -236,7 +234,6 @@ def generate_pdf(objects):
             [
                 ('BACKGROUND', (0, 0), (3, 0), colors.green),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                # ('BOTTOMPADDING', (start_col, start_row), (end_col, end_row), padding)
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
                 ('SIZE', (0, 0), (-1, -1), cell_width, cell_height),
                 ('FONTSIZE', (0, 0), (-1, -1), 9),
@@ -261,7 +258,6 @@ def generate_pdf(objects):
         fall_circumstance_d = get_fall_circumstance_display(fall_circumstance)
         ot_fall_circumstance = fall_declaration.other_fall_circumstance
 
-        # p.drawString(30, B_y , "B. Circonstances de la chute")
 
         # Set up the text style
         text_style = p.beginText()
@@ -280,16 +276,11 @@ def generate_pdf(objects):
 
         def fall_circumstance_value():
             if fall_circumstance != "FCI_OTHER_CAUSES":
-                # p.drawString(50, B_y - 25 , f" • {textobject}")
-                # p.drawText(textobject)
                 return str_fall
             else:
                 return f"   • {ot_fall_circumstance}"
-                # p.drawString(50, B_y - 22 , f" • {ot_fall_circumstance}")
 
         fall_incident_circumstance = fall_declaration.incident_circumstance
-
-        # p.drawString(30, B_y- 49 , f"    Circonstances de l’incident:{fall_incident_circumstance}")
 
         # -----------------------------------------------------------------
 
@@ -312,11 +303,7 @@ def generate_pdf(objects):
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
                 ('SIZE', (0, 0), (-1, -1), cell_width, cell_height),
-                # ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, -1), 9),
-
-                # merge the first row
-                # ('SPAN', (0, 0), (1, 0)),
             ]
         )
         table.setStyle(ts)
@@ -334,8 +321,6 @@ def generate_pdf(objects):
         C_y = title_y - 140
         f_other_fall_consequence = fall_declaration.other_fall_consequence
 
-        # print_consequence = dict(falldeclaration_enum.FallConsequences.choices)[falldeclaration_enum.FallConsequences(eval(fall_declaration.fall_consequences)[0])]
-        # p.drawString(30, C_y , "C. Conséquences de la chute")
         # Set up the styles for the table
         styles = getSampleStyleSheet()
         style_normal = styles['Normal']
@@ -351,7 +336,6 @@ def generate_pdf(objects):
             if consequence:
                 consequence_display = get_fall_consequence_display(
                     fall_consequence_as_str=consequence)
-                # p.drawString(con_X, C_y - 28 , f"   • { _(consequence_display)}")
                 consequence_cell = Paragraph(
                     f"   • {_(consequence_display)}", styleN)
                 consequence_array.append(consequence_cell)
@@ -365,7 +349,6 @@ def generate_pdf(objects):
             data.append(chunk)
 
         if f_other_fall_consequence:
-            # p.drawString(50, C_y - 41 , f" •  {f_other_fall_consequence}")
             data.append([f" •  {f_other_fall_consequence}"])
         # -----------------------------------------------------------------
         cell_width = 0.1*inch
@@ -382,9 +365,7 @@ def generate_pdf(objects):
                 ('FONTSIZE', (0, 0), (-1, -1), 9),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                # merge the first row
                 ('SPAN', (0, 0), (2, 0)),
-                # merge the third row
                 ('SPAN', (0, span_other_consequences),
                  (2, span_other_consequences)),
             ]
@@ -414,7 +395,6 @@ def generate_pdf(objects):
                 ]
 
         fall_other_required_medical_act = fall_declaration.other_required_medical_act
-        # p.drawString(30,D_y , "D. Actes médicaux et/ou infirmiers requis dans les 24h (plusieurs réponses possibles)")
 
         medical_act_display_array = []
 
@@ -426,7 +406,6 @@ def generate_pdf(objects):
                 medical_act_cell = Paragraph(
                     f"   • {_(medical_act_display)}", styleN)
                 medical_act_display_array.append(medical_act_cell)
-                # p.drawString(med_x, D_y - 28 , f"   • { _(medical_act_display)}")
                 med_x += 130
 
         chunk_size = 3
@@ -438,7 +417,6 @@ def generate_pdf(objects):
             data.append(chunk)
 
         if fall_other_required_medical_act:
-            # p.drawString(50, D_y - 41 , f" •  {fall_other_required_medical_act}")
             data.append([f" •  {fall_other_required_medical_act}"])
 
         # ------------------------------------------------------------------
@@ -489,15 +467,12 @@ def generate_pdf(objects):
         # ----------------------------------------------------
         # ****************************************************
         # 1 --------------------------------------------------
-        # p.drawString(30, E_y , "E. Facteurs de risque")
 
         if fall_medications_risk_factor:
-            # p.drawString(50, E_y - 40 , f"  • {fall_medications_risk_factor}")
             dataE.append([f"  • {fall_medications_risk_factor}"])
         # ----------------------------------------------------
         # ****************************************************
         # 2 ----------------------------------------------------
-        # p.drawString(30, E_y - 15 , "   Troubles cognitifs et/ou de l’humeur")
         dataE.append(["   Troubles cognitifs et/ou de l’humeur"])
 
         trouble_array = []
@@ -508,7 +483,6 @@ def generate_pdf(objects):
                     fall_cognitive_mood_diorders_as_str=trouble)
                 trouble_cell = Paragraph(f"   • {_(trouble_display)}", styleN)
                 trouble_array.append(trouble_cell)
-                # p.drawString(tro_x, E_y - 28 , f"   • { _(trouble_display)}")
                 tro_x += 130
 
         chunk_size = 3
@@ -523,7 +497,6 @@ def generate_pdf(objects):
         # ****************************************************
         # 3 --------------------------------------------------
 
-        # p.drawString(30, E_y - 60 , "   Incontinence")
         dataE.append(["   Incontinence"])
         incontinence_array = []
         inc_x = 30
@@ -534,7 +507,6 @@ def generate_pdf(objects):
                 incontinence_cell = Paragraph(
                     f"  • { _(incontinence_display)}", styleN)
                 incontinence_array.append(incontinence_cell)
-                # p.drawString(inc_x, E_y - 70 , f"  • { _(incontinence_display)}")
                 inc_x += 130
 
         dataE.append(incontinence_array)
@@ -542,12 +514,10 @@ def generate_pdf(objects):
         # ----------------------------------------------------
         # ****************************************************
         # 4 --------------------------------------------------
-        # p.drawString(30, E_y  - 110 , "   Incapacité concernant les déplacements")
         dataE.append(["   Incapacité concernant les déplacements"])
         fall_mobility_disability = get_fall_mobility_disability(
             fall_declaration.mobility_disability)
         if fall_mobility_disability:
-            # p.drawString(50, E_y  - 130 , f" • {fall_mobility_disability}")
             dataE.append([f" • {fall_mobility_disability}"])
 
         # ----------------------------------------------------
@@ -555,10 +525,8 @@ def generate_pdf(objects):
         # 5 --------------------------------------------------
         fall_unsuitable_footwear = fall_declaration.unsuitable_footwear
         if fall_unsuitable_footwear:
-            # p.drawString(30, E_y - 153 , "   Chaussures inadaptées: Oui")
             dataE.append(["   Chaussures inadaptées: Oui"])
         else:
-            # p.drawString(30, E_y - 153 , "   Chaussures inadaptées: Non")
             dataE.append(["   Chaussures inadaptées: Non"])
 
         # ----------------------------------------------------
@@ -567,7 +535,6 @@ def generate_pdf(objects):
         fall_other_contributing_factor = fall_declaration.other_contributing_factor
 
         if fall_other_contributing_factor:
-            # p.drawString(30, E_y - 200 , f"   Autre facteur favorisant:{fall_other_contributing_factor}")
             dataE.append(
                 [f"   Autre facteur favorisant:{fall_other_contributing_factor}"])
 
@@ -627,20 +594,16 @@ def generate_pdf(objects):
         F_y = title_y - 500
         fall_preventable_fall = fall_declaration.preventable_fall
         if fall_preventable_fall:
-            # p.drawString(30, F_y , "F. La chute aurait pu être prévenue : Oui")
             dataFG.append(["F. La chute aurait pu être prévenue : Oui"])
         else:
-            # p.drawString(30, F_y , "F. La chute aurait pu être prévenue : Non")
             dataFG.append(["F. La chute aurait pu être prévenue : Non"])
 
         # G •••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
         G_y = title_y - 530
         fall_physician_informed = fall_declaration.physician_informed
         if fall_physician_informed:
-            # p.drawString(30, G_y ,"G. Le médecin a été avisé :  Oui")
             dataFG.append(["G. Le médecin a été avisé :  Oui"])
         else:
-            # p.drawString(30, G_y ,"G. Le médecin a été avisé :  Non")
             dataFG.append(["G. Le médecin a été avisé :  Non"])
 
         # ------------------------------------------------------------------
