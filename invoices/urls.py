@@ -9,7 +9,7 @@ from rest_framework.authtoken import views as authtoken_views
 import api
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
     get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView, \
-    FullCalendarEventViewSet, AvailableEmployeeList
+    FullCalendarEventViewSet, AvailableEmployeeList, AvailablePatientList
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
 from invoices.views import delete_prestation, yale_configuration_view
@@ -135,6 +135,11 @@ urlpatterns += [
 ]
 
 urlpatterns += [
+    re_path('fullcalendar-patients/', AvailablePatientList.as_view(), name='fullcalendar-events-list'),
+]
+
+
+urlpatterns += [
     re_path('available-employees/', AvailableEmployeeList.as_view(), name='available-employees'),
 ]
 
@@ -145,6 +150,14 @@ urlpatterns += [
         name='get_employee_contract_details_by_abbreviation',
     ),
 ]
+
+urlpatterns += [
+    re_path(
+        r'^api/v1/get_patient_details_by_id/$',
+        api.views.get_patient_details_by_id,
+        name='get_patient_details_by_id',
+    ),
+]
 urlpatterns += [
     re_path(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
 ]
@@ -153,7 +166,11 @@ urlpatterns += [
     re_path("select2/", include("django_select2.urls")),
     # … other patterns
 ]
-# if settings.DEBUG:
+
+urlpatterns += [
+    re_path('ajax/load-careplans/', api.views.load_care_plans, name='ajax_load_care_plans'),
+]
+    # if settings.DEBUG:
 #     import debug_toolbar
 #
 #     urlpatterns += [

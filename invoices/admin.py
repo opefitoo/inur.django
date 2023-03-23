@@ -35,16 +35,13 @@ from invoices.events import EventType, Event, AssignedAdditionalEmployee, Report
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
-    PrestationInlineFormSet, \
-    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, InvoiceItemForm, \
-    MedicalPrescriptionForm
+    PrestationInlineFormSet, PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, \
+    InvoiceItemForm, MedicalPrescriptionForm
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
-    Hospitalization, InvoiceItemBatch, AssignedPhysician, InvoiceItemEmailLog, PatientAdminFile
-from invoices.models import ContactPerson, OtherStakeholder, DependenceInsurance, \
-    BiographyHabits
+    Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.resources import ExpenseCard, Car
@@ -249,41 +246,6 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     scan_preview.allow_tags = True
 
 
-class AssignedPhysicianInLine(admin.TabularInline):
-    extra = 0
-    model = AssignedPhysician
-    fields = ('assigned_physician',)
-    autocomplete_fields = ['assigned_physician']
-
-
-class ContactPersonInLine(admin.TabularInline):
-    extra = 0
-    model = ContactPerson
-    fields = ('priority', 'contact_name', 'contact_relationship', 'contact_private_phone_nbr',
-              'contact_business_phone_nbr')
-
-
-class DependenceInsuranceInLine(admin.TabularInline):
-    extra = 0
-    model = DependenceInsurance
-    fields = ('evaluation_date', 'ack_receipt_date', 'decision_date', 'rate_granted')
-
-
-class OtherStakeholdersInLine(admin.TabularInline):
-    extra = 0
-    model = OtherStakeholder
-    fields = ('contact_name', 'contact_pro_spec', 'contact_private_phone_nbr', 'contact_business_phone_nbr',
-              'contact_email')
-
-
-class BiographyHabitsInLine(admin.TabularInline):
-    extra = 0
-    model = BiographyHabits
-    fields = ('habit_type', 'habit_time', 'habit_ritual', 'habit_preferences')
-    # autocomplete_fields = ['assigned_physician']
-    # fk_name = 'biography'
-
-
 @admin.register(Patient)
 class PatientAdmin(CSVExportAdmin):
     list_filter = ('city',)
@@ -449,6 +411,12 @@ class InvoicingDetailsAdmin(admin.ModelAdmin):
     list_display = ('provider_code', 'name', 'default_invoicing')
 
 
+class InvoiceItemPrescriptionsListInlines(TabularInline):
+    model = InvoiceItemPrescriptionsList
+    extra = 0
+    fields = ('medical_prescription',)
+    autocomplete_fields = ['medical_prescription']
+
 @admin.register(InvoiceItem)
 class InvoiceItemAdmin(admin.ModelAdmin):
     class Media:
@@ -463,13 +431,15 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
-                    'number_of_prestations', 'invoice_details')
+                    'number_of_prestations', 'invoice_details', 'has_medical_prescription')
     list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', 'patient__name']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
-    readonly_fields = ('medical_prescription_preview',)
+    readonly_fields = ('medical_prescription_preview', 'created_at', 'updated_at')
     autocomplete_fields = ['patient']
 
-    # search_form = InvoiceItemSearchForm
+    def has_medical_prescription(self, obj):
+        return obj.medical_prescription is not None
+    has_medical_prescription.boolean = True
 
     def cns_invoice_bis(self, request, queryset):
         try:
@@ -492,7 +462,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     actions = [export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
                pdf_private_invoice, export_to_pdf2, cns_invoice_bis, pdf_private_invoice_pp_bis, set_invoice_as_sent,
                set_invoice_as_paid, set_invoice_as_not_paid, set_invoice_as_not_sent]
-    inlines = [PrestationInline]
+    inlines = [InvoiceItemPrescriptionsListInlines, PrestationInline]
     fieldsets = (
         (None, {
             'fields': ('invoice_number', 'is_private', 'patient', 'invoice_date', 'invoice_details')
@@ -501,7 +471,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
             'fields': ('accident_id', 'accident_date', 'is_valid', 'validation_comment',
                        'patient_invoice_date', 'invoice_send_date', 'invoice_sent', 'invoice_paid',
-                       'medical_prescription'),
+                       'medical_prescription', 'created_at', 'updated_at'),
         }),
     )
     verbose_name = u"Mémoire d'honoraire"
@@ -1066,6 +1036,7 @@ class EventAdmin(admin.ModelAdmin):
     exclude = ('event_type',)
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
+    change_form_template = 'admin/invoices/event_change_form.html'
     list_filter = (SmartEmployeeFilter,)
     inlines = (AssignedAdditionalEmployeeInLine, ReportPictureInLine)
 
@@ -1283,6 +1254,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
     list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees']
     exclude = ('event_type',)
     change_list_template = 'events/calendar.html'
+    change_form_template = 'admin/invoices/event_change_form.html'
     list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'
 

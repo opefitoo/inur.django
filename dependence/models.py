@@ -3,8 +3,10 @@ from datetime import date, datetime
 from constance import config
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django_countries.fields import CountryField
 
+from dependence.detailedcareplan import MedicalCareSummaryPerPatient, SharedMedicalCareSummaryPerPatientDetail
 from invoices.db.fields import CurrentUserField
 from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
     MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType, \
@@ -36,7 +38,7 @@ class MonthlyParameters(models.Model):
     # Patient
     patient = models.ForeignKey(Patient, related_name='health_params_to_patient',
                                 on_delete=models.PROTECT,
-                                limit_choices_to={'is_under_dependence_insurance': True})
+                                limit_choices_to=Q(is_under_dependence_insurance=True) | Q(is_eligible_to_parameter_surveillance=True))
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1)
 
     def clean(self):
@@ -144,6 +146,11 @@ class PatientAnamnesis(models.Model):
                                 on_delete=models.PROTECT,
                                 limit_choices_to={'is_under_dependence_insurance': True})
     nationality = CountryField(u'Nationalité', blank_label='...', blank=True, null=True)
+    birth_place = models.CharField(u'Lieu de naissance', help_text="Ville/Pays", max_length=50, default=None, blank=True, null=True)
+    contract_file = models.FileField(u"Contrat", upload_to='contracts/', default=None, blank=True, null=True)
+    contract_signed_date = models.DateField(u"Date de signature du contrat", default=None, blank=True, null=True)
+    contract_start_date = models.DateField(u"Date de début du contrat", default=None, blank=True, null=True)
+    contract_end_date = models.DateField(u"Date de fin du contrat", default=None, blank=True, null=True)
     spoken_languages = models.CharField(u'Langues parlées', max_length=40, default=None, blank=True, null=True)
     external_doc_link = models.URLField("URL doc. externe", default=None, blank=True, null=True)
     civil_status = models.CharField(u"État civil",
@@ -256,7 +263,7 @@ class PatientAnamnesis(models.Model):
 
     medical_background = models.TextField(u"Antécédents", max_length=500, default=None, blank=True,
                                           null=True)
-    treatments = models.TextField("Traitements", max_length=500, default=None, blank=True, null=True) #
+    treatments = models.TextField("Traitements", max_length=1000, default=None, blank=True, null=True) #
     allergies = models.TextField("Allergies", max_length=250, default=None, blank=True, null=True)
     # aides techniques
     electrical_bed = models.BooleanField(u"Lit électrique", default=None, blank=True, null=True)
@@ -340,6 +347,26 @@ class PatientAnamnesis(models.Model):
         if self.id:
             return [p.assigned_physician for p in AssignedPhysician.objects.filter(anamnesis_id=self.id)]
         return None
+
+    @property
+    def shared_care_plan(self):
+        shared_care_plan_dict = {}
+        if self.id:
+            care_summary_per_patient = MedicalCareSummaryPerPatient.objects.filter(patient_id=self.patient_id).all()
+            # if more than one throw an error
+            if len(care_summary_per_patient) > 1:
+                raise Exception("More than one medical care summary per patient %s" % self.patient)
+            elif len(care_summary_per_patient) == 1:
+                shared_care = SharedMedicalCareSummaryPerPatientDetail.objects.filter(
+                    medical_care_summary_per_patient_id=care_summary_per_patient[0].id).all()
+                shared_plan = False
+                if len(shared_care) > 1:
+                    shared_plan = True
+                shared_care_plan_dict['shared_plan'] = shared_plan
+                shared_care_plan_dict['sn_code_aidant'] = care_summary_per_patient[0].sn_code_aidant
+                return shared_care_plan_dict
+            else:
+                raise shared_care_plan_dict
 
     def clean(self, *args, **kwargs):
         super(PatientAnamnesis, self).clean_fields()

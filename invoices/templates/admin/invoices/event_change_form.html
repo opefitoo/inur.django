@@ -1,0 +1,39 @@
+{% extends "admin/change_form.html" %}
+{% block extrahead %}
+{{ block.super }}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        django.jQuery(document).ready(function () {
+            let $ = django.jQuery;
+            $("#id_patient").on("select2:select", function (e) {
+                let patientId = $(this).val();
+                let eventType = $("#id_event_type_enum").val();
+                if (patientId) {
+                    $.ajax({
+                        url: "{% url 'ajax_load_care_plans' %}",
+                        data: {
+                            'patient': patientId,
+                            'event_type': eventType
+                        },
+                        success: function (data) {
+                            let plansSelect = $("#id_care_plan_detail");
+                            plansSelect.empty();
+                            $.each(data, function (index, plan) {
+                                let option = $('<option>', {
+                                    value: plan.id,
+                                    text: plan.name
+                                });
+                                plansSelect.append(option);
+                            });
+                            // Trigger the "change" event on the care plan field
+                            plansSelect.trigger("change");
+                        }
+                    });
+                } else {
+                    $("#id_care_plan_detail").empty();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

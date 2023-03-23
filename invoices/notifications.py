@@ -47,6 +47,17 @@ def send_email_notification(subject, message, to_emails):
         recipient_list=to_emails,
     )
 
+def notify_user_that_holiday_request_is_created(instance, url, employee_email):
+    to_emails = [employee_email]
+    send_email_notification('Your holiday request has been created',
+                            'Your holiday request has been created, please that you have to wait for validation and if you have any questions, please contact your manager. '
+                            'In case of desiderata please take into consideration that it can be transformed into a holiday request if not possible. please check. %s' % url,
+                            to_emails)
+    # translate notification message into french
+    message = "Votre demande de congé a été créée, veuillez noter que vous devez attendre la validation et si vous avez des questions, veuillez contacter votre manager. " \
+              "En cas de désiderata, veuillez noter qu'il peut être transformé en demande de congé si cela n'est pas possible veuillez vérifier. %s" % url
+
+    send_email_notification("Votre demande de congé a été créée", message, to_emails)
 
 def notify_system_via_google_webhook(message):
     url = config.GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL

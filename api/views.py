@@ -2,7 +2,7 @@ import json
 
 from constance import config
 from django.contrib.auth.models import User, Group
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils.datetime_safe import datetime
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.decorators import api_view
@@ -19,10 +19,12 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
     FullCalendarEmployeeSerializer, FullCalendarPatientSerializer
 from api.utils import get_settings
+from dependence.careplan import CarePlanDetail
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation, \
     get_current_employee_contract_details_by_employee_abbreviation
+from helpers.patient import get_patient_by_id
 from invoices import settings
 from invoices.employee import JobPosition, Employee
 from invoices.enums.event import EventTypeEnum
@@ -167,6 +169,19 @@ class PatientAnamnesisViewSet(viewsets.ModelViewSet):
     queryset = PatientAnamnesis.objects.all()
     serializer_class = PatientAnamnesisSerializer
 
+
+
+def load_care_plans(request):
+    patient_id = request.GET.get('patient')
+    event_type = request.GET.get('event_type')
+    if event_type != EventTypeEnum.ASS_DEP.value:
+        return JsonResponse([], safe=False)
+    care_plans = CarePlanDetail.objects.filter(care_plan_to_master__patient_id__exact=patient_id).order_by('time_start')
+    # build a list of dictionaries with the care plan id and string representation
+    care_plan_list = []
+    for care_plan in care_plans:
+        care_plan_list.append({'id': care_plan.id, 'name': str(care_plan)})
+    return JsonResponse(care_plan_list, safe=False)
 
 class GenericEmployeeEventList(generics.ListCreateAPIView):
     queryset = Event.objects.all()
@@ -365,6 +380,16 @@ def get_employee_contract_details_by_abbreviation(request):
     employee = get_current_employee_contract_details_by_employee_abbreviation(request.data.get('abbreviation'))
     if employee:
         return Response(EmployeeContractSerializer(employee).data, status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+def get_patient_details_by_id(request):
+    if 'POST' != request.method:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    patient = get_patient_by_id(request.data.get('id'))
+    if patient:
+        return Response(PatientSerializer(patient).data, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 

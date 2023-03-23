@@ -27,11 +27,13 @@ from django.core.checks import messages
 from django.core.exceptions import ValidationError
 from django.db.models import Count, ManyToManyField
 from django.forms import ModelMultipleChoiceField, CheckboxSelectMultiple
+from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from fieldsets_with_inlines import FieldsetsInlineMixin
 from dependence.careplan_pdf import generate_pdf
 
+from reportlab.pdfgen import canvas
 
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
@@ -40,12 +42,12 @@ from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCar
     SharedMedicalCareSummaryPerPatientDetail
 from dependence.falldeclaration import FallDeclaration
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
-    TensionAndTemperatureParametersFormset
+    TensionAndTemperatureParametersFormset, CarePlanDetailForm
 from dependence.longtermcareitem import LongTermCareItem
 from dependence.medicalcaresummary import MedicalCareSummary
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
-from invoices.employee import JobPosition
+from dependence.pdf.basedata import basedata_view
 from invoices.models import Patient
 
 
@@ -88,13 +90,14 @@ class FilteringPatientsForMedicalCareSummaryPerPatient(SimpleListFilter):
 @admin.register(MedicalCareSummaryPerPatient)
 class MedicalCareSummaryPerPatientAdmin(admin.ModelAdmin):
     inlines = [MedicalCareSummaryPerPatientDetailInline, SharedMedicalCareSummaryPerPatientDetailInline]
-    list_display = ('patient', 'date_of_request', 'referent', 'date_of_evaluation', 'date_of_notification',
+    list_display = ('patient', 'date_of_decision', 'referent', 'date_of_evaluation', 'date_of_notification',
                     'plan_number', 'decision_number', 'level_of_needs', 'start_of_support', 'end_of_support',)
     # all fields are readonly
     readonly_fields = ('created_on', 'updated_on', 'patient', 'date_of_request', 'referent', 'date_of_evaluation',
                        'date_of_notification', 'plan_number', 'decision_number', 'level_of_needs', 'start_of_support',
                        'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
                        'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail')
+    list_filter = (FilteringPatientsForMedicalCareSummaryPerPatient, 'date_of_decision')
 
     def link_to_declaration_detail(self, instance):
         url = f'{reverse("admin:dependence_declarationdetail_changelist")}?patient__id={instance.patient.id}'
@@ -127,7 +130,7 @@ class DeclarationDetailAdmin(admin.ModelAdmin):
     # cannot delete and hide delete button
     def has_delete_permission(self, request, obj=None):
         return False
-    
+
 
 class DeclarationDetailInline(admin.StackedInline):
     model = DeclarationDetail
@@ -160,15 +163,16 @@ class ChangeDeclarationFileAdmin(admin.ModelAdmin):
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):
     model = CareOccurrence
+    list_display = ('str_name', 'value')
 
 
 class CarePlanDetailInLine(admin.TabularInline):
     extra = 0
     model = CarePlanDetail
+    form = CarePlanDetailForm
     params_occurrence = ModelMultipleChoiceField(widget=CheckboxSelectMultiple(), queryset=CareOccurrence.objects.all(),
                                                  required=True)
-    required_skills = ModelMultipleChoiceField(widget=CheckboxSelectMultiple(), queryset=JobPosition.objects.all(),
-                                               required=True, limit_choices_to={'is_involved_in_health_care': True})
+
     formfield_overrides = {
         ManyToManyField: {'widget': CheckboxSelectMultiple},
     }
@@ -330,7 +334,7 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
 
 @admin.register(PatientAnamnesis)
 class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, admin.ModelAdmin):
-    list_display = ('patient', 'display_object_actions_list',)
+    list_display = ('patient', 'display_object_actions_list', )
     autocomplete_fields = ['patient']
 
     object_actions = [
@@ -346,6 +350,13 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
             'form_method': 'GET',
             'view': 'print_cover',
         },
+        {
+            'slug': 'generate_report',
+            'verbose_name': 'Generate Report',
+            'icon': 'fas fa-file-pdf',
+            'form_method': 'GET',
+            'view': 'generate_report',
+        },
     ]
 
     readonly_fields = ("created_on", "updated_on",
@@ -355,6 +366,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
     fieldsets_with_inlines = [
         ('Patient', {
             'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link',
+                       'birth_place', 'contract_start_date', 'contract_end_date', 'contract_signed_date','contract_file',
                        'plan_of_share', 'help_for_cleaning', 'reason_for_dependence', 'anticipated_directives',
                        'anticipated_directives_doc_link',
                        'religious_beliefs',
@@ -464,6 +476,16 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
 
     # inlines = [BiographyHabitsInLine, AssignedPhysicianInLine, ContactPersonInLine, OtherStakeholdersInLine,
     #            DependenceInsuranceInLine]
+
+    def generate_report(self, request, object_id, form_url='', extra_context=None, action=None):
+        response = HttpResponse(content_type='application/pdf')
+        obj = self.get_object(request, object_id)
+        response['Content-Disposition'] = f'attachment; filename="{obj.patient.name}.pdf"'
+
+        p = canvas.Canvas(response, pagesize=(792, 612))
+        p.drawString(100, 100, f"Name: {obj.patient.name}")
+        p.save()
+        return basedata_view(request, obj)
 
     def print_view(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse

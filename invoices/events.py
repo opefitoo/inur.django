@@ -19,6 +19,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from dependence.careplan import CarePlanMaster, CarePlanDetail
 from invoices import settings
 from invoices.employee import Employee
 from invoices.enums.event import EventTypeEnum
@@ -82,6 +83,11 @@ class Event(models.Model):
     notes = models.TextField(
         _('Notes'),
         help_text=_('Notes'), blank=True, null=True)
+    # link to CarePlanDetail
+    care_plan_detail = models.ForeignKey('dependence.CarePlanDetail', related_name='event_link_to_care_plan_detail',
+                                         blank=True, null=True,
+                                         help_text=_('Choisissez un plan de soin'),
+                                         on_delete=models.DO_NOTHING)
     event_report = models.TextField(_('Rapport de soin'), help_text="A remplir une fois le soin terminé",
                                     blank=True, null=True)
     patient = models.ForeignKey(Patient, related_name='event_link_to_patient', blank=True, null=True,
@@ -135,6 +141,12 @@ class Event(models.Model):
                                                                         '<span class="evttooltiptext">%s</span> '
                                                                         % self.notes)
 
+    def clean(self):
+        print(self.__dict__)
+        print(self.data)
+        cleaned_data = super().clean()
+        print(cleaned_data)  # Add a print statement to see the cleaned data
+
     def clean(self, *args, **kwargs):
         exclude = []
         super(Event, self).clean_fields(exclude)
@@ -167,6 +179,18 @@ class Event(models.Model):
                                                                              event_id=found_event['gId'],
                                                                              dry_run=dry_run))
         return deleted_evts
+
+    def synchronize_with_care_plan(self):
+        # first check if event type is of type ASS_DEP
+        if self.event_type_enum == EventTypeEnum.ASS_DEP:
+            # check if event is already linked to a careplan
+            if not self.care_plan_detail:
+                # check care_plan_detail is linked to event patient
+                if self.patient:
+                    # check care_plan_master is sames as event patient
+                    care_plan_master = CarePlanMaster.objects.filter(patient=self.patient).first().exists()
+                    if care_plan_master.exists():
+                        print("Found a careplan to link to event %s" % care_plan_master)
 
     def display_unconnected_events(self):
         # FIXME not complete one
@@ -229,6 +253,8 @@ class Event(models.Model):
         result.update(model.event_is_unique(data))
         result.update(address_mandatory_for_generic_employee(data))
         result.update(event_report_mandatory_validated_events(data))
+        result.update(if_care_plan_check_date_times(data))
+        result.update(checks_that_care_plan_is_linked_to_right_patient(data))
         # result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
         # result.update(create_or_update_google_calendar(model))
         return result
@@ -487,10 +513,40 @@ def event_report_mandatory_validated_events(data):
     return messages
 
 
+def if_care_plan_check_date_times(data):
+    messages = {}
+    if data['event_type_enum'] == EventTypeEnum.ASS_DEP and data['care_plan_detail_id']:
+        assigned_care_plan = CarePlanDetail.objects.get(pk=data['care_plan_detail_id'])
+        if assigned_care_plan:
+            if data['time_start_event'] < assigned_care_plan.time_start:
+                messages = {'time_start_event': _("Heure début doit être supérieur à %s car le plan est %s") % (
+                    assigned_care_plan.time_start, str(assigned_care_plan))}
+            if data['time_end_event'] > assigned_care_plan.time_end:
+                messages = {'time_end_event': _("Heure fin doit être inférieur à %s car le plan est %s") % (
+                    assigned_care_plan.time_end, str(assigned_care_plan))}
+            # check if weekday is the same as care plan
+            if "*" not in assigned_care_plan.days_of_week() and data[
+                'day'].weekday() in assigned_care_plan.days_of_week():
+                messages = {'day': _("Jour doit être %s car le plan est %s") % (
+                    assigned_care_plan.get_day_of_week_display(), str(assigned_care_plan))}
+    return messages
+
+
+def checks_that_care_plan_is_linked_to_right_patient(data):
+    messages = {}
+    if data['event_type_enum'] == EventTypeEnum.ASS_DEP and data['care_plan_detail_id']:
+        assigned_care_plan = CarePlanDetail.objects.get(pk=data['care_plan_detail_id'])
+        if assigned_care_plan:
+            if CarePlanMaster.objects.get(patient_id=data['patient_id']) != assigned_care_plan.care_plan_to_master:
+                messages = {'care_plan_detail': _("Plan de soin doit être lié au patient, vous avez choisi le plan lié à %s") % (
+                    str(Patient.objects.get(pk=assigned_care_plan.care_plan_to_master.patient_id)))}
+    return messages
+
+
 def validate_date_range(instance_id, data):
     messages = {}
     conflicts = None
-    if data['state'] in [5,6]:
+    if data['state'] in [5, 6]:
         return messages
     if data['employees_id']:
         conflicts = Event.objects.filter(day=data['day']).filter(
@@ -512,8 +568,8 @@ def validate_date_range(instance_id, data):
             pk=instance_id).exclude(state=Event.STATES[5][0]).exclude(state=Event.STATES[4][0])
     if conflicts and 0 < conflicts.count():
         messages = {'state': _("Intersection with other %s, here : %s from %s to %s") %
-                                        (Event._meta.verbose_name_plural, conflicts[0], conflicts[0].time_start_event,
-                                         conflicts[0].time_end_event)}
+                             (Event._meta.verbose_name_plural, conflicts[0], conflicts[0].time_start_event,
+                              conflicts[0].time_end_event)}
     return messages
 
 # @receiver(post_save, sender=Patient, dispatch_uid="sync_future_events_adresses_when_patient_address_changed")

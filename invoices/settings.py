@@ -279,6 +279,7 @@ if 'EMAIL_HOST' in os.environ:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     EMAIL_HOST_USER = 'noreply@localhost'
+    EMAIL_AUTH_USER = 'noreply@localhost'
 
 LOGGING = {
     'version': 1,
@@ -342,12 +343,19 @@ if 'GOOGLE_APPLICATION_CREDENTIALS2' in os.environ and not os.path.exists(GOOGLE
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
+if os.environ.get("SENTRY_DSN", None):
+    sentry_sdk.init(
+        dsn=os.environ["SENTRY_DSN"],
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=1.0,
+        send_default_pii=True
+    )
 # sentry_sdk.init(
-#     dsn="https://8e73556ef21c4c73a6ecec31b9d742cc@o4504561450287104.ingest.sentry.io/4504561450287104",
+#     dsn=os.environ["SENTRY_DSN"],
 #     integrations=[
 #         DjangoIntegration(),
 #     ],
-
+#
 #     #     # Set traces_sample_rate to 1.0 to capture 100%
 #     #     # of transactions for performance monitoring.
 #     #     # We recommend adjusting this value in production.

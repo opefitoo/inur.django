@@ -18,7 +18,7 @@ from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
 from invoices.enums.generic import HolidayRequestChoice
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
-from invoices.notifications import send_email_notification
+from invoices.notifications import send_email_notification, notify_user_that_holiday_request_is_created
 from invoices.validators import validators
 
 
@@ -254,6 +254,9 @@ class HolidayRequest(models.Model):
             result.update(validate_requests_from_other_employees(instance_id, data))
         result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
         result.update(validators.validate_full_day_request(data))
+        result.update(validators.validate_only_one_desiderata_per_month_per_employee(data))
+        result.update(validators.validate_only_one_desiderata_per_month_per_employee(data))
+        result.update(validators.validate_desiderata_cannot_be_more_than_one_day(data))
         return result
 
     @staticmethod
@@ -330,6 +333,8 @@ def notify_holiday_request_creation(sender, instance, created, **kwargs):
         return
     url = "%s%s " % (config.ROOT_URL, instance.get_admin_url())
     to_emails = get_admin_emails()
+    employee_email = instance.employee.email
+    notify_user_that_holiday_request_is_created(instance, url, employee_email)
     if len(to_emails) > 0:
         send_email_notification('A new %s' % instance,
                                 'please validate. %s' % url,

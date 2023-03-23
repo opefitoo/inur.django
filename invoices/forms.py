@@ -7,6 +7,7 @@ from django_select2.forms import ModelSelect2Widget
 from wtforms import Form, SubmitField, StringField
 from wtforms.validators import Length
 
+from dependence.careplan import CarePlanDetail
 from invoices.events import Event
 from invoices.models import InvoiceItem, MedicalPrescription
 from invoices.timesheet import SimplifiedTimesheet, SimplifiedTimesheetDetail
@@ -191,6 +192,8 @@ def cannot_validate_in_future(instance, user):
 
 
 class EventForm(ModelForm):
+    care_plan_detail = forms.ModelChoiceField(queryset=CarePlanDetail.objects.all(), required=False,
+                                              label="Plan de soin", to_field_name="id",)
     class Meta:
         model = Event
         exclude = ('event_type',)

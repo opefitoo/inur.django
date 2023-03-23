@@ -153,6 +153,7 @@
 
         <tr class="heading">
             <td>Date/heure</td>
+            <td>Remarques</td>
             <td>Glycémie</td>
             <td>Tension</td>
             <td>Pouls</td>
@@ -160,6 +161,7 @@
         {% for param in obj.parameters_set %}
             <tr class="item">
                 <td>{{ param.params_date_time }}</td>
+                <td>{{ param.general_remarks }}</td>
                 <td>{% if param.blood_glucose %} {{ param.blood_glucose }} {% else %} - {% endif %}</td>
                 <td>{{ param.systolic_blood_press }}/{{ param.diastolic_blood_press }}</td>
                 <td>{% if param.heart_pulse > 0 %} {{ param.heart_pulse }} {% else %} - {% endif %}</td>

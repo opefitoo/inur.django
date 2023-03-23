@@ -116,6 +116,8 @@ class Employee(models.Model):
     virtual_career_anniversary_date = models.DateField("Date anniversaire carrière virtuelle",
                                                        help_text="Pour les carrières sous convention SAS",
                                                        blank=True, null=True)
+    miscellaneous = models.TextField("Divers", default="Code Pin tél:...etc", max_length=200)
+
 
     def get_current_contract(self):
         return self.contract_set.filter(end_date__isnull=True).first()
@@ -179,6 +181,7 @@ class EmployeeContractDetail(models.Model):
                                      default=ContractType.CDI, blank=True, null=True)
     monthly_wage = models.DecimalField("Salaire Mensuel", max_digits=8, decimal_places=2, blank=True, null=True)
     index = models.PositiveIntegerField("Index", blank=True, null=True)
+    responsibility_bonus = models.PositiveIntegerField("Index", blank=True, null=True)
     number_of_days_holidays = models.PositiveSmallIntegerField(u"Nombre de jours de congés",
                                                                validators=[MinValueValidator(0),
                                                                            MaxValueValidator(37)])
