@@ -102,7 +102,7 @@ def generate_pdf(objects):
         p.drawImage(logo_img, logo_x, logo_y,
                     width=logo_width, height=logo_height)
         # add some text below the logo
-        p.setFont("Helvetica-Bold", 10)
+        p.setFont("Helvetica-Bold", 9)
 
         nurse_name = config.NURSE_NAME
         nurse_code = config.MAIN_NURSE_CODE
@@ -175,7 +175,7 @@ def generate_pdf(objects):
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             # ('FONTNAME', (0,0), (-1,0), 'Courier-Bold'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Times-Roman'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 14),
         ])
         table.setStyle(style)
@@ -229,7 +229,7 @@ def generate_pdf(objects):
 
         table = Table(data, colWidths=240, rowHeights=20)
 
-        p.setFont('Helvetica-Bold', 12)
+        p.setFont('Helvetica-Bold', 9)
 
         # Add borders
         ts = TableStyle(
@@ -265,7 +265,7 @@ def generate_pdf(objects):
 
         # Set up the text style
         text_style = p.beginText()
-        text_style.setFont("Helvetica", 9)
+        text_style.setFont("Helvetica-Bold", 9)
         text_style.setFillColor("black")
 
         # create a text object
