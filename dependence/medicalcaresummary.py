@@ -53,6 +53,8 @@ def parse_xml_using_xmlschema(instance):
     # Get the data from the XML file
     instance.count_of_supported_persons = xml_data['NbPriseEnCharges']
     instance.date_of_submission = xml_data['DateEnvoiPrestataire']
+    # get DateEnvoiPrestataire
+    # instance.date_of_notification_to_provider = datetime.strptime(xml_data['DateEnvoiPrestataire'], '%Y-%m-%d')
     instance.parsing_date = datetime.now()
     instance.force_update = False
     # loop through PriseEnCharge elements
@@ -77,6 +79,7 @@ def parse_xml_using_xmlschema(instance):
         start_of_support = datetime.strptime(prise_en_charge['Decision']['Accord']['DebutPriseEnCharge'], '%Y-%m-%d')
         # get DateDecision
         date_of_decision = datetime.strptime(prise_en_charge['Decision']['Accord']['DateDecision'], '%Y-%m-%d')
+        date_of_notification_to_provider = datetime.strptime(xml_data['DateEnvoiPrestataire'], '%Y-%m-%d')
         # get FinPriseEnCharge if key FinPriseEnCharge exists
         end_of_support = None
         if prise_en_charge['Decision']['Accord'].get('FinPriseEnCharge'):
@@ -103,6 +106,7 @@ def parse_xml_using_xmlschema(instance):
             date_of_notification=date_of_notification,
             plan_number=plan_number,
             decision_number=decision_number,
+            date_of_notification_to_provider=date_of_notification_to_provider,
             level_of_needs=level_of_needs,
             start_of_support=start_of_support,
             date_of_decision=date_of_decision,

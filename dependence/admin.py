@@ -66,16 +66,19 @@ class FilteringPatientsForMedicalCareSummaryPerPatient(SimpleListFilter):
         if value is not None:
             return queryset.filter(patient__id=value)
         return queryset
+
+
 @admin.register(MedicalCareSummaryPerPatient)
 class MedicalCareSummaryPerPatientAdmin(admin.ModelAdmin):
     inlines = [MedicalCareSummaryPerPatientDetailInline, SharedMedicalCareSummaryPerPatientDetailInline]
-    list_display = ('patient', 'date_of_decision', 'referent', 'date_of_evaluation', 'date_of_notification',
+    list_display = ('patient', 'date_of_decision', 'referent', 'date_of_notification_to_provider', 'date_of_evaluation',
+                    'date_of_notification',
                     'plan_number', 'decision_number', 'level_of_needs', 'start_of_support', 'end_of_support',)
     # all fields are readonly
     readonly_fields = ('created_on', 'updated_on', 'patient', 'date_of_request', 'referent', 'date_of_evaluation',
                        'date_of_notification', 'plan_number', 'decision_number', 'level_of_needs', 'start_of_support',
                        'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
-                       'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail')
+                       'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail','date_of_notification_to_provider')
     list_filter = (FilteringPatientsForMedicalCareSummaryPerPatient, 'date_of_decision')
 
     def link_to_declaration_detail(self, instance):
@@ -84,7 +87,8 @@ class MedicalCareSummaryPerPatientAdmin(admin.ModelAdmin):
             patient_id=instance.patient.id).count()))
 
     link_to_declaration_detail.short_description = "Echanges client"
-    #list_filter = (FilteringPatientsForMedicalCareSummaryPerPatient,)
+    # list_filter = (FilteringPatientsForMedicalCareSummaryPerPatient,)
+
 
 @admin.register(MedicalCareSummary)
 class MedicalCareSummaryAdmin(admin.ModelAdmin):
@@ -96,9 +100,10 @@ class DeclarationDetailAdmin(admin.ModelAdmin):
     list_display = ('patient', 'year_of_count', 'month_of_count', 'change_type', 'change_reference', 'change_date')
     # all fields are readonly
     readonly_fields = ('patient', 'year_of_count', 'month_of_count', 'change_type', 'change_reference', 'change_date',
-                       'change_organism_identifier','change_anomaly', 'information',)
+                       'change_organism_identifier', 'change_anomaly', 'information',)
     # cannot delete
     can_delete = False
+
     # cannot add
     def has_add_permission(self, request):
         return False
@@ -106,6 +111,7 @@ class DeclarationDetailAdmin(admin.ModelAdmin):
     # cannot edit
     def has_change_permission(self, request, obj=None):
         return False
+
     # cannot delete and hide delete button
     def has_delete_permission(self, request, obj=None):
         return False
@@ -121,8 +127,8 @@ class DeclarationDetailInline(admin.StackedInline):
 class ChangeDeclarationFileAdmin(admin.ModelAdmin):
     inlines = [DeclarationDetailInline]
     list_display = (
-    'provider_date_of_sending', 'internal_reference', 'generated_xml', 'generated_return_xml', 'created_on',
-    'updated_on')
+        'provider_date_of_sending', 'internal_reference', 'generated_xml', 'generated_return_xml', 'created_on',
+        'updated_on')
     list_filter = ('provider_date_of_sending',)
     readonly_fields = ('created_on', 'updated_on', 'generated_xml', 'sent_to_ftp_server', 'updates_log',)
     actions = ['send_xml_to_ftp']
@@ -313,7 +319,7 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
 
 @admin.register(PatientAnamnesis)
 class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, admin.ModelAdmin):
-    list_display = ('patient', 'display_object_actions_list', )
+    list_display = ('patient', 'display_object_actions_list',)
     autocomplete_fields = ['patient']
 
     object_actions = [
@@ -345,7 +351,8 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
     fieldsets_with_inlines = [
         ('Patient', {
             'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link',
-                       'birth_place', 'contract_start_date', 'contract_end_date', 'contract_signed_date','contract_file',
+                       'birth_place', 'contract_start_date', 'contract_end_date', 'contract_signed_date',
+                       'contract_file',
                        'plan_of_share', 'help_for_cleaning', 'reason_for_dependence', 'anticipated_directives',
                        'anticipated_directives_doc_link',
                        'religious_beliefs',

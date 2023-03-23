@@ -21,6 +21,8 @@ class MedicalCareSummaryPerPatient(models.Model):
     date_of_evaluation = models.DateField(_("Date d'évaluation"))
     # DateNotification
     date_of_notification = models.DateField(_("Date de notification"))
+    # DateEnvoiPrestataire
+    date_of_notification_to_provider = models.DateField(_("Date d'envoi au prestataire"))
     # NoPlan
     plan_number = models.CharField(_("Numéro de plan"), max_length=25)
     # NoDecision
