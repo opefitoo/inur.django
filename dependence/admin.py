@@ -142,6 +142,7 @@ class ChangeDeclarationFileAdmin(admin.ModelAdmin):
 @admin.register(CareOccurrence)
 class CareOccurrenceAdmin(admin.ModelAdmin):
     model = CareOccurrence
+    list_display = ('str_name', 'value')
 
 
 class CarePlanDetailInLine(admin.TabularInline):

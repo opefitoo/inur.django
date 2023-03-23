@@ -35,9 +35,8 @@ from invoices.events import EventType, Event, AssignedAdditionalEmployee, Report
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
-    PrestationInlineFormSet, \
-    PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, InvoiceItemForm, \
-    MedicalPrescriptionForm
+    PrestationInlineFormSet, PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, \
+    InvoiceItemForm, MedicalPrescriptionForm
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
@@ -1037,6 +1036,7 @@ class EventAdmin(admin.ModelAdmin):
     exclude = ('event_type',)
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
+    change_form_template = 'admin/invoices/event_change_form.html'
     list_filter = (SmartEmployeeFilter,)
     inlines = (AssignedAdditionalEmployeeInLine, ReportPictureInLine)
 
@@ -1254,6 +1254,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
     list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees']
     exclude = ('event_type',)
     change_list_template = 'events/calendar.html'
+    change_form_template = 'admin/invoices/event_change_form.html'
     list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'
 

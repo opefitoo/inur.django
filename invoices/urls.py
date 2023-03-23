@@ -166,7 +166,11 @@ urlpatterns += [
     re_path("select2/", include("django_select2.urls")),
     # … other patterns
 ]
-# if settings.DEBUG:
+
+urlpatterns += [
+    re_path('ajax/load-careplans/', api.views.load_care_plans, name='ajax_load_care_plans'),
+]
+    # if settings.DEBUG:
 #     import debug_toolbar
 #
 #     urlpatterns += [

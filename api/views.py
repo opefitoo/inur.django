@@ -2,7 +2,7 @@ import json
 
 from constance import config
 from django.contrib.auth.models import User, Group
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils.datetime_safe import datetime
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.decorators import api_view
@@ -19,6 +19,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
     FullCalendarEmployeeSerializer, FullCalendarPatientSerializer
 from api.utils import get_settings
+from dependence.careplan import CarePlanDetail
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation, \
@@ -168,6 +169,19 @@ class PatientAnamnesisViewSet(viewsets.ModelViewSet):
     queryset = PatientAnamnesis.objects.all()
     serializer_class = PatientAnamnesisSerializer
 
+
+
+def load_care_plans(request):
+    patient_id = request.GET.get('patient')
+    event_type = request.GET.get('event_type')
+    if event_type != EventTypeEnum.ASS_DEP.value:
+        return JsonResponse([], safe=False)
+    care_plans = CarePlanDetail.objects.filter(care_plan_to_master__patient_id__exact=patient_id).order_by('time_start')
+    # build a list of dictionaries with the care plan id and string representation
+    care_plan_list = []
+    for care_plan in care_plans:
+        care_plan_list.append({'id': care_plan.id, 'name': str(care_plan)})
+    return JsonResponse(care_plan_list, safe=False)
 
 class GenericEmployeeEventList(generics.ListCreateAPIView):
     queryset = Event.objects.all()
