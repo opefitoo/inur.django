@@ -96,7 +96,39 @@ class CarePlanMaster(models.Model):
 
 
 class CareOccurrence(models.Model):
+    class Meta:
+        ordering = ['value']
+        verbose_name = u"Occurence des soins"
+        verbose_name_plural = u"Occurences"
+        
     str_name = models.CharField('Nom', max_length=50)
+    value = models.CharField('Valeur', max_length=5, default="?")
+
+    # validate that there is only one occurrence with the same value
+    def clean(self):
+        exclude = []
+        super(CareOccurrence, self).clean_fields(exclude)
+        messages = self.validate(self, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    @staticmethod
+    def validate(instance, data):
+        result = {}
+        result.update(CareOccurrence.unique_care_occurrence_value(instance, data))
+        return result
+
+    @staticmethod
+    def unique_care_occurrence_value(instance, data):
+        messages = {}
+        conflicts_count = CarePlanDetail.objects.filter(
+            params_occurrence__value=data['value']). \
+            exclude(pk=instance.id).count()
+        if 0 < conflicts_count:
+            messages.update({'value':
+                                 "Il existe déjà un avec le numéro %s et ce patient dans le système" % data[
+                                     'value']})
+        return messages
 
     def __str__(self):
         return self.str_name
@@ -107,7 +139,7 @@ class CarePlanDetail(models.Model):
         ordering = ['id']
         verbose_name = u"Détail"
         verbose_name_plural = u"Détails"
-
+    name = models.CharField('Nom', max_length=50)
     params_occurrence = models.ManyToManyField(CareOccurrence,
                                                related_name="from_careplan_detail_to_occurence+",
                                                verbose_name="Occurence")
@@ -123,5 +155,10 @@ class CarePlanDetail(models.Model):
     care_plan_to_master = models.ForeignKey(CarePlanMaster, related_name="care_plan_detail_to_master",
                                             on_delete=models.CASCADE, null=True, blank=True, default=None)
 
+    def days_of_week(self):
+        # return as a list the value of the CareOccurrence object
+        return [x.value for x in self.params_occurrence.all()]
+
     def __str__(self):
-        return "%s à %s" % (self.time_start, self.time_end)
+        # name et time start et end
+        return "%s - %s - %s" % (self.name, self.time_start, self.time_end)
