@@ -71,15 +71,16 @@ class FilteringPatientsForMedicalCareSummaryPerPatient(SimpleListFilter):
 @admin.register(MedicalCareSummaryPerPatient)
 class MedicalCareSummaryPerPatientAdmin(admin.ModelAdmin):
     inlines = [MedicalCareSummaryPerPatientDetailInline, SharedMedicalCareSummaryPerPatientDetailInline]
-    list_display = ('patient', 'date_of_decision', 'referent', 'date_of_notification_to_provider', 'date_of_evaluation',
-                    'date_of_notification',
-                    'plan_number', 'decision_number', 'level_of_needs', 'start_of_support', 'end_of_support',)
+    list_display = ('patient', 'date_of_decision', 'date_of_notification_to_provider', 'level_of_needs', 'start_of_support', 'end_of_support','is_latest_plan')
     # all fields are readonly
     readonly_fields = ('created_on', 'updated_on', 'patient', 'date_of_request', 'referent', 'date_of_evaluation',
                        'date_of_notification', 'plan_number', 'decision_number', 'level_of_needs', 'start_of_support',
                        'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
                        'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail','date_of_notification_to_provider')
     list_filter = (FilteringPatientsForMedicalCareSummaryPerPatient, 'date_of_decision')
+    def is_latest_plan(self, obj):
+        return obj.is_latest_plan
+    is_latest_plan.boolean = True
 
     def link_to_declaration_detail(self, instance):
         url = f'{reverse("admin:dependence_declarationdetail_changelist")}?patient__id={instance.patient.id}'

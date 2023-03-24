@@ -6,7 +6,6 @@ from invoices.models import Patient
 
 
 class MedicalCareSummaryPerPatient(models.Model):
-
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
@@ -55,6 +54,16 @@ class MedicalCareSummaryPerPatient(models.Model):
 
     def __str__(self):
         return "Synthèse de prise en charge du patient {0}".format(self.patient)
+    @property
+    def is_latest_plan(self):
+        # if self has most recent date_of_notification_to_provider then return True
+        # else return False
+        if self.date_of_notification_to_provider == MedicalCareSummaryPerPatient.objects.filter(
+                patient=self.patient).latest('date_of_notification_to_provider').date_of_notification_to_provider:
+            return True
+        else:
+            return False
+
 
 
 # model Prestatations
@@ -62,6 +71,7 @@ class MedicalCareSummaryPerPatientDetail(models.Model):
     class Meta:
         verbose_name = _("Prestation Prestataire")
         verbose_name_plural = _("Prestations Prestataire")
+
     # Fields
     # field patient
     # one to one relation to LongTermCareItem
@@ -78,6 +88,7 @@ class MedicalCareSummaryPerPatientDetail(models.Model):
         ('W', _('Weekly')),
         ('M', _('Monthly')),
         ('A', _('Annually')),))
+
     def __str__(self):
         # code de l'acte / fréquence / périodicité
         return " {0} / {1} / {2}".format(self.item.code, self.number_of_care, self.periodicity)
