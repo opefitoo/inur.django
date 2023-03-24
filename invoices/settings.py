@@ -367,3 +367,17 @@ if os.environ.get("SENTRY_DSN", None):
 #     #     # django.contrib.auth) you may enable sending PII data.
 #     send_default_pii=True
 # )
+
+DJANGO_ADMIN_COLOR = os.environ.get('DJANGO_ADMIN_COLOR', None)
+DJANGO_ADMIN_SECONDARY_COLOR = os.environ.get('DJANGO_ADMIN_SECONDARY_COLOR', None)
+
+# Set the Django admin color
+if DJANGO_ADMIN_COLOR:
+    ADMIN_COLOR = DJANGO_ADMIN_COLOR
+    ADMIN_CSS = f"{BASE_DIR}/static/admin/css/base.css"
+    with open(ADMIN_CSS, 'r') as f:
+        content = f.read()
+    content = content.replace('#79aec8', ADMIN_COLOR)
+    content = content.replace('#417690', DJANGO_ADMIN_SECONDARY_COLOR)
+    with open(ADMIN_CSS, 'w') as f:
+        f.write(content)
