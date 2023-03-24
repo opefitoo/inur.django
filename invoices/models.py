@@ -2,9 +2,9 @@
 import base64
 import logging
 import os
+import uuid
 from copy import deepcopy
 from datetime import datetime
-from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 import requests
@@ -12,6 +12,7 @@ from constance import config
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
+from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
@@ -449,6 +450,8 @@ class Hospitalization(models.Model):
 
 def update_medical_prescription_filename(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
+    # get the storage backend for the file field
+    storage = default_storage
     if instance.date is None:
         _current_yr_or_prscr_yr = now().date().strftime('%Y')
         _current_month_or_prscr_month = now().date().strftime('%M')
@@ -457,11 +460,21 @@ def update_medical_prescription_filename(instance, filename):
         _current_month_or_prscr_month = str(instance.date.month)
     path = os.path.join("Medical Prescription", _current_yr_or_prscr_yr,
                         _current_month_or_prscr_month)
-    uuid = str(uuid4())
+
+    #uuid = str(uuid4())
     filename = '%s_pour_%s_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
                                           str(instance.date), uuid, file_extension)
-
-    return os.path.join(path, filename)
+    # rewrite filename using f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{uuid}{file_extension}"
+    filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}.{file_extension}"
+    filepath = os.path.join(path, filename)
+    if storage.exists(filepath):
+        # if it does, generate a unique identifier and append it to the filename
+        unique_id = uuid.uuid4().hex
+        new_filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{unique_id}.{file_extension}"
+        filepath = os.path.join(path, new_filename)
+        return filepath
+    else:
+        return filepath
 
 
 def validate_image(image):
