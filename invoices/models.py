@@ -575,13 +575,14 @@ class MedicalPrescription(models.Model):
 
     @staticmethod
     def autocomplete_search_fields():
-        return 'date', 'prescriptor__name', 'prescriptor__first_name'
+        return 'date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name', \
+            'prescriptor__provider_code'
 
     def __str__(self):
         if bool(self.file_upload):
             return '%s %s (%s) [%s...]' % (
                 self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
-                self.file_upload.name[:5])
+                self.notes.replace('\n','-').replace(' ','-')[:10])
         else:
             return '%s %s (%s) sans fichier' % (
                 self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
