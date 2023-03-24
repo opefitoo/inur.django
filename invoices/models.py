@@ -461,7 +461,7 @@ def update_medical_prescription_filename(instance, filename):
     path = os.path.join("Medical Prescription", _current_yr_or_prscr_yr,
                         _current_month_or_prscr_month)
 
-    #uuid = str(uuid4())
+    # uuid = str(uuid4())
     filename = '%s_pour_%s_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
                                           str(instance.date), uuid, file_extension)
     # rewrite filename using f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{uuid}{file_extension}"
@@ -579,13 +579,10 @@ class MedicalPrescription(models.Model):
             'prescriptor__provider_code'
 
     def __str__(self):
-        if bool(self.file_upload):
-            return '%s %s (%s) [%s...]' % (
-                self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
-                self.notes.replace('\n','-').replace(' ','-')[:10])
-        else:
-            return '%s %s (%s) sans fichier' % (
-                self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date)
+        return 'Dr. %s %s (%s) pour %s [%s...]' % (
+            self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
+            self.patient.name.strip(),
+            self.notes.replace('\n', '-').replace(' ', '-')[:10])
 
 
 def update_patient_admin_filename(instance, filename):
