@@ -76,7 +76,7 @@ def get_fall_incontinences_display(fall_incontinences_as_str):
     return ''
 
 
-def generate_pdf(objects):
+def generate_pdf_fall_declaration(objects):
     # Create a new PDF object
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
