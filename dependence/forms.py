@@ -1,32 +1,45 @@
 from django import forms
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.exceptions import ValidationError
 from django.core.validators import EMPTY_VALUES
-from django.forms import BaseInlineFormSet, ModelMultipleChoiceField, SelectMultiple
+from django.forms import BaseInlineFormSet, ModelMultipleChoiceField, CheckboxSelectMultiple
 from django.utils.translation import gettext_lazy as _
 
-from dependence.careplan import CarePlanDetail
+from dependence.careplan import CarePlanDetail, CareOccurrence
+from dependence.detailedcareplan import MedicalCareSummaryPerPatientDetail
 from dependence.enums.falldeclaration_enum import FallCircumstances, FallCognitiveMoodDiorders, FallConsequences, \
     FallIncontinences, FallRequiredMedicalActs
 from dependence.falldeclaration import FallDeclaration
 from dependence.longtermcareitem import LongTermCareItem
-from invoices.employee import JobPosition
 
 
-class CarePlanDetailForm(forms.ModelForm):
+class CarePlanDetailForm(BaseInlineFormSet):
     long_term_care_items = ModelMultipleChoiceField(
-        queryset=LongTermCareItem.objects.all(),
-        widget=SelectMultiple,
-        required=False
+        queryset=LongTermCareItem.objects.none(),
+        widget=FilteredSelectMultiple(_('Codes Assurance dépendance'), True),
+        required=False,
     )
 
-    req_skills = ModelMultipleChoiceField(
-        queryset=JobPosition.objects.filter(is_involved_in_health_care=True),
-        widget=SelectMultiple,
-        required=False
+    params_occurrence = ModelMultipleChoiceField(
+        queryset=CareOccurrence.objects.all(),
+        widget=CheckboxSelectMultiple,
+        required=True,
     )
     class Meta:
         model = CarePlanDetail
         fields = '__all__'
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        medical_care_summary_per_patient = self.instance.medical_care_summary_per_patient
+        if medical_care_summary_per_patient:
+            for form in self.forms:
+                # get all LongTermCareItem for the current medical_care_summary_per_patient
+                initial = MedicalCareSummaryPerPatientDetail.objects.filter(
+                    medical_care_summary_per_patient=medical_care_summary_per_patient).values_list('item', flat=True)
+                form.fields['long_term_care_items'].queryset = LongTermCareItem.objects.filter(pk__in=initial)
+        else:
+            for form in self.forms:
+                form.fields['long_term_care_items'].queryset = LongTermCareItem.objects.none()
 
 class TypeDescriptionGenericInlineFormset(BaseInlineFormSet):
 
@@ -55,12 +68,12 @@ class TensionAndTemperatureParametersFormset(BaseInlineFormSet):
                 if 'params_date_time' in row and row['params_date_time'] and not row['DELETE']:
                     self.validate_periods(rowindex, self.data['params_month'], self.data['params_year'], row)
 
-
     @staticmethod
     def validate_saturation(rowindex, data):
         is_valid = (100 >= data['oximeter_saturation'] > 0) or data['oximeter_saturation'] is None
         if not is_valid:
-            raise ValidationError("Ligne %s : Valeure incorrecte pour la saturation - doit être entre 0 et 100" % rowindex)
+            raise ValidationError(
+                "Ligne %s : Valeure incorrecte pour la saturation - doit être entre 0 et 100" % rowindex)
 
     @staticmethod
     def validate_periods(rowindex, month, year, data):
@@ -68,29 +81,31 @@ class TensionAndTemperatureParametersFormset(BaseInlineFormSet):
         if not is_valid:
             raise ValidationError("Ligne %d : Date doit être dans le mois %s de l'année %s" % (rowindex, month, year))
 
+
 class FallDeclarationForm(forms.ModelForm):
     class Meta:
         model = FallDeclaration
         exclude = ()
         fields = (
-                'fall_consequences',
-                'fall_required_medical_acts',
-                'fall_cognitive_mood_diorders',
-                'fall_incontinences',
-            )
-        
+            'fall_consequences',
+            'fall_required_medical_acts',
+            'fall_cognitive_mood_diorders',
+            'fall_incontinences',
+        )
+
     fall_consequences = forms.MultipleChoiceField(choices=FallConsequences.choices,
-                 widget=forms.CheckboxSelectMultiple(),
-                 required = False,)    
-    fall_required_medical_acts = forms.MultipleChoiceField(choices=FallRequiredMedicalActs.choices, 
-                widget=forms.CheckboxSelectMultiple(),
-                required = False, )
+                                                  widget=forms.CheckboxSelectMultiple(),
+                                                  required=False, )
+    fall_required_medical_acts = forms.MultipleChoiceField(choices=FallRequiredMedicalActs.choices,
+                                                           widget=forms.CheckboxSelectMultiple(),
+                                                           required=False, )
     fall_cognitive_mood_diorders = forms.MultipleChoiceField(choices=FallCognitiveMoodDiorders.choices,
-                widget=forms.CheckboxSelectMultiple(),
-                required = False,)
+                                                             widget=forms.CheckboxSelectMultiple(),
+                                                             required=False, )
     fall_incontinences = forms.MultipleChoiceField(choices=FallIncontinences.choices,
-                widget=forms.CheckboxSelectMultiple(),
-                required = False,)
+                                                   widget=forms.CheckboxSelectMultiple(),
+                                                   required=False, )
+
     def clean(self):
         fall_circumstance = self.cleaned_data.get('fall_circumstance', None)
         activity_name = self.cleaned_data.get('other_fall_circumstance', None)
@@ -109,4 +124,4 @@ class FallDeclarationForm(forms.ModelForm):
         super(FallDeclarationForm, self).__init__(*args, **kwargs)
         for field in self.declared_fields:
             if field in self.initial.keys():
-                 self.initial[field] = eval(self.initial[field]) 
+                self.initial[field] = eval(self.initial[field])

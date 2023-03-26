@@ -11,4 +11,4 @@ class LongTermCareItem(models.Model):
         verbose_name = "Acte d'assurance dépendance"
         verbose_name_plural = "Actes d'assurance dépendance"
     def __str__(self):
-        return self.code
+        return f"{self.code} - {self.description}"

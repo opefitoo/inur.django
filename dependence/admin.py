@@ -3,10 +3,11 @@ from datetime import timezone
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Count, ManyToManyField
-from django.forms import ModelMultipleChoiceField, CheckboxSelectMultiple
+from django.db.models import Count
+from django.forms import ModelMultipleChoiceField
 from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -155,16 +156,15 @@ class CareOccurrenceAdmin(admin.ModelAdmin):
 class CarePlanDetailInLine(admin.TabularInline):
     extra = 0
     model = CarePlanDetail
-    form = CarePlanDetailForm
-    params_occurrence = ModelMultipleChoiceField(widget=CheckboxSelectMultiple(), queryset=CareOccurrence.objects.all(),
+    formset = CarePlanDetailForm
+    params_occurrence = ModelMultipleChoiceField(queryset=CareOccurrence.objects.all(),
                                                  required=True)
-
-    formfield_overrides = {
-        ManyToManyField: {'widget': CheckboxSelectMultiple},
-    }
-
-    # fields = ('params_day_of_week',
-    #           'time_start', 'time_end', 'care_actions')
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "long_term_care_items":
+            kwargs["widget"] = FilteredSelectMultiple(
+            db_field.verbose_name, True,
+        )
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
 class FilteringPatients(SimpleListFilter):
@@ -212,6 +212,7 @@ class CarePlanMasterAdmin(admin.ModelAdmin):
     inlines = [CarePlanDetailInLine]
     autocomplete_fields = ['patient']
 
+
     def pdf_action(self, request, queryset):
         try:
             return generate_pdf(queryset)
@@ -222,7 +223,7 @@ class CarePlanMasterAdmin(admin.ModelAdmin):
     pdf_action.short_description = "Imprimer"
 
     actions = [pdf_action]
-    readonly_fields = ('user', 'created_on', 'updated_on')
+    readonly_fields = ('user', 'created_on', 'updated_on', 'display_plan_concordance')
 
 
 class AssignedPhysicianInLine(admin.TabularInline):
