@@ -51,7 +51,7 @@ django-admin-search==0.3.12
 # googlemaps
 django-admin-object-actions
 # django-crispy-forms==1.11.2
-redis==4.3.3
+redis==4.5.3
 oauthlib==3.2.2
 asgiref==3.6.0
 django-storages==1.13.1
