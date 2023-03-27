@@ -349,7 +349,7 @@ def generate_pdf_fall_declaration(objects):
             data.append(chunk)
 
         if f_other_fall_consequence:
-            data.append([f" •  {f_other_fall_consequence}"])
+            data.append([f" Autres conséquences :   {f_other_fall_consequence}"])
         # -----------------------------------------------------------------
         cell_width = 0.1*inch
         cell_height = 0.1*inch
@@ -417,7 +417,7 @@ def generate_pdf_fall_declaration(objects):
             data.append(chunk)
 
         if fall_other_required_medical_act:
-            data.append([f" •  {fall_other_required_medical_act}"])
+            data.append([f" Autres actes médicaux :   {fall_other_required_medical_act}"])
 
         # ------------------------------------------------------------------
 
@@ -637,9 +637,9 @@ def generate_pdf_fall_declaration(objects):
         # Close the PDF object cleanly, and we're done.
         # Pagination
 
-        page_num = p.getPageNumber()
-        text = "page %s" % page_num
-        p.drawString(300, 20, text)
+        # page_num = p.getPageNumber()
+        # text = "page %s" % page_num
+        # p.drawString(300, 20, text)
 
         # Move to the next page For other patient
         p.showPage()
