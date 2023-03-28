@@ -374,7 +374,7 @@ if DJANGO_ADMIN_COLOR:
     ADMIN_CSS = f"{BASE_DIR}/static/admin/css/base.css"
     with open(ADMIN_CSS, 'r') as f:
         content = f.read()
-    content = content.replace('#79aec8', ADMIN_COLOR)
-    content = content.replace('#417690', DJANGO_ADMIN_SECONDARY_COLOR)
+    content = content.replace('--primary: #79aec8', '--primary: ' + ADMIN_COLOR)
+    content = content.replace('--secondary: #417690', '--secondary: ' + DJANGO_ADMIN_SECONDARY_COLOR)
     with open(ADMIN_CSS, 'w') as f:
         f.write(content)
