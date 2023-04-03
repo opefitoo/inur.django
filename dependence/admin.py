@@ -1,7 +1,15 @@
 from datetime import timezone
 
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
+from dependence.print_fall_declaration  import generate_pdf_fall_declaration
 from django.contrib import admin
+from django.http import HttpResponse
+# report lab library
+from django.utils.translation import gettext as _
+from reportlab.pdfgen import canvas
+
+
+
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.checks import messages
@@ -12,11 +20,12 @@ from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from fieldsets_with_inlines import FieldsetsInlineMixin
+from dependence.careplan_pdf import generate_pdf
+
 from reportlab.pdfgen import canvas
 
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
-from dependence.careplan_pdf import generate_pdf
 from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetail
 from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCareSummaryPerPatientDetail, \
     SharedMedicalCareSummaryPerPatientDetail
@@ -548,13 +557,23 @@ class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     object_actions = [
         {
             'slug': 'print_fall_declaration',
-            'verbose_name': 'Imprimer',
+            'verbose_name': _('Print'),
             'form_method': 'GET',
             'view': 'print_fall_declaration',
         },
     ]
-
+    
     def print_fall_declaration(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'falldeclaration/print_fall_declaration.html', {'obj': obj})
+    
+    ######################   create Django action for printing foc as PDF file
+    
+    actions = ['print_document']
+    
+    def print_document(self, request, queryset):
+        response = generate_pdf_fall_declaration(queryset)
+        return response
+    
+    print_document.short_description = _("Print selected objects as PDF")
