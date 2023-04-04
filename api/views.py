@@ -79,6 +79,13 @@ class PatientViewSet(viewsets.ModelViewSet):
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
 
+class DependantPatientViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows Patients to be viewed.
+    """
+    queryset = Patient.objects.filter(is_dependant=True)
+    serializer_class = PatientSerializer
+
 
 class PhysicianViewSet(viewsets.ModelViewSet):
     """
@@ -86,6 +93,14 @@ class PhysicianViewSet(viewsets.ModelViewSet):
     """
     queryset = Physician.objects.all()
     serializer_class = PhysicianSerializer
+
+class EmployeeSerializerViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows Employees to be viewed.
+    """
+
+    queryset = Employee.objects.filter(occupation__is_involved_in_health_care=True).order_by("start_contract")
+    serializer_class = EmployeeSerializer
 
 
 class PrestationViewSet(viewsets.ModelViewSet):
