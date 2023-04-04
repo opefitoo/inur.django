@@ -83,7 +83,7 @@ class DependantPatientViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Patients to be viewed.
     """
-    queryset = Patient.objects.filter(is_dependant=True)
+    queryset = Patient.objects.filter(is_under_dependence_insurance=True)
     serializer_class = PatientSerializer
 
 
