@@ -7,6 +7,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from dependence.careplan import CarePlanMaster, CarePlanDetail
+from dependence.invoicing import LongTermCareInvoiceFile
 from dependence.models import PatientAnamnesis, AssignedPhysician
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail
 from invoices.events import EventType, Event
@@ -381,3 +382,9 @@ class CarePlanMasterSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarePlanMaster
         fields = ['patient', 'plan_number', 'plan_start_date', 'care_plan_detail_to_master']
+
+
+class LongTermCareInvoiceFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LongTermCareInvoiceFile
+        fields = '__all__'

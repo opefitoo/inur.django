@@ -17,9 +17,10 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
-    FullCalendarEmployeeSerializer, FullCalendarPatientSerializer
+    FullCalendarEmployeeSerializer, FullCalendarPatientSerializer, LongTermCareInvoiceFileSerializer
 from api.utils import get_settings
 from dependence.careplan import CarePlanDetail, CarePlanMaster
+from dependence.invoicing import LongTermCareInvoiceFile
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation, \
@@ -119,6 +120,20 @@ class PatientCarePlanView(generics.ListCreateAPIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Patient.DoesNotExist:
             return Response({'error': 'Patient not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+class LongTermCareInvoiceFileView(generics.ListCreateAPIView):
+    queryset = LongTermCareInvoiceFile.objects.all()
+    serializer_class = LongTermCareInvoiceFileSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PrestationViewSet(viewsets.ModelViewSet):
