@@ -24,6 +24,7 @@ router.register(r'patient-anamnesis', views.PatientAnamnesisViewSet)
 router.register(r'events-types', views.EventTypeViewSet)
 router.register(r'employee', views.EmployeeSerializerViewSet)
 router.register(r'caregivers', views.EmployeeSerializerViewSet)
+router.register(r'longtermcare-invoice', views.LongTermCareInvoiceFileViewSet)
 # router.register(r'events', views.EventViewSet)
 
 urlpatterns = [

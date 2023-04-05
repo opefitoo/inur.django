@@ -124,16 +124,22 @@ class PatientCarePlanView(generics.ListCreateAPIView):
 
 
 
-class LongTermCareInvoiceFileView(generics.ListCreateAPIView):
+# class LongTermCareInvoiceFileView(generics.ListCreateAPIView):
+#     queryset = LongTermCareInvoiceFile.objects.all()
+#     serializer_class = LongTermCareInvoiceFileSerializer
+#
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.serializer_class(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LongTermCareInvoiceFileViewSet(viewsets.ModelViewSet):
     queryset = LongTermCareInvoiceFile.objects.all()
     serializer_class = LongTermCareInvoiceFileSerializer
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PrestationViewSet(viewsets.ModelViewSet):

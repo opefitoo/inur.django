@@ -7,7 +7,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from dependence.careplan import CarePlanMaster, CarePlanDetail
-from dependence.invoicing import LongTermCareInvoiceFile
+from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceItem
+from dependence.longtermcareitem import LongTermCareItem
 from dependence.models import PatientAnamnesis, AssignedPhysician
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail
 from invoices.events import EventType, Event
@@ -31,13 +32,14 @@ class EmployeeAvatarSerializer(serializers.ModelSerializer):
         depth = 1
 
 
-
 class FullCalendarEmployeeSerializer(serializers.ModelSerializer):
     user = UserSerializer()
+
     class Meta:
         model = Employee
         fields = ('id', 'abbreviation', 'user')
         depth = 1
+
 
 class EmployeeSerializer(serializers.ModelSerializer):
     user = UserSerializer()
@@ -111,7 +113,7 @@ class AssignedPhysician(serializers.ModelSerializer):
 
 
 class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
-    #anamnesis_set = PatientAnamnesisSerializer(required=False)
+    # anamnesis_set = PatientAnamnesisSerializer(required=False)
     anamnesis_set = serializers.SerializerMethodField()
     birth_date = serializers.SerializerMethodField()
     full_address = serializers.CharField(required=False)
@@ -137,7 +139,6 @@ class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
     def get_birth_date(self, obj):
         # get extracted birth date from patient and serialize it as a date
         return extract_birth_date_iso(obj.code_sn)
-
 
     class Meta:
         model = Patient
@@ -278,10 +279,13 @@ class EventSerializer(serializers.ModelSerializer):
             )
         ]
 
+
 class FullCalendarPatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = ['id', 'name', 'first_name']
+
+
 class FullCalendarEventSerializer(serializers.ModelSerializer):
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
@@ -349,6 +353,7 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
                 description += "    " + str(obj.state)
                 print("state not in STATES dictionary: %s and id: %s" % (obj.state, obj.id))
         return description + "(%s)" % obj.id
+
     # resource id is the id of the employee
     def get_resourceId(self, obj):
         if obj.employees is None:
@@ -384,7 +389,52 @@ class CarePlanMasterSerializer(serializers.ModelSerializer):
         fields = ['patient', 'plan_number', 'plan_start_date', 'care_plan_detail_to_master']
 
 
+class LongTermCareInvoiceItemSerializer(serializers.ModelSerializer):
+    long_term_care_item = serializers.CharField()
+
+    class Meta:
+        model = LongTermCareInvoiceItem
+        fields = ('item_date', 'status', 'long_term_care_item',)
+
+
+#
+#     def create(self, validated_data):
+#         long_term_care_item_code = validated_data.pop('long_term_care_item')
+#         long_term_care_item_code_instance = LongTermCareItem.objects.get(code=long_term_care_item_code)
+#         long_term_care_invoice_item = LongTermCareInvoiceItem.objects.create(long_term_care_item=long_term_care_item_code_instance,
+#                                                                              assigned_employee=Employee.objects.get(id=1),
+#                                                                              **validated_data)
+#         return long_term_care_invoice_item
+
+
 class LongTermCareInvoiceFileSerializer(serializers.ModelSerializer):
+    invoice = LongTermCareInvoiceItemSerializer(many=True)
+
+    # long_term_care_item = serializers.CharField()
+
     class Meta:
         model = LongTermCareInvoiceFile
         fields = '__all__'
+
+    def create(self, validated_data):
+        invoice_data = validated_data.pop('invoice')
+        invoice_items = []
+        invoice_file = LongTermCareInvoiceFile.objects.create(**validated_data)
+
+        for item_data in invoice_data:
+            long_term_care_item_code = item_data.pop('long_term_care_item')
+            long_term_care_item_code_instance = LongTermCareItem.objects.get(code=long_term_care_item_code)
+            long_term_care_invoice_item = LongTermCareInvoiceItem.objects.create(
+                long_term_care_item=long_term_care_item_code_instance,
+                assigned_employee=Employee.objects.get(id=1),
+                invoice=invoice_file, **item_data)
+        return invoice_file
+
+            # serializer = LongTermCareInvoiceItemSerializer(data=item_data)
+            # serializer.is_valid(raise_exception=True)
+            # invoice_items.append(serializer.save())
+
+        invoice = LongTermCareInvoiceFile.objects.create(**validated_data)
+        invoice.invoice.set(invoice_items)
+
+        return invoice

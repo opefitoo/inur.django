@@ -1,14 +1,10 @@
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
-from dependence.helpers import generate_invoice_file
 from dependence.longtermcareitem import LongTermCareItem
 from invoices.employee import Employee
 from invoices.models import Patient
-from invoices.notifications import notify_system_via_google_webhook
 
 
 # décompte mensuel de factures
@@ -93,10 +89,11 @@ class LongTermCareInvoiceItem(models.Model):
         verbose_name_plural = _("Lignes de facture assurance dépendance")
 
 
-@receiver(post_save, sender=LongTermCareInvoiceFile, dispatch_uid="generate_invoice_file_and_notify_via_chat_5QH9cN")
-def parse_xml_and_notify_via_chat(sender, instance, **kwargs):
-    message = "Le fichier de facture %s a été mis à jour." % instance.generated_invoice_file
-    if instance.force_regeneration:
-        generate_invoice_file(instance)
-        notify_system_via_google_webhook(message)
-        return
+# @receiver(post_save, sender=LongTermCareInvoiceFile, dispatch_uid="generate_invoice_file_and_notify_via_chat_5QH9cN")
+# def parse_xml_and_notify_via_chat(sender, instance, **kwargs):
+#     if instance.generated_invoice_file:
+#         message = "Le fichier de facture %s a été mis à jour." % instance.generated_invoice_file
+#     if instance.force_regeneration:
+#         generate_invoice_file(instance)
+#         notify_system_via_google_webhook(message)
+#         return
