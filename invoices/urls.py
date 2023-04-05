@@ -170,6 +170,12 @@ urlpatterns += [
 urlpatterns += [
     re_path('ajax/load-careplans/', api.views.load_care_plans, name='ajax_load_care_plans'),
 ]
+
+
+urlpatterns += [
+    re_path(r'^api/v1/dependant-patients/(?P<patient_id>\d+)/careplan/$', api.views.PatientCarePlanView.as_view(), name='patient-careplan'),
+]
+
     # if settings.DEBUG:
 #     import debug_toolbar
 #

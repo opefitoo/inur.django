@@ -19,7 +19,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
     FullCalendarEmployeeSerializer, FullCalendarPatientSerializer
 from api.utils import get_settings
-from dependence.careplan import CarePlanDetail
+from dependence.careplan import CarePlanDetail, CarePlanMaster
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation, \
@@ -54,6 +54,7 @@ class EmployeeAvatarSerializerViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.filter(to_be_published_on_www=True).order_by("start_contract")
     serializer_class = EmployeeAvatarSerializer
 
+
 class GroupViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed.
@@ -79,6 +80,7 @@ class PatientViewSet(viewsets.ModelViewSet):
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
 
+
 class DependantPatientViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Patients to be viewed.
@@ -94,6 +96,7 @@ class PhysicianViewSet(viewsets.ModelViewSet):
     queryset = Physician.objects.all()
     serializer_class = PhysicianSerializer
 
+
 class EmployeeSerializerViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Employees to be viewed.
@@ -101,6 +104,21 @@ class EmployeeSerializerViewSet(viewsets.ModelViewSet):
 
     queryset = Employee.objects.filter(occupation__is_involved_in_health_care=True).order_by("start_contract")
     serializer_class = EmployeeSerializer
+
+
+class PatientCarePlanView(generics.ListCreateAPIView):
+    queryset = CarePlanMaster.objects.all()
+    serializer_class = CarePlanMasterSerializer
+
+    def get(self, request, patient_id):
+        try:
+            patient = Patient.objects.get(pk=patient_id)
+            care_plans = CarePlanMaster.objects.filter(patient=patient)
+            serializer = self.serializer_class(care_plans, many=True)
+            # Do any additional processing or filtering on the careplan object here
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Patient.DoesNotExist:
+            return Response({'error': 'Patient not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class PrestationViewSet(viewsets.ModelViewSet):
@@ -185,7 +203,6 @@ class PatientAnamnesisViewSet(viewsets.ModelViewSet):
     serializer_class = PatientAnamnesisSerializer
 
 
-
 def load_care_plans(request):
     patient_id = request.GET.get('patient')
     event_type = request.GET.get('event_type')
@@ -197,6 +214,7 @@ def load_care_plans(request):
     for care_plan in care_plans:
         care_plan_list.append({'id': care_plan.id, 'name': str(care_plan)})
     return JsonResponse(care_plan_list, safe=False)
+
 
 class GenericEmployeeEventList(generics.ListCreateAPIView):
     queryset = Event.objects.all()
@@ -227,7 +245,6 @@ class GenericEmployeeEventList(generics.ListCreateAPIView):
         if year is not None:
             self.queryset = self.queryset.filter(day__year=year)
         return self.list(request, *args, **kwargs)
-
 
 
 class FullCalendarEventViewSet(generics.ListCreateAPIView):
@@ -286,6 +303,7 @@ class AvailablePatientList(generics.ListCreateAPIView):
         json_data = json.dumps(serializer.data)
         return HttpResponse(json_data, content_type='application/json')
 
+
 class AvailableEmployeeList(generics.ListCreateAPIView):
     queryset = Employee.objects.all()
     serializer_class = FullCalendarEmployeeSerializer
@@ -309,19 +327,21 @@ class AvailableEmployeeList(generics.ListCreateAPIView):
                                                      request_status=HolidayRequestWorkflowStatus.ACCEPTED)
         # get the list of employees assigned to an event at the same time, must remove current event otherwise it will be
         # removed from the list
-        event_list = Event.objects.filter(day=day, time_start_event__lte=end_time, time_end_event__gte=start_time).exclude(
+        event_list = Event.objects.filter(day=day, time_start_event__lte=end_time,
+                                          time_end_event__gte=start_time).exclude(
             id=self.request.query_params['id'])
         # get the list of employees not on holiday and not assigned to an event at the same time
         # take only employees who still have a contract
         queryset = Employee.objects.exclude(id__in=holiday_list.values_list('employee', flat=True)).exclude(
-                id__in=event_list.values_list('employees', flat=True)).exclude(end_contract__lt=day)
+            id__in=event_list.values_list('employees', flat=True)).exclude(end_contract__lt=day)
         serializer = self.get_serializer(queryset, many=True)
         json_data = json.dumps(serializer.data)
         return HttpResponse(json_data, content_type='application/json')
 
-
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+
+
 class EventList(generics.ListCreateAPIView):
     queryset = Event.objects.all().order_by("day", "time_start_event")
     serializer_class = EventSerializer
@@ -398,6 +418,7 @@ def get_employee_contract_details_by_abbreviation(request):
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+
 @api_view(['POST'])
 def get_patient_details_by_id(request):
     if 'POST' != request.method:
@@ -407,6 +428,7 @@ def get_patient_details_by_id(request):
         return Response(PatientSerializer(patient).data, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['POST'])
 def whois_off(request):
@@ -484,19 +506,20 @@ class EventProcessorView(APIView):
         response = Response(items, status=status.HTTP_200_OK)
         return response
 
+
 class YaleEventProcessorView(APIView):
     def get(self, request, *args, **kw):
-         """
-         Calling api this way: http://localhost:8000/api/v1/yale_events/
-         """
-         employees = Employee.objects.filter(end_contract__isnull=True)
-         items = ""
-         for employee in employees:
-             result = get_door_events_for_employee(employee=employee)
-             items += result
-             break
-         response = Response(items, status=status.HTTP_200_OK)
-         return response
+        """
+        Calling api this way: http://localhost:8000/api/v1/yale_events/
+        """
+        employees = Employee.objects.filter(end_contract__isnull=True)
+        items = ""
+        for employee in employees:
+            result = get_door_events_for_employee(employee=employee)
+            items += result
+            break
+        response = Response(items, status=status.HTTP_200_OK)
+        return response
 
 
 class SettingViewSet(viewsets.ViewSet):
