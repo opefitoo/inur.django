@@ -1,107 +1,102 @@
-from xml.etree.ElementTree import ElementTree
-
-import xmlschema
-from constance import config
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
-from invoices.enums.event import EventTypeEnum
-from invoices.events import Event
+from dependence.helpers import generate_invoice_file
+from dependence.longtermcareitem import LongTermCareItem
+from invoices.employee import Employee
 from invoices.models import Patient
+from invoices.notifications import notify_system_via_google_webhook
 
 
-class LongTermCareInvoiceFile(models.Model):
-
-    # invoice year is positive integer
+# décompte mensuel de factures
+class LongTermCareMonthlyStatement(models.Model):
+    class Meta:
+        verbose_name = _("Décompte mensuel de factures")
+        verbose_name_plural = _("Décomptes mensuels de factures")
     year = models.PositiveIntegerField(_('Year'))
     # invoice month
     month = models.PositiveIntegerField(_('Month'))
-    invoice_sent_date = models.DateField(_('Invoice Sent Date'),  default=timezone.now)
-    generated_invoice_file = models.FileField(_('Generated Invoice File'), )
+    generated_invoice_file = models.FileField(_('Generated Invoice File'), blank=True, null=True)
     force_regeneration = models.BooleanField(_('Force Regeneration'), default=False)
-    generation_report = models.TextField(_('Generation Report'),)
+    # dateEnvoi
+    date_of_submission = models.DateField(_('Date d\'envoi du fichier'), blank=True, null=True)
+    # dateReception
+    generated_invoice_file_response = models.FileField(_('Generated Invoice Response File'), blank=True, null=True)
+    date_of_receipt = models.DateField(_('Date de réception du fichier'), blank=True, null=True)
+
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+    def __str__(self):
+        return f"{self.year} - {self.month}"
+
+
+class LongTermCareInvoiceFile(models.Model):
+    link_to_monthly_statement = models.ForeignKey(LongTermCareMonthlyStatement, on_delete=models.CASCADE,
+                                                  related_name='monthly_statement', blank=True, null=True)
+    # invoice year is positive integer
+    invoice_start_period = models.DateField(_('Invoice Start Period'), )
+    invoice_end_period = models.DateField(_('Invoice End Period'), )
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='patient')
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    # must be linked to a monthly statement that is same period as invoice file
+    def clean(self):
+        if self.link_to_monthly_statement.month != self.invoice_start_period.month:
+            raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
+        if self.link_to_monthly_statement.year != self.invoice_start_period.year:
+            raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
+        if self.link_to_monthly_statement.month != self.invoice_end_period.month:
+            raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
+        if self.link_to_monthly_statement.year != self.invoice_end_period.year:
+            raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
 
     class Meta:
-        unique_together = ('year', 'month')
         verbose_name = _("Facture assurance dépendance")
         verbose_name_plural = _("Factures assurance dépendance")
 
+
     def __str__(self):
-        return "Facture assurance dépendance de {0}/{1}".format(self.month, self.year)
+        return "Facture assurance dépendance de {0}/{1} patient {2}".format(self.invoice_start_period,
+                                                                            self.invoice_end_period,
+                                                                            self.patient)
 
     # on save gather all events for the month and generate the invoice file
-    def save(self, *args, **kwargs):
-        # gather all events for the month
-        all_events = Event.objects.filter(date__year=self.year, date__month=self.month,
-                                          event_type_enum=EventTypeEnum.ASS_DEP,
-                                          state=Event.STATES.DONE)
 
-        # generate invoice file
-        # save invoice file
-        # save invoice file
-        super(LongTermCareInvoiceFile, self).save(*args, **kwargs)
 
-    def generate_xml(self):
-        # generate xml
-        # Load the XSD schema file
-        xsd_schema = xmlschema.XMLSchema('dependence/xsd/ad-fichierfacturation-505.xsd')
-        # create element tree object
-        root = ElementTree.Element("decompteFacturation")
-        # create sub element Type
-        typeDecompte = ElementTree.SubElement(root, "typeDecompte")
-        # create sub element CadreLegal
-        CadreLegal = ElementTree.SubElement(typeDecompte, "CadreLegal")
-        CadreLegal.text = "ASD"
-        # create sub element Layout
-        Layout = ElementTree.SubElement(typeDecompte, "Layout")
-        Layout.text = "1"
-        # create sub element Type
-        Type = ElementTree.SubElement(typeDecompte, "Type")
-        Type.text = "FAC"
-        # create sub element Organisme
-        entete = ElementTree.SubElement(root, "entete")
-        identifiantFacturier = ElementTree.SubElement(entete, "identifiantFacturier")
-        identifiantFacturier.text = config.CODE_PRESTATAIRE
-        # create sub element Organisme
-        organisme = ElementTree.SubElement(entete, "organisme")
-        organisme.text = "19"
-        dateEnvoi = ElementTree.SubElement(entete, "dateEnvoi")
-        dateEnvoi.text = self.invoice_sent_date.strftime("%Y-%m-%d")
-        referenceFichierFacturation = ElementTree.SubElement(entete, "referenceFichierFacturation")
-        referenceFichierFacturation.text = "19" + self.invoice_sent_date.strftime("%Y%m%d")
-        periodeDecompte = ElementTree.SubElement(entete, "periodeDecompte")
-        exercice = ElementTree.SubElement(periodeDecompte, "exercice")
-        exercice.text = str(self.year)
-        mois = ElementTree.SubElement(periodeDecompte, "mois")
-        mois.text = str(self.month)
-        demandeDecompte = ElementTree.SubElement(entete, "demandeDecompte")
-        nombre = ElementTree.SubElement(demandeDecompte, "nombre")
-        devise = ElementTree.SubElement(demandeDecompte, "devise")
-        devise.text = "EUR"
-        montantBrut = ElementTree.SubElement(demandeDecompte, "montantBrut")
-        montantBrut.text = "0"
-        montantNet = ElementTree.SubElement(demandeDecompte, "montantNet")
-        montantNet.text = "0"
-        passages = ["2023-02-28"]
-        i = 0
-        for passage in passages:
-            facture = ElementTree.SubElement(root, "facture")
-            referenceFacture = ElementTree.SubElement(facture, "referenceFacture")
-            referenceFacture.text = "19" + passage.strftime("%Y%m%d")
-            numeroOrdreFacture = ElementTree.SubElement(facture, "numeroOrdreFacture")
-            numeroOrdreFacture.text = str(i)
-            identifiantPersonneProtegee = ElementTree.SubElement(facture, "identifiantPersonneProtegee")
-            identifiantPersonneProtegee.text = passage.person_id
-            dateEtablissementFacture = ElementTree.SubElement(facture, "dateEtablissementFacture")
-            dateEtablissementFacture.text = passage.strftime("%Y-%m-%d")
-            acte = ElementTree.SubElement(facture, "acte")
-            codeTarif = ElementTree.SubElement(acte, "codeTarif")
-            codeTarif.text = "505"
-            #periodePrestation = ElementTree.SubElement(prestation, "periodePrestation")
-        pass
+
+
+class LongTermCareInvoiceItem(models.Model):
+    INVOICE_ITEM_STATUS = (
+        ('DONE', _('Done')),
+        ('NOT_DONE', _('Not Done')),
+        ('CANCELLED', _('Cancelled')),
+    )
+    invoice = models.ForeignKey(LongTermCareInvoiceFile, on_delete=models.CASCADE, related_name='invoice')
+    item_date = models.DateField(_('Item Date'), )
+    long_term_care_item = models.ForeignKey(LongTermCareItem, on_delete=models.CASCADE, related_name='long_term_care_item')
+    assigned_employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='assigned_employee')
+    status = models.CharField(_('Status'), max_length=100, choices=INVOICE_ITEM_STATUS, default='DONE')
+    notes = models.TextField(_('Notes'), blank=True, null=True)
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+    class Meta:
+        verbose_name = _("Ligne de facture assurance dépendance")
+        verbose_name_plural = _("Lignes de facture assurance dépendance")
+
+
+@receiver(post_save, sender=LongTermCareInvoiceFile, dispatch_uid="generate_invoice_file_and_notify_via_chat_5QH9cN")
+def parse_xml_and_notify_via_chat(sender, instance, **kwargs):
+    message = "Le fichier de facture %s a été mis à jour." % instance.generated_invoice_file
+    if instance.force_regeneration:
+        generate_invoice_file(instance)
+        notify_system_via_google_webhook(message)
+        return

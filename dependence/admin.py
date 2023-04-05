@@ -32,6 +32,7 @@ from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCar
 from dependence.falldeclaration import FallDeclaration
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
     TensionAndTemperatureParametersFormset, CarePlanDetailForm
+from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceItem
 from dependence.longtermcareitem import LongTermCareItem
 from dependence.medicalcaresummary import MedicalCareSummary
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
@@ -39,6 +40,13 @@ from dependence.models import AssignedPhysician, ContactPerson, DependenceInsura
 from dependence.pdf.basedata import basedata_view
 from invoices.models import Patient
 
+
+class LongTermCareInvoiceItemInline(admin.TabularInline):
+    model = LongTermCareInvoiceItem
+    extra = 0
+@admin.register(LongTermCareInvoiceFile)
+class LongTermCareInvoiceFileAdmin(admin.ModelAdmin):
+    inlines = [LongTermCareInvoiceItemInline]
 
 @admin.register(LongTermCareItem)
 class LongTermCareItemAdmin(admin.ModelAdmin):
