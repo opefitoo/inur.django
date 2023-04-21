@@ -9,7 +9,7 @@ from rest_framework.authtoken import views as authtoken_views
 import api
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
     get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView, \
-    FullCalendarEventViewSet, AvailableEmployeeList, AvailablePatientList
+    FullCalendarEventViewSet, AvailableEmployeeList, AvailablePatientList, build_payroll_sheet
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
 from invoices.views import delete_prestation, yale_configuration_view
@@ -102,6 +102,10 @@ urlpatterns += [
     re_path(r'^media/(?P<path>.*)$', serve, {
         'document_root': settings.MEDIA_ROOT,
     }),
+]
+
+urlpatterns += [
+    re_path(r'^api/v1/build_payroll_sheet', build_payroll_sheet, name='build_payroll_sheet'),
 ]
 
 urlpatterns += [
