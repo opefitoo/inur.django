@@ -1,8 +1,10 @@
 import json
+from zoneinfo import ZoneInfo
 
 from constance import config
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
 from django.utils.datetime_safe import datetime
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.decorators import api_view
@@ -37,7 +39,7 @@ from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physicia
 from invoices.processors.birthdays import process_and_generate
 from invoices.processors.events import delete_events_created_by_script
 from invoices.processors.timesheets import get_door_events_for_employee
-from invoices.timesheet import Timesheet, TimesheetTask
+from invoices.timesheet import Timesheet, TimesheetTask, SimplifiedTimesheetDetail
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -470,6 +472,38 @@ def which_shift(request):
     if 'POST' == request.method:  # user posting data
         reqs = holidays.which_shift(datetime.strptime(request.data["working_day"], "%Y-%m-%d"))
         return Response(reqs, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def build_payroll_sheet(request):
+    if 'POST' == request.method:
+        # get employee abbreviation
+        employee_abbreviation = request.data.get('employee_abbreviation')
+        # get employee
+        employee = Employee.objects.get(abbreviation=employee_abbreviation)
+        # get date from request
+        date = datetime.strptime(request.data.get('date'), "%Y-%m-%d")
+        # get holiday request for this date and employee
+        holiday_request = HolidayRequest.objects.filter(employee=employee.user, start_date__lte=date, end_date__gte=date).first()
+        if holiday_request:
+            return Response(HolidayRequest.REASONS[holiday_request.reason][1], status=status.HTTP_200_OK)
+        # if there is a holiday request
+        else:
+            #SimplifiedTimesheet.objects.filter(employee=employee, date=date).get()
+            # convert date to django compatible date for object filter
+            # Set the timezone context to "America/Los_Angeles"
+            stdtl = SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee, start_date__year=date.year,
+                                                     start_date__month=date.month,
+                                                     start_date__day=date.day).get()
+            start_time = timezone.now().replace(hour=stdtl.start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour, minute=stdtl.start_date.minute)
+            end_time = timezone.now().replace(hour=stdtl.end_date.hour, minute=stdtl.end_date.minute)
+            # return only hours and minutes
+            # format hours and minutes
+            start_time_str = start_time.strftime("%H:%M")
+            end_time_str = end_time.strftime("%H:%M")
+            # format time delta which is of type datetime.timedelta to hours and minutes
+            return Response("De %s à %s (%s heures)" % (start_time_str, end_time_str, ':'.join(str(stdtl.time_delta()).split(':')[:2])),
+                            status=status.HTTP_200_OK)
+
 
 
 @api_view(['GET'])
