@@ -485,7 +485,7 @@ def build_payroll_sheet(request):
         # get holiday request for this date and employee
         holiday_request = HolidayRequest.objects.filter(employee=employee.user, start_date__lte=date, end_date__gte=date).first()
         if holiday_request:
-            return Response(HolidayRequest.REASONS[holiday_request.reason][1], status=status.HTTP_200_OK)
+            return Response(HolidayRequest.REASONS[holiday_request.reason - 1][1], status=status.HTTP_200_OK)
         # if there is a holiday request
         else:
             #SimplifiedTimesheet.objects.filter(employee=employee, date=date).get()
@@ -494,7 +494,6 @@ def build_payroll_sheet(request):
             if SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee, start_date__year=date.year,
                                                      start_date__month=date.month,
                                                      start_date__day=date.day).exists():
-
                 stdtl = SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee, start_date__year=date.year,
                                                      start_date__month=date.month,
                                                      start_date__day=date.day).get()
@@ -505,7 +504,7 @@ def build_payroll_sheet(request):
                 start_time_str = start_time.strftime("%H:%M")
                 end_time_str = end_time.strftime("%H:%M")
             else:
-                return Response("Pas de prestation pour cette la date %s pour %s" % (employee_abbreviation, date) ,
+                return Response("OFF",
                                 status=status.HTTP_200_OK)
             # format time delta which is of type datetime.timedelta to hours and minutes
             return Response("De %s à %s (%s heures)" % (start_time_str, end_time_str, ':'.join(str(stdtl.time_delta()).split(':')[:2])),
