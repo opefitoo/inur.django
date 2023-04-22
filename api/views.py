@@ -497,8 +497,17 @@ def build_payroll_sheet(request):
                 stdtl = SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee, start_date__year=date.year,
                                                      start_date__month=date.month,
                                                      start_date__day=date.day)
-                if stdtl.count() > 1:
-                    return Response("Plusieurs entrées le %s pour %s" %(date, employee_abbreviation), status=status.HTTP_200_OK)
+                string_to_return = ""
+                for dtl in stdtl:
+
+                    start_time = timezone.now().replace(
+                            hour=stdtl.get().start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
+                            minute=stdtl.get().start_date.minute)
+                    end_time = timezone.now().replace(hour=stdtl.get().end_date.hour,
+                                                          minute=stdtl.get().end_date.minute)
+                    str_delta = ':'.join(str(dtl.time_delta()).split(':')[:2])
+                    string_to_return += "De %s à %s (%s heures) " % (start_time.strftime("%H:%M"), end_time.strftime("%H:%M"), str_delta)
+                    return Response(string_to_return, status=status.HTTP_200_OK)
                 start_time = timezone.now().replace(hour=stdtl.get().start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
                                                     minute=stdtl.get().start_date.minute)
                 end_time = timezone.now().replace(hour=stdtl.get().end_date.hour,
