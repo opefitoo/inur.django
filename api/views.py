@@ -491,15 +491,22 @@ def build_payroll_sheet(request):
             #SimplifiedTimesheet.objects.filter(employee=employee, date=date).get()
             # convert date to django compatible date for object filter
             # Set the timezone context to "America/Los_Angeles"
-            stdtl = SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee, start_date__year=date.year,
+            if SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee, start_date__year=date.year,
+                                                     start_date__month=date.month,
+                                                     start_date__day=date.day).exists():
+
+                stdtl = SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee, start_date__year=date.year,
                                                      start_date__month=date.month,
                                                      start_date__day=date.day).get()
-            start_time = timezone.now().replace(hour=stdtl.start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour, minute=stdtl.start_date.minute)
-            end_time = timezone.now().replace(hour=stdtl.end_date.hour, minute=stdtl.end_date.minute)
-            # return only hours and minutes
-            # format hours and minutes
-            start_time_str = start_time.strftime("%H:%M")
-            end_time_str = end_time.strftime("%H:%M")
+                start_time = timezone.now().replace(hour=stdtl.start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour, minute=stdtl.start_date.minute)
+                end_time = timezone.now().replace(hour=stdtl.end_date.hour, minute=stdtl.end_date.minute)
+                # return only hours and minutes
+                # format hours and minutes
+                start_time_str = start_time.strftime("%H:%M")
+                end_time_str = end_time.strftime("%H:%M")
+            else:
+                return Response("Pas de prestation pour cette la date %s pour %s" % (employee_abbreviation, date) ,
+                                status=status.HTTP_200_OK)
             # format time delta which is of type datetime.timedelta to hours and minutes
             return Response("De %s à %s (%s heures)" % (start_time_str, end_time_str, ':'.join(str(stdtl.time_delta()).split(':')[:2])),
                             status=status.HTTP_200_OK)
