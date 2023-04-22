@@ -499,29 +499,28 @@ def build_payroll_sheet(request):
                                                      start_date__day=date.day)
                 string_to_return = ""
                 for dtl in stdtl:
-
                     start_time = timezone.now().replace(
-                            hour=stdtl.get().start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
-                            minute=stdtl.get().start_date.minute)
-                    end_time = timezone.now().replace(hour=stdtl.get().end_date.hour,
-                                                          minute=stdtl.get().end_date.minute)
+                            hour=dtl.start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
+                            minute=dtl.start_date.minute)
+                    end_time = timezone.now().replace(hour=dtl.end_date.hour,
+                                                          minute=dtl.end_date.minute)
                     str_delta = ':'.join(str(dtl.time_delta()).split(':')[:2])
                     string_to_return += "De %s à %s (%s heures) " % (start_time.strftime("%H:%M"), end_time.strftime("%H:%M"), str_delta)
                     return Response(string_to_return, status=status.HTTP_200_OK)
-                start_time = timezone.now().replace(hour=stdtl.get().start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
-                                                    minute=stdtl.get().start_date.minute)
-                end_time = timezone.now().replace(hour=stdtl.get().end_date.hour,
-                                                  minute=stdtl.get().end_date.minute)
-                # return only hours and minutes
-                # format hours and minutes
-                start_time_str = start_time.strftime("%H:%M")
-                end_time_str = end_time.strftime("%H:%M")
+                # start_time = timezone.now().replace(hour=stdtl.get().start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
+                #                                     minute=stdtl.get().start_date.minute)
+                # end_time = timezone.now().replace(hour=stdtl.get().end_date.hour,
+                #                                   minute=stdtl.get().end_date.minute)
+                # # return only hours and minutes
+                # # format hours and minutes
+                # start_time_str = start_time.strftime("%H:%M")
+                # end_time_str = end_time.strftime("%H:%M")
             else:
                 return Response("OFF",
                                 status=status.HTTP_200_OK)
             # format time delta which is of type datetime.timedelta to hours and minutes
-            return Response("De %s à %s (%s heures)" % (start_time_str, end_time_str, ':'.join(str(stdtl.get().time_delta()).split(':')[:2])),
-                            status=status.HTTP_200_OK)
+            #return Response("De %s à %s (%s heures)" % (start_time_str, end_time_str, ':'.join(str(stdtl.get().time_delta()).split(':')[:2])),
+            #                status=status.HTTP_200_OK)
 
 
 
