@@ -790,6 +790,8 @@ class HolidayRequestAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
         if obj:
             return request.user.is_superuser or (obj.employee.id == request.user.id and not 1 != obj.request_status)
         else:
