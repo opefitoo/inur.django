@@ -499,8 +499,10 @@ def build_payroll_sheet(request):
                                                      start_date__day=date.day)
                 if stdtl.count() > 1:
                     return Response("Plusieurs entrées le %s pour %s" %(date, employee_abbreviation), status=status.HTTP_200_OK)
-                start_time = timezone.now().replace(hour=stdtl.get().start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour, minute=stdtl.start_date.minute)
-                end_time = timezone.now().replace(hour=stdtl.get().end_date.hour, minute=stdtl.end_date.minute)
+                start_time = timezone.now().replace(hour=stdtl.get().start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
+                                                    minute=stdtl.get().start_date.minute)
+                end_time = timezone.now().replace(hour=stdtl.get().end_date.hour,
+                                                  minute=stdtl.get().end_date.minute)
                 # return only hours and minutes
                 # format hours and minutes
                 start_time_str = start_time.strftime("%H:%M")
@@ -509,7 +511,7 @@ def build_payroll_sheet(request):
                 return Response("OFF",
                                 status=status.HTTP_200_OK)
             # format time delta which is of type datetime.timedelta to hours and minutes
-            return Response("De %s à %s (%s heures)" % (start_time_str, end_time_str, ':'.join(str(stdtl.time_delta()).split(':')[:2])),
+            return Response("De %s à %s (%s heures)" % (start_time_str, end_time_str, ':'.join(str(stdtl.get().time_delta()).split(':')[:2])),
                             status=status.HTTP_200_OK)
 
 
