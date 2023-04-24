@@ -70,6 +70,19 @@ class CareCode(models.Model):
                     return v.gross_amount
         return 0
 
+    def gross_amount_date_based(self, date):
+        if date is None:
+            return 0
+        if self.validity_dates.count() == 0:
+            return 0
+        for v in self.validity_dates.all():
+            if date >= v.start_date:
+                if v.end_date is None:
+                    return v.gross_amount
+                elif date <= v.end_date:
+                    return v.gross_amount
+        return 0
+
     def net_amount(self, date, private_patient, participation_statutaire):
         if not private_patient:
             if self.reimbursed and not self.contribution_undue:
@@ -128,14 +141,13 @@ class ValidityDate(models.Model):
 
     start_date = models.DateField("date debut validite")
     end_date = models.DateField("date fin validite", blank=True, null=True)
-    gross_amount = models.DecimalField("montant brut", max_digits=5, decimal_places=2)
+    gross_amount = models.DecimalField("montant brut", max_digits=10, decimal_places=6)
     care_code = models.ForeignKey(CareCode
                                   , related_name='validity_dates'
                                   , on_delete=models.CASCADE)
 
     def __str__(self):
         return 'from %s to %s' % (self.start_date, self.end_date)
-
     def clean(self, *args, **kwargs):
         exclude = []
         if self.care_code is not None and self.care_code.id is None:
@@ -579,6 +591,10 @@ class MedicalPrescription(models.Model):
             'prescriptor__provider_code'
 
     def __str__(self):
+        if self.notes is None:
+            return 'Dr. %s %s (%s) pour %s' % (
+                self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
+                self.patient.name.strip())
         return 'Dr. %s %s (%s) pour %s [%s...]' % (
             self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
             self.patient.name.strip(),
