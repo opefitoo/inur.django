@@ -85,7 +85,6 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'api.views.exception_handler.custom_exception_handler',
 }
 
-
 #
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
@@ -197,6 +196,8 @@ CONSTANCE_ADDITIONAL_FIELDS = {
 CONSTANCE_CONFIG = {
     'AT_HOME_CARE_CODE': (
         'NF01', "CareCode that is set to Prestation's copy which is created if at_home is checked", str),
+    'AEV_VM_MIN': (
+        'AEV_VM_MIN', "CareCode that is set to calculate longterm care prices per/mn", str),
     'MAIN_NURSE_CODE': (
         'XXXXXX-YY', "Code infirmier pour les soins", str),
     'MAIN_BANK_ACCOUNT': (
@@ -243,7 +244,8 @@ CONSTANCE_CONFIG = {
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
-    'Options Générales': ('USE_GDRIVE', 'AT_HOME_CARE_CODE', 'ROOT_URL', 'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL'),
+    'Options Générales': (
+    'USE_GDRIVE', 'AT_HOME_CARE_CODE', 'AEV_VM_MN', 'ROOT_URL', 'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL'),
     'Options de Facturation': (
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
         'CODE_PRESTATAIRE',

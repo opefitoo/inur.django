@@ -1,15 +1,7 @@
 from datetime import timezone
 
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
-from dependence.print_fall_declaration  import generate_pdf_fall_declaration
 from django.contrib import admin
-from django.http import HttpResponse
-# report lab library
-from django.utils.translation import gettext as _
-from reportlab.pdfgen import canvas
-
-
-
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.checks import messages
@@ -19,38 +11,53 @@ from django.forms import ModelMultipleChoiceField
 from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+# report lab library
+from django.utils.translation import gettext as _
 from fieldsets_with_inlines import FieldsetsInlineMixin
-from dependence.careplan_pdf import generate_pdf
-
 from reportlab.pdfgen import canvas
 
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
+from dependence.careplan_pdf import generate_pdf
 from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetail
 from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCareSummaryPerPatientDetail, \
     SharedMedicalCareSummaryPerPatientDetail
 from dependence.falldeclaration import FallDeclaration
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
     TensionAndTemperatureParametersFormset, CarePlanDetailForm
-from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceItem
-from dependence.longtermcareitem import LongTermCareItem
+from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceLine, LongTermCareMonthlyStatement
+from dependence.longtermcareitem import LongTermPackage, LongTermPackagePrice
 from dependence.medicalcaresummary import MedicalCareSummary
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from dependence.pdf.basedata import basedata_view
+from dependence.print_fall_declaration import generate_pdf_fall_declaration
 from invoices.models import Patient
 
 
 class LongTermCareInvoiceItemInline(admin.TabularInline):
-    model = LongTermCareInvoiceItem
+    model = LongTermCareInvoiceLine
     extra = 0
 @admin.register(LongTermCareInvoiceFile)
 class LongTermCareInvoiceFileAdmin(admin.ModelAdmin):
     inlines = [LongTermCareInvoiceItemInline]
 
-@admin.register(LongTermCareItem)
+
+
+@admin.register(LongTermCareMonthlyStatement)
+class LongTermCareMonthlyStatementAdmin(admin.ModelAdmin):
+    pass
+
+
+class LongTermPackagePriceInline(admin.TabularInline):
+    extra = 0
+    model = LongTermPackagePrice
+
+
+@admin.register(LongTermPackage)
 class LongTermCareItemAdmin(admin.ModelAdmin):
     list_display = ('code', 'description')
+    inlines = [LongTermPackagePriceInline]
 
 
 class SharedMedicalCareSummaryPerPatientDetailInline(admin.TabularInline):
@@ -89,9 +96,14 @@ class FilteringPatientsForMedicalCareSummaryPerPatient(SimpleListFilter):
 @admin.register(MedicalCareSummaryPerPatient)
 class MedicalCareSummaryPerPatientAdmin(admin.ModelAdmin):
     inlines = [MedicalCareSummaryPerPatientDetailInline, SharedMedicalCareSummaryPerPatientDetailInline]
-    list_display = ('patient', 'date_of_decision', 'date_of_notification_to_provider', 'level_of_needs', 'start_of_support', 'end_of_support','is_latest_plan')
+    list_display = ('patient', 'date_of_decision', 'date_of_notification_to_provider', 'level_of_needs',
+                    'start_of_support', 'end_of_support','is_latest_plan')
     # all fields are readonly
     readonly_fields = ('created_on', 'updated_on', 'patient', 'date_of_request', 'referent', 'date_of_evaluation',
+                       'date_of_notification', 'plan_number', 'decision_number', 'level_of_needs', 'start_of_support',
+                       'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
+                       'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail','date_of_notification_to_provider')
+    fields = ('date_of_change_to_new_plan', 'created_on', 'updated_on', 'patient', 'date_of_request', 'referent', 'date_of_evaluation',
                        'date_of_notification', 'plan_number', 'decision_number', 'level_of_needs', 'start_of_support',
                        'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
                        'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail','date_of_notification_to_provider')

@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -45,6 +46,21 @@ class MedicalCareSummaryPerPatient(models.Model):
     fmi_right = models.BooleanField(_("Droit FMI"), default=False)
     # sn code of the helper
     sn_code_aidant = models.CharField(_("SN Code Aidant"), max_length=13, null=True, blank=True)
+    # date changement vers un nouveau plan
+    date_of_change_to_new_plan = models.DateField(_("Date de changement vers un nouveau plan"), blank=True, null=True)
+
+    # validate that there is no other plan that has a date_of_decision more recent than date_of_change_to_new_plan
+    def validate_constraints(self, exclude=None):
+        # if date_of_change_to_new_plan is not null
+        # check that there is no other plan that has a date_of_decision more recent than date_of_change_to_new_plan
+        if self.date_of_change_to_new_plan:
+            if MedicalCareSummaryPerPatient.objects.filter(patient=self.patient,
+                                                          date_of_decision__lte=self.date_of_change_to_new_plan).exists():
+                conflict = MedicalCareSummaryPerPatient.objects.filter(patient=self.patient,
+                                                            date_of_decision__lte=self.date_of_change_to_new_plan).get()
+                raise ValidationError(
+                    _('Il existe déjà une synthèse de prise en charge avec une date de décision plus récente que la date de changement vers un nouveau plan: %s') % conflict)
+        return True
 
     # create a composite unique constraint
     class Meta:
@@ -53,7 +69,10 @@ class MedicalCareSummaryPerPatient(models.Model):
         verbose_name_plural = _("Synthèses de prise en charge par patient")
 
     def __str__(self):
-        return "Synthèse de prise en charge du patient {0}".format(self.patient)
+        if self.date_of_change_to_new_plan:
+            return "Synthèse de {0} en date du {1} jusque {2}".format(
+                self.patient, self.date_of_decision, self.date_of_change_to_new_plan)
+        return "Synthèse de prise en charge {0} en date du {1}".format(self.patient, self.date_of_decision)
     @property
     def is_latest_plan(self):
         # if self has most recent date_of_notification_to_provider then return True
