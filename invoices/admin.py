@@ -25,6 +25,7 @@ from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_p
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
+from invoices.actions.invoices import generer_forfait_aev_mars
 # from invoices.actions.maps import calculate_distance_matrix
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
@@ -248,7 +249,7 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
 
 @admin.register(Patient)
 class PatientAdmin(CSVExportAdmin):
-    list_filter = ('city',)
+    list_filter = ('is_under_dependence_insurance',)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
                   'country', 'phone_number', 'email_address', 'date_of_death']
@@ -256,7 +257,7 @@ class PatientAdmin(CSVExportAdmin):
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode']
     # actions = [calculate_distance_matrix]
     form = PatientForm
-    # actions = [generate_road_book_2019_mehdi]
+    actions = [generer_forfait_aev_mars]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, ]
 
     def link_to_invoices(self, instance):
