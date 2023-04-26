@@ -1,0 +1,178 @@
+[
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 1,
+    "fields": {
+      "code": "AEVF00",
+      "description": "Forfait PN AEV 0",
+      "weekly_package": 125,
+      "dependence_level": 0,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 2,
+    "fields": {
+      "code": "AEVF01",
+      "description": "Forfait PN AEV 1",
+      "weekly_package": 280,
+      "dependence_level": 1,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 3,
+    "fields": {
+      "code": "AEVF02",
+      "description": "Forfait PN AEV 2",
+      "weekly_package": 420,
+      "dependence_level": 2,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 4,
+    "fields": {
+      "code": "AEVF03",
+      "description": "Forfait PN AEV 3",
+      "weekly_package": 560,
+      "dependence_level": 3,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 5,
+    "fields": {
+      "code": "AEVF04",
+      "description": "Forfait PN AEV 4",
+      "weekly_package": 700,
+      "dependence_level": 4,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 6,
+    "fields": {
+      "code": "AEVF05",
+      "description": "Forfait PN AEV 5",
+      "weekly_package": 840,
+      "dependence_level": 5,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 7,
+    "fields": {
+      "code": "AEVF06",
+      "description": "Forfait PN AEV 6",
+      "weekly_package": 980,
+      "dependence_level": 6,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 8,
+    "fields": {
+      "code": "AEVF07",
+      "description": "Forfait PN AEV 7",
+      "weekly_package": 1120,
+      "dependence_level": 7,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 9,
+    "fields": {
+      "code": "AEVF08",
+      "description": "Forfait PN AEV 8",
+      "weekly_package": 1260,
+      "dependence_level": 8,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 10,
+    "fields": {
+      "code": "AEVF09",
+      "description": "Forfait PN AEV 9",
+      "weekly_package": 1400,
+      "dependence_level": 9,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 11,
+    "fields": {
+      "code": "AEVF10",
+      "description": "Forfait PN AEV 10",
+      "weekly_package": 1540,
+      "dependence_level": 10,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 12,
+    "fields": {
+      "code": "AEVF11",
+      "description": "Forfait PN AEV 11",
+      "weekly_package": 1680,
+      "dependence_level": 11,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 13,
+    "fields": {
+      "code": "AEVF12",
+      "description": "Forfait PN AEV 12",
+      "weekly_package": 1820,
+      "dependence_level": 12,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 14,
+    "fields": {
+      "code": "AEVF13",
+      "description": "Forfait PN AEV 13",
+      "weekly_package": 1960,
+      "dependence_level": 13,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 15,
+    "fields": {
+      "code": "AEVF14",
+      "description": "Forfait PN AEV 14",
+      "weekly_package": 2100,
+      "dependence_level": 14,
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 16,
+    "fields": {
+      "code": "AEVF15",
+      "description": "Forfait PN AEV 15",
+      "weekly_package": 2230,
+      "dependence_level": 15,
+      "package": true
+    }
+  }
+]
