@@ -241,6 +241,8 @@ CONSTANCE_CONFIG = {
     'FTP_USER': ('NOT_SET', 'FTP user', str),
     'FTP_PASSWORD': ('NOT_SET', 'FTP password', str),
     'FTP_XML_DIRECTORY': ('NOT_SET', 'FTP xml directory', str),
+    'INVOXIA_USERNAME': ('NOT_SET', 'Invoxia username', str),
+    'INVOXIA_PASSWORD': ('NOT_SET', 'Invoxia password', str),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
@@ -253,7 +255,7 @@ CONSTANCE_CONFIG_FIELDSETS = {
     'Options FTP': ('FTP_HOST', 'FTP_USER', 'FTP_PASSWORD', 'FTP_XML_DIRECTORY'),
     'Options API Convadis': ('CONVADIS_ORG_ID', 'CONVADIS_CLIENT_ID', 'CONVADIS_SECRET_ID', 'CONVADIS_URL',
                              'OPENROUTE_SERVICE_API_KEY'),
-    'Options API Yale': ('YALE_USERNAME', 'YALE_PASSWORD', 'YALE_VERIFICATION_CODE', 'YALE_HOUSE_ID')
+    'Options Invoxia': ('INVOXIA_USERNAME', 'INVOXIA_PASSWORD'),
 }
 
 INTERNAL_IPS = {'127.0.0.1', }

@@ -14,6 +14,8 @@ from oauthlib.oauth2 import LegacyApplicationClient, TokenExpiredError
 from requests_oauthlib import OAuth2Session
 from vininfo import Vin
 
+from invoices.actions.helpers import invoxia_position
+
 
 def get_last_token():
     if len(ConvadisOAuth2Token.objects.all()) > 0:
@@ -82,6 +84,7 @@ class Car(models.Model):
     name = models.CharField(max_length=20)
     licence_plate = models.CharField(max_length=8)
     is_connected_to_convadis = models.BooleanField(default=False)
+    invoxia_identifier = models.CharField(max_length=20, default=None, blank=True, null=True)
     convadis_identifier = models.CharField(max_length=20, default=None, blank=True, null=True)
     registration_card = models.FileField(upload_to=registration_card_storage_location,
                                help_text=_("You can attach the scan of the registration card of the car"),
@@ -91,10 +94,21 @@ class Car(models.Model):
 
     @property
     def geo_localisation_of_car(self):
-        if not self.is_connected_to_convadis:
+        # if not self.is_connected_to_convadis:
+        #     return "n/a"
+        # if self.is_connected_to_convadis and not self.convadis_identifier:
+        #     return "n/a Error: convadis id is not set"
+        if not self.is_connected_to_convadis and not self.invoxia_identifier:
             return "n/a"
-        if self.is_connected_to_convadis and not self.convadis_identifier:
-            return "n/a Error: convadis id is not set"
+        if self.is_connected_to_convadis:
+            if not self.convadis_identifier:
+                return "n/a Error: convadis id is not set"
+        elif self.invoxia_identifier:
+            position = invoxia_position(self.invoxia_identifier)
+            if position:
+                return position.datetime.strftime('%Y-%m-%dT%H:%M:%S%z'), position.lat, position.lng
+            else:
+                return "n/a"
         vehicles_last_position = cache.get('vehicles-last-position')
         if vehicles_last_position:
             return find_vehicle_position(self.convadis_identifier, vehicles_last_position)
@@ -130,10 +144,11 @@ class Car(models.Model):
 
     @property
     def address(self):
-        if not self.is_connected_to_convadis:
+        if not self.is_connected_to_convadis and not self.invoxia_identifier:
             return "n/a"
-        if self.is_connected_to_convadis and not self.convadis_identifier:
-            return "n/a Error: convadis id is not set"
+        if self.is_connected_to_convadis:
+            if not self.convadis_identifier:
+                return "n/a Error: convadis id is not set"
         geo_loc_car = self.geo_localisation_of_car
         position_lon = geo_loc_car[2]
         position_lat = geo_loc_car[1]
