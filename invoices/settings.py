@@ -243,6 +243,7 @@ CONSTANCE_CONFIG = {
     'FTP_XML_DIRECTORY': ('NOT_SET', 'FTP xml directory', str),
     'INVOXIA_USERNAME': ('NOT_SET', 'Invoxia username', str),
     'INVOXIA_PASSWORD': ('NOT_SET', 'Invoxia password', str),
+    'AEV_VM_MN': ('NOT_SET', 'AEV VM MN', str),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
