@@ -94,7 +94,7 @@ def update_prices_for_april_2023(self, request, queryset):
 
 
     # Replace 'your_csv_file.csv' with the actual path to your CSV file
-    csv_file_path = 'initialdata/2023_APRI_cns_codes.csv'
+    csv_file_path = 'initialdata/2023_APRIL_cns_codes.csv'
     # Replace 'your_start_date' with the actual date you want to use
     your_start_date = date(2023, 4, 1)
 
