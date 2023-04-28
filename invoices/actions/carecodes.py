@@ -6,14 +6,14 @@ from django.db import transaction
 from invoices.models import CareCode, ValidityDate
 
 
-def update_prices_for_january_2023(self, request, queryset):
+def update_prices_for_feb_2023(self, request, queryset):
 
 
     # Replace 'your_csv_file.csv' with the actual path to your CSV file
-    csv_file_path = 'initialdata/2023_JAN_cns_codes.csv'
+    csv_file_path = 'initialdata/2023_FEB_cns_codes.csv'
 
     # Replace 'your_start_date' with the actual date you want to use
-    your_start_date = date(2023, 1, 1)
+    your_start_date = date(2023, 2, 1)
 
     with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile, delimiter=';', quotechar='"')
