@@ -24,8 +24,6 @@ from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_p
     set_invoice_as_not_sent
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
-from invoices.actions.carecodes import update_prices_for_feb_2023, update_prices_for_jan_2023, \
-    update_prices_for_april_2023, cleanup_2023
 from invoices.actions.certificates import generate_pdf
 from invoices.actions.invoices import generer_forfait_aev_mars
 # from invoices.actions.maps import calculate_distance_matrix
@@ -94,7 +92,7 @@ class CareCodeAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
     inlines = [ValidityDateInline]
-    actions = [update_prices_for_jan_2023, update_prices_for_feb_2023, update_prices_for_april_2023, cleanup_2023]
+    #actions = [update_prices_for_jan_2023, update_prices_for_feb_2023, update_prices_for_april_2023, cleanup_2023]
 
 
 class EmployeeContractDetailInline(TabularInline):
