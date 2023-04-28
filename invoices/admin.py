@@ -24,6 +24,7 @@ from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_p
     set_invoice_as_not_sent
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
+from invoices.actions.carecodes import update_prices_for_january_2023
 from invoices.actions.certificates import generate_pdf
 from invoices.actions.invoices import generer_forfait_aev_mars
 # from invoices.actions.maps import calculate_distance_matrix
@@ -49,7 +50,6 @@ from invoices.resources import ExpenseCard, Car
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 from invoices.utils import EventCalendar
-from invoices.yale.model import DoorEvent
 
 
 @admin.register(JobPosition)
@@ -93,6 +93,7 @@ class CareCodeAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
     inlines = [ValidityDateInline]
+    actions = [update_prices_for_january_2023]
 
 
 class EmployeeContractDetailInline(TabularInline):
@@ -1317,9 +1318,4 @@ class EventWeekListAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
 
-@admin.register(DoorEvent)
-class DoorEventAdmin(admin.ModelAdmin):
-    list_filter = ('employee', 'activity_start_time', 'activity_type')
-    list_display = ('employee', 'activity_start_time')
-    date_hierarchy = 'activity_start_time'
 

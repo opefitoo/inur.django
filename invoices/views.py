@@ -1,13 +1,9 @@
 # from dal import autocomplete
-from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import Http404, JsonResponse
-from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
-from invoices.forms import YaleConfigurationForm
 from invoices.models import Prestation, MedicalPrescription, InvoiceItem
-from invoices.yale.api import CustomizedYaleSession
 
 
 def get_queryset_filter(query_str, fields):
@@ -98,48 +94,6 @@ def delete_prestation(request):
     return JsonResponse({'status': 'Success'})
 
 
-def load_prescriptions(request):
-    patient_name = request.GET.get('patient_name')
-    value = request.GET.get('selected_medical_prescription_id')
-    medical_prescriptions = MedicalPrescription.objects.filter(patient__name__startswith=patient_name.split(' ')[0],
-                                                               patient__first_name__endswith=patient_name.split(' ')[-1]
-                                                               )
-    # [(None, [{'name': 'medical_prescription', 'value': '', 'label': '---------', 'selected': False, 'index': '0', 'attrs': {}, 'type': 'select', 'template_name': 'django/forms/widgets/select_option.html', 'wrap_label': True}], 0),
-    #  (None, [{'name': 'medical_prescription', 'value': <django.forms.models.ModelChoiceIteratorValue object at 0x12cf6a5b0>, 'label': 'RISCHETTE René (2022-07-07) sans fichier', 'selected': False, 'index': '1', 'attrs': {}, 'type': 'select', 'template_name': 'django/forms/widgets/select_option.html', 'wrap_label': True}], 1),
-    #  (None, [{'name': 'medical_prescription', 'value': <django.forms.models.ModelChoiceIteratorValue object at 0x12cf66af0>, 'label': 'LEE Paul (2019-11-06) [CHRIS...]', 'selected': True, 'index': '2', 'attrs': {'selected': True}, 'type': 'select', 'template_name': 'django/forms/widgets/select_option.html', 'wrap_label': True}], 2)]
-    widget_optgroups = []
-    index = 1
-    for medical_prescription in medical_prescriptions:
-        if medical_prescription.pk == int(selected_medical_prescription_id):
-            selected = True
-        else:
-            selected = False
-        widget_optgroups.append((None, [{'name': 'medical_prescription',
-                                         'value': medical_prescription,
-                                         'label': str(medical_prescription),
-                                         'selected': selected,
-                                         'index': str(index),
-                                         'attrs': {'selected': False},
-                                         'type': 'select',
-                                         'template_name': 'django/forms/widgets/select_option.html',
-                                         'wrap_label': True}],
-                                 index))
-        index += 1
-
-    for k, y, v in widget_optgroups:
-        print(k)
-        print(y)
-        print(v)
-
-    # return render(request, 'widgets/select-medical-prescription.html',
-    #               {'widget_optgroups': widget_optgroups})
-
-
-    return render(request, 'widgets/select-medical-prescription.html',
-                  {'widget': {'optgroups': medical_prescriptions}}
-                  )
-    # return JsonResponse(list(cities.values('id', 'name')), safe=False)
-
 
 def optgroups(self, name, value, attr=None):
     """Return selected options based on the ModelChoiceIterator."""
@@ -175,25 +129,3 @@ def optgroups(self, name, value, attr=None):
             )
         )
     return groups
-@login_required
-def yale_configuration_view(request):
-    yale_session = CustomizedYaleSession
-    message = None
-    if request.method == 'POST':
-        form = YaleConfigurationForm(request.POST)
-        if form.validate():
-            input_value = form.text_input.data
-            if form.send_button.data:
-                # send input value to REST service
-                authenticator = yale_session.send_validation()
-                message = "Sent to yale %s" % authenticator
-            elif form.validate_button.data:
-                yale_session.authenticate(input_value)
-            elif form.house_activities_button.data:
-                house_activities =  yale_session.get_house_activities()
-                message = "House activities %s" % house_activities
-            elif form.display_state_button.data:
-                message = yale_session.get_authentication_state()
-    else:
-        form = YaleConfigurationForm()
-    return render(request, 'yale/yale_configuration_template.html', {'form': form, 'message': message})

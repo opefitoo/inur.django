@@ -8,11 +8,11 @@ from rest_framework.authtoken import views as authtoken_views
 
 import api
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
-    get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView, \
+    get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, \
     FullCalendarEventViewSet, AvailableEmployeeList, AvailablePatientList, build_payroll_sheet
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
-from invoices.views import delete_prestation, yale_configuration_view
+from invoices.views import delete_prestation
 
 admin.autodiscover()
 
@@ -91,10 +91,6 @@ urlpatterns = [
         r'^api/v1/process/(?P<numdays>\d+)/$',
         login_required(EventProcessorView.as_view()),
         name='event_processor_rest_view'),
-    re_path(
-        r'^api/v1/yale_events/',
-        login_required(YaleEventProcessorView.as_view()),
-        name='yale_event_processor_rest_view'),
 
 ]
 
@@ -186,9 +182,6 @@ urlpatterns += [
 #     urlpatterns += [
 #         path('__debug__/', include(debug_toolbar.urls)),
 #     ]
-urlpatterns += [
-    re_path('yale-conf/', yale_configuration_view, name='yale_configuration_form'),
-]
 admin.site.site_header = "Invoice for Nurses Admin (inur)"
 admin.site.site_title = "INUR Admin Portal"
 admin.site.index_title = "Welcome to INUR Portal"

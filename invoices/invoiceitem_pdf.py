@@ -172,7 +172,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
             data.append((i, presta.carecode.code,
                          (presta.date.astimezone(ZoneInfo("Europe/Luxembourg"))).strftime('%d/%m/%Y'),
                          '1',
-                         presta.carecode.gross_amount(presta.date),
+                         # keep only 2 decimals
+                         round(presta.carecode.gross_amount(presta.date), 2),
                          presta.carecode.net_amount(presta.date, patient.is_private, (patient.participation_statutaire
                                                                                       and patient.age > 18)),
                          (presta.date.astimezone(ZoneInfo("Europe/Luxembourg"))).strftime('%H:%M'),
