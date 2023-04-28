@@ -94,10 +94,9 @@ def update_prices_for_april_2023(self, request, queryset):
 
 
     # Replace 'your_csv_file.csv' with the actual path to your CSV file
-    csv_file_path = 'initialdata/2023_FEB_cns_codes.csv'
-
+    csv_file_path = 'initialdata/2023_APRI_cns_codes.csv'
     # Replace 'your_start_date' with the actual date you want to use
-    your_start_date = date(2023, 1, 1)
+    your_start_date = date(2023, 4, 1)
 
 
     with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
@@ -128,3 +127,30 @@ def update_prices_for_april_2023(self, request, queryset):
                         validity_date.save()
 
                     print(f"Updated CareCode {care_code_str} with gross amount {new_gross_amount}")
+
+def cleanup_2023(self, request, queryset):
+    # Replace 'your_csv_file.csv' with the actual path to your CSV file
+    csv_file_path = 'initialdata/2023_FEB_cns_codes.csv'
+
+    # Replace 'your_start_date' with the actual date you want to use
+    your_start_date = date(2023, 4, 1)
+
+    with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile, delimiter=';', quotechar='"')
+
+        with transaction.atomic():
+            for row in reader:
+                print(row)
+                if len(row) < 4:
+                    continue
+                care_code_str = row[1].strip()
+                new_gross_amount = float(row[3].strip())
+
+                care_code = CareCode.objects.filter(code=care_code_str).first()
+
+                if care_code:
+                    # remove all validity dates of 2023
+                    deleted = ValidityDate.objects.filter(care_code=care_code, start_date__year=2023).delete()
+                    print(f"Deleted {deleted[0]} validity dates for {care_code_str}")
+
+
