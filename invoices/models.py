@@ -137,7 +137,7 @@ class ValidityDate(models.Model):
     """
 
     class Meta:
-        ordering = ['-id']
+        ordering = ['-start_date']
 
     start_date = models.DateField("date debut validite")
     end_date = models.DateField("date fin validite", blank=True, null=True)
