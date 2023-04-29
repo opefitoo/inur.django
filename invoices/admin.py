@@ -24,6 +24,7 @@ from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_p
     set_invoice_as_not_sent
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
+from invoices.actions.carecodes import update_prices_for_april_2022
 from invoices.actions.certificates import generate_pdf
 from invoices.actions.invoices import generer_forfait_aev_mars
 # from invoices.actions.maps import calculate_distance_matrix
@@ -204,6 +205,7 @@ class ExpenseCardDetailInline(TabularInline):
 class CarAdmin(admin.ModelAdmin):
     inlines = [ExpenseCardDetailInline]
     list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'car_movement')
+    actions = [update_prices_for_april_2022]
 
     def geo_localisation_of_car_url(self, obj):
         _geo_localisation_of_car = obj.geo_localisation_of_car
