@@ -153,9 +153,10 @@ def update_prices_for_april_2022(self, request, queryset):
                 care_code = CareCode.objects.filter(code=care_code_str).first()
 
                 if care_code:
-                    validity_date, created = ValidityDate.objects.update_or_create(
+                    validity_date, created = ValidityDate.objects.get_or_create(
                         care_code=care_code,
-                        end_date=None,
+                        start_date=your_start_date,
+                        end_date=your_end_date,
                         defaults={
                             'start_date': your_start_date,
                             'end_date': your_end_date,

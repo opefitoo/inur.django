@@ -93,7 +93,8 @@ class CareCodeAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
     inlines = [ValidityDateInline]
-    #actions = [update_prices_for_jan_2023, update_prices_for_feb_2023, update_prices_for_april_2023, cleanup_2023]
+    #actions = [update_prices_for_jan_2023, update_prices_for_feb_2023, , cleanup_2023]
+    actions = [update_prices_for_april_2022]
 
 
 class EmployeeContractDetailInline(TabularInline):
@@ -205,7 +206,6 @@ class ExpenseCardDetailInline(TabularInline):
 class CarAdmin(admin.ModelAdmin):
     inlines = [ExpenseCardDetailInline]
     list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'car_movement')
-    actions = [update_prices_for_april_2022]
 
     def geo_localisation_of_car_url(self, obj):
         _geo_localisation_of_car = obj.geo_localisation_of_car
