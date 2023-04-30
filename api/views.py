@@ -32,7 +32,7 @@ from invoices import settings
 from invoices.employee import JobPosition, Employee
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
-from invoices.events import EventType, Event
+from invoices.events import EventType, Event, create_or_update_google_calendar
 from invoices.holidays import HolidayRequest
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch
@@ -123,8 +123,6 @@ class PatientCarePlanView(generics.ListCreateAPIView):
             return Response({'error': 'Patient not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-
-
 # class LongTermCareInvoiceFileView(generics.ListCreateAPIView):
 #     queryset = LongTermCareInvoiceFile.objects.all()
 #     serializer_class = LongTermCareInvoiceFileSerializer
@@ -140,7 +138,6 @@ class PatientCarePlanView(generics.ListCreateAPIView):
 class LongTermCareInvoiceFileViewSet(viewsets.ModelViewSet):
     queryset = LongTermCareInvoiceFile.objects.all()
     serializer_class = LongTermCareInvoiceFileSerializer
-
 
 
 class PrestationViewSet(viewsets.ModelViewSet):
@@ -391,20 +388,21 @@ class EventList(generics.ListCreateAPIView):
         if result.status_code == status.HTTP_201_CREATED:
             instance = Event.objects.get(pk=result.data.get('id'))
             if employee_bis:
-                instance.notes = "En collaboration avec %s %s - Tél %s" % (employee_bis.user.last_name,
-                                                                           employee_bis.user.first_name,
-                                                                           employee_bis.phone_number)
+                instance.notes = request.data['notes'] + "\n En collaboration avec %s %s - Tél %s" % (
+                employee_bis.user.last_name,
+                employee_bis.user.first_name,
+                employee_bis.phone_number)
             assert isinstance(instance, Event)
             # if instance.event_type_enum == EventTypeEnum.BIRTHDAY:
             #     return "Birthday created"
-            # gmail_event = create_or_update_google_calendar(instance)
-            # if gmail_event.get('id'):
-            #     instance.calendar_id = gmail_event.get('id')
-            #     instance.calendar_url = gmail_event.get('htmlLink')
-            #     instance.save()
-            # else:
-            #     instance.delete()
-            #     return JsonResponse(result.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            gmail_event = create_or_update_google_calendar(instance)
+            if gmail_event.get('id'):
+                instance.calendar_id = gmail_event.get('id')
+                instance.calendar_url = gmail_event.get('htmlLink')
+                instance.save()
+            else:
+                instance.delete()
+                return JsonResponse(result.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return result
 
@@ -472,6 +470,7 @@ def which_shift(request):
         reqs = holidays.which_shift(datetime.strptime(request.data["working_day"], "%Y-%m-%d"))
         return Response(reqs, status=status.HTTP_200_OK)
 
+
 @api_view(['POST'])
 def build_payroll_sheet(request):
     if 'POST' == request.method:
@@ -482,29 +481,33 @@ def build_payroll_sheet(request):
         # get date from request
         date = datetime.strptime(request.data.get('date'), "%Y-%m-%d")
         # get holiday request for this date and employee
-        holiday_request = HolidayRequest.objects.filter(employee=employee.user, start_date__lte=date, end_date__gte=date).first()
+        holiday_request = HolidayRequest.objects.filter(employee=employee.user, start_date__lte=date,
+                                                        end_date__gte=date).first()
         if holiday_request:
             return Response(HolidayRequest.REASONS[holiday_request.reason - 1][1], status=status.HTTP_200_OK)
         # if there is a holiday request
         else:
-            #SimplifiedTimesheet.objects.filter(employee=employee, date=date).get()
+            # SimplifiedTimesheet.objects.filter(employee=employee, date=date).get()
             # convert date to django compatible date for object filter
             # Set the timezone context to "America/Los_Angeles"
-            if SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee, start_date__year=date.year,
-                                                     start_date__month=date.month,
-                                                     start_date__day=date.day).exists():
-                stdtl = SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee, start_date__year=date.year,
-                                                     start_date__month=date.month,
-                                                     start_date__day=date.day)
+            if SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee,
+                                                        start_date__year=date.year,
+                                                        start_date__month=date.month,
+                                                        start_date__day=date.day).exists():
+                stdtl = SimplifiedTimesheetDetail.objects.filter(simplified_timesheet__employee=employee,
+                                                                 start_date__year=date.year,
+                                                                 start_date__month=date.month,
+                                                                 start_date__day=date.day)
                 string_to_return = ""
                 for dtl in stdtl:
                     start_time = timezone.now().replace(
-                            hour=dtl.start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
-                            minute=dtl.start_date.minute)
+                        hour=dtl.start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
+                        minute=dtl.start_date.minute)
                     end_time = timezone.now().replace(hour=dtl.end_date.hour,
-                                                          minute=dtl.end_date.minute)
+                                                      minute=dtl.end_date.minute)
                     str_delta = ':'.join(str(dtl.time_delta()).split(':')[:2])
-                    string_to_return += "De %s à %s (%s heures) " % (start_time.strftime("%H:%M"), end_time.strftime("%H:%M"), str_delta)
+                    string_to_return += "De %s à %s (%s heures) " % (
+                    start_time.strftime("%H:%M"), end_time.strftime("%H:%M"), str_delta)
                     return Response(string_to_return, status=status.HTTP_200_OK)
                 # start_time = timezone.now().replace(hour=stdtl.get().start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
                 #                                     minute=stdtl.get().start_date.minute)
@@ -518,9 +521,8 @@ def build_payroll_sheet(request):
                 return Response("OFF",
                                 status=status.HTTP_200_OK)
             # format time delta which is of type datetime.timedelta to hours and minutes
-            #return Response("De %s à %s (%s heures)" % (start_time_str, end_time_str, ':'.join(str(stdtl.get().time_delta()).split(':')[:2])),
+            # return Response("De %s à %s (%s heures)" % (start_time_str, end_time_str, ':'.join(str(stdtl.get().time_delta()).split(':')[:2])),
             #                status=status.HTTP_200_OK)
-
 
 
 @api_view(['GET'])
@@ -577,6 +579,7 @@ class EventProcessorView(APIView):
         items = items_serializer.data
         response = Response(items, status=status.HTTP_200_OK)
         return response
+
 
 class SettingViewSet(viewsets.ViewSet):
     permission_classes = (IsAuthenticated,)
