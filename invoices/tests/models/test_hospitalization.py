@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from invoices.employee import Employee, JobPosition
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Hospitalization
+from invoices.modelspackage import InvoicingDetails
 
 
 class HospitalizationTestCase(TestCase):
@@ -25,9 +26,16 @@ class HospitalizationTestCase(TestCase):
                                               zipcode='zipcode 0',
                                               city='city 0',
                                               phone_number='000')
+        invoicing_dtls = InvoicingDetails.objects.create(
+            provider_code="111111",
+            name="BEST.lu",
+            address="Sesame Street",
+            zipcode_city="1234 Sesame Street",
+            bank_account="LU12 3456 7890 1234 5678")
 
         self.invoice_item = InvoiceItem.objects.create(invoice_number='936 some invoice_number',
                                                        invoice_date=self.start_date,
+                                                       invoice_details=invoicing_dtls,
                                                        patient=self.patient)
 
         self.care_code = CareCode.objects.create(code='code0',

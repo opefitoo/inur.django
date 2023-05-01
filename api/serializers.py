@@ -14,6 +14,7 @@ from invoices.employee import JobPosition, Employee, EmployeeContractDetail
 from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch, extract_birth_date_iso
+from invoices.modelspackage import InvoicingDetails
 from invoices.timesheet import Timesheet, TimesheetTask
 
 
@@ -195,7 +196,13 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
         model = InvoiceItem
         fields = ('id', 'invoice_number', 'accident_id', 'accident_date', 'invoice_date', 'patient_invoice_date',
                   'invoice_send_date', 'invoice_sent', 'invoice_paid', 'medical_prescription', 'patient', 'prestations',
-                  'is_private')
+                  'is_private', 'invoice_details')
+
+class InvoicingDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvoicingDetails
+        fields = ('id', 'provider_code', 'name')
+
 
 
 class InvoiceItemBatchSerializer(serializers.ModelSerializer):

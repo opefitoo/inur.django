@@ -30,7 +30,6 @@ from invoices.enums.generic import GenderType
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.modelspackage import InvoicingDetails
-from invoices.modelspackage.invoice import get_default_invoicing_details
 from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
 
@@ -256,6 +255,8 @@ class Patient(models.Model):
     participation_statutaire = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
     is_under_dependence_insurance = models.BooleanField(u"Assurance dépendance", default=False)
+    # date sortie de notre réseau
+    date_of_exit = models.DateField(u"Date de sortie", default=None, blank=True, null=True)
     is_eligible_to_parameter_surveillance = models.BooleanField(u"Suivre Paramètres", default=False)
     date_of_death = models.DateField(u"Date de décès", default=None, blank=True, null=True)
     additional_details = models.TextField(u"Détails additionels",
@@ -477,12 +478,12 @@ def update_medical_prescription_filename(instance, filename):
     filename = '%s_pour_%s_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
                                           str(instance.date), uuid, file_extension)
     # rewrite filename using f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{uuid}{file_extension}"
-    filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}.{file_extension}"
+    filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}{file_extension}"
     filepath = os.path.join(path, filename)
     if storage.exists(filepath):
         # if it does, generate a unique identifier and append it to the filename
         unique_id = uuid.uuid4().hex
-        new_filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{unique_id}.{file_extension}"
+        new_filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{unique_id}{file_extension}"
         filepath = os.path.join(path, new_filename)
         return filepath
     else:
@@ -755,7 +756,6 @@ class InvoiceItem(models.Model):
 
     PRESTATION_LIMIT_MAX = 20
     invoice_details = models.ForeignKey(InvoicingDetails,
-                                        default=get_default_invoicing_details,
                                         related_name='invoicing_details_link',
                                         on_delete=models.PROTECT)
     invoice_number = models.CharField(max_length=50, unique=True, default=get_default_invoice_number)

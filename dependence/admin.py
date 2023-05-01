@@ -17,6 +17,7 @@ from fieldsets_with_inlines import FieldsetsInlineMixin
 from reportlab.pdfgen import canvas
 
 from dependence.aai import AAITransmission, AAITransDetail
+from dependence.actions.monthly import create_aev_invoices_mars_2023
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
 from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetail
@@ -108,6 +109,7 @@ class MedicalCareSummaryPerPatientAdmin(admin.ModelAdmin):
                        'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
                        'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail','date_of_notification_to_provider')
     list_filter = (FilteringPatientsForMedicalCareSummaryPerPatient, 'date_of_decision')
+    actions = [create_aev_invoices_mars_2023]
     def is_latest_plan(self, obj):
         return obj.is_latest_plan
     is_latest_plan.boolean = True

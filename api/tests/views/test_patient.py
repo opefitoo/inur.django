@@ -1,7 +1,7 @@
-from api.tests.views.base import BaseTestCase
 from rest_framework.test import APITestCase
 
 from api.serializers import PatientSerializer
+from api.tests.views.base import BaseTestCase
 from invoices.models import Patient
 
 
@@ -20,6 +20,7 @@ class PatientTestCase(BaseTestCase, APITestCase):
                                                 country='LU',
                                                 phone_number='000',
                                                 participation_statutaire=True,
+                                                is_under_dependence_insurance=True,
                                                 is_private=False),
                       self.model.objects.create(code_sn='1961030661534',
                                                 first_name='first name 1',
@@ -30,6 +31,7 @@ class PatientTestCase(BaseTestCase, APITestCase):
                                                 country='LU',
                                                 phone_number='111',
                                                 participation_statutaire=True,
+                                                is_under_dependence_insurance=True,
                                                 is_private=False),
                       self.model.objects.create(code_sn='1983030661534',
                                                 first_name='first name 2',
@@ -40,6 +42,7 @@ class PatientTestCase(BaseTestCase, APITestCase):
                                                 country='LU',
                                                 phone_number='222',
                                                 participation_statutaire=True,
+                                                is_under_dependence_insurance=True,
                                                 is_private=False),
                       self.model.objects.create(code_sn='1970030661534',
                                                 first_name='first name 3',
@@ -50,15 +53,16 @@ class PatientTestCase(BaseTestCase, APITestCase):
                                                 country='LU',
                                                 phone_number='333',
                                                 participation_statutaire=True,
+                                                is_under_dependence_insurance=True,
                                                 is_private=False)]
 
         self.valid_payload = {
-            'code_sn': '1951083022154',
-            'first_name': 'Sabatina',
-            'name': 'TRICARICO',
-            'address': '27 Rue Cunegonde',
-            'zipcode': '8221',
-            'city': 'MAMER',
+            'code_sn': '1966020661534',
+            'first_name': 'Trotro',
+            'name': 'BOURRICOT',
+            'address': '27 Rue Plaine',
+            'zipcode': '1200',
+            'city': 'TAIPEI',
             'country':  {'code': 'AU', 'name': 'Australia'},
             'phone_number': '1111',
             'participation_statutaire': True,

@@ -1,7 +1,9 @@
 from datetime import datetime
+
 from django.test import TestCase
 
 from invoices.models import Patient, Physician, InvoiceItem, get_default_invoice_number, MedicalPrescription
+from invoices.modelspackage import InvoicingDetails
 
 
 class InvoiceItemTestCase(TestCase):
@@ -20,23 +22,36 @@ class InvoiceItemTestCase(TestCase):
                                                                        date=date,
                                                                        patient=self.patient)
 
+        invoicing_dtls = InvoicingDetails.objects.create(
+            provider_code="111111",
+            name="BEST.lu",
+            address="Sesame Street",
+            zipcode_city="1234 Sesame Street",
+            bank_account="LU12 3456 7890 1234 5678")
+
         InvoiceItem.objects.create(invoice_number='936 some invoice_number',
                                    invoice_date=date,
+                                   invoice_details=invoicing_dtls,
                                    patient=self.patient)
         InvoiceItem.objects.create(invoice_number='10',
                                    invoice_date=date,
+                                   invoice_details=invoicing_dtls,
                                    patient=self.patient)
         InvoiceItem.objects.create(invoice_number='058',
                                    invoice_date=date,
+                                   invoice_details=invoicing_dtls,
                                    patient=self.patient)
         InvoiceItem.objects.create(invoice_number='147',
                                    invoice_date=date,
+                                   invoice_details=invoicing_dtls,
                                    patient=self.patient)
         InvoiceItem.objects.create(invoice_number='259',
                                    invoice_date=date,
+                                   invoice_details=invoicing_dtls,
                                    patient=self.patient)
         InvoiceItem.objects.create(invoice_number='926',
                                    invoice_date=date,
+                                   invoice_details=invoicing_dtls,
                                    patient=self.patient)
 
     def test_string_representation(self):

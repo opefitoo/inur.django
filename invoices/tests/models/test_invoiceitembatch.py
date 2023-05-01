@@ -1,12 +1,10 @@
 from datetime import datetime
 
-from django.utils import timezone
 from django.test import TestCase
-from django.test import override_settings
-from django.contrib.auth.models import User
+from django.utils import timezone
 
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, InvoiceItemBatch
-from invoices.employee import Employee, JobPosition
+from invoices.models import Patient, InvoiceItem, InvoiceItemBatch
+from invoices.modelspackage import InvoicingDetails
 
 
 class InvoiceItemBatchTestCase(TestCase):
@@ -15,16 +13,26 @@ class InvoiceItemBatchTestCase(TestCase):
         self.patient = Patient.objects.create(first_name='first name',
                                               name='name')
 
+        invoicing_dtls = InvoicingDetails.objects.create(
+            provider_code="111111",
+            name="BEST.lu",
+            address="Sesame Street",
+            zipcode_city="1234 Sesame Street",
+            bank_account="LU12 3456 7890 1234 5678")
+
         date.replace(hour=0, minute=0)
         self.december_invoices = [
             InvoiceItem.objects.create(invoice_number='936 some invoice_number',
                                        invoice_date=date.replace(month=12, day=1),
+                                       invoice_details=invoicing_dtls,
                                        patient=self.patient),
             InvoiceItem.objects.create(invoice_number='10',
                                        invoice_date=date.replace(month=12, day=15),
+                                       invoice_details=invoicing_dtls,
                                        patient=self.patient),
             InvoiceItem.objects.create(invoice_number='058',
                                        invoice_date=date.replace(month=12, day=31),
+                                       invoice_details=invoicing_dtls,
                                        patient=self.patient)
         ]
 
@@ -32,9 +40,11 @@ class InvoiceItemBatchTestCase(TestCase):
             InvoiceItem.objects.create(invoice_number='946 some invoice_number',
                                        invoice_date=date.replace(month=12, day=1),
                                        patient=self.patient,
+                                       invoice_details=invoicing_dtls,
                                        is_private=True),
             InvoiceItem.objects.create(invoice_number='11',
                                        invoice_date=date.replace(month=12, day=15),
+                                       invoice_details=invoicing_dtls,
                                        patient=self.patient,
                                        is_private=True)
         ]
@@ -42,9 +52,11 @@ class InvoiceItemBatchTestCase(TestCase):
         self.october_invoices = [
             InvoiceItem.objects.create(invoice_number='147',
                                        invoice_date=date.replace(month=10, day=1),
+                                       invoice_details=invoicing_dtls,
                                        patient=self.patient),
             InvoiceItem.objects.create(invoice_number='259',
                                        invoice_date=date.replace(month=10, day=10),
+                                       invoice_details=invoicing_dtls,
                                        patient=self.patient)
         ]
 

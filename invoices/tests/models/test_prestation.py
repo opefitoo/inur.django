@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from constance import config
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Hospitalization
 from invoices.employee import Employee, JobPosition
+from invoices.modelspackage import InvoicingDetails
 
 
 class PrestationTestCase(TestCase):
@@ -13,6 +14,13 @@ class PrestationTestCase(TestCase):
         jobposition = JobPosition.objects.create(name='name 0')
         user = User.objects.create_user('testuser', email='testuser@test.com', password='testing')
         user.save()
+        invoice_details = InvoicingDetails.objects.create(
+            provider_code="111111",
+            name="BEST.lu",
+            address="Sesame Street",
+            zipcode_city="1234 Sesame Street",
+            bank_account="LU12 3456 7890 1234 5678")
+
         self.employee = Employee.objects.create(user=user,
                                                 start_contract=self.date,
                                                 occupation=jobposition)
@@ -22,6 +30,7 @@ class PrestationTestCase(TestCase):
 
         self.invoice_item = InvoiceItem.objects.create(invoice_number='936 some invoice_number',
                                                        invoice_date=self.date,
+                                                      invoice_details=invoice_details,
                                                        patient=self.patient)
 
         self.care_code_first = CareCode.objects.create(code='code0',

@@ -11,7 +11,7 @@ from invoices.holidays import HolidayRequest, validate_date_range
 class HolidayRequestTestCase(TestCase):
 
     def setUp(self):
-        self.start_date = timezone.now().replace(month=6, day=1)
+        self.start_date = timezone.now().replace(year=2018,month=6, day=1)
         self.end_date = timezone.now().replace(month=6, day=20)
 
         self.user = User.objects.create_user('testuser', email='testuser@test.com', password='testing')

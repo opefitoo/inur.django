@@ -308,7 +308,7 @@ class DeclarationDetail(models.Model):
         Patient,
         help_text=_(
             "Only looks for patients covered by long-term care insurance, check that the checkbox is validated if you cannot find your patient"),
-        related_name="longtermcare_to_patient",
+        related_name="declaration_dtl_to_patient",
         on_delete=models.CASCADE,
         limit_choices_to={"is_under_dependence_insurance": True},
     )
