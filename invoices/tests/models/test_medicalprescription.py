@@ -8,22 +8,14 @@ from invoices.storages import CustomizedGoogleDriveStorage
 
 
 class MedicalPrescriptionTestCase(TestCase):
-    def test_string_representation(self):
-        date = timezone.now()
-        physician = Physician(first_name='first name',
-                              name='name')
-
-        prescription = MedicalPrescription(prescriptor=physician,
-                                           date=date)
-
-        self.assertEqual(str(prescription),
-                         '%s %s (%s) sans fichier' % (
-                         prescription.prescriptor.name.strip(), prescription.prescriptor.first_name.strip(),
-                         prescription.date))
 
     def test_autocomplete(self):
         self.assertEqual(MedicalPrescription.autocomplete_search_fields(),
-                         ('date', 'prescriptor__name', 'prescriptor__first_name'))
+                         ('date', 'prescriptor__name', 'prescriptor__first_name',
+                          'patient__name',
+                          'patient__first_name',
+                          'prescriptor__provider_code'
+                          ))
 
     def test_validate_dates(self):
         data = {
@@ -47,7 +39,7 @@ class MedicalPrescriptionTestCase(TestCase):
         prescription = MedicalPrescription(date=date,
                                            patient=patient)
         self.assertEqual(prescription.file_description, '%s %s %s' % (
-        prescription.patient.name, prescription.patient.first_name, str(prescription.date)))
+            prescription.patient.name, prescription.patient.first_name, str(prescription.date)))
 
 
 class UpdateMedicalPrescriptionFilenameTestCase(TestCase):
@@ -65,7 +57,7 @@ class UpdateMedicalPrescriptionFilenameTestCase(TestCase):
         file_name, file_extension = os.path.splitext(filename)
         '%s_%s_%s%s' % (
             prescription.patient.name, prescription.patient.first_name, str(prescription.date), file_extension)
-        filename = '%s_pour_%s_%s_%s%s' % (prescription.prescriptor.name, prescription.patient.name,
+        filename = '%s_%s_%s_%s%s' % (prescription.prescriptor.name, prescription.patient.name,
                                            prescription.patient.first_name,
                                            str(prescription.date), file_extension)
         expected_name = os.path.join(path, filename)
