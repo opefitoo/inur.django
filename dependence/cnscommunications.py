@@ -160,7 +160,7 @@ class ChangeDeclarationFile(models.Model):
             xsd_schema = xmlschema.XMLSchema('dependence/xsd/ad-declaration-14.xsd')
 
         # if self.generated_return_xml name is emtpy, then the file has not been generated yet
-        if self.generated_return_xml.name != '':
+        if  self.generated_return_xml.name and self.generated_return_xml.name != '':
             with self.generated_return_xml as return_file:
                 read_file = TextIOWrapper(return_file, encoding='UTF-8')
                 xml_data = return_file.read()
@@ -271,10 +271,14 @@ class ChangeDeclarationFile(models.Model):
 
     def __str__(self):
         # take only last part of the path to the file
-        filename = self.generated_xml.name.split('/')[-1]
-        return "Echanges électroniques envoyés le %s ref. %s (%s)" % (self.provider_date_of_sending,
+        if self.generated_xml:
+            filename = self.generated_xml.name.split('/')[-1]
+            return "Echanges électroniques envoyés le %s ref. %s (%s)" % (self.provider_date_of_sending,
                                                                       self.internal_reference,
                                                                       filename)
+        else:
+            return "Echanges électroniques envoyés le %s ref. %s" % (self.provider_date_of_sending,
+                                                                      self.internal_reference)
 
     def send_xml_to_ftp(self):
         try:
