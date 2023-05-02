@@ -26,10 +26,10 @@ def create_aev_invoices_mars_2023(self, request, queryset):
         create_monthly_invoice(patient, 3, 2023)
 
 
-def create_monthly_invoice(patient, month, year):
+def create_monthly_invoice(patient_list, month, year):
     """
     Create a monthly invoice for a patient
-    :param patient: Patient
+    :param patient_list: list of patients
     :param month: int
     :param year: int
     :return: LongTermCareMonthlyStatement
@@ -38,6 +38,12 @@ def create_monthly_invoice(patient, month, year):
     # activities = LongTermCareActivity.objects.filter(patient=patient, date__month=month, date__year=year)
     # create a new invoice
     statement, created = LongTermCareMonthlyStatement.objects.get_or_create(month=month, year=year)
+    for patient in patient_list:
+        create_monthly_invoice_line(patient, statement, month=month, year=year)
+    return statement
+
+
+def create_monthly_invoice_line(patient, statement, month, year):
     # first day of the month
     start_period = datetime(year, month, 1)
     # end period is last day of the month
@@ -59,10 +65,20 @@ def create_monthly_invoice(patient, month, year):
             if summary.date_of_change_to_new_plan is not None:
                 end_period = summary.date_of_change_to_new_plan
                 start_period = summary.date_of_decision
-            line = LongTermCareInvoiceLine.objects.get_or_create(invoice=invoice,
-                                                                 start_period=start_period,
-                                                                 end_period=end_period,
-                                                                 long_term_care_package=long_term_package)
-            print(line)
-    return statement
-       # add all activities to the invoice
+            line_aev = LongTermCareInvoiceLine.objects.get_or_create(invoice=invoice,
+                                                                     start_period=start_period,
+                                                                     end_period=end_period,
+                                                                     long_term_care_package=long_term_package)
+            line_famdm = LongTermCareInvoiceLine.objects.get_or_create(invoice=invoice,
+                                                                       start_period=start_period,
+                                                                       end_period=end_period,
+                                                                       long_term_care_package=LongTermPackage.objects.filter(
+                                                                           code='FAMDM').get())
+
+            line_gardes = LongTermCareInvoiceLine.objects.get_or_create(invoice=invoice,
+                                                                        start_period=start_period,
+                                                                        end_period=end_period,
+                                                                        long_term_care_package=LongTermPackage.objects.filter(
+                                                                            code='AMDGI').get())
+
+        return invoice

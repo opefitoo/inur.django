@@ -30,6 +30,13 @@ class LongTermCareMonthlyStatement(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    def calculate_total_price(self):
+        total_price = 0
+        for invoice in LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all():
+            total_price += invoice.calculate_price()
+        return total_price
+
+
     def __str__(self):
         return f"{self.year} - {self.month}"
 
@@ -68,6 +75,12 @@ class LongTermCareInvoiceFile(models.Model):
             if line.end_period.month != self.invoice_end_period.month or line.end_period.year != self.invoice_end_period.year:
                 raise ValidationError("La ligne doit être dans le même mois que la facture")
 
+    def calculate_price(self):
+        lines = LongTermCareInvoiceLine.objects.filter(invoice=self)
+        total = 0
+        for line in lines:
+            total += line.calculate_price()
+        return total
 
     class Meta:
         verbose_name = _("Facture assurance dépendance")
@@ -117,6 +130,16 @@ class LongTermCareInvoiceLine(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    def calculate_price(self):
+        print("calculate_price for line {0}".format(self))
+        if self.long_term_care_package.package:
+            return self.long_term_care_package.price_per_year_month(year=self.start_period.year,
+                                                                month=self.start_period.month) * (
+                    self.end_period - self.start_period).days
+        else:
+            return self.long_term_care_package.price_per_year_month(year=self.start_period.year,
+                                                                month=self.start_period.month) * 20
+
     class Meta:
         verbose_name = _("Ligne de facture assurance dépendance")
         verbose_name_plural = _("Lignes de facture assurance dépendance")
@@ -140,8 +163,6 @@ class LongTermCareInvoiceLine(models.Model):
                 self.long_term_care_package,
                 self.long_term_care_package.dependence_level,
                 plan_for_period.level_of_needs))
-
-
 
     def __str__(self):
         return "Ligne de facture assurance dépendance de {0} à {1} patient {2}".format(self.start_period,

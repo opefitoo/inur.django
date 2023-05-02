@@ -11,6 +11,24 @@
     }
   },
   {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 1,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 26.53
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 1,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 25.88
+    }
+  },
+  {
     "model": "dependence.longtermpackage",
     "pk": 2,
     "fields": {
@@ -19,6 +37,24 @@
       "weekly_package": 280,
       "dependence_level": 1,
       "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 2,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 59.43
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 2,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 57.98
     }
   },
   {
@@ -33,6 +69,24 @@
     }
   },
   {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 3,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 89.14
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 3,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 86.97
+    }
+  },
+  {
     "model": "dependence.longtermpackage",
     "pk": 4,
     "fields": {
@@ -41,6 +95,24 @@
       "weekly_package": 560,
       "dependence_level": 3,
       "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 4,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 118.85
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 4,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 115.95
     }
   },
   {
@@ -55,6 +127,24 @@
     }
   },
   {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 5,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 148.57
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 5,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 144.94
+    }
+  },
+  {
     "model": "dependence.longtermpackage",
     "pk": 6,
     "fields": {
@@ -63,6 +153,24 @@
       "weekly_package": 840,
       "dependence_level": 5,
       "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 6,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 178.28
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 6,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 173.93
     }
   },
   {
@@ -77,6 +185,24 @@
     }
   },
   {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 7,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 207.99
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 7,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 202.92
+    }
+  },
+  {
     "model": "dependence.longtermpackage",
     "pk": 8,
     "fields": {
@@ -85,6 +211,24 @@
       "weekly_package": 1120,
       "dependence_level": 7,
       "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 8,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 237.71
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 8,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 231.91
     }
   },
   {
@@ -99,6 +243,24 @@
     }
   },
   {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 9,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 267.42
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 9,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 260.90
+    }
+  },
+  {
     "model": "dependence.longtermpackage",
     "pk": 10,
     "fields": {
@@ -107,6 +269,24 @@
       "weekly_package": 1400,
       "dependence_level": 9,
       "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 10,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 297.13
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 10,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 289.89
     }
   },
   {
@@ -121,6 +301,24 @@
     }
   },
   {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 11,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 326.85
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 11,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 318.87
+    }
+  },
+  {
     "model": "dependence.longtermpackage",
     "pk": 12,
     "fields": {
@@ -129,6 +327,24 @@
       "weekly_package": 1680,
       "dependence_level": 11,
       "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 12,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 356.56
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 12,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 347.86
     }
   },
   {
@@ -143,6 +359,24 @@
     }
   },
   {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 13,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 386.27
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 13,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 376.85
+    }
+  },
+  {
     "model": "dependence.longtermpackage",
     "pk": 14,
     "fields": {
@@ -151,6 +385,24 @@
       "weekly_package": 1960,
       "dependence_level": 13,
       "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 14,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 415.98
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 14,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 405.84
     }
   },
   {
@@ -165,6 +417,24 @@
     }
   },
   {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 15,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 445.70
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 15,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 434.83
+    }
+  },
+  {
     "model": "dependence.longtermpackage",
     "pk": 16,
     "fields": {
@@ -173,6 +443,141 @@
       "weekly_package": 2230,
       "dependence_level": 15,
       "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 16,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 473.29
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 16,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 461.75
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 17,
+    "fields": {
+      "code": "AEV_VM_MIN",
+      "description": "Prix par minute Assurance dépendance",
+      "package": false
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 17,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 1.485659
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 17,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 1.449429
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 17,
+      "start_date": "2022-10-01",
+      "end_date": "2022-12-31",
+      "price": 1.410956
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 18,
+    "fields": {
+      "code": "FAMDM",
+      "description": "Activités d'assistance à l'entretien du ménage",
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 18,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 26.74
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 18,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 26.09
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 19,
+    "fields": {
+      "code": "AMDGI",
+      "description": "Garde individuelle durée 30 mn",
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 19,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 40.11
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 19,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 39.13
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 20,
+    "fields": {
+      "code": "AMDGD",
+      "description": "Activité de garde déplacement durée 30 mn",
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 20,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 31.20
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 20,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 30.44
     }
   }
 ]

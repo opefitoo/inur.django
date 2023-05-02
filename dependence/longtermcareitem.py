@@ -15,6 +15,7 @@ class LongTermCareItem(models.Model):
         ordering = ['code']
         verbose_name = "Acte d'assurance dépendance"
         verbose_name_plural = "Actes d'assurance dépendance"
+
     def __str__(self):
         # if short_description is not empty
         if self.short_description:
@@ -23,6 +24,7 @@ class LongTermCareItem(models.Model):
         else:
             # code de l'acte / description de l'acte (seuelement les 10 premiers caractères)
             return "{0} / {1}".format(self.code, self.description[:10])
+
 
 # class that represents a code and a dependency insurance package
 class LongTermPackage(models.Model):
@@ -34,12 +36,28 @@ class LongTermPackage(models.Model):
     # forfait hebdomadaire en minutes
     weekly_package = models.PositiveIntegerField(blank=True, null=True)
 
+    def price_per_day(self, date):
+        try:
+            price = LongTermPackagePrice.objects.get(package=self, start_date__lte=date, end_date__gte=date)
+            return price.price
+        except LongTermPackagePrice.DoesNotExist:
+            return None
+
+    def price_per_year_month(self, year, month):
+        try:
+            price = LongTermPackagePrice.objects.get(package=self, start_date__year=year, start_date__month=month)
+            return price.price
+        except LongTermPackagePrice.DoesNotExist:
+            return None
+
     class Meta:
         ordering = ['code']
         verbose_name = "Acte assurance dépendance"
         verbose_name_plural = "Acte assurance dépendance"
+
     def __str__(self):
         return "{0} / {1}".format(self.code, self.description)
+
 
 class LongTermPackagePrice(models.Model):
     package = models.ForeignKey(LongTermPackage, on_delete=models.CASCADE, related_name='price_validity_package')
@@ -51,5 +69,6 @@ class LongTermPackagePrice(models.Model):
         ordering = ['package']
         verbose_name = "Prix assurance dépendance"
         verbose_name_plural = "Prix assurance dépendance"
+
     def __str__(self):
         return "{0} / {1}".format(self.package, self.price)
