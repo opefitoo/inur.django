@@ -4,8 +4,6 @@ from django import forms
 from django.forms import BaseInlineFormSet, ValidationError, ModelForm
 from django.utils import timezone
 from django_select2.forms import ModelSelect2Widget
-from wtforms import Form, SubmitField, StringField
-from wtforms.validators import Length
 
 from dependence.careplan import CarePlanDetail
 from invoices.events import Event
@@ -224,13 +222,3 @@ class MedicalPrescriptionForm(ModelForm):
         super(MedicalPrescriptionForm, self).__init__(*args, **kwargs)
 
 
-class YaleConfigurationForm(Form):
-    text_input = StringField(
-        'Yale Validation Code',
-        validators=[Length(max=100)],
-        description='Enter text here'
-    )
-    send_button = SubmitField('Send Validation Code')
-    validate_button = SubmitField('Validate Validation Code')
-    house_activities_button = SubmitField('House Activities')
-    display_state_button = SubmitField('Yale connection state')
