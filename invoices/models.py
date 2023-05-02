@@ -24,6 +24,7 @@ from django.utils.timezone import now
 from django_countries.fields import CountryField
 from gdstorage.storage import GoogleDriveStorage
 from pdf2image import convert_from_bytes
+from phonenumber_field.modelfields import PhoneNumberField
 
 from invoices.employee import Employee
 from invoices.enums.generic import GenderType
@@ -251,6 +252,7 @@ class Patient(models.Model):
     city = models.CharField(max_length=30)
     country = CountryField(blank_label='...', blank=True, null=True)
     phone_number = models.CharField(max_length=30)
+    additional_phone_number = PhoneNumberField("Numéro de tél. additionel", blank=True, null=True)
     email_address = models.EmailField(default=None, blank=True, null=True)
     participation_statutaire = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)

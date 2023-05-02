@@ -64,5 +64,5 @@ def create_monthly_invoice(patient, month, year):
                                                                  end_period=end_period,
                                                                  long_term_care_package=long_term_package)
             print(line)
-
+    return statement
        # add all activities to the invoice

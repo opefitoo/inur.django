@@ -101,6 +101,8 @@ class PrestationGoogleCalendarSurLu:
                                           data.get('patient').country)
         description += descr_line % (u'Adresse:', address)
         description += descr_line % (u'Tél Patient:', data.get('patient').phone_number)
+        if data.get('patient').additional_phone_number:
+            description += descr_line % (u'Tél 2 Patient:', data.get('patient').additional_phone_number)
         if data.get('id'):
             description += descr_line % (u'Sur LU ID:', data.get('id'))
         if data.get('notes') and len(data.get('notes')) > 0:
@@ -192,6 +194,8 @@ class PrestationGoogleCalendarSurLu:
         description += descr_line % (u'Adresse:', address)
         if event.patient:
             description += descr_line % (u'Tél Patient:', event.patient.phone_number)
+            if event.patient.additional_phone_number:
+                description += descr_line % (u'Tél 2 Patient:', event.patient.additional_phone_number)
         if event.id:
             description += descr_line % (u'Sur LU ID:', event.id)
         if event.notes and len(event.notes) > 0:
