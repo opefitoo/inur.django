@@ -7,9 +7,9 @@ import os
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import migrations
+from django.utils.dateparse import parse_date
 
 from invoices import settings
-from django.utils.dateparse import parse_date
 
 
 def process_codes(apps, schema_editor):
@@ -33,7 +33,6 @@ def process_codes(apps, schema_editor):
                     care_code_to_updt.name = row[0][0:320]
                     care_code_to_updt.description = row[0]
                     care_code_to_updt.save()
-                    print("### care code saved: %s" % str(care_code_to_updt))
 
                 except ObjectDoesNotExist:
                     new_c_code = care_code(code=code, name=row[0][0:320], description=row[0])
