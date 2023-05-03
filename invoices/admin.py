@@ -1208,7 +1208,7 @@ class EventListAdmin(admin.ModelAdmin):
         else:
             # Display only today's and yesterday's events for non admin users
             return queryset.filter(employees__user_id=request.user.id).exclude(state=3).exclude(state=5).filter(
-                day__year=today.year).filter(day__month=today.month).filter(day__day__gte=today.day - 1)
+                day__year=today.year).filter(day__month=today.month).filter(day__day__gte=today.day - 1).order_by("-day")
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
