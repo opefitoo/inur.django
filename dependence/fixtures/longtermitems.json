@@ -1,0 +1,325 @@
+[
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVH01",
+      "short_description": "hygiène corporelle aide minimale",
+      "weekly_package": 30
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVH02",
+      "short_description": "hygiène corporelle aide partielle",
+      "weekly_package": 70
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVH03",
+      "short_description": "hygiène corporelle aide complète",
+      "weekly_package": 117.5
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVH04",
+      "short_description": "hygiène buccale",
+      "weekly_package": 35
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVH05",
+      "short_description": "rasage visage",
+      "weekly_package": 35
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVH06",
+      "short_description": "épilation visage",
+      "weekly_package": 5
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVH07",
+      "short_description": "hygiène menstruelle",
+      "weekly_package": 8
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVE01",
+      "short_description": "élimination aide minimale",
+      "weekly_package": 87.5
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVE02",
+      "short_description": "élimination aide partielle",
+      "weekly_package": 175
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVE03",
+      "short_description": "élimination aide complète",
+      "weekly_package": 262.5
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVE04",
+      "short_description": "changement sac de stomie/vidange sac urinaire",
+      "weekly_package": 52.5
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVN01",
+      "short_description": "nutrition aide minimale",
+      "weekly_package": 105
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVN02",
+      "short_description": "nutrition aide partielle",
+      "weekly_package": 210
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVN03",
+      "short_description": "nutrition aide complète",
+      "weekly_package": 420
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVN04",
+      "short_description": "nutrition entérale",
+      "weekly_package": 210
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVHB01",
+      "short_description": "habillage-déshabillage aide minimale",
+      "weekly_package": 70
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVHB02",
+      "short_description": "habillage-déshabillage aide partielle",
+      "weekly_package": 105
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVHB03",
+      "short_description": "habillage-déshabillage aide complète",
+      "weekly_package": 210
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVHB04",
+      "short_description": "installation de matériel de correction et de compensation",
+      "weekly_package": 17.5
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVM11",
+      "short_description": "transferts forfait simple",
+      "weekly_package": 52.5
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVM12",
+      "short_description": "transferts forfait majoré",
+      "weekly_package": 105
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVM13",
+      "short_description": "déplacements forfait simple",
+      "weekly_package": 52.5
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVM14",
+      "short_description": "déplacements forfait majoré",
+      "weekly_package": 105
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVM15",
+      "short_description": "accès et sortie du logement",
+      "weekly_package": 35
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVM16",
+      "short_description": "changements de niveau",
+      "weekly_package": 35
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVH-C",
+      "short_description": "complément hygiène corporelle",
+      "weekly_package": 105
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVE-C",
+      "short_description": "complément élimination",
+      "weekly_package": 105
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVHB-C",
+      "short_description": "complément habillage-déshabillage",
+      "weekly_package": 105
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVN-C",
+      "short_description": "complément nutrition",
+      "weekly_package": 105
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVN-C-HY",
+      "short_description": "complément hydratation",
+      "weekly_package": 52.5
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVM-C",
+      "short_description": "complément transferts",
+      "weekly_package": 105
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AEVM-C-ES",
+      "short_description": "complément pour risques d'escarres",
+      "weekly_package": 220.5
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AAI",
+      "short_description": "activités d'appui à l'indépendance",
+      "weekly_package": 300
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AMD-GI",
+      "short_description": "garde individuelle",
+      "weekly_package": 840
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AMD-GDN",
+      "short_description": "garde de nuit",
+      "description": "10 nuits par an",
+      "weekly_package": 0
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AMD-FA",
+      "short_description": "formation à l’aidant",
+      "description": "6 (annuel)",
+      "weekly_package": 360
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AMD-FAT",
+      "short_description": "formation liée aux aides techniques",
+      "description": "2 (annuel)",
+      "weekly_package": 120
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AMD-M",
+      "short_description": "activités d'assistance à l'entretien du ménage",
+      "weekly_package": 180
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AMD-GG",
+      "short_description": "garde en groupe",
+      "weekly_package": 2400
+    }
+  },
+  {
+    "model": "dependence.longtermcareitem",
+    "fields": {
+      "code": "AMD-GG-M",
+      "short_description": "garde en groupe : forfait majoré",
+      "weekly_package": 3360
+    }
+  }
+]
