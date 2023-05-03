@@ -6,15 +6,15 @@ class LongTermCareItem(models.Model):
     # code de l'acte must be unique
     code = models.CharField(max_length=10, unique=True)
     # description de l'acte
-    description = models.TextField(max_length=500)
-    short_description = models.CharField(max_length=50, blank=True, null=True)
+    description = models.TextField(max_length=500, blank=True, null=True)
+    short_description = models.CharField(max_length=60, blank=True, null=True)
     # forfait hebdomadaire en minutes  et en décimales
     weekly_package = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
 
     class Meta:
         ordering = ['code']
-        verbose_name = "Acte d'assurance dépendance"
-        verbose_name_plural = "Actes d'assurance dépendance"
+        verbose_name = "Relevé type des aides et soins"
+        verbose_name_plural = "Relevés type des aides et soins"
 
     def __str__(self):
         # if short_description is not empty

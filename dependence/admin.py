@@ -17,6 +17,7 @@ from fieldsets_with_inlines import FieldsetsInlineMixin
 from reportlab.pdfgen import canvas
 
 from dependence.aai import AAITransmission, AAITransDetail
+from dependence.actions.initial_data import create_or_update_long_term_item_based_on_fixture
 from dependence.actions.monthly import create_aev_invoices_mars_2023
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
@@ -27,7 +28,7 @@ from dependence.falldeclaration import FallDeclaration
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
     TensionAndTemperatureParametersFormset, CarePlanDetailForm
 from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceLine, LongTermCareMonthlyStatement
-from dependence.longtermcareitem import LongTermPackage, LongTermPackagePrice
+from dependence.longtermcareitem import LongTermPackage, LongTermPackagePrice, LongTermCareItem
 from dependence.medicalcaresummary import MedicalCareSummary
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
@@ -55,8 +56,12 @@ class LongTermPackagePriceInline(admin.TabularInline):
     model = LongTermPackagePrice
 
 
-@admin.register(LongTermPackage)
+@admin.register(LongTermCareItem)
 class LongTermCareItemAdmin(admin.ModelAdmin):
+    list_display = ('code', 'short_description')
+    actions = [create_or_update_long_term_item_based_on_fixture]    
+@admin.register(LongTermPackage)
+class LongTermPackageAdmin(admin.ModelAdmin):
     list_display = ('code', 'description')
     inlines = [LongTermPackagePriceInline]
 
