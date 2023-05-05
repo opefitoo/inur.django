@@ -6,6 +6,7 @@ from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
+from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivityDetail
 from dependence.careplan import CarePlanMaster, CarePlanDetail
 from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareActivity
 from dependence.longtermcareitem import LongTermCareItem
@@ -413,7 +414,28 @@ class LongTermCareInvoiceItemSerializer(serializers.ModelSerializer):
 #                                                                              **validated_data)
 #         return long_term_care_invoice_item
 
+class LongTermMonthlyActivityDetailSerializer(serializers.ModelSerializer):
+    activity = serializers.StringRelatedField()
+    activity_date = serializers.DateField(format="%Y-%m-%d")
 
+
+    class Meta:
+        model = LongTermMonthlyActivityDetail
+        fields = ['activity', 'quantity', 'activity_date']
+
+class LongTermMonthlyActivitySerializer(serializers.ModelSerializer):
+    activity_details = LongTermMonthlyActivityDetailSerializer(many=True)
+
+    class Meta:
+        model = LongTermMonthlyActivity
+        fields = ['year', 'month', 'patient', 'activity_details']
+
+    def create(self, validated_data):
+        activity_details_data = validated_data.pop('activity_details')
+        activity = LongTermMonthlyActivity.objects.create(**validated_data)
+        for activity_detail_data in activity_details_data:
+            LongTermMonthlyActivityDetail.objects.create(long_term_monthly_activity=activity, **activity_detail_data)
+        return activity
 class LongTermCareInvoiceFileSerializer(serializers.ModelSerializer):
     invoice = LongTermCareInvoiceItemSerializer(many=True)
 
