@@ -465,8 +465,6 @@ class Hospitalization(models.Model):
 
 def update_medical_prescription_filename(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
-    # get the storage backend for the file field
-    storage = default_storage
     if instance.date is None:
         _current_yr_or_prscr_yr = now().date().strftime('%Y')
         _current_month_or_prscr_month = now().date().strftime('%M')
@@ -475,22 +473,17 @@ def update_medical_prescription_filename(instance, filename):
         _current_month_or_prscr_month = str(instance.date.month)
     path = os.path.join("Medical Prescription", _current_yr_or_prscr_yr,
                         _current_month_or_prscr_month)
-
-    # uuid = str(uuid4())
-    filename = '%s_pour_%s_%s_%s_%s%s' % (instance.prescriptor.name, instance.patient.name, instance.patient.first_name,
-                                          str(instance.date), uuid, file_extension)
+    filename_pre_str = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}"
+    if (instance.file_upload.name.find(filename_pre_str) != -1):
+        file_name_pdf, file_extension_pdf = os.path.splitext(instance.file_upload.name)
+        filename = f"{file_name_pdf}{file_extension}"
+        return filename
+    
     # rewrite filename using f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{uuid}{file_extension}"
-    filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}{file_extension}"
+    unique_id = uuid.uuid4().hex
+    filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{unique_id}{file_extension}"
     filepath = os.path.join(path, filename)
-    if storage.exists(filepath):
-        # if it does, generate a unique identifier and append it to the filename
-        unique_id = uuid.uuid4().hex
-        new_filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{unique_id}{file_extension}"
-        filepath = os.path.join(path, new_filename)
-        return filepath
-    else:
-        return filepath
-
+    return filepath
 
 def validate_image(image):
     try:
@@ -626,13 +619,21 @@ class PatientAdminFile(models.Model):
 @receiver(pre_save, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_pre_save")
 def medical_prescription_clean_gdrive_pre_save(sender, instance, **kwargs):
     if instance.thumbnail_img:
-        old_file_name = instance.file_upload.name
-        new_file_name = update_medical_prescription_filename(instance, old_file_name)
-        my_file = instance.file_upload.storage.open(old_file_name, 'rb')
-        instance.file_upload.storage.save(new_file_name, my_file)
-        my_file.close()
-        instance.file_upload.delete(save=False)
-        instance.file_upload.name = new_file_name
+        old_file_name = instance.thumbnail_img.name
+        old_file_name_path, old_file_name_ext = os.path.splitext(old_file_name)
+        old_file_name_pdf = f"{old_file_name_path}.pdf"
+        new_file_name_pdf = instance.file_upload.name
+        if instance.file_upload._committed:
+            new_file_name_pdf = update_medical_prescription_filename(instance, old_file_name_pdf)
+        if (new_file_name_pdf != old_file_name_pdf):
+            storage = default_storage
+            if storage.exists(old_file_name_pdf):
+                my_file = instance.file_upload.storage.open(old_file_name_pdf, 'rb')
+                if instance.file_upload._committed:
+                    instance.file_upload.storage.save(new_file_name_pdf, my_file)
+                    my_file.close()
+                    instance.file_upload.name = new_file_name_pdf
+                instance.file_upload.storage.delete(old_file_name_pdf)
     if instance.file_upload:
         instance.thumbnail_img.delete(save=False)
         thumbnail_images = convert_from_bytes(instance.file_upload.read(), fmt='png', dpi=200, size=(300, None))
