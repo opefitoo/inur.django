@@ -19,6 +19,7 @@ from reportlab.pdfgen import canvas
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.actions.initial_data import create_or_update_long_term_item_based_on_fixture
 from dependence.actions.monthly import create_aev_invoices_mars_2023
+from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivityDetail
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
 from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetail
@@ -59,7 +60,7 @@ class LongTermPackagePriceInline(admin.TabularInline):
 @admin.register(LongTermCareItem)
 class LongTermCareItemAdmin(admin.ModelAdmin):
     list_display = ('code', 'short_description')
-    actions = [create_or_update_long_term_item_based_on_fixture]    
+    actions = [create_or_update_long_term_item_based_on_fixture]
 @admin.register(LongTermPackage)
 class LongTermPackageAdmin(admin.ModelAdmin):
     list_display = ('code', 'description')
@@ -547,6 +548,18 @@ class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'aai/print_aai.html', {'obj': obj})
+
+
+class LongTermMonthlyActivityDetailInLine(admin.StackedInline):
+    extra = 0
+    model = LongTermMonthlyActivityDetail
+
+@admin.register(LongTermMonthlyActivity)
+class LongTermMonthlyActivityAdmin(admin.ModelAdmin):
+    list_display = ('patient', 'month', 'year')
+    autocomplete_fields = ['patient']
+    readonly_fields = ('created_on', 'updated_on')
+    inlines = [LongTermMonthlyActivityDetailInLine]
 
 
 @admin.register(FallDeclaration)

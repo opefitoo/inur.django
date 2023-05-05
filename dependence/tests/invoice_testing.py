@@ -1,3 +1,4 @@
+import json
 from _decimal import Decimal
 from datetime import datetime
 
@@ -6,21 +7,34 @@ from django.test import TestCase
 from dependence.actions.monthly import create_monthly_invoice
 from dependence.detailedcareplan import MedicalCareSummaryPerPatient
 from dependence.invoicing import LongTermCareInvoiceFile
+from invoices import settings
 from invoices.models import Patient
 
 
 class TestMonthlyInvoice(TestCase):
     fixtures = ['longtermpackage.json']
+    fixtures = ['longtermitems.json']
 
     def setUp(self):
-        self.patient_john = Patient.objects.create(name="John", is_under_dependence_insurance=True, date_of_exit=None)
+        self.patient_john = Patient.objects.create(id=1309, name="John", is_under_dependence_insurance=True,
+                                                   date_of_exit=None)
         self.patient_david = Patient.objects.create(name="David", is_under_dependence_insurance=True, date_of_exit=None)
         self.patient_lucy = Patient.objects.create(name="Lucy", is_under_dependence_insurance=True, date_of_exit=None)
         self.month = 4
         self.year = 2023
 
-
     def test_create_monthly_invoice(self):
+        """
+        Test that a monthly invoice is created for a patient
+        @return: None
+        """
+        file_path = settings.BASE_DIR + '/test_data/month_validation.json'
+        with open(file_path) as f:
+            data = json.load(f)
+        response = self.client.post('/api/v1/longtermcare-invoice/', data)  # Simulate the POST request
+        self.assertEqual(response.status_code, 200)  # Check the response status code
+        # Check the response content, assuming it's JSON
+        self.assertJSONEqual(str(response.content, encoding='utf8'), {'success': True})
 
         # Create a medical care summary for the patient
         MedicalCareSummaryPerPatient.objects.create(patient=self.patient_john,
@@ -64,7 +78,8 @@ class TestMonthlyInvoice(TestCase):
         self.assertEqual(statement.year, self.year)
 
         # Check that a LongTermCareInvoiceFile was created for the patient and period
-        invoice = LongTermCareInvoiceFile.objects.get(patient=self.patient_john, invoice_start_period=datetime(2023, 4, 1),
+        invoice = LongTermCareInvoiceFile.objects.get(patient=self.patient_john,
+                                                      invoice_start_period=datetime(2023, 4, 1),
                                                       invoice_end_period=datetime(2023, 4, 30))
 
         # Check that a LongTermCareInvoiceLine was created for the invoice and period
@@ -72,7 +87,7 @@ class TestMonthlyInvoice(TestCase):
         #                                            start_period=datetime(2023, 4, 1),
         #                                            end_period=datetime(2023, 4, 30))
         self.assertEqual(statement.calculate_total_price(), Decimal('22187.90'))
-        #self.assertEqual(line.calculate_price(), Decimal('1723.47'))
+        # self.assertEqual(line.calculate_price(), Decimal('1723.47'))
 
         # Check that the LongTermCarePackage on the invoice line matches the level of needs from the medical care summary
-        #self.assertEqual(line.long_term_care_package.dependence_level, 1)
+        # self.assertEqual(line.long_term_care_package.dependence_level, 1)
