@@ -33,7 +33,8 @@ class LongTermMonthlyActivityTestCase(BaseTestCase, APITestCase):
                                            zipcode='zipcode 0',
                                            city='city 0',
                                            phone_number='000')
-        patient_1 = Patient.objects.create(code_sn='code_sn1',
+        patient_1 = Patient.objects.create(id=1515,
+                                           code_sn='code_sn1',
                                            first_name='first name 1',
                                            name='name 1',
                                            address='address 1',
@@ -56,19 +57,19 @@ class LongTermMonthlyActivityTestCase(BaseTestCase, APITestCase):
 
         self.valid_payload = {
             "year": 2023,
-            "month": 5,
-            "patient": 1,
+            "month": 1,
+            "patient": 1515,
             "activity_details": [
                 {
-                    "activity": "Activity 1",
+                    "activity": "AEVH03",
                     "quantity": 2,
-                    "activity_date": "2023-05-03",
+                    "activity_date": "2023-01-03",
 
                 },
                 {
-                    "activity": "Activity 2",
+                    "activity": "AEVH03",
                     "quantity": 3,
-                    "activity_date": "2023-05-04",
+                    "activity_date": "2023-01-04",
                 }
             ]
         }

@@ -116,7 +116,7 @@ class LongTermMonthlyActivityDetail(models.Model):
         verbose_name_plural = _("Détails des relevés d'activité mensuels")
 
     long_term_monthly_activity = models.ForeignKey(LongTermMonthlyActivity, on_delete=models.CASCADE,
-                                                   related_name='activity_dtl_to_monthly_activity')
+                                                   related_name='activity_details')
     activity_date = models.DateField(_('Activity Date'))
     activity = models.ForeignKey(LongTermCareItem, on_delete=models.CASCADE, related_name='activity_dtl_to_item')
     quantity = models.PositiveIntegerField(_('Quantity'))

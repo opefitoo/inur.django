@@ -19,12 +19,11 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     ValidityDateSerializer, InvoiceItemBatchSerializer, EventTypeSerializer, EventSerializer, \
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
-    FullCalendarEmployeeSerializer, FullCalendarPatientSerializer, LongTermCareInvoiceFileSerializer, \
+    FullCalendarEmployeeSerializer, FullCalendarPatientSerializer, \
     LongTermMonthlyActivitySerializer
 from api.utils import get_settings
 from dependence.activity import LongTermMonthlyActivity
 from dependence.careplan import CarePlanDetail, CarePlanMaster
-from dependence.invoicing import LongTermCareInvoiceFile
 from dependence.models import PatientAnamnesis
 from helpers import holidays, careplan
 from helpers.employee import get_employee_id_by_abbreviation, \
@@ -136,10 +135,6 @@ class PatientCarePlanView(generics.ListCreateAPIView):
 #             return Response(serializer.data, status=status.HTTP_201_CREATED)
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-class LongTermCareInvoiceFileViewSet(viewsets.ModelViewSet):
-    queryset = LongTermCareInvoiceFile.objects.all()
-    serializer_class = LongTermCareInvoiceFileSerializer
 
 class LongTermMonthlyActivityViewSet(viewsets.ModelViewSet):
     queryset = LongTermMonthlyActivity.objects.all()

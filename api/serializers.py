@@ -8,7 +8,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivityDetail
 from dependence.careplan import CarePlanMaster, CarePlanDetail
-from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareActivity
+from dependence.invoicing import LongTermCareActivity
 from dependence.longtermcareitem import LongTermCareItem
 from dependence.models import PatientAnamnesis, AssignedPhysician
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail
@@ -445,35 +445,30 @@ class LongTermMonthlyActivitySerializer(serializers.ModelSerializer):
 
         return long_term_monthly_activity
 
+    def update(self, instance, validated_data):
+        instance.year = validated_data.get('year', instance.year)
+        instance.month = validated_data.get('month', instance.month)
+        instance.patient = validated_data.get('patient', instance.patient)
+        instance.save()
 
-class LongTermCareInvoiceFileSerializer(serializers.ModelSerializer):
-    invoice = LongTermCareInvoiceItemSerializer(many=True)
+        activity_details_data = validated_data.pop('activity_details', [])
 
-    # long_term_care_item = serializers.CharField()
+        # Delete existing activity details not in the updated data
+        instance.activity_details.exclude(
+            id__in=[item.get('id') for item in activity_details_data if item.get('id')]).delete()
 
-    class Meta:
-        model = LongTermCareInvoiceFile
-        fields = '__all__'
+        for activity_detail_data in activity_details_data:
+            activity_detail_id = activity_detail_data.get('id', None)
+            if activity_detail_id:
+                # Update existing activity detail
+                activity_detail = instance.activity_details.get(id=activity_detail_id)
+                activity_detail.activity = activity_detail_data.get('activity', activity_detail.activity)
+                activity_detail.quantity = activity_detail_data.get('quantity', activity_detail.quantity)
+                activity_detail.activity_date = activity_detail_data.get('activity_date', activity_detail.activity_date)
+                activity_detail.save()
+            else:
+                # Create new activity detail
+                LongTermMonthlyActivityDetail.objects.create(long_term_monthly_activity=instance,
+                                                             **activity_detail_data)
 
-    def create(self, validated_data):
-        invoice_data = validated_data.pop('invoice')
-        invoice_items = []
-        invoice_file = LongTermCareInvoiceFile.objects.create(**validated_data)
-
-        for item_data in invoice_data:
-            long_term_care_item_code = item_data.pop('long_term_care_item')
-            long_term_care_item_code_instance = LongTermCareItem.objects.get(code=long_term_care_item_code)
-            long_term_care_invoice_item = LongTermCareInvoiceItem.objects.create(
-                long_term_care_item=long_term_care_item_code_instance,
-                assigned_employee=Employee.objects.get(id=1),
-                invoice=invoice_file, **item_data)
-        return invoice_file
-
-        # serializer = LongTermCareInvoiceItemSerializer(data=item_data)
-        # serializer.is_valid(raise_exception=True)
-        # invoice_items.append(serializer.save())
-
-        invoice = LongTermCareInvoiceFile.objects.create(**validated_data)
-        invoice.invoice.set(invoice_items)
-
-        return invoice
+        return instance
