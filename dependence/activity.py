@@ -61,7 +61,6 @@ class LongTermMonthlyActivityFile(models.Model):
         DateEnvoiPrestataire.text = self.provider_date_of_sending.strftime("%Y-%m-%d")
         # create sub element Prestataire
         Prestataire = ElementTree.SubElement(root, "Prestataire")
-        print("* * * code prestataire: " + config.CODE_PRESTATAIRE)
         Prestataire.text = config.CODE_PRESTATAIRE
         # loop through all LongTermMonthlyActivityDetail objects
         # create sub element Changement
@@ -85,7 +84,6 @@ class LongTermMonthlyActivityFile(models.Model):
                 DateActivite = ElementTree.SubElement(Activite, "DateActivite")
                 DateActivite.text = dtl.activity_date.strftime("%Y-%m-%d")
         mydata = ElementTree.tostring(root)
-        print(mydata)
         if xsd_schema.is_valid(mydata):
             print("The XML instance is valid!")
         else:
