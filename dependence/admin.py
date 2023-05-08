@@ -19,7 +19,7 @@ from reportlab.pdfgen import canvas
 from dependence.aai import AAITransmission, AAITransDetail
 from dependence.actions.initial_data import create_or_update_long_term_item_based_on_fixture
 from dependence.actions.monthly import create_aev_invoices_mars_2023
-from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivityDetail
+from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivityDetail, LongTermMonthlyActivityFile
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
 from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetail
@@ -27,7 +27,7 @@ from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCar
     SharedMedicalCareSummaryPerPatientDetail
 from dependence.falldeclaration import FallDeclaration
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
-    TensionAndTemperatureParametersFormset, CarePlanDetailForm
+    TensionAndTemperatureParametersFormset, CarePlanDetailForm, LongTermMonthlyActivityFileAdminForm
 from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceLine, LongTermCareMonthlyStatement
 from dependence.longtermcareitem import LongTermPackage, LongTermPackagePrice, LongTermCareItem
 from dependence.medicalcaresummary import MedicalCareSummary
@@ -560,6 +560,11 @@ class LongTermMonthlyActivityAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
     readonly_fields = ('created_on', 'updated_on')
     inlines = [LongTermMonthlyActivityDetailInLine]
+@admin.register(LongTermMonthlyActivityFile)
+class LongTermMonthlyActivityFileAdmin(admin.ModelAdmin):
+    list_display = ('month', 'year')
+    readonly_fields = ('created_on', 'updated_on')
+    form = LongTermMonthlyActivityFileAdminForm
 
 
 @admin.register(FallDeclaration)

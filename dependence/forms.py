@@ -5,6 +5,7 @@ from django.core.validators import EMPTY_VALUES
 from django.forms import BaseInlineFormSet, ModelMultipleChoiceField, CheckboxSelectMultiple
 from django.utils.translation import gettext_lazy as _
 
+from dependence.activity import LongTermMonthlyActivityFile, LongTermMonthlyActivity
 from dependence.careplan import CarePlanDetail, CareOccurrence
 from dependence.detailedcareplan import MedicalCareSummaryPerPatientDetail
 from dependence.enums.falldeclaration_enum import FallCircumstances, FallCognitiveMoodDiorders, FallConsequences, \
@@ -125,3 +126,16 @@ class FallDeclarationForm(forms.ModelForm):
         for field in self.declared_fields:
             if field in self.initial.keys():
                 self.initial[field] = eval(self.initial[field])
+
+
+class LongTermMonthlyActivityFileAdminForm(forms.ModelForm):
+    class Meta:
+        model = LongTermMonthlyActivityFile
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance')
+        if instance and instance.year and instance.month:
+            self.fields['monthly_activities'].queryset = LongTermMonthlyActivity.objects.filter(year=instance.year,
+                                                                                                month=instance.month)

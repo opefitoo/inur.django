@@ -199,11 +199,11 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
                   'invoice_send_date', 'invoice_sent', 'invoice_paid', 'medical_prescription', 'patient', 'prestations',
                   'is_private', 'invoice_details')
 
+
 class InvoicingDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoicingDetails
         fields = ('id', 'provider_code', 'name')
-
 
 
 class InvoiceItemBatchSerializer(serializers.ModelSerializer):
@@ -413,15 +413,20 @@ class LongTermCareInvoiceItemSerializer(serializers.ModelSerializer):
 #                                                                              assigned_employee=Employee.objects.get(id=1),
 #                                                                              **validated_data)
 #         return long_term_care_invoice_item
+class LongTermItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LongTermCareItem
+        fields = '__all__'
+
 
 class LongTermMonthlyActivityDetailSerializer(serializers.ModelSerializer):
-    activity = serializers.StringRelatedField()
+    activity = serializers.SlugRelatedField(slug_field='code', queryset=LongTermCareItem.objects.all())
     activity_date = serializers.DateField(format="%Y-%m-%d")
-
 
     class Meta:
         model = LongTermMonthlyActivityDetail
         fields = ['activity', 'quantity', 'activity_date']
+
 
 class LongTermMonthlyActivitySerializer(serializers.ModelSerializer):
     activity_details = LongTermMonthlyActivityDetailSerializer(many=True)
@@ -432,10 +437,15 @@ class LongTermMonthlyActivitySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         activity_details_data = validated_data.pop('activity_details')
-        activity = LongTermMonthlyActivity.objects.create(**validated_data)
+        long_term_monthly_activity = LongTermMonthlyActivity.objects.create(**validated_data)
+
         for activity_detail_data in activity_details_data:
-            LongTermMonthlyActivityDetail.objects.create(long_term_monthly_activity=activity, **activity_detail_data)
-        return activity
+            LongTermMonthlyActivityDetail.objects.create(long_term_monthly_activity=long_term_monthly_activity,
+                                                         **activity_detail_data)
+
+        return long_term_monthly_activity
+
+
 class LongTermCareInvoiceFileSerializer(serializers.ModelSerializer):
     invoice = LongTermCareInvoiceItemSerializer(many=True)
 
@@ -459,9 +469,9 @@ class LongTermCareInvoiceFileSerializer(serializers.ModelSerializer):
                 invoice=invoice_file, **item_data)
         return invoice_file
 
-            # serializer = LongTermCareInvoiceItemSerializer(data=item_data)
-            # serializer.is_valid(raise_exception=True)
-            # invoice_items.append(serializer.save())
+        # serializer = LongTermCareInvoiceItemSerializer(data=item_data)
+        # serializer.is_valid(raise_exception=True)
+        # invoice_items.append(serializer.save())
 
         invoice = LongTermCareInvoiceFile.objects.create(**validated_data)
         invoice.invoice.set(invoice_items)
