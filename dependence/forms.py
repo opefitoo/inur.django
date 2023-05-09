@@ -139,3 +139,5 @@ class LongTermMonthlyActivityFileAdminForm(forms.ModelForm):
         if instance and instance.year and instance.month:
             self.fields['monthly_activities'].queryset = LongTermMonthlyActivity.objects.filter(year=instance.year,
                                                                                                 month=instance.month)
+        else:
+            self.fields['monthly_activities'].queryset = LongTermMonthlyActivity.objects.none()
