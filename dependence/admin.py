@@ -556,7 +556,7 @@ class LongTermMonthlyActivityDetailInLine(admin.StackedInline):
 
 @admin.register(LongTermMonthlyActivity)
 class LongTermMonthlyActivityAdmin(admin.ModelAdmin):
-    list_display = ('patient', 'month', 'year')
+    list_display = ('patient', 'month', 'year', 'ratio_days_on_days_of_month')
     autocomplete_fields = ['patient']
     readonly_fields = ('created_on', 'updated_on')
     inlines = [LongTermMonthlyActivityDetailInLine]
