@@ -436,6 +436,15 @@ class LongTermMonthlyActivitySerializer(serializers.ModelSerializer):
         fields = ['year', 'month', 'patient', 'activity_details']
 
     def create(self, validated_data):
+        # validate that year month are the same as the activity details
+        year = validated_data.get('year')
+        month = validated_data.get('month')
+        activity_details = validated_data.get('activity_details')
+        for activity_detail in activity_details:
+            activity_date = activity_detail.get('activity_date')
+            if activity_date.year != year or activity_date.month != month:
+                raise serializers.ValidationError(
+                    "activity date %s does not match year %s and month %s" % (activity_date, year, month))
         activity_details_data = validated_data.pop('activity_details')
         long_term_monthly_activity = LongTermMonthlyActivity.objects.create(**validated_data)
 

@@ -3,6 +3,7 @@ from datetime import datetime
 from constance.test import override_config
 from django.contrib.auth.models import User
 from django.utils.datetime_safe import date
+from rest_framework.exceptions import ValidationError
 from rest_framework.test import APITestCase
 
 from api.serializers import LongTermMonthlyActivitySerializer
@@ -208,3 +209,44 @@ class LongTermMonthlyActivityTestCase(BaseTestCase, APITestCase):
             file.monthly_activities.add(ll)
         self.assertEqual(file.monthly_activities.count(), 2)
         print(file.generate_xml_using_xmlschema())
+
+    def test_different_dates_in_detail_and_main_activity(self):
+        patient_1414 = Patient.objects.create(id=1414,
+                                              code_sn='1980020230022',
+                                              first_name='first 1414',
+                                              name='name 1414',
+                                              address='address',
+                                              zipcode='zipcode',
+                                              city='city 0',
+                                              phone_number='000')
+
+
+        invalid_payload = {
+            "activity_details": [
+                {
+                    "activity_date": "2023-02-01",
+                    "activity": "AEVH03",
+                    "quantity": 1
+                },
+
+                {
+                    "activity_date": "2023-03-02",
+                    "activity": "AEVM15",
+                    "quantity": 1
+                },
+                {
+                    "activity_date": "2023-03-03",
+                    "activity": "AMD-GI",
+                    "quantity": 3
+                }
+            ],
+            "patient": 1414,
+            "year": 2023,
+            "month": 3
+        }
+        serializer = LongTermMonthlyActivitySerializer(data=invalid_payload)
+        with self.assertRaises(ValidationError):
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+
