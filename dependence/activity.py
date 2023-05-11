@@ -31,8 +31,8 @@ def long_term_care_activity_declaration_file_path(instance, filename):
     # Illustration schématique :
     # [F/D][Code prestataire][Année][Envoi]_[Cadre légal]_[Type Fichier]_[Numéro Layout]_[Référence]
     # format integer to display 2 digits
-    month_of_count = f"{instance.provider_date_of_sending.month:02d}"
-    year_of_count = f"{instance.provider_date_of_sending.year:04d}"
+    month_of_count = f"{instance.month:02d}"
+    year_of_count = f"{instance.year:04d}"
     newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_DCL_001_{instance.id}{instance.version_number}.xml"
     # newfilename, file_extension = os.path.splitext(filename)
     return f"long_term_monthly_activity_declaration/{instance.id}/{newfilename}"
