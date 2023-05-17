@@ -15,6 +15,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_csv_exports.admin import CSVExportAdmin
@@ -359,12 +360,14 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     # list_per_page = 5
 
     # actions = [migrate_from_g_to_cl]
-    def link_to_invoices(self, instance):
-        url = f'{reverse("admin:invoices_invoiceitem_changelist")}?medical_prescription__id={instance.id}'
-        if instance.id:
-            return mark_safe('<a href="%s">%s</a>' % (url, "cliquez ici (%d)" % InvoiceItem.objects.filter(
-                medical_prescription__id=instance.id).count()))
-        return '-'
+    def link_to_invoices(self, obj):
+        count = obj.med_prescription_multi_invoice_items.count()
+        url = (
+                reverse("admin:invoices_invoiceitem_changelist")
+                + "?"
+                + urlencode({"prescriptions__medical_prescription__id": f"{obj.id}"})
+        )
+        return format_html('<a href="{}">{} facture(s)</a>', url, count)
 
     link_to_invoices.short_description = "Factures client"
 
@@ -434,7 +437,8 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
                     'number_of_prestations', 'invoice_details', 'has_medical_prescription')
-    list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', 'patient__name']
+    list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', 'patient__name',
+                   'prescriptions__medical_prescription']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview', 'created_at', 'updated_at')
     autocomplete_fields = ['patient']
