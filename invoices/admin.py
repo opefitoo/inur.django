@@ -444,7 +444,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
 
     def has_medical_prescription(self, obj):
-        return obj.medical_prescription is not None
+        return InvoiceItemPrescriptionsList.objects.filter(invoice_item=obj).exists()
     has_medical_prescription.boolean = True
 
     def cns_invoice_bis(self, request, queryset):
