@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from datetime import date
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -55,14 +58,13 @@ class MedicalCareSummaryPerPatient(models.Model):
         # check that there is no other plan that has a date_of_decision more recent than date_of_change_to_new_plan
         if self.date_of_change_to_new_plan:
             if MedicalCareSummaryPerPatient.objects.filter(patient=self.patient,
-                                                          date_of_decision__lte=self.date_of_change_to_new_plan).exists():
+                                                           date_of_decision__lte=self.date_of_change_to_new_plan).exists():
                 conflict = MedicalCareSummaryPerPatient.objects.filter(patient=self.patient,
-                                                            date_of_decision__lte=self.date_of_change_to_new_plan).get()
+                                                                       date_of_decision__lte=self.date_of_change_to_new_plan).get()
                 raise ValidationError(
                     _('Il existe déjà une synthèse de prise en charge avec une date de décision plus récente que la date de changement vers un nouveau plan: %s') % conflict)
         return True
 
-    # create a composite unique constraint
     class Meta:
         unique_together = ('patient', 'plan_number', 'decision_number', 'date_of_decision')
         verbose_name = _("Synthèse de prise en charge par patient")
@@ -73,16 +75,17 @@ class MedicalCareSummaryPerPatient(models.Model):
             return "Synthèse de {0} en date du {1} jusque {2}".format(
                 self.patient, self.date_of_decision, self.date_of_change_to_new_plan)
         return "Synthèse de prise en charge {0} en date du {1}".format(self.patient, self.date_of_decision)
-    @property
-    def is_latest_plan(self):
-        # if self has most recent date_of_notification_to_provider then return True
-        # else return False
-        if self.date_of_notification_to_provider == MedicalCareSummaryPerPatient.objects.filter(
-                patient=self.patient).latest('date_of_notification_to_provider').date_of_notification_to_provider:
-            return True
-        else:
-            return False
 
+
+@property
+def is_latest_plan(self):
+    # if self has most recent date_of_notification_to_provider then return True
+    # else return False
+    if self.date_of_notification_to_provider == MedicalCareSummaryPerPatient.objects.filter(
+            patient=self.patient).latest('date_of_notification_to_provider').date_of_notification_to_provider:
+        return True
+    else:
+        return False
 
 
 # model Prestatations
@@ -135,3 +138,42 @@ class SharedMedicalCareSummaryPerPatientDetail(models.Model):
     def __str__(self):
         # code de l'acte / fréquence / périodicité
         return " {0} / {1} / {2}".format(self.item.code, self.number_of_care, self.periodicity)
+
+
+@dataclass
+class MedicalSummaryData:
+    """Summary data for a single day."""
+    start_date: date
+    end_date: date
+    medicalSummaryPerPatient: MedicalCareSummaryPerPatient
+
+
+def get_summaries_between_two_dates(patient, start_date, end_date):
+    summaries = MedicalCareSummaryPerPatient.objects.filter(patient=patient,
+                                                            date_of_decision__lte=end_date,
+                                                            date_of_decision__gte=start_date,
+                                                            date_of_change_to_new_plan__gte=start_date) | \
+                MedicalCareSummaryPerPatient.objects.filter(patient=patient,
+                                                            date_of_decision__lte=end_date,
+                                                            date_of_decision__gte=start_date,
+                                                            date_of_change_to_new_plan__isnull=True).order_by(
+                    "date_of_decision")
+    summary_data = []
+    for summary in summaries:
+        if summary.date_of_decision < start_date and summary.date_of_change_to_new_plan:
+            summary_data.append(MedicalSummaryData(medicalSummaryPerPatient=summary,
+                                                   start_date=start_date,
+                                                   end_date=summary.date_of_change_to_new_plan))
+        elif summary.date_of_decision < start_date and not summary.date_of_change_to_new_plan:
+            summary_data.append(MedicalSummaryData(medicalSummaryPerPatient=summary,
+                                                   start_date=start_date,
+                                                   end_date=end_date))
+        elif summary.date_of_decision >= start_date and summary.date_of_change_to_new_plan:
+            summary_data.append(MedicalSummaryData(medicalSummaryPerPatient=summary,
+                                                   start_date=summary.date_of_decision,
+                                                   end_date=summary.date_of_change_to_new_plan))
+        elif summary.date_of_decision >= start_date and not summary.date_of_change_to_new_plan:
+            summary_data.append(MedicalSummaryData(medicalSummaryPerPatient=summary,
+                                                   start_date=summary.date_of_decision,
+                                                   end_date=end_date))
+    return summary_data

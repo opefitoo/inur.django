@@ -8,7 +8,6 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivityDetail
 from dependence.careplan import CarePlanMaster, CarePlanDetail
-from dependence.invoicing import LongTermCareActivity
 from dependence.longtermcareitem import LongTermCareItem
 from dependence.models import PatientAnamnesis, AssignedPhysician
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail
@@ -397,12 +396,6 @@ class CarePlanMasterSerializer(serializers.ModelSerializer):
         fields = ['patient', 'plan_number', 'plan_start_date', 'care_plan_detail_to_master']
 
 
-class LongTermCareInvoiceItemSerializer(serializers.ModelSerializer):
-    long_term_care_item = serializers.CharField()
-
-    class Meta:
-        model = LongTermCareActivity
-        fields = ('item_date', 'status', 'long_term_care_item',)
 
 
 #

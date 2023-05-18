@@ -532,7 +532,7 @@
     "fields": {
       "code": "AMDGI",
       "description": "Garde individuelle durée 30 mn",
-      "package": true
+      "package": false
     }
   },
   {
@@ -559,7 +559,7 @@
     "fields": {
       "code": "AMDGD",
       "description": "Activité de garde déplacement durée 30 mn",
-      "package": true
+      "package": false
     }
   },
   {
@@ -578,6 +578,88 @@
       "start_date": "2023-02-01",
       "end_date": "2023-03-31",
       "price": 30.44
+    }
+  },
+   {
+    "model": "dependence.longtermpackage",
+    "pk": 21,
+    "fields": {
+      "code": "AAII",
+      "description": "AAI - En individuel durée 30 mn",
+      "package": false
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 21,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 80.23
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 21,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 78.27
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 22,
+    "fields": {
+      "code": "AEVFSP",
+      "description": "Forfait Soins palliatifs",
+      "package": true,
+      "dependence_level": 780
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 22,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 165.54
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 22,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 161.51
+    }
+  },
+  {
+    "model": "dependence.longtermpackage",
+    "pk": 23,
+    "fields": {
+      "code": "AEVFMAJ",
+      "description": "Fluctuation imprévisible",
+      "package": true
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 23,
+      "start_date": "2023-04-01",
+      "end_date": null,
+      "price": 9.55
+    }
+  },
+  {
+    "model": "dependence.longtermpackageprice",
+    "fields": {
+      "package": 23,
+      "start_date": "2023-02-01",
+      "end_date": "2023-03-31",
+      "price": 9.32
     }
   }
 ]

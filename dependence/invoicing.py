@@ -1,3 +1,8 @@
+import os
+from xml.etree import ElementTree
+
+import xmlschema
+from constance import config
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -30,12 +35,134 @@ class LongTermCareMonthlyStatement(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    def generate_xml_using_xmlschema(self):
+
+        # Load the XSD schema file
+        # go one folder up
+        # Get the current script's directory
+        current_directory = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the path to the XSD file
+        xsd_path = os.path.join(current_directory, 'xsd', 'ad-fichierfacturation-505.xsd')
+
+        # Load the XSD schema
+        xsd_schema = xmlschema.XMLSchema(xsd_path)
+        # xsd_schema = xmlschema.XMLSchema(settings.BASE_DIR + '/dependence/xsd/ad-declaration-14.xsd')
+        # create element tree object
+        root = ElementTree.Element("decompteFacturation")
+        # create sub element typeDecompte
+        typeDecompte = ElementTree.SubElement(root, "typeDecompte")
+        # create sub element cadreLegal
+        cadreLegal = ElementTree.SubElement(typeDecompte, "cadreLegal")
+        cadreLegal.text = "ASD"
+        # create sub element layout
+        layout = ElementTree.SubElement(typeDecompte, "layout")
+        layout.text = "2"
+        # create sub element Type
+        type = ElementTree.SubElement(typeDecompte, "type")
+        type.text = "FAC"
+
+        # create sub element entete
+        entete = ElementTree.SubElement(root, "entete")
+        # create sub element identifiantFacturier
+        identifiantFacturier = ElementTree.SubElement(entete, "identifiantFacturier")
+        identifiantFacturier.text = config.CODE_PRESTATAIRE
+        # create sub element organisme
+        organisme = ElementTree.SubElement(entete, "organisme")
+        organisme.text = "19"
+        # create sub element dateEnvoi
+        dateEnvoi = ElementTree.SubElement(entete, "dateEnvoi")
+        dateEnvoi.text = self.date_of_submission.strftime("%Y-%m-%d")
+        # create sub element referenceFichierFacturation
+        referenceFichierFacturation = ElementTree.SubElement(entete, "referenceFichierFacturation")
+        referenceFichierFacturation.text = self.id
+        # create sub element periodeDecompte
+        periodeDecompte = ElementTree.SubElement(entete, "periodeDecompte")
+        # create sub element exercice
+        exercice = ElementTree.SubElement(periodeDecompte, "exercice")
+        exercice.text = self.invoice_start_period.strftime("%Y")
+        # create sub element mois
+        mois = ElementTree.SubElement(periodeDecompte, "mois")
+        mois.text = self.invoice_start_period.strftime("%m")
+        # create sub element demandeDecompte
+        demandeDecompte = ElementTree.SubElement(entete, "demandeDecompte")
+        # create sub element nombre
+        nombre = ElementTree.SubElement(demandeDecompte, "nombre")
+        # set number of invoices per patient
+        nombre.text = "10"
+        # create sub element devise
+        devise = ElementTree.SubElement(demandeDecompte, "devise")
+        devise.text = "EUR"
+        # create sub element montantBrut
+        montantBrut = ElementTree.SubElement(demandeDecompte, "montantBrut")
+        montantBrut.text = str(self.calculate_price())
+        # create sub element montantNet
+        montantNet = ElementTree.SubElement(demandeDecompte, "montantNet")
+        montantNet.text = str(self.calculate_price())
+        # create sub element facture
+        facture = ElementTree.SubElement(root, "facture")
+        # loop through all LongTermCareInvoiceFile
+        for invoice in LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all():
+            print(invoice)
+            # create sub element referenceFacture
+            referenceFacture = ElementTree.SubElement(facture, "referenceFacture")
+            # set referenceFacture is year _ month _  invoice.id
+            referenceFacture.text = str(self.year) + str(self.month) + str(invoice.id)
+            # create sub element identifiantPersonneProtegee
+            identifiantPersonneProtegee = ElementTree.SubElement(facture, "identifiantPersonneProtegee")
+            identifiantPersonneProtegee.text = invoice.patient.code_sn
+            # create sub element dateEtablissementFacture
+            dateEtablissementFacture = ElementTree.SubElement(facture, "dateEtablissementFacture")
+            dateEtablissementFacture.text = self.date_of_submission.strftime("%Y-%m-%d")
+            # create sub element prestation
+            prestation = ElementTree.SubElement(facture, "prestation")
+            # loop through all LongTermCareInvoiceLine
+            for line in LongTermCareInvoiceLine.objects.filter(link_to_invoice_file=invoice).all().all():
+                # create sub element codePrestation
+                referencePrestation = ElementTree.SubElement(prestation, "referencePrestation")
+                referencePrestation.text = line.id
+                # create sub element quantite
+                acte = ElementTree.SubElement(prestation, "acte")
+                # create sub element codeTarif
+                codeTarif = ElementTree.SubElement(acte, "codeTarif")
+                codeTarif.text = line.long_term_care_package.code
+                # create sub element demandePrestation
+                demandePrestation = ElementTree.SubElement(prestation, "demandePrestation")
+                # create sub element nombre
+                nombre = ElementTree.SubElement(demandePrestation, "nombre")
+                nombre.text = "1"
+                # create sub element devise
+                devise = ElementTree.SubElement(demandePrestation, "devise")
+                devise.text = "EUR"
+                # create sub element montantBrut
+                montantBrut = ElementTree.SubElement(demandePrestation, "montantBrut")
+                montantBrut.text = str(line.long_term_care_package.price)
+                # create sub element montantNet
+                montantNet = ElementTree.SubElement(demandePrestation, "montantNet")
+                montantNet.text = str(line.long_term_care_package.price)
+                # create sub element identifiantExecutant
+                identifiantExecutant = ElementTree.SubElement(prestation, "identifiantExecutant")
+                identifiantExecutant.text = config.CODE_PRESTATAIRE
+            # create sub element demandeFacture
+            demandeFacture = ElementTree.SubElement(facture, "demandeFacture")
+            # create sub element nombre
+            nombre = ElementTree.SubElement(demandeFacture, "nombre")
+            nombre.text = "1"
+            # create sub element devise
+            devise = ElementTree.SubElement(demandeFacture, "devise")
+            devise.text = "EUR"
+            # create sub element montantBrut
+            montantBrut = ElementTree.SubElement(demandeFacture, "montantBrut")
+            montantBrut.text = str(self.calculate_price())
+            # create sub element montantNet
+            montantNet = ElementTree.SubElement(demandeFacture, "montantNet")
+            montantNet.text = str(self.calculate_price())
+
     def calculate_total_price(self):
         total_price = 0
         for invoice in LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all():
             total_price += invoice.calculate_price()
         return total_price
-
 
     def __str__(self):
         return f"{self.year} - {self.month}"
@@ -80,6 +207,9 @@ class LongTermCareInvoiceFile(models.Model):
         total = 0
         for line in lines:
             total += line.calculate_price()
+        items = LongTermCareInvoiceItem.objects.filter(invoice=self)
+        for item in items:
+            total += item.calculate_price()
         return total
 
     class Meta:
@@ -120,25 +250,46 @@ class LongTermCareActivity(models.Model):
                                                                                  self.invoice.patient)
 
 
+class LongTermCareInvoiceItem(models.Model):
+    invoice = models.ForeignKey(LongTermCareInvoiceFile, on_delete=models.CASCADE, related_name='invoice_item')
+    care_date = models.DateField(_('Date Début période'), )
+    long_term_care_package = models.ForeignKey(LongTermPackage, on_delete=models.CASCADE,
+                                               related_name='from_item_to_long_term_care_package')
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+    class Meta:
+        verbose_name = _("Item facture assurance dépendance")
+        verbose_name_plural = _("Item de facture assurance dépendance")
+
+    def calculate_price(self):
+        if self.long_term_care_package.package:
+            raise ValidationError("Item seulement pour un non forfait (package doit etre false)")
+        else:
+            # price for specific care_date
+            return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
+                                                             month=self.care_date.month)
+
+
 class LongTermCareInvoiceLine(models.Model):
     invoice = models.ForeignKey(LongTermCareInvoiceFile, on_delete=models.CASCADE, related_name='invoice_line')
     start_period = models.DateField(_('Date Début période'), )
     end_period = models.DateField(_('Date Fin période'), blank=True, null=True)
     long_term_care_package = models.ForeignKey(LongTermPackage, on_delete=models.CASCADE,
+                                               null=True, blank=True,
                                                related_name='long_term_care_package')
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
     def calculate_price(self):
-        print("calculate_price for line {0}".format(self))
+        number_of_days_inclusive = (self.end_period - self.start_period).days + 1
         if self.long_term_care_package.package:
             return self.long_term_care_package.price_per_year_month(year=self.start_period.year,
-                                                                month=self.start_period.month) * (
-                    self.end_period - self.start_period).days
+                                                                    month=self.start_period.month) * number_of_days_inclusive
         else:
-            return self.long_term_care_package.price_per_year_month(year=self.start_period.year,
-                                                                month=self.start_period.month) * 20
+            raise ValidationError("Line seulement pour un forfait (package doit etre true)")
 
     class Meta:
         verbose_name = _("Ligne de facture assurance dépendance")

@@ -171,6 +171,22 @@ class LongTermMonthlyActivity(models.Model):
             count=Count('activity_date')).count()
         return "%s / %s" % (count, days_in_month)
 
+    def get_first_date_for_activity_detail(self):
+        # get first LongTermMonthlyActivityDetail by activity_date
+        return LongTermMonthlyActivityDetail.objects.filter(long_term_monthly_activity=self).values('activity_date').annotate(
+            count=Count('activity_date')).order_by('activity_date').first()['activity_date']
+
+    def get_last_date_for_activity_detail(self):
+        # get first LongTermMonthlyActivityDetail by activity_date
+        return LongTermMonthlyActivityDetail.objects.filter(long_term_monthly_activity=self).values('activity_date').annotate(
+            count=Count('activity_date')).order_by('activity_date').last()['activity_date']
+
+    def how_many_occurrence_of_activity(self, activity, start_date, end_date):
+        return LongTermMonthlyActivityDetail.objects.filter(long_term_monthly_activity=self, activity=activity,
+                                                            activity_date__gte=start_date,
+                                                            activity_date__lte=end_date).count()
+
+
     def __str__(self):
         return f"{self.patient} {self.year} - {self.month}"
 
@@ -185,6 +201,12 @@ class LongTermMonthlyActivityDetail(models.Model):
     activity_date = models.DateField(_('Activity Date'))
     activity = models.ForeignKey(LongTermCareItem, on_delete=models.CASCADE, related_name='activity_dtl_to_item')
     quantity = models.PositiveIntegerField(_('Quantity'))
+
+    def did_activity_happen(self, date, patient):
+        if self.activity_date == date and self.long_term_monthly_activity.patient == patient:
+            return True
+        else:
+            return False
 
     def __str__(self):
         return f"{self.long_term_monthly_activity} - {self.activity} - {self.quantity}"
