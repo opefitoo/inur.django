@@ -42,6 +42,7 @@ def create_monthly_invoice(patient_list, month, year):
     statement, created = LongTermCareMonthlyStatement.objects.get_or_create(month=month, year=year)
     for patient in patient_list:
         create_monthly_invoice_line_v2(patient, statement, month=month, year=year)
+        create_monthly_invoice_items(patient, statement, month=month, year=year)
     return statement
 
 
@@ -89,12 +90,51 @@ def create_monthly_invoice_line_v2(patient, statement, month, year):
             aev_long_term_package = LongTermPackage.objects.filter(
                 dependence_level=summary.medicalSummaryPerPatient.nature_package).get()
             create_packages(invoice, summary.start_date, summary.end_date, aev_long_term_package)
+        elif summary.medicalSummaryPerPatient.nature_package is None:
+            aev_long_term_package = LongTermPackage.objects.filter(
+                dependence_level=summary.medicalSummaryPerPatient.level_of_needs).get()
+            create_packages(invoice, summary.start_date, summary.end_date, aev_long_term_package)
         amdm_activity_item = LongTermCareItem.objects.filter(code="AMD-M").get()
         if activity.how_many_occurrence_of_activity(amdm_activity_item, first_day, last_day) > 0:
             # create an invoice line for each activity
             amdm_long_term_package = LongTermPackage.objects.filter(code="FAMDM").get()
             create_packages(invoice, summary.start_date, summary.end_date, amdm_long_term_package)
     return invoice
+
+
+def create_monthly_invoice_items(patient, statement, month, year):
+    start_period = date(year, month, 1)
+    # end period is last day of the month
+    last_day = calendar.monthrange(year, month)[1]
+    end_period = date(year, month, last_day)
+    invoice, created = LongTermCareInvoiceFile.objects.get_or_create(link_to_monthly_statement=statement,
+                                                                     patient=patient,
+                                                                     invoice_start_period=start_period,
+                                                                     invoice_end_period=end_period)
+    if LongTermMonthlyActivity.objects.filter(patient=patient, year=start_period.year,
+                                              month=start_period.month).count() == 0:
+        return invoice
+    long_term_monthly_activity = LongTermMonthlyActivity.objects.filter(patient=patient, year=start_period.year,
+                                                                        month=start_period.month).get()
+    dtls = LongTermMonthlyActivityDetail.objects.filter(long_term_monthly_activity=long_term_monthly_activity).order_by(
+        'activity_date')
+    for dtl in dtls:
+        if "AMD-GI" == dtl.activity.code:
+            print(dtl.activity.code + " " + str(dtl.activity_date) + " " + str(dtl.quantity) + " " + str(patient))
+            # create as many invoice items as quantity
+            for i in range(dtl.quantity * 2):
+                LongTermCareInvoiceItem.objects.get_or_create(invoice=invoice,
+                                                              care_date=dtl.activity_date,
+                                                              long_term_care_package=LongTermPackage.objects.filter(
+                                                                  code="AMDGI").get())
+        elif "AAI" == dtl.activity.code:
+            print(dtl.activity.code + " " + str(dtl.activity_date) + " " + str(dtl.quantity))
+            # create as many invoice items as quantity
+            for i in range(dtl.quantity * 2):
+                LongTermCareInvoiceItem.objects.get_or_create(invoice=invoice,
+                                                              care_date=dtl.activity_date,
+                                                              long_term_care_package=LongTermPackage.objects.filter(
+                                                                  code="AAII").get())
 
 
 def create_monthly_invoice_line(patient, statement, month, year):

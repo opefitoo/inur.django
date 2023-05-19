@@ -146,6 +146,15 @@
                 <td>{{ line.calculate_price }}</td>
             </tr>
         {% endfor %}
+        {% for item in obj.get_invoice_items %}
+            <tr class="item">
+                <td>{{ item.care_date }}</td>
+                <td>-</td>
+                <td>{{ item.long_term_care_package.code }}</td>
+                <td>{{ item.long_term_care_package.price }}</td>
+                <td>{{ item.calculate_price }}</td>
+            </tr>
+        {% endfor %}
 
         {% comment %}<tr class="heading">
             <td>Item</td>

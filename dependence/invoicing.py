@@ -216,7 +216,7 @@ class LongTermCareInvoiceFile(models.Model):
         return total
 
     @property
-    def get_invoice_item(self):
+    def get_invoice_items(self):
         # get LongTermCareInvoiceItem linked to this invoice
         if self.id:
             return LongTermCareInvoiceItem.objects.filter(invoice=self).order_by(
