@@ -77,15 +77,15 @@ class MedicalCareSummaryPerPatient(models.Model):
         return "Synthèse de prise en charge {0} en date du {1}".format(self.patient, self.date_of_decision)
 
 
-@property
-def is_latest_plan(self):
-    # if self has most recent date_of_notification_to_provider then return True
-    # else return False
-    if self.date_of_notification_to_provider == MedicalCareSummaryPerPatient.objects.filter(
-            patient=self.patient).latest('date_of_notification_to_provider').date_of_notification_to_provider:
-        return True
-    else:
-        return False
+    @property
+    def is_latest_plan(self):
+        # if self has most recent date_of_notification_to_provider then return True
+        # else return False
+        if self.date_of_notification_to_provider == MedicalCareSummaryPerPatient.objects.filter(
+                patient=self.patient).latest('date_of_notification_to_provider').date_of_notification_to_provider:
+            return True
+        else:
+            return False
 
 
 # model Prestatations
