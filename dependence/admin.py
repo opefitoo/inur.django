@@ -47,8 +47,25 @@ class LongTermCareInvoiceItemInLine(admin.TabularInline):
     model = LongTermCareInvoiceItem
     extra = 0
 @admin.register(LongTermCareInvoiceFile)
-class LongTermCareInvoiceFileAdmin(admin.ModelAdmin):
+class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     inlines = [LongTermCareInvoiceLineInline, LongTermCareInvoiceItemInLine]
+    list_display = ('patient', 'invoice_start_period', 'invoice_end_period', 'display_object_actions_list')
+
+    object_actions = [
+        {
+            'slug': 'print_long_term_invoice',
+            'verbose_name': 'Print',
+            'form_method': 'GET',
+            'view': 'print_long_term_invoice',
+        },
+
+    ]
+
+    def print_long_term_invoice(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'invoicing/print_long_term_invoice.html', {'obj': obj})
+
 
 
 
@@ -70,6 +87,24 @@ class LongTermCareItemAdmin(admin.ModelAdmin):
 class LongTermPackageAdmin(admin.ModelAdmin):
     list_display = ('code', 'description')
     inlines = [LongTermPackagePriceInline]
+    actions = ['remove_duplicates']
+
+    def remove_duplicates(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        for long_term_package in queryset:
+            prices = LongTermPackagePrice.objects.filter(package=long_term_package).order_by('start_date', 'id')
+            seen_dates = set()
+            for price in prices:
+                dup_message = ""
+                if price.start_date in seen_dates:
+                    dup_message += "dup: %s, " % price
+                    price.delete()
+                else:
+                    seen_dates.add(price.start_date)
+        self.message_user(request, "One of each set of duplicates removed successfully %s" % dup_message)
+
+    remove_duplicates.short_description = 'Remove one of each set of duplicates'
 
 
 class SharedMedicalCareSummaryPerPatientDetailInline(admin.TabularInline):

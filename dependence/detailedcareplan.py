@@ -155,7 +155,7 @@ def get_summaries_between_two_dates(patient, start_date, end_date):
                                                             date_of_change_to_new_plan__gte=start_date) | \
                 MedicalCareSummaryPerPatient.objects.filter(patient=patient,
                                                             date_of_decision__lte=end_date,
-                                                            date_of_decision__gte=start_date,
+                                                            #date_of_decision__gte=start_date,
                                                             date_of_change_to_new_plan__isnull=True).order_by(
                     "date_of_decision")
     summary_data = []

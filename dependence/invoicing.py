@@ -8,7 +8,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
-from dependence.detailedcareplan import MedicalCareSummaryPerPatient
+from dependence.detailedcareplan import MedicalCareSummaryPerPatient, get_summaries_between_two_dates
 from dependence.longtermcareitem import LongTermCareItem, LongTermPackage
 from invoices.employee import Employee
 from invoices.models import Patient
@@ -212,6 +212,22 @@ class LongTermCareInvoiceFile(models.Model):
             total += item.calculate_price()
         return total
 
+    @property
+    def get_invoice_item(self):
+        # get LongTermCareInvoiceItem linked to this invoice
+        if self.id:
+            return LongTermCareInvoiceItem.objects.filter(invoice=self).order_by(
+                'care_date')
+        return None
+
+    @property
+    def get_invoice_lines(self):
+        # get LongTermCareInvoiceItem linked to this invoice
+        if self.id:
+            return LongTermCareInvoiceLine.objects.filter(invoice=self).order_by(
+                'start_period')
+        return None
+
     class Meta:
         verbose_name = _("Facture assurance dépendance")
         verbose_name_plural = _("Factures assurance dépendance")
@@ -269,7 +285,7 @@ class LongTermCareInvoiceItem(models.Model):
         else:
             # price for specific care_date
             return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
-                                                             month=self.care_date.month)
+                                                                    month=self.care_date.month)
 
 
 class LongTermCareInvoiceLine(models.Model):
@@ -303,17 +319,16 @@ class LongTermCareInvoiceLine(models.Model):
                                                                                        date_of_decision__lte=self.start_period)
         if medical_care_summary_per_patient.count() == 0:
             raise ValidationError("Aucune synthèse trouvée pour ce patient")
-        plan_for_period = None
-        for plan in medical_care_summary_per_patient:
-            if not plan.date_of_decision or self.end_period <= plan.date_of_change_to_new_plan:
-                plan_for_period = plan
+        plan_for_period = get_summaries_between_two_dates(self.invoice.patient, self.start_period, self.end_period)
         if not plan_for_period:
             raise ValidationError("Aucune synthèse trouvée pour cette période")
-        if plan_for_period.level_of_needs != self.long_term_care_package.dependence_level:
+        if len(plan_for_period) > 1:
+            raise ValidationError("Trop de synthèses %s" % plan_for_period.count())
+        if plan_for_period[0].medicalSummaryPerPatient.nature_package != self.long_term_care_package.dependence_level:
             raise ValidationError("Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
                 self.long_term_care_package,
                 self.long_term_care_package.dependence_level,
-                plan_for_period.level_of_needs))
+                plan_for_period[0].medicalSummaryPerPatient.nature_package))
 
     def __str__(self):
         return "Ligne de facture assurance dépendance de {0} à {1} patient {2}".format(self.start_period,

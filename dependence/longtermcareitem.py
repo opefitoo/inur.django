@@ -1,5 +1,8 @@
+from datetime import date
+
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models import Q
 
 
 class LongTermCareItem(models.Model):
@@ -45,7 +48,12 @@ class LongTermPackage(models.Model):
 
     def price_per_year_month(self, year, month):
         try:
-            price = LongTermPackagePrice.objects.get(package=self, start_date__year=year, start_date__month=month)
+            target_date = date(year, month, 1)
+            price = LongTermPackagePrice.objects.get(
+                Q(package=self),
+                Q(start_date__lte=target_date),
+                Q(Q(end_date__gte=target_date) | Q(end_date__isnull=True))
+            )
             return price.price
         except LongTermPackagePrice.DoesNotExist:
             return None
@@ -69,6 +77,10 @@ class LongTermPackagePrice(models.Model):
         ordering = ['package']
         verbose_name = "Prix assurance dépendance"
         verbose_name_plural = "Prix assurance dépendance"
+        constraints = [
+            models.UniqueConstraint(fields=['package', 'start_date'],
+                                    name='unique package price')
+        ]
 
     def __str__(self):
         return "{0} / {1}".format(self.package, self.price)

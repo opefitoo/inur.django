@@ -19,6 +19,7 @@ class TestMedicalCareSummary(TestCase):
                                                     date_of_request=datetime(2021, 12, 1),
                                                     date_of_notification=datetime(2022, 1, 11),
                                                     date_of_notification_to_provider=datetime(2022, 1, 12),
+                                                    date_of_change_to_new_plan=datetime(2022, 12, 31),
                                                     plan_number="123456789",
                                                     decision_number="123456789",
                                                     start_of_support=datetime(2022, 1, 1),
