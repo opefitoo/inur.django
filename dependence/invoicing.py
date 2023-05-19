@@ -163,6 +163,9 @@ class LongTermCareMonthlyStatement(models.Model):
         for invoice in LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all():
             total_price += invoice.calculate_price()
         return total_price
+    @property
+    def get_invoices(self):
+        return LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all()
 
     def __str__(self):
         return f"{self.year} - {self.month}"

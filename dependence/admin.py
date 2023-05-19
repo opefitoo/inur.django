@@ -70,8 +70,23 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
 
 
 @admin.register(LongTermCareMonthlyStatement)
-class LongTermCareMonthlyStatementAdmin(admin.ModelAdmin):
-    pass
+class LongTermCareMonthlyStatementAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
+    list_display = ('year', 'month', 'date_of_submission', 'display_object_actions_list')
+
+    object_actions = [
+        {
+            'slug': 'print_statement_invoice',
+            'verbose_name': 'Print',
+            'form_method': 'GET',
+            'view': 'print_statement_invoice',
+        },
+
+    ]
+
+    def print_statement_invoice(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'invoicing/print_statement_invoice.html', {'obj': obj})
 
 
 class LongTermPackagePriceInline(admin.TabularInline):
