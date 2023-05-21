@@ -7,10 +7,11 @@ from invoices.models import Patient
 
 
 class MedicalSummaryTest(TestCase):
+    fixtures = ['test_data/medical_care_summary_per_patient.json']
     def setUp(self) -> None:
         self.patient_john = Patient.objects.create(id=1309, name="John", is_under_dependence_insurance=True,
                                                    date_of_exit=None)
-
+        self.patient_dark_valor = Patient.objects.filter(id=1070).get()
     def test_get_summaries_between_two_dates(self):
         # Create a medical care summary for the patient
         MedicalCareSummaryPerPatient.objects.create(patient=self.patient_john,
@@ -28,3 +29,15 @@ class MedicalSummaryTest(TestCase):
                                                     start_date=date(2023, 1, 1),
                                                     end_date=date(2023, 1, 31))
         self.assertEqual(len(summaries), 1)
+
+    def test_forfait_soins_palliatifs(self):
+        summaries = get_summaries_between_two_dates(self.patient_dark_valor,
+                                                    start_date=date(2023, 3, 1),
+                                                    end_date=date(2023, 3, 13))
+        self.assertEqual(len(summaries), 2)
+        self.assertEqual(summaries[1].start_date, date(2023, 3, 1))
+        self.assertEqual(summaries[1].end_date, date(2023, 3, 10))
+        self.assertEqual(summaries[1].medicalSummaryPerPatient.level_of_needs, 780)
+        self.assertEqual(summaries[0].start_date, date(2023, 3, 11))
+        self.assertEqual(summaries[0].end_date, date(2023, 3, 13))
+        self.assertEqual(summaries[0].medicalSummaryPerPatient.level_of_needs, 1)

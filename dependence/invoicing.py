@@ -278,6 +278,10 @@ class LongTermCareInvoiceItem(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    def __str__(self):
+        return "Item de facture assurance dépendance de {0} patient {1}".format(self.care_date,
+                                                                                 self.invoice.patient)
+
     class Meta:
         verbose_name = _("Item facture assurance dépendance")
         verbose_name_plural = _("Item de facture assurance dépendance")
@@ -326,7 +330,7 @@ class LongTermCareInvoiceLine(models.Model):
         if not plan_for_period:
             raise ValidationError("Aucune synthèse trouvée pour cette période")
         if len(plan_for_period) > 1:
-            raise ValidationError("Trop de synthèses %s" % plan_for_period.count())
+            raise ValidationError("Trop de synthèses %s" % len(plan_for_period))
         if plan_for_period[0].medicalSummaryPerPatient.nature_package != self.long_term_care_package.dependence_level:
             raise ValidationError("Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
                 self.long_term_care_package,

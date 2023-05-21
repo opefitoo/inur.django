@@ -1,0 +1,81 @@
+[
+  {
+    "model": "invoices.patient",
+    "pk": 1070,
+    "fields": {
+      "code_sn": "1962020605195",
+      "first_name": "Dark",
+      "name": "VALOR",
+      "gender": "MAL",
+      "address": "25 Rue Hell",
+      "zipcode": "5666",
+      "city": "Space CITY",
+      "country": "LU",
+      "phone_number": "6666666",
+      "additional_phone_number": null,
+      "email_address": null,
+      "participation_statutaire": true,
+      "is_private": false,
+      "is_under_dependence_insurance": true,
+      "date_of_exit": null,
+      "is_eligible_to_parameter_surveillance": false,
+      "date_of_death": null,
+      "additional_details": "",
+      "created_on": "2023-03-02T19:54:56.000Z",
+      "updated_on": "2023-05-05T13:57:38.514Z"
+    }
+  },
+  {
+    "model": "dependence.medicalcaresummaryperpatient",
+    "pk": 22,
+    "fields": {
+      "created_on": "2023-03-23T16:53:19.808Z",
+      "updated_on": "2023-03-23T16:53:19.819Z",
+      "patient": 1070,
+      "date_of_request": "2021-11-04",
+      "referent": "Dr House",
+      "date_of_evaluation": "2022-01-06",
+      "date_of_notification": "2022-01-14",
+      "date_of_notification_to_provider": "2023-03-03",
+      "plan_number": "2051404",
+      "decision_number": "73084",
+      "level_of_needs": 780,
+      "start_of_support": "2023-03-01",
+      "end_of_support": "2023-03-09",
+      "date_of_decision": "2023-03-01",
+      "special_package": "AEVFSP",
+      "nature_package": null,
+      "cash_package": 3,
+      "fmi_right": false,
+      "sn_code_aidant": "1997051214700",
+      "date_of_change_to_new_plan": "2023-03-10"
+    }
+  },
+  {
+    "model": "dependence.medicalcaresummaryperpatient",
+    "pk": 28,
+    "fields": {
+      "created_on": "2023-03-23T16:53:36.871Z",
+      "updated_on": "2023-03-23T16:53:36.885Z",
+      "patient": 1070,
+      "date_of_request": "2021-11-04",
+      "referent": "Dr Skywalker",
+      "date_of_evaluation": "2022-01-06",
+      "date_of_notification": "2022-01-14",
+      "date_of_notification_to_provider": "2023-03-10",
+      "plan_number": "1543918",
+      "decision_number": "73084",
+      "level_of_needs": 1,
+      "start_of_support": "2021-11-04",
+      "end_of_support": null,
+      "date_of_decision": "2022-01-10",
+      "special_package": null,
+      "nature_package": 1,
+      "cash_package": 3,
+      "fmi_right": false,
+      "sn_code_aidant": "1997051214700",
+      "date_of_start_of_plan_for_us": "2023-03-11",
+      "date_of_change_to_new_plan": null
+    }
+  }
+]

@@ -43,9 +43,12 @@ class LongTermCareInvoiceLineInline(admin.TabularInline):
     model = LongTermCareInvoiceLine
     extra = 0
 
+
 class LongTermCareInvoiceItemInLine(admin.TabularInline):
     model = LongTermCareInvoiceItem
     extra = 0
+
+
 @admin.register(LongTermCareInvoiceFile)
 class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     inlines = [LongTermCareInvoiceLineInline, LongTermCareInvoiceItemInLine]
@@ -65,8 +68,6 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'invoicing/print_long_term_invoice.html', {'obj': obj})
-
-
 
 
 @admin.register(LongTermCareMonthlyStatement)
@@ -98,6 +99,8 @@ class LongTermPackagePriceInline(admin.TabularInline):
 class LongTermCareItemAdmin(admin.ModelAdmin):
     list_display = ('code', 'short_description')
     actions = [create_or_update_long_term_item_based_on_fixture]
+
+
 @admin.register(LongTermPackage)
 class LongTermPackageAdmin(admin.ModelAdmin):
     list_display = ('code', 'description')
@@ -159,20 +162,24 @@ class FilteringPatientsForMedicalCareSummaryPerPatient(SimpleListFilter):
 class MedicalCareSummaryPerPatientAdmin(admin.ModelAdmin):
     inlines = [MedicalCareSummaryPerPatientDetailInline, SharedMedicalCareSummaryPerPatientDetailInline]
     list_display = ('patient', 'date_of_decision', 'date_of_notification_to_provider', 'level_of_needs',
-                    'start_of_support', 'end_of_support','is_latest_plan')
+                    'start_of_support', 'end_of_support', 'date_of_start_of_plan_for_us', 'date_of_change_to_new_plan',
+                    'is_latest_plan')
     # all fields are readonly
     readonly_fields = ('created_on', 'updated_on', 'patient', 'date_of_request', 'referent', 'date_of_evaluation',
                        'date_of_notification', 'plan_number', 'decision_number', 'level_of_needs', 'start_of_support',
                        'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
-                       'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail','date_of_notification_to_provider')
-    fields = ('date_of_change_to_new_plan', 'created_on', 'updated_on', 'patient', 'date_of_request', 'referent', 'date_of_evaluation',
-                       'date_of_notification', 'plan_number', 'decision_number', 'level_of_needs', 'start_of_support',
-                       'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
-                       'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail','date_of_notification_to_provider')
+                       'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail', 'date_of_notification_to_provider')
+    fields = ('date_of_start_of_plan_for_us', 'date_of_change_to_new_plan', 'created_on', 'updated_on', 'patient',
+              'date_of_request', 'referent', 'date_of_evaluation',
+              'date_of_notification', 'plan_number', 'decision_number', 'level_of_needs', 'start_of_support',
+              'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
+              'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail', 'date_of_notification_to_provider')
     list_filter = (FilteringPatientsForMedicalCareSummaryPerPatient, 'date_of_decision')
     actions = [create_aev_invoices_mars_2023]
+
     def is_latest_plan(self, obj):
         return obj.is_latest_plan
+
     is_latest_plan.boolean = True
 
     def link_to_declaration_detail(self, instance):
@@ -251,11 +258,12 @@ class CarePlanDetailInLine(admin.TabularInline):
     formset = CarePlanDetailForm
     params_occurrence = ModelMultipleChoiceField(queryset=CareOccurrence.objects.all(),
                                                  required=True)
+
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "long_term_care_items":
             kwargs["widget"] = FilteredSelectMultiple(
-            db_field.verbose_name, True,
-        )
+                db_field.verbose_name, True,
+            )
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
@@ -303,7 +311,6 @@ class CarePlanMasterAdmin(admin.ModelAdmin):
     list_filter = (FilteringPatients,)
     inlines = [CarePlanDetailInLine]
     autocomplete_fields = ['patient']
-
 
     def pdf_action(self, request, queryset):
         try:
@@ -609,6 +616,7 @@ class LongTermMonthlyActivityDetailInLine(admin.StackedInline):
     extra = 0
     model = LongTermMonthlyActivityDetail
 
+
 @admin.register(LongTermMonthlyActivity)
 class LongTermMonthlyActivityAdmin(admin.ModelAdmin):
     list_display = ('patient', 'month', 'year', 'ratio_days_on_days_of_month')
@@ -616,6 +624,8 @@ class LongTermMonthlyActivityAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
     readonly_fields = ('created_on', 'updated_on')
     inlines = [LongTermMonthlyActivityDetailInLine]
+
+
 @admin.register(LongTermMonthlyActivityFile)
 class LongTermMonthlyActivityFileAdmin(admin.ModelAdmin):
     list_display = ('month', 'year')
@@ -663,18 +673,18 @@ class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
             'view': 'print_fall_declaration',
         },
     ]
-    
+
     def print_fall_declaration(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'falldeclaration/print_fall_declaration.html', {'obj': obj})
-    
+
     ######################   create Django action for printing foc as PDF file
-    
+
     actions = ['print_document']
-    
+
     def print_document(self, request, queryset):
         response = generate_pdf_fall_declaration(queryset)
         return response
-    
+
     print_document.short_description = _("Print selected objects as PDF")

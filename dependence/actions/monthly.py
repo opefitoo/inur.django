@@ -123,7 +123,7 @@ def create_monthly_invoice_items(patient, statement, month, year):
             print(dtl.activity.code + " " + str(dtl.activity_date) + " " + str(dtl.quantity) + " " + str(patient))
             # create as many invoice items as quantity
             for i in range(dtl.quantity * 2):
-                LongTermCareInvoiceItem.objects.get_or_create(invoice=invoice,
+                LongTermCareInvoiceItem.objects.create(invoice=invoice,
                                                               care_date=dtl.activity_date,
                                                               long_term_care_package=LongTermPackage.objects.filter(
                                                                   code="AMDGI").get())
@@ -131,10 +131,11 @@ def create_monthly_invoice_items(patient, statement, month, year):
             print(dtl.activity.code + " " + str(dtl.activity_date) + " " + str(dtl.quantity))
             # create as many invoice items as quantity
             for i in range(dtl.quantity * 2):
-                LongTermCareInvoiceItem.objects.get_or_create(invoice=invoice,
+                invoice_item = LongTermCareInvoiceItem.objects.create(invoice=invoice,
                                                               care_date=dtl.activity_date,
                                                               long_term_care_package=LongTermPackage.objects.filter(
                                                                   code="AAII").get())
+                print(invoice_item)
 
 
 def create_monthly_invoice_line(patient, statement, month, year):
