@@ -26,7 +26,6 @@ def create_aev_invoices_mars_2023(self, request, queryset):
         Q(date_of_exit__lte=end_period) | Q(date_of_exit__isnull=True))
     # create invoices for each patient
     statement = create_monthly_invoice(patients, 3, 2023)
-    self.messages.success(request, "Invoices created successfully %s" % statement)
 
 
 def create_monthly_invoice(patient_list, month, year):
@@ -123,20 +122,19 @@ def create_monthly_invoice_items(patient, statement, month, year):
         if "AMD-GI" == dtl.activity.code:
             print(dtl.activity.code + " " + str(dtl.activity_date) + " " + str(dtl.quantity) + " " + str(patient))
             # create as many invoice items as quantity
-            for i in range(dtl.quantity * 2):
-                LongTermCareInvoiceItem.objects.create(invoice=invoice,
-                                                              care_date=dtl.activity_date,
-                                                              long_term_care_package=LongTermPackage.objects.filter(
-                                                                  code="AMDGI").get())
+            LongTermCareInvoiceItem.objects.create(invoice=invoice,
+                                                       care_date=dtl.activity_date,
+                                                       long_term_care_package=LongTermPackage.objects.filter(
+                                                           code="AMDGI").get(),
+                                                       quantity=dtl.quantity * 2)
         elif "AAI" == dtl.activity.code:
             print(dtl.activity.code + " " + str(dtl.activity_date) + " " + str(dtl.quantity))
             # create as many invoice items as quantity
-            for i in range(dtl.quantity * 2):
-                invoice_item = LongTermCareInvoiceItem.objects.create(invoice=invoice,
-                                                              care_date=dtl.activity_date,
-                                                              long_term_care_package=LongTermPackage.objects.filter(
-                                                                  code="AAII").get())
-                print(invoice_item)
+            invoice_item = LongTermCareInvoiceItem.objects.create(invoice=invoice,
+                                                                      care_date=dtl.activity_date,
+                                                                      long_term_care_package=LongTermPackage.objects.filter(
+                                                                          code="AAII").get(),
+                                                                      quantity=dtl.quantity * 2)
 
 
 def create_monthly_invoice_line(patient, statement, month, year):

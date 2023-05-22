@@ -135,6 +135,7 @@
             <td>Date Fin</td>
             <td>Code</td>
             <td>Prix unitaire</td>
+            <td>Qté</td>
             <td>Total</td>
         </tr>
         {% for line in obj.get_invoice_lines %}
@@ -143,6 +144,7 @@
                 <td>{{ line.end_period }}</td>
                 <td>{{ line.long_term_care_package.code }}</td>
                 <td>{{ line.long_term_care_package.price }}</td>
+                <td>1</td>
                 <td>{{ line.calculate_price }}</td>
             </tr>
         {% endfor %}
@@ -152,6 +154,7 @@
                 <td>-</td>
                 <td>{{ item.long_term_care_package.code }}</td>
                 <td>{{ item.long_term_care_package.price }}</td>
+                <td>{{ item.quantity }}</td>
                 <td>{{ item.calculate_price }}</td>
             </tr>
         {% endfor %}

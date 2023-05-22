@@ -104,10 +104,10 @@ class LongTermCareMonthlyStatement(models.Model):
         # create sub element montantNet
         montantNet = ElementTree.SubElement(demandeDecompte, "montantNet")
         montantNet.text = str(self.calculate_total_price())
-        # create sub element facture
-        facture = ElementTree.SubElement(root, "facture")
         # loop through all LongTermCareInvoiceFile
         for invoice in LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all():
+            # create sub element facture
+            facture = ElementTree.SubElement(root, "facture")
             print(invoice)
             # create sub element referenceFacture
             referenceFacture = ElementTree.SubElement(facture, "referenceFacture")
@@ -121,6 +121,46 @@ class LongTermCareMonthlyStatement(models.Model):
             dateEtablissementFacture.text = self.date_of_submission.strftime("%Y-%m-%d")
             # loop through all LongTermCareInvoiceLine
             _counter = 0
+            for item in LongTermCareInvoiceItem.objects.filter(invoice=invoice).all().all():
+                _counter += 1
+                # create sub element prestation
+                prestation = ElementTree.SubElement(facture, "prestation")
+                # create sub element codePrestation
+                referencePrestation = ElementTree.SubElement(prestation, "referencePrestation")
+                referencePrestation.text = str(_counter)
+                # create sub element acte
+                acte = ElementTree.SubElement(prestation, "acte")
+                # create sub element codeTarif
+                codeTarif = ElementTree.SubElement(acte, "codeTarif")
+                codeTarif.text = item.long_term_care_package.code
+                # create sub element periodePrestation
+                periodePrestation = ElementTree.SubElement(prestation, "periodePrestation")
+                # create sub element dateDebut
+                dateDebut = ElementTree.SubElement(periodePrestation, "dateDebut")
+                dateDebut.text = item.care_date.strftime("%Y-%m-%d")
+                # create sub element dateFin
+                dateFin = ElementTree.SubElement(periodePrestation, "dateFin")
+                dateFin.text = item.care_date.strftime("%Y-%m-%d")
+                # create sub element demandePrestation
+                demandePrestation = ElementTree.SubElement(prestation, "demandePrestation")
+                # create sub element nombre
+                nombre = ElementTree.SubElement(demandePrestation, "nombre")
+                nombre.text = str(2)
+                # create sub element devise
+                devise = ElementTree.SubElement(demandePrestation, "devise")
+                devise.text = "EUR"
+                # create sub element montantBrut
+                montantBrut = ElementTree.SubElement(demandePrestation, "montantBrut")
+                montantBrut.text = str(item.long_term_care_package.price_per_year_month(year=self.year,
+                                                                                            month=self.month))
+                # create sub element montantNet
+                montantNet = ElementTree.SubElement(demandePrestation, "montantNet")
+                montantNet.text = str(item.long_term_care_package.price_per_year_month(year=self.year,
+                                                                                        month=self.month))
+                # create sub element identifiantExecutant
+                identifiantExecutant = ElementTree.SubElement(prestation, "identifiantExecutant")
+                identifiantExecutant.text = config.CODE_PRESTATAIRE
+
             for line in LongTermCareInvoiceLine.objects.filter(invoice=invoice).all().all():
                 for line_per_day in line.get_line_item_per_each_day_of_period():
                     _counter += 1
@@ -129,7 +169,7 @@ class LongTermCareMonthlyStatement(models.Model):
                     # create sub element codePrestation
                     referencePrestation = ElementTree.SubElement(prestation, "referencePrestation")
                     referencePrestation.text = str(_counter)
-                    # create sub element quantite
+                    # create sub element acte
                     acte = ElementTree.SubElement(prestation, "acte")
                     # create sub element codeTarif
                     codeTarif = ElementTree.SubElement(acte, "codeTarif")
@@ -342,6 +382,7 @@ class LongTermCareInvoiceItem(models.Model):
     care_date = models.DateField(_('Date Début période'), )
     long_term_care_package = models.ForeignKey(LongTermPackage, on_delete=models.CASCADE,
                                                related_name='from_item_to_long_term_care_package')
+    quantity = models.IntegerField(_('Quantité'), default=1)
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
@@ -360,7 +401,7 @@ class LongTermCareInvoiceItem(models.Model):
         else:
             # price for specific care_date
             return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
-                                                                    month=self.care_date.month)
+                                                                    month=self.care_date.month) * self.quantity
 
 
 @dataclass
