@@ -81,6 +81,12 @@ class LongTermCareMonthlyStatementAdmin(ModelAdminObjectActionsMixin, admin.Mode
             'form_method': 'GET',
             'view': 'print_statement_invoice',
         },
+        {
+            'slug': 'print_statement_invoice_to_be_sent',
+            'verbose_name': 'Mémoire à envoyer',
+            'form_method': 'GET',
+            'view': 'print_statement_invoice_to_be_sent',
+        },
 
     ]
 
@@ -88,6 +94,11 @@ class LongTermCareMonthlyStatementAdmin(ModelAdminObjectActionsMixin, admin.Mode
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'invoicing/print_statement_invoice.html', {'obj': obj})
+
+    def print_statement_invoice_to_be_sent(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'invoicing/print_statement_invoice_to_be_sent.html', {'obj': obj})
 
 
 class LongTermPackagePriceInline(admin.TabularInline):

@@ -1,0 +1,273 @@
+{% load static %}
+<head xmlns="http://www.w3.org/1999/html">
+    <meta charset="utf-8"/>
+    <title>Mémoire d'honoraires Assurance dépendance</title>
+
+    <style>
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            font-size: 12px;
+            line-height: 20px;
+            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            color: #555;
+        }
+
+        .invoice-box table {
+            width: 100%;
+            line-height: inherit;
+            text-align: left;
+        }
+
+        .invoice-box table td {
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .invoice-box table tr.top table td {
+            padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.top table td:nth-child(2) {
+            text-align: right;
+        }
+
+        .invoice-box table tr.top table td.title {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 20px;
+            color: #333;
+        }
+
+        .invoice-box table tr.information table td {
+            padding-bottom: 40px;
+            font-size: 14px;
+        }
+
+        .invoice-box table tr.heading td {
+            background: #eee;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .invoice-box table tr.details td {
+            padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.item td {
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+
+        .invoice-box table tr.item.last td {
+            border-bottom: none;
+        }
+
+        .invoice-box table tr.total td:nth-child(2) {
+            border-top: 2px solid #eee;
+            font-weight: bold;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .invoice-box table tr.top table td {
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+
+            .invoice-box table tr.information table td {
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+        }
+
+        /** RTL **/
+        .invoice-box.rtl {
+            direction: rtl;
+            font-family: Tahoma, 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+        }
+
+        .invoice-box.rtl table {
+            text-align: right;
+        }
+
+        .invoice-box.rtl table tr td:nth-child(2) {
+            text-align: left;
+        }
+
+        .invoice-header table {
+            width: 100%; /* adjust the width as you need */
+            text-align: center;
+            border-collapse: collapse; /* this is to make the borders join */
+        }
+
+        .invoice-header table tr.item-hdr td {
+            border-bottom: 1px solid #eee;
+            padding: 10px; /* optional, for some padding */
+            font-size: 16px;
+        }
+
+        .invoice-box table tr.item td {
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="invoice-box">
+    <table cellpadding="0" cellspacing="0">
+        <tr class="top">
+            <td colspan="8">
+                <table>
+                    <tr>
+                        <td><img src="{% static 'images/Logo_SUR_quadri_transparent_pour_copas.png' %}"
+                                 style="width: 200%; max-width: 100px"/></td>
+                        <td>
+                            </tr>
+                    <tr>
+                        <td colspan="2">
+                            <div style="text-align: center;">
+                                <b>Mémoire du mois de {{obj.get_month_in_french}} {{obj.year}}</b>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <!--                <table class="invoice-header">-->
+                <table>
+                    <tr>
+                        <td class="title" style="padding: 10px; border-bottom: 1px solid #eee;">
+
+                            <div class="information">Nom du Prestataire</div>
+                        </td>
+                        <td class="title" style="padding: 10px; border-bottom: 1px solid #eee;">
+                            <div class="information"> Code : {{ obj.get_provider_code  }} </div>
+                        </td>
+                    <tr>
+                        <td class="title" style="padding: 10px; border-bottom: 1px solid #eee;">
+                            <div class="information"> {{ obj.get_provider_name  }} </div>
+                        </td>
+                        <td class="title" style="padding: 10px; border-bottom: 1px solid #eee;">
+                            <div class="information"> {{ obj.get_provider_address  }} </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        <tr class="item-hdr">
+            <td colspan="2" style="text-align: justify;">Il est dû au prestataire pré-qualifié la somme de : {{ obj.calculate_total_price }} Euro
+                pour
+                aides et soins délivrés
+                dans le cadre de l’assurance dépendance, conformément aux données et enregistrements
+                suivants : <br />
+            </td>
+        </tr>
+
+
+        <tr class="heading">
+            <td>Mois : {{obj.get_month_in_2_digits}}</td>
+            <td></td>
+        </tr>
+        <tr class="item total">
+            <td>Nombre total des factures :</td>
+            <td>{{ obj.get_number_of_invoices }}</td>
+        </tr>
+        <tr class="item total">
+            <td>Nombre total des lignes de facturation :</td>
+            <td>99</td>
+        </tr>
+
+        {% comment %}
+        <tr class="heading">
+            <td>Item</td>
+
+            <td>Price</td>
+        </tr>
+
+        <tr class="item">
+            <td>Website design</td>
+
+            <td>$300.00</td>
+        </tr>
+
+        <tr class="item">
+            <td>Hosting (3 months)</td>
+
+            <td>$75.00</td>
+        </tr>
+
+        <tr class="item last">
+            <td>Domain name (1 year)</td>
+
+            <td>$10.00</td>
+        </tr>
+
+        <tr class="total">
+            <td></td>
+
+            <td>Total: $385.00</td>
+        </tr>
+        {% endcomment %}
+        <tr>
+            <td></td>
+        </tr>
+        <tr class="information">
+            <td class="">Mémoire certifié sincère, véritable et non encore acquitté.</td>
+        </tr>
+        <tr class="information">
+            <td>Luxembourg, le {{obj.send_date}}</td>
+        </tr>
+        <tr class="item">
+            <td>Nom et prénom du signataire :</td>
+            <td><b>SIMBA U. Régine</b></td>
+        </tr>
+        <tr class="item last">
+            <td>Qualité du signataire :</td>
+            <td><b>Gérante technique</b></td>
+        </tr>
+        <tr style="border-bottom: 2px solid #1e1e1e;" >
+            <td style="border-bottom: 2px solid #1e1e1e;"></td>
+            <td style="border-bottom: 2px solid #1e1e1e;"></td>
+        </tr>
+        <tr class="item">
+            <td>Accusé de réception</td>
+        </tr>
+        <tr class="item">
+            <td>
+                La CNS certifie par la présente avoir reçu le présent mémoire en date du :
+            </td>
+            <td>……………………………….</td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="checkbox" disabled>
+                Les données transmises sont conformes.
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="checkbox" disabled>
+                Les données transmises ne sont pas conformes aux motifs suivants :
+        </tr>
+        <tr class="item">
+            <td>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr class="item">
+            <td colspan="2"> ………………………………. (Cachet) (Date et signature)</td>
+        </tr>
+        <tr class="last"></tr>
+        <tr class="item last">
+            <td>
+                Nom du responsable CNS :
+            </td>
+        </tr>
+        <tr></tr>
+    </table>
+</div>
+</body>
+</html>

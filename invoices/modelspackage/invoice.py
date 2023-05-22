@@ -27,6 +27,9 @@ class InvoicingDetails(models.Model):
     aa = models.CharField("Autorisation ministère de la famille activités aides à domicile", max_length=50, null=True, blank=True)
     default_invoicing = models.BooleanField(default=False)
 
+    def get_full_address(self):
+        return '%s, %s %s' % (self.address, self.zipcode_city, self.country)
+
     def clean(self):
         # Don't allow draft entries to have a pub_date.
         default_details = InvoicingDetails.objects.filter(default_invoicing=True).exclude(pk=self.id)

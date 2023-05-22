@@ -1,3 +1,5 @@
+import calendar
+import locale
 import os
 from xml.etree import ElementTree
 
@@ -12,6 +14,7 @@ from dependence.detailedcareplan import MedicalCareSummaryPerPatient, get_summar
 from dependence.longtermcareitem import LongTermCareItem, LongTermPackage
 from invoices.employee import Employee
 from invoices.models import Patient
+from invoices.modelspackage import InvoicingDetails
 
 
 # décompte mensuel de factures
@@ -167,8 +170,43 @@ class LongTermCareMonthlyStatement(models.Model):
     def get_invoices(self):
         return LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all()
 
+    @property
+    def get_month_in_french(self):
+        locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')  # for Unix/Linux/MacOS
+        # to upper case
+        return calendar.month_name[self.month].upper()
+    @property
+    def get_provider_name(self):
+        invoicing_details = InvoicingDetails.objects.filter(default_invoicing=True).first()
+        if invoicing_details:
+            return invoicing_details.name
+        return "PLEASE FILL IN INVOICING DETAILS"
+
+    @property
+    def get_provider_address(self):
+        invoicing_details = InvoicingDetails.objects.filter(default_invoicing=True).first()
+        if invoicing_details:
+            return invoicing_details.get_full_address
+        return "PLEASE FILL IN INVOICING DETAILS"
+
+    @property
+    def get_provider_code(self):
+        invoicing_details = InvoicingDetails.objects.filter(default_invoicing=True).first()
+        if invoicing_details:
+            return invoicing_details.provider_code
+        return "PLEASE FILL IN INVOICING DETAILS"
+
+    @property
+    def get_number_of_invoices(self):
+        return LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().count()
+
+    @property
+    def get_month_in_2_digits(self):
+        return str(self.month).zfill(2)
+
+
     def __str__(self):
-        return f"{self.year} - {self.month}"
+            return f"{self.year} - {self.month}"
 
 
 class LongTermCareInvoiceFile(models.Model):
