@@ -94,7 +94,8 @@ class LongTermCareMonthlyStatement(models.Model):
         # create sub element nombre
         nombre = ElementTree.SubElement(demandeDecompte, "nombre")
         # set number of invoices per patient
-        nombre.text = "10"
+        invoices = LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all()
+        nombre.text = str(invoices.count())
         # create sub element devise
         devise = ElementTree.SubElement(demandeDecompte, "devise")
         devise.text = "EUR"
@@ -105,7 +106,7 @@ class LongTermCareMonthlyStatement(models.Model):
         montantNet = ElementTree.SubElement(demandeDecompte, "montantNet")
         montantNet.text = str(self.calculate_total_price())
         # loop through all LongTermCareInvoiceFile
-        for invoice in LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all():
+        for invoice in invoices:
             # create sub element facture
             facture = ElementTree.SubElement(root, "facture")
             print(invoice)
@@ -145,18 +146,16 @@ class LongTermCareMonthlyStatement(models.Model):
                 demandePrestation = ElementTree.SubElement(prestation, "demandePrestation")
                 # create sub element nombre
                 nombre = ElementTree.SubElement(demandePrestation, "nombre")
-                nombre.text = str(2)
+                nombre.text = str(item.quantity)
                 # create sub element devise
                 devise = ElementTree.SubElement(demandePrestation, "devise")
                 devise.text = "EUR"
                 # create sub element montantBrut
                 montantBrut = ElementTree.SubElement(demandePrestation, "montantBrut")
-                montantBrut.text = str(item.long_term_care_package.price_per_year_month(year=self.year,
-                                                                                            month=self.month))
+                montantBrut.text = str(item.calculate_price())
                 # create sub element montantNet
                 montantNet = ElementTree.SubElement(demandePrestation, "montantNet")
-                montantNet.text = str(item.long_term_care_package.price_per_year_month(year=self.year,
-                                                                                        month=self.month))
+                montantNet.text = str(item.calculate_price())
                 # create sub element identifiantExecutant
                 identifiantExecutant = ElementTree.SubElement(prestation, "identifiantExecutant")
                 identifiantExecutant.text = config.CODE_PRESTATAIRE
@@ -194,12 +193,10 @@ class LongTermCareMonthlyStatement(models.Model):
                     devise.text = "EUR"
                     # create sub element montantBrut
                     montantBrut = ElementTree.SubElement(demandePrestation, "montantBrut")
-                    montantBrut.text = str(line.long_term_care_package.price_per_year_month(year=self.year,
-                                                                                            month=self.month))
+                    montantBrut.text = str(line.calculate_price_per_day())
                     # create sub element montantNet
                     montantNet = ElementTree.SubElement(demandePrestation, "montantNet")
-                    montantNet.text = str(line.long_term_care_package.price_per_year_month(year=self.year,
-                                                                                            month=self.month))
+                    montantNet.text = str(line.calculate_price_per_day())
                     # create sub element identifiantExecutant
                     identifiantExecutant = ElementTree.SubElement(prestation, "identifiantExecutant")
                     identifiantExecutant.text = config.CODE_PRESTATAIRE
@@ -403,6 +400,14 @@ class LongTermCareInvoiceItem(models.Model):
             return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
                                                                     month=self.care_date.month) * self.quantity
 
+    def calculate_unit_price(self):
+        if self.long_term_care_package.package:
+            raise ValidationError("Item seulement pour un non forfait (package doit etre false)")
+        else:
+            # price for specific care_date
+            return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
+                                                                    month=self.care_date.month)
+
 
 @dataclass
 class LongTermCareInvoiceLinePerDay:
@@ -429,6 +434,14 @@ class LongTermCareInvoiceLine(models.Model):
                                                                     month=self.start_period.month) * number_of_days_inclusive
         else:
             raise ValidationError("Line seulement pour un forfait (package doit etre true)")
+
+    def calculate_price_per_day(self):
+        if not self.long_term_care_package.package:
+            raise ValidationError("Line seulement pour un forfait (package doit etre false)")
+        else:
+            # price for specific care_date
+            return self.long_term_care_package.price_per_year_month(year=self.start_period.year,
+                                                                    month=self.start_period.month)
 
     def get_line_item_per_each_day_of_period(self):
         # loop through all days of period and create an object for each day
