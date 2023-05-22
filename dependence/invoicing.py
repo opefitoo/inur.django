@@ -1,6 +1,8 @@
 import calendar
 import locale
 import os
+from dataclasses import dataclass
+from datetime import timedelta, date
 from xml.etree import ElementTree
 
 import xmlschema
@@ -78,15 +80,15 @@ class LongTermCareMonthlyStatement(models.Model):
         dateEnvoi.text = self.date_of_submission.strftime("%Y-%m-%d")
         # create sub element referenceFichierFacturation
         referenceFichierFacturation = ElementTree.SubElement(entete, "referenceFichierFacturation")
-        referenceFichierFacturation.text = self.id
+        referenceFichierFacturation.text = str(self.id)
         # create sub element periodeDecompte
         periodeDecompte = ElementTree.SubElement(entete, "periodeDecompte")
         # create sub element exercice
         exercice = ElementTree.SubElement(periodeDecompte, "exercice")
-        exercice.text = self.invoice_start_period.strftime("%Y")
+        exercice.text = str(self.year)
         # create sub element mois
         mois = ElementTree.SubElement(periodeDecompte, "mois")
-        mois.text = self.invoice_start_period.strftime("%m")
+        mois.text = str(self.get_month_in_2_digits)
         # create sub element demandeDecompte
         demandeDecompte = ElementTree.SubElement(entete, "demandeDecompte")
         # create sub element nombre
@@ -98,10 +100,10 @@ class LongTermCareMonthlyStatement(models.Model):
         devise.text = "EUR"
         # create sub element montantBrut
         montantBrut = ElementTree.SubElement(demandeDecompte, "montantBrut")
-        montantBrut.text = str(self.calculate_price())
+        montantBrut.text = str(self.calculate_total_price())
         # create sub element montantNet
         montantNet = ElementTree.SubElement(demandeDecompte, "montantNet")
-        montantNet.text = str(self.calculate_price())
+        montantNet.text = str(self.calculate_total_price())
         # create sub element facture
         facture = ElementTree.SubElement(root, "facture")
         # loop through all LongTermCareInvoiceFile
@@ -117,35 +119,50 @@ class LongTermCareMonthlyStatement(models.Model):
             # create sub element dateEtablissementFacture
             dateEtablissementFacture = ElementTree.SubElement(facture, "dateEtablissementFacture")
             dateEtablissementFacture.text = self.date_of_submission.strftime("%Y-%m-%d")
-            # create sub element prestation
-            prestation = ElementTree.SubElement(facture, "prestation")
             # loop through all LongTermCareInvoiceLine
-            for line in LongTermCareInvoiceLine.objects.filter(link_to_invoice_file=invoice).all().all():
-                # create sub element codePrestation
-                referencePrestation = ElementTree.SubElement(prestation, "referencePrestation")
-                referencePrestation.text = line.id
-                # create sub element quantite
-                acte = ElementTree.SubElement(prestation, "acte")
-                # create sub element codeTarif
-                codeTarif = ElementTree.SubElement(acte, "codeTarif")
-                codeTarif.text = line.long_term_care_package.code
-                # create sub element demandePrestation
-                demandePrestation = ElementTree.SubElement(prestation, "demandePrestation")
-                # create sub element nombre
-                nombre = ElementTree.SubElement(demandePrestation, "nombre")
-                nombre.text = "1"
-                # create sub element devise
-                devise = ElementTree.SubElement(demandePrestation, "devise")
-                devise.text = "EUR"
-                # create sub element montantBrut
-                montantBrut = ElementTree.SubElement(demandePrestation, "montantBrut")
-                montantBrut.text = str(line.long_term_care_package.price)
-                # create sub element montantNet
-                montantNet = ElementTree.SubElement(demandePrestation, "montantNet")
-                montantNet.text = str(line.long_term_care_package.price)
-                # create sub element identifiantExecutant
-                identifiantExecutant = ElementTree.SubElement(prestation, "identifiantExecutant")
-                identifiantExecutant.text = config.CODE_PRESTATAIRE
+            _counter = 0
+            for line in LongTermCareInvoiceLine.objects.filter(invoice=invoice).all().all():
+                for line_per_day in line.get_line_item_per_each_day_of_period():
+                    _counter += 1
+                    # create sub element prestation
+                    prestation = ElementTree.SubElement(facture, "prestation")
+                    # create sub element codePrestation
+                    referencePrestation = ElementTree.SubElement(prestation, "referencePrestation")
+                    referencePrestation.text = str(_counter)
+                    # create sub element quantite
+                    acte = ElementTree.SubElement(prestation, "acte")
+                    # create sub element codeTarif
+                    codeTarif = ElementTree.SubElement(acte, "codeTarif")
+                    codeTarif.text = line.long_term_care_package.code
+                    # create sub element periodePrestation
+                    periodePrestation = ElementTree.SubElement(prestation, "periodePrestation")
+                    # create sub element dateDebut
+                    dateDebut = ElementTree.SubElement(periodePrestation, "dateDebut")
+                    #dateDebut.text = line.start_period.strftime("%Y-%m-%d")
+                    dateDebut.text = line_per_day.care_date.strftime("%Y-%m-%d")
+                    # create sub element dateFin
+                    #dateFin = ElementTree.SubElement(periodePrestation, "dateFin")
+                    #dateFin.text = line.end_period.strftime("%Y-%m-%d")
+
+                    # create sub element demandePrestation
+                    demandePrestation = ElementTree.SubElement(prestation, "demandePrestation")
+                    # create sub element nombre
+                    nombre = ElementTree.SubElement(demandePrestation, "nombre")
+                    nombre.text = "1"
+                    # create sub element devise
+                    devise = ElementTree.SubElement(demandePrestation, "devise")
+                    devise.text = "EUR"
+                    # create sub element montantBrut
+                    montantBrut = ElementTree.SubElement(demandePrestation, "montantBrut")
+                    montantBrut.text = str(line.long_term_care_package.price_per_year_month(year=self.year,
+                                                                                            month=self.month))
+                    # create sub element montantNet
+                    montantNet = ElementTree.SubElement(demandePrestation, "montantNet")
+                    montantNet.text = str(line.long_term_care_package.price_per_year_month(year=self.year,
+                                                                                            month=self.month))
+                    # create sub element identifiantExecutant
+                    identifiantExecutant = ElementTree.SubElement(prestation, "identifiantExecutant")
+                    identifiantExecutant.text = config.CODE_PRESTATAIRE
             # create sub element demandeFacture
             demandeFacture = ElementTree.SubElement(facture, "demandeFacture")
             # create sub element nombre
@@ -156,10 +173,17 @@ class LongTermCareMonthlyStatement(models.Model):
             devise.text = "EUR"
             # create sub element montantBrut
             montantBrut = ElementTree.SubElement(demandeFacture, "montantBrut")
-            montantBrut.text = str(self.calculate_price())
+            montantBrut.text = str(self.calculate_total_price())
             # create sub element montantNet
             montantNet = ElementTree.SubElement(demandeFacture, "montantNet")
-            montantNet.text = str(self.calculate_price())
+            montantNet.text = str(self.calculate_total_price())
+        # create a new XML file with the results
+        mydata = ElementTree.tostring(root)
+        if xsd_schema.is_valid(mydata):
+            print("The XML instance is valid!")
+        else:
+            xsd_schema.validate(mydata)
+        return mydata
 
     def calculate_total_price(self):
         total_price = 0
@@ -204,6 +228,12 @@ class LongTermCareMonthlyStatement(models.Model):
     def get_month_in_2_digits(self):
         return str(self.month).zfill(2)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.force_regeneration:
+            # create invoice file
+            xml_str = self.generate_xml_using_xmlschema()
+            print(xml_str)
 
     def __str__(self):
             return f"{self.year} - {self.month}"
@@ -333,6 +363,13 @@ class LongTermCareInvoiceItem(models.Model):
                                                                     month=self.care_date.month)
 
 
+@dataclass
+class LongTermCareInvoiceLinePerDay:
+    care_reference: str
+    care_date: date
+    care_package: LongTermPackage
+
+
 class LongTermCareInvoiceLine(models.Model):
     invoice = models.ForeignKey(LongTermCareInvoiceFile, on_delete=models.CASCADE, related_name='invoice_line')
     start_period = models.DateField(_('Date Début période'), )
@@ -351,6 +388,18 @@ class LongTermCareInvoiceLine(models.Model):
                                                                     month=self.start_period.month) * number_of_days_inclusive
         else:
             raise ValidationError("Line seulement pour un forfait (package doit etre true)")
+
+    def get_line_item_per_each_day_of_period(self):
+        # loop through all days of period and create an object for each day
+        number_of_days_inclusive = (self.end_period - self.start_period).days + 1
+        data_to_return = []
+        for day in range(number_of_days_inclusive):
+            date_of_line = self.start_period + timedelta(days=day)
+            # format date YYYYMMDD
+            date_of_line_str = date_of_line.strftime("%Y%m%d")
+            reference_prestation = "%s%s%s" % (self.invoice.id, self.long_term_care_package.id, date_of_line_str )
+            data_to_return.append(LongTermCareInvoiceLinePerDay(reference_prestation, date_of_line, self.long_term_care_package))
+        return data_to_return
 
     class Meta:
         verbose_name = _("Ligne de facture assurance dépendance")
