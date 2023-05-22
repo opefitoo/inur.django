@@ -25,7 +25,8 @@ def create_aev_invoices_mars_2023(self, request, queryset):
     patients = Patient.objects.filter(is_under_dependence_insurance=True).filter(
         Q(date_of_exit__lte=end_period) | Q(date_of_exit__isnull=True))
     # create invoices for each patient
-    create_monthly_invoice(patients, 3, 2023)
+    statement = create_monthly_invoice(patients, 3, 2023)
+    self.messages.success(request, "Invoices created successfully %s" % statement)
 
 
 def create_monthly_invoice(patient_list, month, year):
