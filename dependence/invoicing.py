@@ -177,11 +177,11 @@ class LongTermCareMonthlyStatement(models.Model):
                     periodePrestation = ElementTree.SubElement(prestation, "periodePrestation")
                     # create sub element dateDebut
                     dateDebut = ElementTree.SubElement(periodePrestation, "dateDebut")
-                    #dateDebut.text = line.start_period.strftime("%Y-%m-%d")
+                    # dateDebut.text = line.start_period.strftime("%Y-%m-%d")
                     dateDebut.text = line_per_day.care_date.strftime("%Y-%m-%d")
                     # create sub element dateFin
-                    #dateFin = ElementTree.SubElement(periodePrestation, "dateFin")
-                    #dateFin.text = line.end_period.strftime("%Y-%m-%d")
+                    # dateFin = ElementTree.SubElement(periodePrestation, "dateFin")
+                    # dateFin.text = line.end_period.strftime("%Y-%m-%d")
 
                     # create sub element demandePrestation
                     demandePrestation = ElementTree.SubElement(prestation, "demandePrestation")
@@ -227,6 +227,7 @@ class LongTermCareMonthlyStatement(models.Model):
         for invoice in LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all():
             total_price += invoice.calculate_price()
         return total_price
+
     @property
     def get_invoices(self):
         return LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all()
@@ -236,6 +237,7 @@ class LongTermCareMonthlyStatement(models.Model):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')  # for Unix/Linux/MacOS
         # to upper case
         return calendar.month_name[self.month].upper()
+
     @property
     def get_provider_name(self):
         invoicing_details = InvoicingDetails.objects.filter(default_invoicing=True).first()
@@ -273,7 +275,7 @@ class LongTermCareMonthlyStatement(models.Model):
             print(xml_str)
 
     def __str__(self):
-            return f"{self.year} - {self.month}"
+        return f"{self.year} - {self.month}"
 
 
 class LongTermCareInvoiceFile(models.Model):
@@ -319,6 +321,15 @@ class LongTermCareInvoiceFile(models.Model):
         for item in items:
             total += item.calculate_price()
         return total
+
+    def total_number_of_lines(self):
+        invoice_lines = LongTermCareInvoiceLine.objects.filter(
+            invoice=self).all()
+        _number_of_lines = 0
+        for line in invoice_lines:
+            _number_of_lines += len(line.get_line_item_per_each_day_of_period())
+        return _number_of_lines + LongTermCareInvoiceItem.objects.filter(
+            invoice=self).count()
 
     @property
     def get_invoice_items(self):
@@ -386,7 +397,7 @@ class LongTermCareInvoiceItem(models.Model):
 
     def __str__(self):
         return "Item de facture assurance dépendance de {0} patient {1}".format(self.care_date,
-                                                                                 self.invoice.patient)
+                                                                                self.invoice.patient)
 
     class Meta:
         verbose_name = _("Item facture assurance dépendance")
@@ -451,8 +462,9 @@ class LongTermCareInvoiceLine(models.Model):
             date_of_line = self.start_period + timedelta(days=day)
             # format date YYYYMMDD
             date_of_line_str = date_of_line.strftime("%Y%m%d")
-            reference_prestation = "%s%s%s" % (self.invoice.id, self.long_term_care_package.id, date_of_line_str )
-            data_to_return.append(LongTermCareInvoiceLinePerDay(reference_prestation, date_of_line, self.long_term_care_package))
+            reference_prestation = "%s%s%s" % (self.invoice.id, self.long_term_care_package.id, date_of_line_str)
+            data_to_return.append(
+                LongTermCareInvoiceLinePerDay(reference_prestation, date_of_line, self.long_term_care_package))
         return data_to_return
 
     class Meta:
