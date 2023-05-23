@@ -554,18 +554,19 @@ class LongTermCareInvoiceLine(models.Model):
             item__code="AMD-M").count()
         if "FAMDM" == self.long_term_care_package.code and famdm_count == 0:
             raise ValidationError("Le forfait FAMDM n'a pas été encodé dans la synthèse")
-        if plan_for_period[0].medicalSummaryPerPatient.nature_package \
-                and plan_for_period[0].medicalSummaryPerPatient.nature_package != self.long_term_care_package.dependence_level:
-            raise ValidationError("Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
-                self.long_term_care_package,
-                self.long_term_care_package.dependence_level,
-                plan_for_period[0].medicalSummaryPerPatient.nature_package))
-        if not plan_for_period[0].medicalSummaryPerPatient.nature_package and plan_for_period[
-            0].medicalSummaryPerPatient.level_of_needs != self.long_term_care_package.dependence_level:
-            raise ValidationError("Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
-                self.long_term_care_package,
-                self.long_term_care_package.dependence_level,
-                plan_for_period[0].medicalSummaryPerPatient.level_of_needs))
+        else:
+            if plan_for_period[0].medicalSummaryPerPatient.nature_package \
+                    and plan_for_period[0].medicalSummaryPerPatient.nature_package != self.long_term_care_package.dependence_level:
+                raise ValidationError("Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
+                    self.long_term_care_package,
+                    self.long_term_care_package.dependence_level,
+                    plan_for_period[0].medicalSummaryPerPatient.nature_package))
+            if not plan_for_period[0].medicalSummaryPerPatient.nature_package and plan_for_period[
+                0].medicalSummaryPerPatient.level_of_needs != self.long_term_care_package.dependence_level:
+                raise ValidationError("Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
+                    self.long_term_care_package,
+                    self.long_term_care_package.dependence_level,
+                    plan_for_period[0].medicalSummaryPerPatient.level_of_needs))
 
     def __str__(self):
         return "Ligne de facture assurance dépendance de {0} à {1} patient {2}".format(self.start_period,
