@@ -73,6 +73,7 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
 @admin.register(LongTermCareMonthlyStatement)
 class LongTermCareMonthlyStatementAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     list_display = ('year', 'month', 'date_of_submission', 'display_object_actions_list')
+    readonly_fields = ('created_on', 'updated_on')
 
     object_actions = [
         {
