@@ -46,7 +46,7 @@ def long_term_care_monthly_statement_file_path(instance, filename):
     month_of_count = f"{instance.month:02d}"
     year_of_count = f"{instance.year:04d}"
     _internal_reference = instance.date_of_submission.strftime("%Y%m%d")
-    newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_FAC_2_{_internal_reference}{instance.id}.xml"
+    newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_FAC_001_{_internal_reference}{instance.id}.xml"
     # newfilename, file_extension = os.path.splitext(filename)
     return f"long_term_invoices/{instance.year}/{instance.month}/{newfilename}"
 
