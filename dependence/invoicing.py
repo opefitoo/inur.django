@@ -228,6 +228,12 @@ class LongTermCareMonthlyStatement(models.Model):
             total_price += invoice.calculate_price()
         return total_price
 
+    def total_number_of_lines(self):
+        _total_number_of_lines = 0
+        for invoice in LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all():
+            _total_number_of_lines += invoice.total_number_of_lines()
+        return _total_number_of_lines
+
     @property
     def get_invoices(self):
         return LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all()
