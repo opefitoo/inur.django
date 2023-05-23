@@ -262,6 +262,11 @@ class LongTermCareMonthlyStatement(models.Model):
             total_price += invoice.calculate_price()
         return total_price
 
+    def total_price_formatted(self):
+        locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')  # Unix/Linux/MacOS
+        # locale.setlocale(locale.LC_ALL, 'french')  # Windows
+        return locale.format_string("%.2f", self.calculate_total_price(), grouping=True, monetary=True)
+
     def total_number_of_lines(self):
         _total_number_of_lines = 0
         for invoice in LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all():
