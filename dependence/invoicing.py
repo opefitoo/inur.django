@@ -244,10 +244,10 @@ class LongTermCareMonthlyStatement(models.Model):
             devise.text = "EUR"
             # create sub element montantBrut
             montantBrut = ElementTree.SubElement(demandeFacture, "montantBrut")
-            montantBrut.text = str(self.calculate_total_price())
+            montantBrut.text = str(invoice.calculate_price())
             # create sub element montantNet
             montantNet = ElementTree.SubElement(demandeFacture, "montantNet")
-            montantNet.text = str(self.calculate_total_price())
+            montantNet.text = str(invoice.calculate_price())
         # create a new XML file with the results
         mydata = ElementTree.tostring(root)
         if xsd_schema.is_valid(mydata):
