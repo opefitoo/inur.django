@@ -323,10 +323,9 @@ class LongTermCareInvoiceFile(models.Model):
         return total
 
     def total_number_of_lines(self):
-        invoice_lines = LongTermCareInvoiceLine.objects.filter(
-            invoice=self).all()
         _number_of_lines = 0
-        for line in invoice_lines:
+        for line in LongTermCareInvoiceLine.objects.filter(
+                invoice=self).all():
             _number_of_lines += len(line.get_line_item_per_each_day_of_period())
         return _number_of_lines + LongTermCareInvoiceItem.objects.filter(
             invoice=self).count()
