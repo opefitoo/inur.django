@@ -16,7 +16,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from dependence.detailedcareplan import MedicalCareSummaryPerPatient, get_summaries_between_two_dates
+from dependence.detailedcareplan import get_summaries_between_two_dates, MedicalCareSummaryPerPatientDetail
 from dependence.longtermcareitem import LongTermCareItem, LongTermPackage
 from invoices.employee import Employee
 from invoices.models import Patient
@@ -49,6 +49,7 @@ def long_term_care_monthly_statement_file_path(instance, filename):
     newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_FAC_2_{_internal_reference}{instance.id}.xml"
     # newfilename, file_extension = os.path.splitext(filename)
     return f"long_term_invoices/{instance.year}/{instance.month}/{newfilename}"
+
 
 # décompte mensuel de factures
 class LongTermCareMonthlyStatement(models.Model):
@@ -335,6 +336,8 @@ def create_and_save_invoice_file(sender, instance, **kwargs):
         finally:
             notify_system_via_google_webhook(message)
             instance.force_regeneration = False
+
+
 class LongTermCareInvoiceFile(models.Model):
     link_to_monthly_statement = models.ForeignKey(LongTermCareMonthlyStatement, on_delete=models.CASCADE,
                                                   related_name='monthly_statement', blank=True, null=True)
@@ -474,6 +477,7 @@ class LongTermCareInvoiceItem(models.Model):
             # price for specific care_date
             return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
                                                                     month=self.care_date.month)
+
     def clean(self):
         self.validate_item_dates_are_in_same_month_year_as_invoice()
 
@@ -537,20 +541,31 @@ class LongTermCareInvoiceLine(models.Model):
         self.validate_line_are_coherent_with_medical_care_summary_per_patient()
 
     def validate_line_are_coherent_with_medical_care_summary_per_patient(self):
-        medical_care_summary_per_patient = MedicalCareSummaryPerPatient.objects.filter(patient=self.invoice.patient,
-                                                                                       date_of_decision__lte=self.start_period)
-        if medical_care_summary_per_patient.count() == 0:
+        plan_for_period = get_summaries_between_two_dates(self.invoice.patient, self.start_period, self.end_period)
+        if len(plan_for_period) == 0:
             raise ValidationError("Aucune synthèse trouvée pour ce patient")
         plan_for_period = get_summaries_between_two_dates(self.invoice.patient, self.start_period, self.end_period)
         if not plan_for_period:
             raise ValidationError("Aucune synthèse trouvée pour cette période")
         if len(plan_for_period) > 1:
             raise ValidationError("Trop de synthèses %s" % len(plan_for_period))
-        if plan_for_period[0].medicalSummaryPerPatient.nature_package != self.long_term_care_package.dependence_level:
+        famdm_count = MedicalCareSummaryPerPatientDetail.objects.filter(
+            medical_care_summary_per_patient=plan_for_period[0].medicalSummaryPerPatient.id,
+            item__code="AMD-M").count()
+        if "FAMDM" == self.long_term_care_package.code and famdm_count == 0:
+            raise ValidationError("Le forfait FAMDM n'a pas été encodé dans la synthèse")
+        if plan_for_period[0].medicalSummaryPerPatient.nature_package \
+                and plan_for_period[0].medicalSummaryPerPatient.nature_package != self.long_term_care_package.dependence_level:
             raise ValidationError("Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
                 self.long_term_care_package,
                 self.long_term_care_package.dependence_level,
                 plan_for_period[0].medicalSummaryPerPatient.nature_package))
+        if not plan_for_period[0].medicalSummaryPerPatient.nature_package and plan_for_period[
+            0].medicalSummaryPerPatient.level_of_needs != self.long_term_care_package.dependence_level:
+            raise ValidationError("Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
+                self.long_term_care_package,
+                self.long_term_care_package.dependence_level,
+                plan_for_period[0].medicalSummaryPerPatient.level_of_needs))
 
     def __str__(self):
         return "Ligne de facture assurance dépendance de {0} à {1} patient {2}".format(self.start_period,
