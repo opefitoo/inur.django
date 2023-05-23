@@ -474,6 +474,12 @@ class LongTermCareInvoiceItem(models.Model):
             # price for specific care_date
             return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
                                                                     month=self.care_date.month)
+    def clean(self):
+        self.validate_item_dates_are_in_same_month_year_as_invoice()
+
+    def validate_item_dates_are_in_same_month_year_as_invoice(self):
+        if self.invoice.invoice_start_period.year != self.care_date.year or self.invoice.invoice_start_period.month != self.care_date.month:
+            raise ValidationError("La date de l'item doit être dans le même mois et année que la facture")
 
 
 @dataclass
