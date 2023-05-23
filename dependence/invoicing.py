@@ -8,8 +8,12 @@ from xml.etree import ElementTree
 import xmlschema
 from constance import config
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from dependence.detailedcareplan import MedicalCareSummaryPerPatient, get_summaries_between_two_dates
@@ -17,7 +21,34 @@ from dependence.longtermcareitem import LongTermCareItem, LongTermPackage
 from invoices.employee import Employee
 from invoices.models import Patient
 from invoices.modelspackage import InvoicingDetails
+from invoices.notifications import notify_system_via_google_webhook
 
+
+def long_term_care_monthly_statement_file_path(instance, filename):
+    # Ainsi le nom des fichiers commence toujours :
+    # - par la lettre ‘D’ pour les fichiers de l’assurance dépendance
+    # − puis par le code prestataire à 8 positions
+    # − puis par l’année de décompte sur 4 positions
+    # − puis par le mois de décompte ou numéro d’envoi sur 2 positions
+    # − puis par le caractère ‘_’
+    # − puis par un identifiant convention à 3 positions qui définit une convention dans le cadre
+    # de laquelle la facturation est demandée.
+    # − puis par le caractère ‘_’
+    # − puis par le type fichier
+    # − puis par le caractère ‘_’
+    # − puis par le numéro de layout
+    # − puis par le caractère ‘_’
+    # − puis par une référence.
+    # − puis par le caractère ‘_’
+    # Illustration schématique :
+    # [F/D][Code prestataire][Année][Envoi]_[Cadre légal]_[Type Fichier]_[Numéro Layout]_[Référence]
+    # format integer to display 2 digits
+    month_of_count = f"{instance.month:02d}"
+    year_of_count = f"{instance.year:04d}"
+    _internal_reference = instance.date_of_submission.strftime("%Y%m%d")
+    newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_FAC_2_{_internal_reference}{instance.id}.xml"
+    # newfilename, file_extension = os.path.splitext(filename)
+    return f"long_term_invoices/{instance.year}/{instance.month}/{newfilename}"
 
 # décompte mensuel de factures
 class LongTermCareMonthlyStatement(models.Model):
@@ -28,7 +59,9 @@ class LongTermCareMonthlyStatement(models.Model):
     year = models.PositiveIntegerField(_('Year'))
     # invoice month
     month = models.PositiveIntegerField(_('Month'))
-    generated_invoice_file = models.FileField(_('Generated Invoice File'), blank=True, null=True)
+    generated_invoice_file = models.FileField(_('Generated Invoice File'),
+                                              upload_to=long_term_care_monthly_statement_file_path,
+                                              blank=True, null=True)
     force_regeneration = models.BooleanField(_('Force Regeneration'), default=False)
     # dateEnvoi
     date_of_submission = models.DateField(_('Date d\'envoi du fichier'), blank=True, null=True)
@@ -275,15 +308,33 @@ class LongTermCareMonthlyStatement(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if self.force_regeneration:
-            # create invoice file
-            xml_str = self.generate_xml_using_xmlschema()
-            print(xml_str)
+        if self.force_regeneration and not self.date_of_submission:
+            raise ValidationError("Please fill in the date of submission if you want to generate the invoice file")
+        self.force_regeneration = False
 
     def __str__(self):
         return f"{self.year} - {self.month}"
 
 
+@receiver(pre_save, sender=LongTermCareMonthlyStatement,
+          dispatch_uid="generate_xml_monthly_statement_and_notify_via_chat")
+def create_and_save_invoice_file(sender, instance, **kwargs):
+    if not instance.force_regeneration:
+        return
+    message = f"Le fichier de factures mensuel {instance} a été généré avec succès. Date heure : {timezone.now()}"
+    if instance.force_regeneration:
+        try:
+            xml_str = instance.generate_xml_using_xmlschema()
+            # save the file
+            xml_file = ContentFile(xml_str, name=f"{instance.year}_{instance.month}.xml")
+            instance.generated_invoice_file = xml_file
+        except Exception as e:
+            message = f"Le fichier de factures mensuel {instance} n'a pas pu être généré. Erreur : {e}. Date heure : {timezone.now()}"
+            notify_system_via_google_webhook(message)
+            print(e)
+        finally:
+            notify_system_via_google_webhook(message)
+            instance.force_regeneration = False
 class LongTermCareInvoiceFile(models.Model):
     link_to_monthly_statement = models.ForeignKey(LongTermCareMonthlyStatement, on_delete=models.CASCADE,
                                                   related_name='monthly_statement', blank=True, null=True)
