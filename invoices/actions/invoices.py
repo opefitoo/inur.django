@@ -76,7 +76,7 @@ def create_prestations_for_month(patient, year, month):
         ).filter(
             Q(end_date__gt=prestation_date) | Q(end_date__isnull=True)
         )
-        if events.count() > 0 and hospitalizations.count() == 0:
+        if (events.count() > 0 or events_made_by_non_nurse.count() > 0)  and hospitalizations.count() == 0:
             # Choose the invoice based on the current day (0-indexed)
             invoice = invoices[day // 20]
             Prestation.objects.get_or_create(invoice_item=invoice, date=prestation_date,
