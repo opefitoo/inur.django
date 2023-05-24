@@ -788,6 +788,7 @@ class InvoiceItem(models.Model):
                                              on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=50, null=True, blank=True)
 
     def clean(self, *args, **kwargs):
         super(InvoiceItem, self).clean_fields()
