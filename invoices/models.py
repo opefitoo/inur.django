@@ -809,6 +809,11 @@ class InvoiceItem(models.Model):
         result.update(InvoiceItem.validate_patient(data))
         return result
 
+    def add_prestation(self, prestation):
+        if self.prestations.count() >= self.PRESTATION_LIMIT_MAX:
+            raise ValidationError("Maximum number of prestations reached")
+        self.prestations.add(prestation)
+
     @staticmethod
     def validate_is_private(data):
         messages = {}
