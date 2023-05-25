@@ -65,7 +65,10 @@ def create_prestations_for_month_v2(patient, year, month):
                                               employee=Employee.objects.get(id=1),
                                               carecode=CareCode.objects.get(code='N803')))
             else:
-                print("no event for day %s for patient %s" % (day, patient))
+                prestations.append(Prestation(date=prestation_date,
+                                              employee=Employee.objects.get(id=1),
+                                              carecode=CareCode.objects.get(code='N803')))
+                print("no event for day %s for patient %s but adding one as no hospi." % (day, patient))
         prestation_date += timedelta(days=1)
 
     # every 20 prestations we create an invoice
