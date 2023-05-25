@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 import requests
 from constance import config
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
 from django.core.files.storage import default_storage
@@ -18,6 +19,7 @@ from django.db.models import Q, IntegerField, Max
 from django.db.models.functions import Cast
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
@@ -29,7 +31,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 from invoices.employee import Employee
 from invoices.enums.generic import GenderType
 from invoices.gcalendar import PrestationGoogleCalendar
-from invoices.invoiceitem_pdf import InvoiceItemBatchPdf
 from invoices.modelspackage import InvoicingDetails
 from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
@@ -529,6 +530,10 @@ class MedicalPrescription(models.Model):
         super(MedicalPrescription, self).__init__(*args, **kwargs)
         self._original_file = self.file_upload
 
+    def get_admin_url(self):
+        content_type = ContentType.objects.get_for_model(self.__class__)
+        return reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model), args=(self.id,))
+
     @property
     def image_preview(self, max_width=None, max_height=None):
         if max_width is None:
@@ -670,7 +675,7 @@ def get_default_invoice_number():
 
 
 def invoiceitembatch_filename(instance, filename):
-    return InvoiceItemBatchPdf.get_path(instance)
+     return "Batch Path"
 
 
 class InvoiceItemBatch(models.Model):
@@ -678,7 +683,8 @@ class InvoiceItemBatch(models.Model):
     end_date = models.DateField('Invoice batch start date')
     send_date = models.DateField(null=True, blank=True)
     payment_date = models.DateField(null=True, blank=True)
-    file = models.FileField(storage=batch_gd_storage, blank=True, upload_to=invoiceitembatch_filename)
+    file = models.FileField(storage=batch_gd_storage, blank=True,
+                            upload_to=invoiceitembatch_filename)
     _original_file = None
 
     # invoices to be corrected
@@ -718,12 +724,12 @@ class InvoiceItemBatch(models.Model):
         return messages
 
 
-@receiver(pre_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_pre_save")
-def invoiceitembatch_generate_pdf_name(sender, instance, **kwargs):
-    instance.file_upload = InvoiceItemBatchPdf.get_filename(instance)
-    origin_file = instance.get_original_file()
-    if origin_file.name and origin_file != instance.file_upload:
-        batch_gd_storage.delete(origin_file.name)
+# @receiver(pre_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_pre_save")
+# def invoiceitembatch_generate_pdf_name(sender, instance, **kwargs):
+#     instance.file_upload = InvoiceItemBatchPdf.get_filename(instance)
+#     origin_file = instance.get_original_file()
+#     if origin_file.name and origin_file != instance.file_upload:
+#         batch_gd_storage.delete(origin_file.name)
 
 
 # @receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_save")

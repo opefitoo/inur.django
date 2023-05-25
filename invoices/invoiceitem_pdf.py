@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 import decimal
 import os
-import sys
-from io import BytesIO
 from zoneinfo import ZoneInfo
 
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from constance import config
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak, Image
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
+
+from invoices.models import InvoiceItemPrescriptionsList
 
 
 def get_doc_elements(queryset, med_p=False):
@@ -25,7 +24,8 @@ def get_doc_elements(queryset, med_p=False):
         if invoicing_details is None:
             invoicing_details = qs.invoice_details
         elif invoicing_details != qs.invoice_details:
-            raise Exception("Invoices must have the same invoicing details found %s and %s" % (invoicing_details, qs.invoice_details))
+            raise Exception("Invoices must have the same invoicing details found %s and %s" % (
+                invoicing_details, qs.invoice_details))
         dd = [qs.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
               range(0, len(qs.prestations.all()), 20)]
         for _prestations in dd:
@@ -41,11 +41,35 @@ def get_doc_elements(queryset, med_p=False):
             elements.extend(_result["elements"])
             summary_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
             elements.append(PageBreak())
-            if med_p and qs.medical_prescription and bool(qs.medical_prescription.file_upload) \
-                    and qs.medical_prescription.file_upload.file_upload.name not in already_added_images:
-                elements.append(Image(qs.medical_prescription.file_upload, width=469.88, height=773.19))
-                elements.append(PageBreak())
-                already_added_images.append(qs.medical_prescription.file_upload.file.name)
+            if med_p:
+                if InvoiceItemPrescriptionsList.objects.filter(invoice_item=qs).exists():
+                    all_prescriptions = InvoiceItemPrescriptionsList.objects.filter(invoice_item=qs).all()
+                    for prescription in all_prescriptions:
+                        try:
+                            print(prescription.medical_prescription.file_upload.file.name)
+                            if prescription.medical_prescription.date.year == qs.invoice_date.year and \
+                                    prescription.medical_prescription.date.month == qs.invoice_date.month:
+                                elements.append(
+                                    Paragraph(u"Ajouter ordonnance originale %s" % prescription.medical_prescription,
+                                              ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=9)))
+                                elements.append(Image(prescription.medical_prescription.thumbnail_img,
+                                                      width=234.94,
+                                                      height=389.595))
+                            elif prescription.medical_prescription.date.year != qs.invoice_date.year and prescription.medical_prescription.date.month != qs.invoice_date.month:
+                                elements.append(
+                                    Paragraph(u"Ajouter copie ordonnance  %s" % prescription.medical_prescription,
+                                              ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=9)))
+                            already_added_images.append(prescription.medical_prescription.file_upload.file.name)
+                            elements.append(PageBreak())
+                        except FileNotFoundError as ex:
+                            print(ex)
+                            elements.append(
+                                Paragraph(u"Fichier ordonnance cassé %s  %s%s " % (prescription.medical_prescription,
+                                                                                   config.ROOT_URL,
+                                                                                   prescription.medical_prescription.get_admin_url()),
+                                          ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=9,
+                                                         textColor=colors.red)))
+                            elements.append(PageBreak())
     recap_data = _build_recap(summary_data)
     elements.extend(recap_data[0])
     elements.append(PageBreak())
@@ -89,10 +113,11 @@ def _build_final_page(total, order_number, invoicing_details):
                                ]))
     elements.append(table)
     elements.append(Spacer(1, 18))
-    data2 = [[u"Identification du fournisseur de", invoicing_details.name, "", u"réservé à l’union des caisses de maladie"],
-             [u"soins de santé", "", "", ""],
-             [u"Coordonnées bancaires :", invoicing_details.bank_account, "", ""],
-             ["Code: ", invoicing_details.provider_code, "", ""]]
+    data2 = [
+        [u"Identification du fournisseur de", invoicing_details.name, "", u"réservé à l’union des caisses de maladie"],
+        [u"soins de santé", "", "", ""],
+        [u"Coordonnées bancaires :", invoicing_details.bank_account, "", ""],
+        ["Code: ", invoicing_details.provider_code, "", ""]]
     table2 = Table(data2, [5 * cm, 3 * cm, 3 * cm, 7 * cm], [1.25 * cm, 0.5 * cm, 1.25 * cm, 1.25 * cm])
     table2.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                 ('ALIGN', (3, 0), (3, 0), 'CENTER'),
@@ -174,8 +199,9 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
                          '1',
                          # keep only 2 decimals
                          round(presta.carecode.gross_amount(presta.date), 2),
-                         round(presta.carecode.net_amount(presta.date, patient.is_private, (patient.participation_statutaire
-                                                                                      and patient.age > 18)),2),
+                         round(presta.carecode.net_amount(presta.date, patient.is_private,
+                                                          (patient.participation_statutaire
+                                                           and patient.age > 18)), 2),
                          (presta.date.astimezone(ZoneInfo("Europe/Luxembourg"))).strftime('%H:%M'),
                          "",
                          presta.employee.provider_code))
@@ -289,19 +315,19 @@ class InvoiceItemBatchPdf:
 
         return os.path.join(gd_storage.INVOICEITEM_BATCH_FOLDER, filename)
 
-    @staticmethod
-    def get_inmemory_pdf(batch):
-        io_buffer = BytesIO()
-        doc = SimpleDocTemplate(io_buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
-        elements = get_doc_elements(batch.invoice_items)
-        doc.build(elements)
-
-        f = io_buffer.getvalue()
-        in_memory_file = InMemoryUploadedFile(io_buffer,
-                                              field_name=None,
-                                              name=InvoiceItemBatchPdf.get_filename(batch=batch),
-                                              content_type="application/pdf",
-                                              size=sys.getsizeof(f),
-                                              charset=None)
-
-        return in_memory_file
+    # @staticmethod
+    # def get_inmemory_pdf(batch):
+    #     io_buffer = BytesIO()
+    #     doc = SimpleDocTemplate(io_buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
+    #     elements = get_doc_elements(batch.invoice_items)
+    #     doc.build(elements)
+    #
+    #     f = io_buffer.getvalue()
+    #     in_memory_file = InMemoryUploadedFile(io_buffer,
+    #                                           field_name=None,
+    #                                           name=InvoiceItemBatchPdf.get_filename(batch=batch),
+    #                                           content_type="application/pdf",
+    #                                           size=sys.getsizeof(f),
+    #                                           charset=None)
+    #
+    #     return in_memory_file

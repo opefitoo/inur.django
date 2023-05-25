@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import csv
+
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 from reportlab.lib.units import cm
 from reportlab.platypus.doctemplate import SimpleDocTemplate
 
 from invoices.invoiceitem_pdf import get_doc_elements
+from invoices.models import InvoiceItemPrescriptionsList
 
 
 def export_to_pdf(modeladmin, request, queryset):
@@ -29,6 +32,31 @@ def export_to_pdf(modeladmin, request, queryset):
 
 
 export_to_pdf.short_description = _("CNS Invoice")
+
+def find_all_invoice_items_with_broken_file(modeladmin, request, queryset):
+    broken_items = []
+    for invoice in queryset:
+        if InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).exists():
+            all_prescriptions = InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).all()
+            for prescription in all_prescriptions:
+                try:
+                    print(prescription.medical_prescription.file_upload.file.name)
+                except FileNotFoundError as e:
+                    print(e)
+                    broken_items.append(prescription)
+    if len(broken_items) > 0:
+        # export broken items to csv
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="broken_items.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Invoice', 'Patient', 'Prescription', 'url'])
+        for item in broken_items:
+            url = "https://surlu2023.herokuapp.com/admin/invoices/medicalprescription/%s/change/" % item.medical_prescription.id
+            writer.writerow([item.invoice_item.invoice_number, item.invoice_item.patient.name, item.medical_prescription, url])
+        return response
+    else:
+        modeladmin.message_user(request, _("No broken file found"))
+
 
 def set_invoice_as_paid(modeladmin, request, queryset):
     if request.user.is_superuser:
