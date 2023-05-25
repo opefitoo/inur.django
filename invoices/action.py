@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import csv
+import io
 
-from django.http import HttpResponse
+from PyPDF2 import PdfMerger
+from django.http import HttpResponse, FileResponse
 from django.utils.translation import gettext_lazy as _
 from reportlab.lib.units import cm
 from reportlab.platypus.doctemplate import SimpleDocTemplate
@@ -33,6 +35,7 @@ def export_to_pdf(modeladmin, request, queryset):
 
 export_to_pdf.short_description = _("CNS Invoice")
 
+
 def find_all_invoice_items_with_broken_file(modeladmin, request, queryset):
     broken_items = []
     for invoice in queryset:
@@ -52,10 +55,40 @@ def find_all_invoice_items_with_broken_file(modeladmin, request, queryset):
         writer.writerow(['Invoice', 'Patient', 'Prescription', 'url'])
         for item in broken_items:
             url = "https://surlu2023.herokuapp.com/admin/invoices/medicalprescription/%s/change/" % item.medical_prescription.id
-            writer.writerow([item.invoice_item.invoice_number, item.invoice_item.patient.name, item.medical_prescription, url])
+            writer.writerow(
+                [item.invoice_item.invoice_number, item.invoice_item.patient.name, item.medical_prescription, url])
         return response
     else:
         modeladmin.message_user(request, _("No broken file found"))
+
+
+def find_all_medical_prescriptions_and_merge_them_in_one_file(modeladmin, request, queryset):
+    if not request.user.is_superuser:
+        return
+    unbroken_items = []
+    merger = PdfMerger()
+    for invoice in queryset:
+        if InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).exists():
+            all_prescriptions = InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).all()
+            for prescription in all_prescriptions:
+                try:
+                    print(prescription.medical_prescription.file_upload.file.name)
+                    merger.append(prescription.medical_prescription.file_upload.file)
+                except FileNotFoundError as e:
+                    print(e)
+                finally:
+                    unbroken_items.append(prescription)
+    pdf_buffer = io.BytesIO()
+    merger.write(pdf_buffer)
+
+    pdf_buffer.seek(0)
+    response = FileResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename=merged_files.pdf'
+    return response
+
+
+find_all_medical_prescriptions_and_merge_them_in_one_file.short_description = _(
+    "Trouver toutes les ordonnances et les fusionner dans un seul fichier")
 
 
 def set_invoice_as_paid(modeladmin, request, queryset):
@@ -64,7 +97,10 @@ def set_invoice_as_paid(modeladmin, request, queryset):
         modeladmin.message_user(request, _("Invoice(s) marked as paid"))
     else:
         modeladmin.message_user(request, _("You are not allowed to do this action"))
+
+
 set_invoice_as_paid.short_description = _("Mark invoice(s) as paid")
+
 
 def set_invoice_as_not_sent(modeladmin, request, queryset):
     if request.user.is_superuser:
@@ -73,7 +109,9 @@ def set_invoice_as_not_sent(modeladmin, request, queryset):
     else:
         modeladmin.message_user(request, _("You are not allowed to do this action"))
 
-set_invoice_as_not_sent.short_description=_("Mark invoice(s) as not sent")
+
+set_invoice_as_not_sent.short_description = _("Mark invoice(s) as not sent")
+
 
 def set_invoice_as_sent(modeladmin, request, queryset):
     if request.user.is_superuser:
@@ -81,7 +119,10 @@ def set_invoice_as_sent(modeladmin, request, queryset):
         modeladmin.message_user(request, _("Invoice(s) marked as sent"))
     else:
         modeladmin.message_user(request, _("You are not allowed to do this action"))
+
+
 set_invoice_as_sent.short_description = _("Mark invoice(s) as sent")
+
 
 def set_invoice_as_not_paid(modeladmin, request, queryset):
     if request.user.is_superuser:
@@ -89,6 +130,8 @@ def set_invoice_as_not_paid(modeladmin, request, queryset):
         modeladmin.message_user(request, _("Invoice(s) marked as not paid"))
     else:
         modeladmin.message_user(request, _("You are not allowed to do this action"))
+
+
 set_invoice_as_not_paid.short_description = _("Mark invoice(s) as not paid")
 
 
