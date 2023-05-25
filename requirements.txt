@@ -66,3 +66,4 @@ sentry-sdk==1.23.1
 lxml==4.9.2
 xmlschema==2.2.3
 gps-tracker==0.8.1
+PyPDF2==3.0.1
