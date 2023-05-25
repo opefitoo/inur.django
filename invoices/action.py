@@ -71,6 +71,8 @@ def find_all_medical_prescriptions_and_merge_them_in_one_file(modeladmin, reques
         if InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).exists():
             all_prescriptions = InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).all()
             for prescription in all_prescriptions:
+                if prescription.medical_prescription.file_upload is None:
+                    continue
                 try:
                     print(prescription.medical_prescription.file_upload.file.name)
                     merger.append(prescription.medical_prescription.file_upload.file)
