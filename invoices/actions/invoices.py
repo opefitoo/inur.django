@@ -30,6 +30,24 @@ def generer_forfait_aev_mars(self, request, queryset):
     else:
         self.message_user(request, "BUG", level=messages.ERROR)
 
+@transaction.atomic
+def generer_forfait_aev_avril(self, request, queryset):
+    # only for superuser
+    if not request.user.is_superuser:
+        return
+    final_result = []
+    for patient in queryset:
+        if patient.is_under_dependence_insurance:
+            final_result.append(create_prestations_for_month_v2(patient, 2023, 4))
+    if len(final_result) > 0:
+        #  final_result string with list of invoice numbers
+        invoice_numbers = ", ".join([str(x) for x in final_result])
+        self.message_user(request, "Forfait AEV AVRIL généré avec succès %s factures générées %s" % (
+            len(final_result), invoice_numbers),
+                          level=messages.INFO)
+    else:
+        self.message_user(request, "BUG", level=messages.ERROR)
+
 
 def create_prestations_for_month_v2(patient, year, month):
     infi_job_position = JobPosition.objects.filter(name__istartswith="infi").get()
