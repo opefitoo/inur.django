@@ -50,6 +50,8 @@ def validate_full_day_request(data):
 
 def validate_only_one_desiderata_per_month_per_employee(data):
     messages = {}
+    if data['force_creation']:
+        return messages
     if data['reason'] == HolidayRequest.REASONS[3][0]:
         holiday_requests = HolidayRequest.objects.filter(
             start_date__year=data['start_date'].year,
