@@ -47,6 +47,7 @@ from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physicia
     Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
+from invoices.prefac import generate_flat_file
 from invoices.resources import ExpenseCard, Car
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
@@ -466,7 +467,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
 
     pdf_private_invoice_pp_bis.short_description = "Facture client participation personnelle (new)"
 
-    actions = [find_all_medical_prescriptions_and_merge_them_in_one_file, find_all_invoice_items_with_broken_file, export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
+    actions = [generate_flat_file, find_all_medical_prescriptions_and_merge_them_in_one_file, find_all_invoice_items_with_broken_file, export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
                pdf_private_invoice, export_to_pdf2, cns_invoice_bis, pdf_private_invoice_pp_bis, set_invoice_as_sent,
                set_invoice_as_paid, set_invoice_as_not_paid, set_invoice_as_not_sent]
     inlines = [InvoiceItemPrescriptionsListInlines, PrestationInline]
