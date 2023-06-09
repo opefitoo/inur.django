@@ -236,6 +236,10 @@ class PatientAdminFileInline(admin.TabularInline):
     extra = 0
     model = PatientAdminFile
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.order_by('-file_date')
+
 
 class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     extra = 0
@@ -566,7 +570,7 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
 
 
 class InvoiceItemBatchAdmin(admin.ModelAdmin):
-    inlines = [InvoiceItemInlineAdmin]
+    #inlines = [InvoiceItemInlineAdmin]
     readonly_fields = ('file',)
 
 
