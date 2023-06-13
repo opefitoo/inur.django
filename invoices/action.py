@@ -9,7 +9,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus.doctemplate import SimpleDocTemplate
 
 from invoices.invoiceitem_pdf import get_doc_elements
-from invoices.models import InvoiceItemPrescriptionsList
+from invoices.models import InvoiceItemPrescriptionsList, InvoiceItemBatch
 
 
 def export_to_pdf(modeladmin, request, queryset):
@@ -34,6 +34,35 @@ def export_to_pdf(modeladmin, request, queryset):
 
 
 export_to_pdf.short_description = _("CNS Invoice")
+
+
+def link_invoice_items_to_existing_batch_or_create_new(modeladmin, request, queryset):
+    # action only for super user
+    if not request.user.is_superuser:
+        raise ValueError(_("Only super user can use this action"))
+    # all invoice items must have same year and month if not then raise error
+    for invoice in queryset:
+        if invoice.invoice_date.year != queryset[0].invoice_date.year or invoice.invoice_date.month != queryset[
+            0].invoice_date.month:
+            raise ValueError(_("All invoice items must have same year and month"))
+    # check if there is already a batch for this month and year
+    if InvoiceItemBatch.objects.filter(batch_year=queryset[0].invoice_date.year,
+                                       batch_month=queryset[0].invoice_date.month).exists():
+        batch = InvoiceItemBatch.objects.get(batch_year=queryset[0].invoice_date.year,
+                                             batch_month=queryset[0].invoice_date.month)
+        # link all invoice items to the existing batch
+        batch.add_invoices_to_batch(queryset)
+        # message user
+        modeladmin.message_user(request, _("Invoice items linked to existing batch %s") % batch)
+    else:
+        # create new batch
+        batch = InvoiceItemBatch.objects.create(batch_year=queryset[0].invoice_date.year,
+                                                batch_month=queryset[0].invoice_date.month)
+        # link all invoice items to the new batch
+        batch.add_invoices_to_batch(queryset)
+        # link all invoice items to the new batch
+        modeladmin.message_user(request, _("Invoice items linked to new batch %s") % batch)
+
 
 
 def find_all_invoice_items_with_broken_file(modeladmin, request, queryset):

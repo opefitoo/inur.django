@@ -176,12 +176,12 @@ urlpatterns += [
     re_path(r'^api/v1/dependant-patients/(?P<patient_id>\d+)/careplan/$', api.views.PatientCarePlanView.as_view(), name='patient-careplan'),
 ]
 
-    # if settings.DEBUG:
-#     import debug_toolbar
-#
-#     urlpatterns += [
-#         path('__debug__/', include(debug_toolbar.urls)),
-#     ]
+if settings.DEBUG:
+    import debug_toolbar
+
+    urlpatterns += [
+        re_path(r'^__debug__/', include(debug_toolbar.urls)),
+    ]
 admin.site.site_header = "Invoice for Nurses Admin (inur)"
 admin.site.site_title = "INUR Admin Portal"
 admin.site.index_title = "Welcome to INUR Portal"

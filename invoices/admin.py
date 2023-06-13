@@ -44,7 +44,8 @@ from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
-    Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList
+    Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList, \
+    InvoiceItemBatchLink
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file
@@ -235,10 +236,6 @@ class HospitalizationInline(admin.TabularInline):
 class PatientAdminFileInline(admin.TabularInline):
     extra = 0
     model = PatientAdminFile
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.order_by('-file_date')
 
 
 class MedicalPrescriptionInlineAdmin(admin.TabularInline):
@@ -442,12 +439,16 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     form = InvoiceItemForm
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
-                    'number_of_prestations', 'invoice_details', 'has_medical_prescription')
+                    'number_of_prestations', 'invoice_details')
     list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', 'patient__name',
                    'prescriptions__medical_prescription', 'created_by']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview', 'created_at', 'updated_at')
     autocomplete_fields = ['patient']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.prefetch_related('prescriptions__medical_prescription')
 
     def has_medical_prescription(self, obj):
         return InvoiceItemPrescriptionsList.objects.filter(invoice_item=obj).exists()
@@ -559,23 +560,23 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     #         return super().response_post_save_change(request, obj)
 
 
-class InvoiceItemInlineAdmin(admin.TabularInline):
-    show_change_link = True
+class InvoiceItemBatchLinkInlineAdmin(admin.TabularInline):
+    #show_change_link = True
     max_num = 0
     extra = 0
-    model = InvoiceItem
-    fields = ('invoice_date', 'is_valid', 'validation_comment')
-    readonly_fields = ('invoice_date',)
+    model = InvoiceItemBatchLink
+    #fields = ('invoice_item__invoice_date', 'invoice_item__invoice_number', 'invoice_item__patient')
+    #readonly_fields = ('invoice_date',)
     can_delete = False
 
-
+@admin.register(InvoiceItemBatch)
 class InvoiceItemBatchAdmin(admin.ModelAdmin):
-    #inlines = [InvoiceItemInlineAdmin]
+    inlines = [InvoiceItemBatchLinkInlineAdmin]
     readonly_fields = ('file',)
 
-
-admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
-
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.prefetch_related('invoiceitembatchlink_set__invoice_item__patient')
 
 @admin.register(InvoiceItemEmailLog)
 class InvoiceItemEmailLogAdmin(admin.ModelAdmin):

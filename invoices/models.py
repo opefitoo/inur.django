@@ -29,7 +29,7 @@ from pdf2image import convert_from_bytes
 from phonenumber_field.modelfields import PhoneNumberField
 
 from invoices.employee import Employee
-from invoices.enums.generic import GenderType
+from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.modelspackage import InvoicingDetails
 from invoices.storages import CustomizedGoogleDriveStorage
@@ -149,6 +149,7 @@ class ValidityDate(models.Model):
 
     def __str__(self):
         return 'from %s to %s' % (self.start_date, self.end_date)
+
     def clean(self, *args, **kwargs):
         exclude = []
         if self.care_code is not None and self.care_code.id is None:
@@ -479,12 +480,13 @@ def update_medical_prescription_filename(instance, filename):
         file_name_pdf, file_extension_pdf = os.path.splitext(instance.file_upload.name)
         filename = f"{file_name_pdf}{file_extension}"
         return filename
-    
+
     # rewrite filename using f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{uuid}{file_extension}"
     unique_id = uuid.uuid4().hex
     filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{unique_id}{file_extension}"
     filepath = os.path.join(path, filename)
     return filepath
+
 
 def validate_image(image):
     try:
@@ -592,14 +594,16 @@ class MedicalPrescription(models.Model):
             'prescriptor__provider_code'
 
     def __str__(self):
-        if self.notes is None:
-            return 'Dr. %s %s (%s) pour %s' % (
-                self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
-                self.patient.name.strip())
-        return 'Dr. %s %s (%s) pour %s [%s...]' % (
-            self.prescriptor.name.strip(), self.prescriptor.first_name.strip(), self.date,
-            self.patient.name.strip(),
-            self.notes.replace('\n', '-').replace(' ', '-')[:10])
+        """from django.core.cache import cache
+        if cache.get('prescriptor_%s' % self.prescriptor.id) is None:
+            cache.set('prescriptor_%s' % self.prescriptor.id, self.prescriptor)
+        # optimize this by putting in cache
+        cached_prescriptor = cache.get('prescriptor_%s' % self.prescriptor.id)
+        return 'Dr. %s %s (%s) pour %s' % (
+            cached_prescriptor.name.strip(),
+            cached_prescriptor.first_name.strip(), self.date,
+            self.patient.name.strip())"""
+        return "toto"
 
 
 def update_patient_admin_filename(instance, filename):
@@ -675,17 +679,28 @@ def get_default_invoice_number():
 
 
 def invoiceitembatch_filename(instance, filename):
-     return "Batch Path"
+    return "Batch Path"
 
 
 class InvoiceItemBatch(models.Model):
-    start_date = models.DateField('Invoice batch start date')
-    end_date = models.DateField('Invoice batch start date')
+    batch_month = models.IntegerField('Invoice batch month', default=timezone.now().month)
+    batch_year = models.IntegerField('Invoice batch year', default=timezone.now().year)
+    start_date = models.DateField('Invoice batch start date', blank=True, null=True)
+    end_date = models.DateField('Invoice batch start date', blank=True, null=True)
     send_date = models.DateField(null=True, blank=True)
     payment_date = models.DateField(null=True, blank=True)
+    payment_reference = models.CharField(max_length=50, null=True, blank=True)
     file = models.FileField(storage=batch_gd_storage, blank=True,
                             upload_to=invoiceitembatch_filename)
     _original_file = None
+
+    # batch type is an enum with values: CNS, ASSURANCE DEPENDANCE, AUTRE
+    batch_type = models.CharField(max_length=25, choices=BatchTypeChoices.choices, default='CNS')
+    force_generation = models.BooleanField(default=False)
+    linked_items = models.ManyToManyField('InvoiceItem', through='InvoiceItemBatchLink', related_name='linked_batches')
+    # technical fields date creation and update
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     # invoices to be corrected
     # total_amount
@@ -723,6 +738,23 @@ class InvoiceItemBatch(models.Model):
 
         return messages
 
+    def add_invoices_to_batch(self, invoices):
+        for invoice in invoices:
+            InvoiceItemBatchLink.objects.get_or_create(invoice_item_batch=self, invoice_item=invoice)
+
+    def remove_invoices_from_batch(self, invoices):
+        for invoice in invoices:
+            InvoiceItemBatchLink.objects.filter(invoice_item_batch=self, invoice_item=invoice).delete()
+
+    def get_invoices(self):
+        return InvoiceItem.objects.filter(linked_batches__invoice_item_batch=self).distinct()
+
+
+class InvoiceItemBatchLink(models.Model):
+    invoice_item_batch = models.ForeignKey(InvoiceItemBatch, on_delete=models.CASCADE)
+    invoice_item = models.ForeignKey('InvoiceItem', on_delete=models.CASCADE)
+    # other fields go here
+
 
 # @receiver(pre_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_pre_save")
 # def invoiceitembatch_generate_pdf_name(sender, instance, **kwargs):
@@ -743,8 +775,7 @@ class InvoiceItemBatch(models.Model):
 
 @receiver(post_delete, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_delete")
 def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
-    if instance.file_upload.name:
-        gd_storage.delete(instance.file_upload.name)
+    print('post_delete do something with %s' % instance)
 
 
 class PaymentReference(models.Model):
@@ -785,8 +816,6 @@ class InvoiceItem(models.Model):
     invoice_send_date = models.DateField('Date envoi facture', null=True, blank=True)
     invoice_sent = models.BooleanField(default=False)
     invoice_paid = models.BooleanField(default=False)
-    batch = models.ForeignKey(InvoiceItemBatch, related_name='invoice_items', null=True, blank=True,
-                              on_delete=models.SET_NULL)
     is_valid = models.BooleanField(default=True)
     validation_comment = models.TextField(null=True, blank=True)
     medical_prescription = models.ForeignKey(MedicalPrescription, related_name='invoice_items', null=True, blank=True,
