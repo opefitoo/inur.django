@@ -60,9 +60,9 @@ def generate_flat_file(modeladmin, request, queryset):
                 # accident number if exists or empty 10 spaces
                 "accident_number": invoice.accident_id,
                 "invoice_number": invoice.invoice_number,
-                "prescription_date": format(InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).first().date, '%Y%m%d') if InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).exists() else None,
-                "validity_date": format(InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).first().end_date, '%Y%m%d') if InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).exists() else None,
-                "prescribing_doctor": InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).first().prescriptor.provider_code if InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).exists() else None,
+                "prescription_date": format(InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).first().medical_prescription.date, '%Y%m%d') if InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).exists() else None,
+                "validity_date": format(InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).first().medical_prescription.end_date, '%Y%m%d') if InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).exists() else None,
+                "prescribing_doctor": InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).first().medical_prescription.prescriptor.provider_code if InvoiceItemPrescriptionsList.objects.filter(invoice_item=invoice).exists() else None,
                 "nurse": prest.employee.provider_code.replace("-", ""),
                 "service_code": prest.carecode.code,
                 "service_date": format(prest.date, '%Y%m%d'),
