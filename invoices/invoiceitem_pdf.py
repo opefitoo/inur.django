@@ -12,8 +12,6 @@ from reportlab.platypus.flowables import Spacer, PageBreak, Image
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 
-from invoices.models import InvoiceItemPrescriptionsList
-
 
 def get_doc_elements(queryset, med_p=False):
     elements = []
@@ -42,8 +40,8 @@ def get_doc_elements(queryset, med_p=False):
             summary_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
             elements.append(PageBreak())
             if med_p:
-                if InvoiceItemPrescriptionsList.objects.filter(invoice_item=qs).exists():
-                    all_prescriptions = InvoiceItemPrescriptionsList.objects.filter(invoice_item=qs).all()
+                if qs.get_all_medical_prescriptions().exists():
+                    all_prescriptions = qs.get_all_medical_prescriptions().all()
                     for prescription in all_prescriptions:
                         try:
                             print(prescription.medical_prescription.file_upload.file.name)

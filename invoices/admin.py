@@ -564,14 +564,15 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
     max_num = 0
     extra = 0
     model = InvoiceItem
-    fields = ('invoice_date', 'is_valid', 'validation_comment')
-    readonly_fields = ('invoice_date',)
-    can_delete = False
+    readonly_fields = ('invoice_number','invoice_date',)
+    fields = ('invoice_number', 'invoice_date',)
+    ordering = ('invoice_date',)
+    #can_delete = False
 
 
 class InvoiceItemBatchAdmin(admin.ModelAdmin):
-    #inlines = [InvoiceItemInlineAdmin]
-    readonly_fields = ('file',)
+    inlines = [InvoiceItemInlineAdmin]
+    #readonly_fields = ('file',)
 
 
 admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)

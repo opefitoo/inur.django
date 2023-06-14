@@ -5,13 +5,16 @@ import os
 import uuid
 from copy import deepcopy
 from datetime import datetime
+from io import BytesIO
 from zoneinfo import ZoneInfo
 
 import requests
 from constance import config
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
 from django.core.files.storage import default_storage
 from django.db import models
@@ -27,11 +30,16 @@ from django_countries.fields import CountryField
 from gdstorage.storage import GoogleDriveStorage
 from pdf2image import convert_from_bytes
 from phonenumber_field.modelfields import PhoneNumberField
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate
 
+from invoices.actions.helpers import invoice_itembatch_medical_prescription_filename, invoice_itembatch_prefac_filename
 from invoices.employee import Employee
-from invoices.enums.generic import GenderType
+from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.gcalendar import PrestationGoogleCalendar
+from invoices.invoiceitem_pdf import get_doc_elements
 from invoices.modelspackage import InvoicingDetails
+from invoices.prefac import generate_all_invoice_lines
 from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
 
@@ -149,6 +157,7 @@ class ValidityDate(models.Model):
 
     def __str__(self):
         return 'from %s to %s' % (self.start_date, self.end_date)
+
     def clean(self, *args, **kwargs):
         exclude = []
         if self.care_code is not None and self.care_code.id is None:
@@ -479,12 +488,13 @@ def update_medical_prescription_filename(instance, filename):
         file_name_pdf, file_extension_pdf = os.path.splitext(instance.file_upload.name)
         filename = f"{file_name_pdf}{file_extension}"
         return filename
-    
+
     # rewrite filename using f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{uuid}{file_extension}"
     unique_id = uuid.uuid4().hex
     filename = f"{instance.prescriptor.name}_{instance.patient.name}_{instance.patient.first_name}_{str(instance.date)}_{unique_id}{file_extension}"
     filepath = os.path.join(path, filename)
     return filepath
+
 
 def validate_image(image):
     try:
@@ -675,7 +685,7 @@ def get_default_invoice_number():
 
 
 def invoiceitembatch_filename(instance, filename):
-     return "Batch Path"
+    return "Batch Path"
 
 
 class InvoiceItemBatch(models.Model):
@@ -683,12 +693,52 @@ class InvoiceItemBatch(models.Model):
     end_date = models.DateField('Invoice batch start date')
     send_date = models.DateField(null=True, blank=True)
     payment_date = models.DateField(null=True, blank=True)
+    batch_description = models.CharField("description", max_length=50, null=True, blank=True)
+    force_update = models.BooleanField(default=False)
+    version = models.IntegerField(default=0)
     file = models.FileField(storage=batch_gd_storage, blank=True,
                             upload_to=invoiceitembatch_filename)
+    prefac_file = models.FileField(blank=True, null=True,
+                                   upload_to=invoice_itembatch_prefac_filename)
+    medical_prescription_files = models.FileField(blank=True, null=True,
+                                                  upload_to=invoice_itembatch_medical_prescription_filename)
+    batch_type = models.CharField(max_length=50, choices=BatchTypeChoices.choices, default=BatchTypeChoices.CNS_INF)
+
+    # creation technical fields
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
     _original_file = None
 
     # invoices to be corrected
     # total_amount
+
+    def save(self, *args, **kwargs):
+        _must_update = False
+        if self.force_update:
+            _must_update = True
+            self.version += 1
+            self.force_update = False
+        super().save(*args, **kwargs)  # first save the instance itself
+        if _must_update:
+            # Now update all InvoiceItems which have an invoice_date within this range
+            batch_invoices = InvoiceItem.objects.filter(
+                Q(invoice_date__gte=self.start_date) & Q(invoice_date__lte=self.end_date)).filter(invoice_sent=False)
+            batch_invoices.update(batch=self)
+            file_content = generate_all_invoice_lines(batch_invoices, sending_date=self.send_date),
+            self.prefac_file = ContentFile(file_content[0].encode('utf-8'), 'prefac.txt')
+
+            # generate the pdf invoice file
+            # Create a BytesIO buffer
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm,
+                                    bottomMargin=1 * cm)
+            elements = get_doc_elements(batch_invoices, med_p=True)
+            doc.build(elements)
+            # Go to the beginning of the buffer
+            buffer.seek(0)
+            self.medical_prescription_files = ContentFile(buffer.read(), 'invoice.pdf')
+
+            super().save(*args, **kwargs)  # save the instance again to update the prefac_file
 
     def __str__(self):  # Python 3: def __str__(self):
         return 'from %s to %s' % (self.start_date, self.end_date)
@@ -743,8 +793,9 @@ class InvoiceItemBatch(models.Model):
 
 @receiver(post_delete, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_delete")
 def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
-    if instance.file_upload.name:
-        gd_storage.delete(instance.file_upload.name)
+    print("post_delete")
+    # if instance.file_upload.name:
+    #    gd_storage.delete(instance.file_upload.name)
 
 
 class PaymentReference(models.Model):
@@ -874,6 +925,14 @@ class InvoiceItem(models.Model):
     @staticmethod
     def autocomplete_search_fields():
         return 'invoice_number',
+
+    def get_first_medical_prescription(self):
+        return InvoiceItemPrescriptionsList.objects.filter(
+            invoice_item=self).first() if InvoiceItemPrescriptionsList.objects.filter(
+            invoice_item=self).exists() else None
+
+    def get_all_medical_prescriptions(self):
+        return InvoiceItemPrescriptionsList.objects.filter(invoice_item=self)
 
 
 class InvoiceItemPrescriptionsList(models.Model):

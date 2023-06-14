@@ -1,23 +1,15 @@
 import hashlib
-from typing import List
 
 from constance import config
 from gps_tracker import Client, Config
 
-from invoices.models import PaymentReference
+from invoices.enums.generic import BatchTypeChoices
 
 
 def encode_payment_reference(str_to_encode):
     return int(hashlib.sha1(str_to_encode.encode("utf-8")).hexdigest(), 16) % (10 ** 8)
 
 
-def generate_payment_reference(invoice_numbers: List[int]):
-    from datetime import datetime
-    today = datetime.today()
-    invoice_list = [n for n in invoice_numbers]
-    p = PaymentReference(invoice_list=invoice_list)
-    p.save()
-    return "%s%s%s-%s-%s" % (today.year, today.month, today.day, "PP", p.id)
 
 
 def decode_payment_reference(hash_to_decode):
@@ -39,3 +31,49 @@ def invoxia_position(invoxia_identifier: str):
         if tracker.id == int(invoxia_identifier):
             return invoxia_client.get_locations(device=tracker, max_count=1)[0]
     return None
+
+def invoice_itembatch_prefac_filename(instance, filename):
+    # Ainsi le nom des fichiers commence toujours :
+    # - par la lettre ‘D’ pour les fichiers de l’assurance dépendance
+    # − puis par le code prestataire à 8 positions
+    # − puis par l’année de décompte sur 4 positions
+    # − puis par le mois de décompte ou numéro d’envoi sur 2 positions
+    # − puis par le caractère ‘_’
+    # − puis par un identifiant convention à 3 positions qui définit une convention dans le cadre
+    # de laquelle la facturation est demandée.
+    # − puis par le caractère ‘_’
+    # − puis par le type fichier
+    # − puis par le caractère ‘_’
+    # − puis par le numéro de layout
+    # − puis par le caractère ‘_’
+    # − puis par une référence.
+    # − puis par le caractère ‘_’
+    # Illustration schématique :
+    # [F/D][Code prestataire][Année][Envoi]_[Cadre légal]_[Type Fichier]_[Numéro Layout]_[Référence]
+    # format integer to display 2 digits
+    month_of_count = f"{instance.end_date.month:02d}"
+    year_of_count = f"{instance.end_date.year:04d}"
+    if instance.id:
+        reference_interne = f"{instance.id:04d}{instance.version:03d}"
+    else:
+        reference_interne = "0000"
+    # loop swtich on BatchTypeChoices to build filename
+    if instance.batch_type == BatchTypeChoices.CNS_INF:
+        legal_frame = "INF"
+    elif instance.batch_type == BatchTypeChoices.CNS_PAL:
+        legal_frame = "PAL"
+    else:
+        legal_frame = "XXX"
+    newfilename = f"F{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_{legal_frame}_PREFAC_001_{reference_interne}.txt"
+    # newfilename, file_extension = os.path.splitext(filename)
+    return f"inf_invoices/{instance.end_date.year}/{instance.end_date.month}/{newfilename}"
+def invoice_itembatch_medical_prescription_filename(instance, filename):
+    month_of_count = f"{instance.end_date.month:02d}"
+    year_of_count = f"{instance.end_date.year:04d}"
+    if instance.id:
+        reference_interne = f"{instance.id:04d}{instance.version:03d}"
+    else:
+        reference_interne = "0000"
+    newfilename = f"F{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ORDO_{reference_interne}.pdf"
+    # newfilename, file_extension = os.path.splitext(filename)
+    return f"inf_invoices/{instance.end_date.year}/{instance.end_date.month}/{newfilename}"

@@ -157,3 +157,9 @@ class VisualAnalogueScaleLvl(models.IntegerChoices):
     very_severe = 8, "8 (douleur intense+)"
     worst_pain_possible_9 = 9, "9 (douleur intolérable)"
     worst_pain_possible = 10, "10 (douleur intolérable+)"
+
+class BatchTypeChoices(models.TextChoices):
+    CNS_INF = 'CNS_INF', _('CNS Infirimier')
+    CNS_PAL = 'CNS_PAL', _('CNS Paliatif')
+    AD = 'AD', _('Assurance Dépendance')
+    OTHER = 'OTHER', _('Autre')
