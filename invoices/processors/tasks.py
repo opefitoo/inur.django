@@ -1,7 +1,8 @@
+import os
 from io import BytesIO
 
+import celery
 from PyPDF2 import PdfMerger
-from celery import shared_task
 from django.core.files.base import ContentFile
 from django.db.models import Q
 from reportlab.lib.units import cm
@@ -11,11 +12,16 @@ from invoices.invoiceitem_pdf import get_doc_elements
 from invoices.notifications import notify_system_via_google_webhook
 from invoices.prefac import generate_all_invoice_lines
 
+app = celery.Celery('inur')
 
-@shared_task
+app.conf.update(BROKER_URL=os.environ['REDIS_URL'],
+                CELERY_RESULT_BACKEND=os.environ['REDIS_URL'])
+
+
+@app.task
 def process_post_save(instance):
     # Fetch the instance using pk and do your long-running task here
-    #instance  = InvoiceItemBatch.objects.get(pk=pk)
+    # instance  = InvoiceItemBatch.objects.get(pk=pk)
     _must_update = False
     message = "Le fichier de batch cns %s a bien été généré." % instance
     if instance.force_update:
