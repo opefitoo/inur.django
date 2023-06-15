@@ -41,6 +41,7 @@ from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.invoiceitem_pdf import get_doc_elements
 from invoices.modelspackage import InvoicingDetails
+from invoices.notifications import notify_system_via_google_webhook
 from invoices.prefac import generate_all_invoice_lines
 from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
@@ -714,44 +715,9 @@ class InvoiceItemBatch(models.Model):
     # invoices to be corrected
     # total_amount
 
-    def save(self, *args, **kwargs):
-        _must_update = False
-        if self.force_update:
-            _must_update = True
-            self.version += 1
-            self.force_update = False
-        super().save(*args, **kwargs)  # first save the instance itself
-        if _must_update:
-            # Now update all InvoiceItems which have an invoice_date within this range
-            batch_invoices = InvoiceItem.objects.filter(
-                Q(invoice_date__gte=self.start_date) & Q(invoice_date__lte=self.end_date)).filter(invoice_sent=False)
-            batch_invoices.update(batch=self)
-            file_content = generate_all_invoice_lines(batch_invoices, sending_date=self.send_date),
-            self.prefac_file = ContentFile(file_content[0].encode('utf-8'), 'prefac.txt')
-
-            # generate the pdf invoice file
-            # Create a BytesIO buffer
-            buffer = BytesIO()
-            doc = SimpleDocTemplate(buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm,
-                                    bottomMargin=1 * cm)
-            elements, copies_of_medical_prescriptions = get_doc_elements(batch_invoices, med_p=True)
-            doc.build(elements)
-            # Go to the beginning of the buffer
-            buffer.seek(0)
-            self.generated_invoice_files = ContentFile(buffer.read(), 'invoice.pdf')
-
-            merger = PdfMerger()
-            for file in copies_of_medical_prescriptions:
-                merger.append(file)
-            pdf_buffer = BytesIO()
-            merger.write(pdf_buffer)
-            pdf_buffer.seek(0)
-            self.medical_prescriptions = ContentFile(pdf_buffer.read(), 'ordos.pdf')
-
-        super().save(*args, **kwargs)  # save the instance again to update the prefac_file
 
     def __str__(self):  # Python 3: def __str__(self):
-        return 'from %s to %s' % (self.start_date, self.end_date)
+        return 'from %s to %s %s' % (self.start_date, self.end_date, self.batch_description)
 
     def __init__(self, *args, **kwargs):
         super(InvoiceItemBatch, self).__init__(*args, **kwargs)
@@ -792,13 +758,42 @@ class InvoiceItemBatch(models.Model):
 #         batch_gd_storage.delete(origin_file.name)
 
 
-# @receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_save")
-# def invoiceitembatch_generate_pdf(sender, instance, **kwargs):
-#     InvoiceItemBatchManager.update_associated_invoiceitems(instance)
-#     file_content = InvoiceItemBatchPdf.get_inmemory_pdf(instance)
-#     path = InvoiceItemBatchPdf.get_path(instance)
-#     instance._original_file = instance.file
-#     batch_gd_storage.save_file(path, file_content)
+@receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_save")
+def invoiceitembatch_generate_pdf(sender, instance, **kwargs):
+    _must_update = False
+    message = "Le fichier de batch cns %s a bien été généré." % instance
+    if instance.force_update:
+        _must_update = True
+        instance.version += 1
+        instance.force_update = False
+    if _must_update:
+        # Now update all InvoiceItems which have an invoice_date within this range
+        batch_invoices = InvoiceItem.objects.filter(
+            Q(invoice_date__gte=instance.start_date) & Q(invoice_date__lte=instance.end_date)).filter(invoice_sent=False)
+        batch_invoices.update(batch=instance)
+        file_content = generate_all_invoice_lines(batch_invoices, sending_date=instance.send_date),
+        instance.prefac_file = ContentFile(file_content[0].encode('utf-8'), 'prefac.txt')
+
+        # generate the pdf invoice file
+        # Create a BytesIO buffer
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm,
+                                bottomMargin=1 * cm)
+        elements, copies_of_medical_prescriptions = get_doc_elements(batch_invoices, med_p=True)
+        doc.build(elements)
+        # Go to the beginning of the buffer
+        buffer.seek(0)
+        instance.generated_invoice_files = ContentFile(buffer.read(), 'invoice.pdf')
+
+        merger = PdfMerger()
+        for file in copies_of_medical_prescriptions:
+            merger.append(file)
+        pdf_buffer = BytesIO()
+        merger.write(pdf_buffer)
+        pdf_buffer.seek(0)
+        instance.medical_prescriptions = ContentFile(pdf_buffer.read(), 'ordos.pdf')
+        notify_system_via_google_webhook(message)
+        instance.save()
 
 
 @receiver(post_delete, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_delete")
