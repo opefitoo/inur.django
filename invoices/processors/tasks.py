@@ -14,10 +14,11 @@ from invoices.prefac import generate_all_invoice_lines
 
 @job
 def process_post_save(instance):
-    # Fetch the instance using pk and do your long-running task here
-    # instance  = InvoiceItemBatch.objects.get(pk=pk)
+    # calculate how much time it takes to process the batch
+    from datetime import datetime
+    start = datetime.now()
     _must_update = False
-    message = "Le fichier de batch cns %s a bien été généré." % instance
+
     if instance.force_update:
         _must_update = True
         instance.version += 1
@@ -50,5 +51,6 @@ def process_post_save(instance):
         merger.write(pdf_buffer)
         pdf_buffer.seek(0)
         instance.medical_prescriptions = ContentFile(pdf_buffer.read(), 'ordos.pdf')
-        notify_system_via_google_webhook(message)
         instance.save()
+        end = datetime.now()
+        notify_system_via_google_webhook("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
