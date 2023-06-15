@@ -38,7 +38,8 @@ def process_post_save(instance):
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm,
                                 bottomMargin=1 * cm)
-        elements, copies_of_medical_prescriptions = get_doc_elements(batch_invoices, med_p=True)
+        elements, copies_of_medical_prescriptions = get_doc_elements(batch_invoices, med_p=True,
+                                                                     with_verification_page=True)
         doc.build(elements)
         # Go to the beginning of the buffer
         buffer.seek(0)

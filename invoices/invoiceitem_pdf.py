@@ -13,7 +13,7 @@ from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 
 
-def get_doc_elements(queryset, med_p=False):
+def get_doc_elements(queryset, med_p=False, with_verification_page=False):
     elements = []
     summary_data = []
     already_added_images = []
@@ -38,14 +38,15 @@ def get_doc_elements(queryset, med_p=False):
                                       qs.invoice_details)
 
             elements.extend(_result["elements"])
-            summary_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
+            summary_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"],
+                                 _result["patient_cns_number"], _result["number_of_lines"]))
             elements.append(PageBreak())
             if med_p:
                 if qs.get_all_medical_prescriptions().exists():
                     all_prescriptions = qs.get_all_medical_prescriptions().all()
                     for prescription in all_prescriptions:
                         try:
-                            #print(prescription.medical_prescription.file_upload.file.name)
+                            # print(prescription.medical_prescription.file_upload.file.name)
                             if prescription.medical_prescription.date.year == qs.invoice_date.year and \
                                     prescription.medical_prescription.date.month == qs.invoice_date.month:
                                 elements.append(
@@ -64,7 +65,8 @@ def get_doc_elements(queryset, med_p=False):
                                                       height=389.595))
                                 already_added_images.append(prescription.medical_prescription.file_upload.file.name)
                                 if prescription.medical_prescription.file_upload not in copies_of_medical_prescriptions:
-                                    copies_of_medical_prescriptions.append(prescription.medical_prescription.file_upload)
+                                    copies_of_medical_prescriptions.append(
+                                        prescription.medical_prescription.file_upload)
                         except FileNotFoundError as ex:
                             print(ex)
                             elements.append(
@@ -77,6 +79,10 @@ def get_doc_elements(queryset, med_p=False):
     recap_data = _build_recap(summary_data)
     elements.extend(recap_data[0])
     elements.append(PageBreak())
+    if with_verification_page:
+        verification_data = _build_verification_page(summary_data)
+        elements.extend(verification_data[0])
+        elements.append(PageBreak())
     elements.extend(_build_final_page(recap_data[1], recap_data[2], invoicing_details))
 
     return elements, copies_of_medical_prescriptions
@@ -95,6 +101,28 @@ def _build_recap(recaps):
     data.append(("", "", u"à reporter", round(total, 2), ""))
 
     table = Table(data, [2 * cm, 3 * cm, 7 * cm, 3 * cm, 3 * cm], (i + 2) * [0.75 * cm])
+    table.setStyle(TableStyle([('ALIGN', (1, 1), (-2, -2), 'LEFT'),
+                               ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                               ('FONTSIZE', (0, 0), (-1, -1), 9),
+                               ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                               ]))
+    elements.append(table)
+    return elements, total, i
+
+
+def _build_verification_page(recaps):
+    elements = []
+    data = []
+    i = 0
+    data.append(("No d'ordre", u"Note no°", u"Nom et prénom", "Montant", "Num. cns", "Nb. lignes"))
+    total = 0.0
+    for recap in recaps:
+        i += 1
+        data.append((i, recap[0], recap[1], recap[2], recap[3], recap[4]))
+        total = decimal.Decimal(total) + decimal.Decimal(recap[2])
+    data.append(("", "", u"à reporter", round(total, 2), ""))
+
+    table = Table(data, [2 * cm, 2 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm], (i + 2) * [0.75 * cm])
     table.setStyle(TableStyle([('ALIGN', (1, 1), (-2, -2), 'LEFT'),
                                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
                                ('FONTSIZE', (0, 0), (-1, -1), 9),
@@ -185,6 +213,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     patientName = ''
     patientFirstName = ''
     patientAddress = ''
+    patient_cns_number = ''
+    number_of_lines = 0
 
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers', 'Executant'))
     for presta in prestations:
@@ -196,6 +226,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
         patientAddress = patient.address
         patientZipCode = patient.zipcode
         patientCity = patient.city
+        patient_cns_number = patient.code_sn
         if presta.carecode.reimbursed:
             i += 1
             data.append((i, presta.carecode.code,
@@ -294,7 +325,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
 
     elements.append(_pouracquit_signature)
     return {"elements": elements, "invoice_number": invoice_number,
-            "patient_name": patientName + " " + patientFirstName, "invoice_amount": newData[23][5]}
+            "patient_name": patientName + " " + patientFirstName, "invoice_amount": newData[23][5],
+            "patient_cns_number": patient_cns_number, "number_of_lines": i}
 
 
 def _compute_sum(data, position):
