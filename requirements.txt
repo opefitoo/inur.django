@@ -68,3 +68,4 @@ xmlschema==2.2.3
 gps-tracker==0.8.1
 PyPDF2==3.0.1
 pygad==3.0.1
+celery==5.3.0
