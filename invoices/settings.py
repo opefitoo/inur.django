@@ -49,6 +49,7 @@ INSTALLED_APPS = (
     'constance',
     'constance.backends.database',
     'invoices',
+    'django_rq',
     'api',
     'corsheaders',
     # 'debug_toolbar'
@@ -378,3 +379,10 @@ if DJANGO_ADMIN_COLOR:
     content = content.replace('--secondary: #417690', '--secondary: ' + DJANGO_ADMIN_SECONDARY_COLOR)
     with open(ADMIN_CSS, 'w') as f:
         f.write(content)
+
+RQ_QUEUES = {
+    'default': {
+        'URL': os.getenv('REDIS_URL', 'redis://localhost:6379'), # Set to REDIS_URL if deploying on Heroku
+        'DEFAULT_TIMEOUT': 500,
+    },
+}

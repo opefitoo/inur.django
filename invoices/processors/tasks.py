@@ -1,10 +1,9 @@
-import os
 from io import BytesIO
 
-import celery
 from PyPDF2 import PdfMerger
 from django.core.files.base import ContentFile
 from django.db.models import Q
+from django_rq import job
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate
 
@@ -12,13 +11,8 @@ from invoices.invoiceitem_pdf import get_doc_elements
 from invoices.notifications import notify_system_via_google_webhook
 from invoices.prefac import generate_all_invoice_lines
 
-app = celery.Celery('inur')
 
-app.conf.update(BROKER_URL=os.environ['REDIS_URL'],
-                CELERY_RESULT_BACKEND=os.environ['REDIS_URL'])
-
-
-@app.task
+@job
 def process_post_save(instance):
     # Fetch the instance using pk and do your long-running task here
     # instance  = InvoiceItemBatch.objects.get(pk=pk)
