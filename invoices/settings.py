@@ -382,7 +382,7 @@ if DJANGO_ADMIN_COLOR:
 
 RQ_QUEUES = {
     'default': {
-        'URL': os.getenv('REDIS_URL', 'redis://localhost:6379'), # Set to REDIS_URL if deploying on Heroku
+        'URL': os.getenv('HEROKU_REDIS_WHITE_URL', 'redis://localhost:6379'), # Set to REDIS_URL if deploying on Heroku
         'DEFAULT_TIMEOUT': 500,
     },
 }
