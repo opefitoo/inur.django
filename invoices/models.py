@@ -9,6 +9,7 @@ from io import BytesIO
 from zoneinfo import ZoneInfo
 
 import requests
+from PyPDF2 import PdfMerger
 from constance import config
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -33,7 +34,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate
 
-from invoices.actions.helpers import invoice_itembatch_medical_prescription_filename, invoice_itembatch_prefac_filename
+from invoices.actions.helpers import invoice_itembatch_medical_prescription_filename, invoice_itembatch_prefac_filename, \
+    invoice_itembatch_ordo_filename
 from invoices.employee import Employee
 from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.gcalendar import PrestationGoogleCalendar
@@ -696,11 +698,11 @@ class InvoiceItemBatch(models.Model):
     batch_description = models.CharField("description", max_length=50, null=True, blank=True)
     force_update = models.BooleanField(default=False)
     version = models.IntegerField(default=0)
-    file = models.FileField(storage=batch_gd_storage, blank=True,
-                            upload_to=invoiceitembatch_filename)
-    prefac_file = models.FileField(blank=True, null=True,
+    medical_prescriptions = models.FileField("Ordonnances", blank=True, null=True,
+                            upload_to=invoice_itembatch_ordo_filename)
+    prefac_file = models.FileField("Fichier Plat facturation", blank=True, null=True,
                                    upload_to=invoice_itembatch_prefac_filename)
-    medical_prescription_files = models.FileField(blank=True, null=True,
+    generated_invoice_files = models.FileField("Facture CNS PDF", blank=True, null=True,
                                                   upload_to=invoice_itembatch_medical_prescription_filename)
     batch_type = models.CharField(max_length=50, choices=BatchTypeChoices.choices, default=BatchTypeChoices.CNS_INF)
 
@@ -732,20 +734,28 @@ class InvoiceItemBatch(models.Model):
             buffer = BytesIO()
             doc = SimpleDocTemplate(buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm,
                                     bottomMargin=1 * cm)
-            elements = get_doc_elements(batch_invoices, med_p=True)
+            elements, copies_of_medical_prescriptions = get_doc_elements(batch_invoices, med_p=True)
             doc.build(elements)
             # Go to the beginning of the buffer
             buffer.seek(0)
-            self.medical_prescription_files = ContentFile(buffer.read(), 'invoice.pdf')
+            self.generated_invoice_files = ContentFile(buffer.read(), 'invoice.pdf')
 
-            super().save(*args, **kwargs)  # save the instance again to update the prefac_file
+            merger = PdfMerger()
+            for file in copies_of_medical_prescriptions:
+                merger.append(file)
+            pdf_buffer = BytesIO()
+            merger.write(pdf_buffer)
+            pdf_buffer.seek(0)
+            self.medical_prescriptions = ContentFile(pdf_buffer.read(), 'ordos.pdf')
+
+        super().save(*args, **kwargs)  # save the instance again to update the prefac_file
 
     def __str__(self):  # Python 3: def __str__(self):
         return 'from %s to %s' % (self.start_date, self.end_date)
 
     def __init__(self, *args, **kwargs):
         super(InvoiceItemBatch, self).__init__(*args, **kwargs)
-        self._original_file = self.file
+        self._original_file = self.generated_invoice_files
 
     def get_original_file(self):
         return self._original_file

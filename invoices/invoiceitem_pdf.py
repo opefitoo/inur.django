@@ -17,6 +17,7 @@ def get_doc_elements(queryset, med_p=False):
     elements = []
     summary_data = []
     already_added_images = []
+    copies_of_medical_prescriptions = []
     invoicing_details = None
     for qs in queryset.order_by("invoice_number"):
         if invoicing_details is None:
@@ -44,21 +45,26 @@ def get_doc_elements(queryset, med_p=False):
                     all_prescriptions = qs.get_all_medical_prescriptions().all()
                     for prescription in all_prescriptions:
                         try:
-                            print(prescription.medical_prescription.file_upload.file.name)
+                            #print(prescription.medical_prescription.file_upload.file.name)
                             if prescription.medical_prescription.date.year == qs.invoice_date.year and \
                                     prescription.medical_prescription.date.month == qs.invoice_date.month:
                                 elements.append(
-                                    Paragraph(u"Ajouter ordonnance originale %s" % prescription.medical_prescription,
-                                              ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=9)))
+                                    Paragraph(u"Ajouter ordonnance ORIGINALE %s" % prescription.medical_prescription,
+                                              ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=14)))
                                 elements.append(Image(prescription.medical_prescription.thumbnail_img,
                                                       width=234.94,
                                                       height=389.595))
-                            elif prescription.medical_prescription.date.year != qs.invoice_date.year and prescription.medical_prescription.date.month != qs.invoice_date.month:
+                                already_added_images.append(prescription.medical_prescription.file_upload.file.name)
+                            elif prescription.medical_prescription.date.year != qs.invoice_date.year or prescription.medical_prescription.date.month != qs.invoice_date.month:
                                 elements.append(
-                                    Paragraph(u"Ajouter copie ordonnance  %s" % prescription.medical_prescription,
-                                              ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=9)))
-                            already_added_images.append(prescription.medical_prescription.file_upload.file.name)
-                            elements.append(PageBreak())
+                                    Paragraph(u"Ajouter COPIE ordonnance  %s" % prescription.medical_prescription,
+                                              ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=14)))
+                                elements.append(Image(prescription.medical_prescription.thumbnail_img,
+                                                      width=234.94,
+                                                      height=389.595))
+                                already_added_images.append(prescription.medical_prescription.file_upload.file.name)
+                                if prescription.medical_prescription.file_upload not in copies_of_medical_prescriptions:
+                                    copies_of_medical_prescriptions.append(prescription.medical_prescription.file_upload)
                         except FileNotFoundError as ex:
                             print(ex)
                             elements.append(
@@ -67,13 +73,13 @@ def get_doc_elements(queryset, med_p=False):
                                                                                    prescription.medical_prescription.get_admin_url()),
                                           ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=9,
                                                          textColor=colors.red)))
-                            elements.append(PageBreak())
+                        elements.append(PageBreak())
     recap_data = _build_recap(summary_data)
     elements.extend(recap_data[0])
     elements.append(PageBreak())
     elements.extend(_build_final_page(recap_data[1], recap_data[2], invoicing_details))
 
-    return elements
+    return elements, copies_of_medical_prescriptions
 
 
 def _build_recap(recaps):

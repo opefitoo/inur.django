@@ -27,7 +27,7 @@ def export_to_pdf(modeladmin, request, queryset):
                                                                                                '%d-%m-%Y'))
 
     doc = SimpleDocTemplate(response, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
-    elements = get_doc_elements(queryset, False)
+    elements,files = get_doc_elements(queryset, False)
     doc.build(elements)
 
     return response
@@ -152,7 +152,7 @@ def export_to_pdf_with_medical_prescription_files(modeladmin, request, queryset)
                                                                                                '%d-%m-%Y'))
 
     doc = SimpleDocTemplate(response, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
-    elements = get_doc_elements(queryset, True)
+    elements, files = get_doc_elements(queryset, True)
     doc.build(elements)
 
     return response

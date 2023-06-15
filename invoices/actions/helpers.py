@@ -74,6 +74,17 @@ def invoice_itembatch_medical_prescription_filename(instance, filename):
         reference_interne = f"{instance.id:04d}{instance.version:03d}"
     else:
         reference_interne = "0000"
-    newfilename = f"F{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ORDO_{reference_interne}.pdf"
+    newfilename = f"F{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_FACTURE_{reference_interne}.pdf"
+    # newfilename, file_extension = os.path.splitext(filename)
+    return f"inf_invoices/{instance.end_date.year}/{instance.end_date.month}/{newfilename}"
+
+def invoice_itembatch_ordo_filename(instance, filename):
+    month_of_count = f"{instance.end_date.month:02d}"
+    year_of_count = f"{instance.end_date.year:04d}"
+    if instance.id:
+        reference_interne = f"{instance.id:04d}{instance.version:03d}"
+    else:
+        reference_interne = "0000"
+    newfilename = f"F{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ordo_{reference_interne}.pdf"
     # newfilename, file_extension = os.path.splitext(filename)
     return f"inf_invoices/{instance.end_date.year}/{instance.end_date.month}/{newfilename}"
