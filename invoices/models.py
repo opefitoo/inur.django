@@ -35,7 +35,7 @@ from invoices.employee import Employee
 from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.modelspackage import InvoicingDetails
-from invoices.processors.longrunning import process_post_save
+from invoices.processors.tasks import process_post_save
 from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
 
