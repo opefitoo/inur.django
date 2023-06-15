@@ -63,9 +63,10 @@ class InvoiceItemBatchTestCase(TestCase):
     def test_string_representation(self):
         date = timezone.now()
         batch = InvoiceItemBatch(start_date=date,
-                                 end_date=date)
+                                 end_date=date,
+                                 batch_description='some description')
 
-        self.assertEqual(str(batch), 'from %s to %s' % (batch.start_date, batch.end_date))
+        self.assertEqual(str(batch), 'from %s to %s - %s' % (date, date, 'some description'))
 
     def test_validate_dates(self):
         data = {

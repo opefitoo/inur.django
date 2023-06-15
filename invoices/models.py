@@ -717,7 +717,7 @@ class InvoiceItemBatch(models.Model):
 
 
     def __str__(self):  # Python 3: def __str__(self):
-        return 'from %s to %s %s' % (self.start_date, self.end_date, self.batch_description)
+        return 'from %s to %s - %s' % (self.start_date, self.end_date, self.batch_description)
 
     def __init__(self, *args, **kwargs):
         super(InvoiceItemBatch, self).__init__(*args, **kwargs)
