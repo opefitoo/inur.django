@@ -754,7 +754,7 @@ class InvoiceItemBatch(models.Model):
 @receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_save")
 def invoiceitembatch_generate_pdf(sender, instance, **kwargs):
     print("called post_save on InvoiceItemBatch %s" % instance)
-    process_post_save(instance.id)
+    process_post_save(instance)
     # _must_update = False
     # message = "Le fichier de batch cns %s a bien été généré." % instance
     # if instance.force_update:
