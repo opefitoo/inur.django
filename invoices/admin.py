@@ -27,7 +27,7 @@ from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_p
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
-from invoices.actions.invoices import generer_forfait_aev_mars, generer_forfait_aev_avril
+from invoices.actions.invoices import generer_forfait_aev_mars, generer_forfait_aev_avril, generer_forfait_aev_mai
 # from invoices.actions.maps import calculate_distance_matrix
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
@@ -265,7 +265,7 @@ class PatientAdmin(CSVExportAdmin):
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode']
     # actions = [calculate_distance_matrix]
     form = PatientForm
-    actions = [generer_forfait_aev_mars, generer_forfait_aev_avril]
+    actions = [generer_forfait_aev_mars, generer_forfait_aev_avril, generer_forfait_aev_mai]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, ]
 
     def link_to_invoices(self, instance):
