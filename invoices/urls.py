@@ -176,10 +176,10 @@ urlpatterns += [
     re_path(r'^api/v1/dependant-patients/(?P<patient_id>\d+)/careplan/$', api.views.PatientCarePlanView.as_view(), name='patient-careplan'),
 ]
 
-# urlpatterns = [
-#     # Other urls
-#     re_path(r'^django-rq/', include('django_rq.urls')),
-# ]
+urlpatterns = [
+    # Other urls
+    re_path(r'^django-rq/', include('django_rq.urls')),
+]
 
     # if settings.DEBUG:
 #     import debug_toolbar
