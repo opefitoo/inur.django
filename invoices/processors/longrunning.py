@@ -3,6 +3,7 @@ from io import BytesIO
 from PyPDF2 import PdfMerger
 from celery import shared_task
 from django.core.files.base import ContentFile
+from django.db.models import Q
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate
 
