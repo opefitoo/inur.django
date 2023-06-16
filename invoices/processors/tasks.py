@@ -25,13 +25,14 @@ def process_post_save(instance):
         instance.version += 1
         instance.force_update = False
     if _must_update:
+        from invoices.models import InvoiceItem
         # Now update all InvoiceItems which have an invoice_date within this range
         if BatchTypeChoices.CNS_INF == instance.batch_type:
-            from invoices.models import InvoiceItem
             batch_invoices = InvoiceItem.objects.filter(
                 Q(invoice_date__gte=instance.start_date) & Q(invoice_date__lte=instance.end_date)).filter(
                 invoice_sent=False)
-        batch_invoices.update(batch=instance)
+            batch_invoices.update(batch=instance)
+        batch_invoices = InvoiceItem.objects.filter(batch=instance)
         file_content = generate_all_invoice_lines(batch_invoices, sending_date=instance.send_date),
         instance.prefac_file = ContentFile(file_content[0].encode('utf-8'), 'prefac.txt')
 
