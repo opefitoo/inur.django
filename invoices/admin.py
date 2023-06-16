@@ -577,7 +577,7 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
 @admin.register(InvoiceItemBatch)
 class InvoiceItemBatchAdmin(admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
-    # readonly_fields = ('file',)
+    readonly_fields = ('created_date','modified_date')
     list_display = ('start_date', 'end_date', 'batch_type')
 
 
