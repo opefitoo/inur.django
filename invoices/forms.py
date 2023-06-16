@@ -66,6 +66,23 @@ class PrestationInlineFormSet(BaseInlineFormSet):
         super(PrestationInlineFormSet, self).clean()
         if hasattr(self, 'cleaned_data'):
             self.validate_max_limit(self.cleaned_data)
+            self.validate_palliative_care_only(self.cleaned_data)
+    @staticmethod
+    def validate_palliative_care_only(cleaned_data):
+        palliative_care = False
+        non_palliative_care = False
+        non_palliative_care_code = None
+        for row_data in cleaned_data:
+            if 'DELETE' in row_data and row_data['DELETE']:
+                continue
+            if row_data['carecode'].code == "FSP2":
+                palliative_care = True
+            else:
+                non_palliative_care = True
+                non_palliative_care_code = row_data['carecode']
+        if palliative_care and non_palliative_care:
+            raise ValidationError(
+                "Prestations should be either only Palliative Care or only Non Palliative Care in the same InvoiceItem, please create another invoice for %s" % non_palliative_care_code)
 
     @staticmethod
     def validate_max_limit(cleaned_data):
@@ -191,7 +208,8 @@ def cannot_validate_in_future(instance, user):
 
 class EventForm(ModelForm):
     care_plan_detail = forms.ModelChoiceField(queryset=CarePlanDetail.objects.all(), required=False,
-                                              label="Plan de soin", to_field_name="id",)
+                                              label="Plan de soin", to_field_name="id", )
+
     class Meta:
         model = Event
         exclude = ('event_type',)
@@ -220,5 +238,3 @@ class MedicalPrescriptionForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(MedicalPrescriptionForm, self).__init__(*args, **kwargs)
-
-
