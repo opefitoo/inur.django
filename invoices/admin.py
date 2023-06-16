@@ -23,7 +23,7 @@ from django_csv_exports.admin import CSVExportAdmin
 from helpers.timesheet import build_use_case_objects
 from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_paid, set_invoice_as_not_paid, \
     set_invoice_as_not_sent, find_all_invoice_items_with_broken_file, \
-    find_all_medical_prescriptions_and_merge_them_in_one_file
+    find_all_medical_prescriptions_and_merge_them_in_one_file, link_invoice_to_invoice_batch
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
@@ -95,8 +95,8 @@ class CareCodeAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
     inlines = [ValidityDateInline]
-    #actions = [update_prices_for_jan_2023, update_prices_for_feb_2023, , cleanup_2023]
-    #actions = [update_prices_for_april_2022]
+    # actions = [update_prices_for_jan_2023, update_prices_for_feb_2023, , cleanup_2023]
+    # actions = [update_prices_for_april_2022]
 
 
 class EmployeeContractDetailInline(TabularInline):
@@ -428,6 +428,7 @@ class InvoiceItemPrescriptionsListInlines(TabularInline):
     fields = ('medical_prescription',)
     autocomplete_fields = ['medical_prescription']
 
+
 @admin.register(InvoiceItem)
 class InvoiceItemAdmin(admin.ModelAdmin):
     class Media:
@@ -451,6 +452,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
 
     def has_medical_prescription(self, obj):
         return InvoiceItemPrescriptionsList.objects.filter(invoice_item=obj).exists()
+
     has_medical_prescription.boolean = True
 
     def cns_invoice_bis(self, request, queryset):
@@ -471,7 +473,9 @@ class InvoiceItemAdmin(admin.ModelAdmin):
 
     pdf_private_invoice_pp_bis.short_description = "Facture client participation personnelle (new)"
 
-    actions = [generate_flat_file, find_all_medical_prescriptions_and_merge_them_in_one_file, find_all_invoice_items_with_broken_file, export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
+    actions = [link_invoice_to_invoice_batch, generate_flat_file,
+               find_all_medical_prescriptions_and_merge_them_in_one_file, find_all_invoice_items_with_broken_file,
+               export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
                pdf_private_invoice, export_to_pdf2, cns_invoice_bis, pdf_private_invoice_pp_bis, set_invoice_as_sent,
                set_invoice_as_paid, set_invoice_as_not_paid, set_invoice_as_not_sent]
     inlines = [InvoiceItemPrescriptionsListInlines, PrestationInline]
@@ -564,18 +568,17 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
     max_num = 0
     extra = 0
     model = InvoiceItem
-    readonly_fields = ('invoice_number','invoice_date',)
+    readonly_fields = ('invoice_number', 'invoice_date',)
     fields = ('invoice_number', 'invoice_date',)
     ordering = ('invoice_date',)
-    #can_delete = False
+    # can_delete = False
 
 
+@admin.register(InvoiceItemBatch)
 class InvoiceItemBatchAdmin(admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
-    #readonly_fields = ('file',)
-
-
-admin.site.register(InvoiceItemBatch, InvoiceItemBatchAdmin)
+    # readonly_fields = ('file',)
+    list_display = ('start_date', 'end_date', 'batch_type')
 
 
 @admin.register(InvoiceItemEmailLog)
@@ -1219,7 +1222,8 @@ class EventListAdmin(admin.ModelAdmin):
         else:
             # Display only today's and yesterday's events for non admin users
             return queryset.filter(employees__user_id=request.user.id).exclude(state=3).exclude(state=5).filter(
-                day__year=today.year).filter(day__month=today.month).filter(day__day__gte=today.day - 1).order_by("-day")
+                day__year=today.year).filter(day__month=today.month).filter(day__day__gte=today.day - 1).order_by(
+                "-day")
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -1327,6 +1331,3 @@ class EventWeekListAdmin(admin.ModelAdmin):
                 else:
                     return fs
         return self.readonly_fields
-
-
-

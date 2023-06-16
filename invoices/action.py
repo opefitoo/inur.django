@@ -27,13 +27,30 @@ def export_to_pdf(modeladmin, request, queryset):
                                                                                                '%d-%m-%Y'))
 
     doc = SimpleDocTemplate(response, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
-    elements,files = get_doc_elements(queryset, False)
+    elements, files = get_doc_elements(queryset, False)
     doc.build(elements)
 
     return response
 
 
 export_to_pdf.short_description = _("CNS Invoice")
+
+
+def link_invoice_to_invoice_batch(modeladmin, request, queryset):
+    if not request.user.is_superuser:
+        return
+    # first create a new invoice batch
+    from invoices.models import InvoiceItemBatch
+    first_invoice_date = queryset.order_by("invoice_date").first().invoice_date
+    last_invoice_date = queryset.order_by("invoice_date").last().invoice_date
+    new_invoice_batch = InvoiceItemBatch.objects.create(start_date=first_invoice_date, end_date=last_invoice_date)
+    # now link all invoices that are not already linked another batch to this batch
+    queryset.filter(batch__isnull=True).update(batch=new_invoice_batch)
+    # now update the batch
+    new_invoice_batch.save()
+    modeladmin.message_user(request, "Batch {0} created and linked to {1} invoices".format(new_invoice_batch,
+                                                                                           queryset.filter(
+                                                                                               batch__isnull=True).count()))
 
 
 def find_all_invoice_items_with_broken_file(modeladmin, request, queryset):

@@ -708,7 +708,6 @@ class InvoiceItemBatch(models.Model):
     # invoices to be corrected
     # total_amount
 
-
     def __str__(self):  # Python 3: def __str__(self):
         return 'from %s to %s - %s' % (self.start_date, self.end_date, self.batch_description)
 
@@ -729,9 +728,17 @@ class InvoiceItemBatch(models.Model):
     @staticmethod
     def validate(instance_id, data):
         result = {}
-        result.update(Hospitalization.validate_dates(data))
-
+        result.update(InvoiceItemBatch.validate_dates(data))
+        result.update(InvoiceItemBatch.validate_force_update_and_send_date_are_set(data))
         return result
+
+    def validate_force_update_and_send_date_are_set(data):
+        messages = {}
+        if data['force_update'] and data['send_date'] is None:
+            messages = {'send_date': 'Send date is mandatory when force update is true'}
+        if data['force_update'] and data['batch_description'] is None:
+            messages = {'batch_description': 'Description is mandatory when force update is true'}
+        return messages
 
     @staticmethod
     def validate_dates(data):
