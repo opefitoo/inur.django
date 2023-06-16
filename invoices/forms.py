@@ -67,6 +67,26 @@ class PrestationInlineFormSet(BaseInlineFormSet):
         if hasattr(self, 'cleaned_data'):
             self.validate_max_limit(self.cleaned_data)
             self.validate_palliative_care_only(self.cleaned_data)
+            self.validate_no_duplicate_carecode_perday(self.cleaned_data)
+
+    @staticmethod
+    def validate_no_duplicate_carecode_perday(cleaned_data):
+        # if the same carecode is used more than once in the same day, raise an error
+        # Collect dates and items seen as we go through the formset
+        dates_seen = set()
+        items_seen = set()
+        for row_data in cleaned_data:
+            if 'DELETE' in row_data and row_data['DELETE']:
+                continue
+            date = row_data['date'].date()
+            item = row_data['carecode'].code
+            if (date, item) in items_seen:
+                raise ValidationError(
+                    "The same carecode %s was used more than once in the same day %s" % (item, date))
+            else:
+                dates_seen.add(date)
+                items_seen.add((date, item))
+
     @staticmethod
     def validate_palliative_care_only(cleaned_data):
         palliative_care = False
