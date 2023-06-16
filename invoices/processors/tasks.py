@@ -7,6 +7,7 @@ from django_rq import job
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate
 
+from invoices.enums.generic import BatchTypeChoices
 from invoices.invoiceitem_pdf import get_doc_elements
 from invoices.notifications import notify_system_via_google_webhook
 from invoices.prefac import generate_all_invoice_lines
@@ -23,7 +24,7 @@ def process_post_save(instance):
         _must_update = True
         instance.version += 1
         instance.force_update = False
-    if _must_update:
+    if _must_update and BatchTypeChoices.CNS_INF == instance.batch_type:
         # Now update all InvoiceItems which have an invoice_date within this range
         from invoices.models import InvoiceItem
         batch_invoices = InvoiceItem.objects.filter(
