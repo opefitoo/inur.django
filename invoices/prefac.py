@@ -1,3 +1,5 @@
+from zoneinfo import ZoneInfo
+
 from constance import config
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
@@ -101,8 +103,9 @@ def generate_all_invoice_lines(invoices, sending_date=None):
                 # patient cns code only 11 digits
                 "patient": invoice.patient.code_sn.replace(" ","")[:13],
                 # accident number if exists or empty 10 spaces
-                "accident_number": invoice.accident_id,
-                "invoice_number": invoice.invoice_number,
+                "accident_number": invoice.accident_id if invoice.accident_id else '0' * 10,
+                # invoice number on 15 digits completed with 0
+                "invoice_number": invoice.invoice_number.ljust(15, '0'),
                 "prescription_date": format(
                     invoice.get_first_medical_prescription().medical_prescription.date,
                     '%Y%m%d') if invoice.get_first_medical_prescription() else None,
@@ -114,18 +117,19 @@ def generate_all_invoice_lines(invoices, sending_date=None):
                 "service_code": prest.carecode.code,
                 "service_date": format(prest.date, '%Y%m%d'),
                 "end_date": format(prest.date, '%Y%m%d'),
-                "start_time": format(prest.date.time(), '%H%M'),
-                "end_time": format(prest.date.time(), '%H%M'),
-                "times_executed": "1",
+                "start_time": format(prest.date.astimezone(ZoneInfo("Europe/Luxembourg")), '%H%M'),
+                # add one minute to end time to avoid 0000
+                "end_time": format(prest.date.astimezone(ZoneInfo("Europe/Luxembourg")), '%H%M'),
+                "times_executed": "001",
                 # gross amount with int part only
-                "gross_amount": int(prest.carecode.gross_amount(prest.date)),
+                "gross_amount": str(int(prest.carecode.gross_amount(prest.date))).zfill(7),
                 "gross_amount_decimals": str(int((prest.carecode.gross_amount(prest.date) - int(
-                    prest.carecode.gross_amount(prest.date))) * 100)),
-                "net_amount": int(
-                    prest.carecode.net_amount(prest.date, False, invoice.patient.participation_statutaire)),
+                    prest.carecode.gross_amount(prest.date))) * 100)).zfill(2),
+                "net_amount": str(int(
+                    prest.carecode.net_amount(prest.date, False, invoice.patient.participation_statutaire))).zfill(7),
                 "net_amount_decimals": str(int((prest.carecode.net_amount(prest.date, False,
                                                                   invoice.patient.participation_statutaire) - int(
-                    prest.carecode.net_amount(prest.date, False, invoice.patient.participation_statutaire))) * 100)),
+                    prest.carecode.net_amount(prest.date, False, invoice.patient.participation_statutaire))) * 100)).zfill(2),
                 "insurance_code": None,
                 "denial_code": None,
                 "currency": "EUR"

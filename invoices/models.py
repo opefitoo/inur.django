@@ -686,7 +686,7 @@ def invoiceitembatch_filename(instance, filename):
 
 class InvoiceItemBatch(models.Model):
     start_date = models.DateField('Invoice batch start date')
-    end_date = models.DateField('Invoice batch start date')
+    end_date = models.DateField('Invoice batch end date')
     send_date = models.DateField(null=True, blank=True)
     payment_date = models.DateField(null=True, blank=True)
     batch_description = models.CharField("description", max_length=50, null=True, blank=True)
@@ -753,10 +753,12 @@ class InvoiceItemBatch(models.Model):
 
 @receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_save")
 def invoiceitembatch_generate_pdf(sender, instance, **kwargs):
-    print("called post_save on InvoiceItemBatch %s" % instance)
-    process_post_save.delay(instance)
-    # if run on local machine then call directly
-    #process_post_save(instance)
+    if os.environ.get('LOCAL_ENV', None):
+        print("Direct call post_save on InvoiceItemBatch %s" % instance)
+        process_post_save(instance)
+    else:
+        print("Call post_save on InvoiceItemBatch %s via redis /rq " % instance)
+        process_post_save.delay(instance)
 
 
 @receiver(post_delete, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_delete")

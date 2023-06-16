@@ -67,7 +67,7 @@ def get_doc_elements(queryset, med_p=False, with_verification_page=False):
                                 if prescription.medical_prescription.file_upload not in copies_of_medical_prescriptions:
                                     copies_of_medical_prescriptions.append(
                                         prescription.medical_prescription.file_upload)
-                        except FileNotFoundError as ex:
+                        except (FileNotFoundError,ValueError) as ex:
                             print(ex)
                             elements.append(
                                 Paragraph(u"Fichier ordonnance cassé %s  %s%s " % (prescription.medical_prescription,
@@ -76,6 +76,7 @@ def get_doc_elements(queryset, med_p=False, with_verification_page=False):
                                           ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=9,
                                                          textColor=colors.red)))
                         elements.append(PageBreak())
+
     recap_data = _build_recap(summary_data)
     elements.extend(recap_data[0])
     elements.append(PageBreak())
