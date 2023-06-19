@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 import sys
 from zoneinfo import ZoneInfo
 
@@ -28,8 +29,7 @@ class PrestationGoogleCalendarSurLu:
 
         credentials = service_account.Credentials.from_service_account_file(
             self._json_keyfile_path, scopes=SCOPES)
-
-        delegated_credentials = credentials.with_subject('mehdi@sur.lu')
+        delegated_credentials = credentials.with_subject(os.environ.get('GOOGLE_EMAIL_CREDENTIALS', None))
         return delegated_credentials
 
     def __init__(self, json_keyfile_path=None):
