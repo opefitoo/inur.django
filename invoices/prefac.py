@@ -97,7 +97,8 @@ def generate_all_invoice_lines(invoices, sending_date=None):
             #print("working on invoice item: " + str(invoice.id))
             data = {
                 "version": "1",
-                "date": format(sending_date, '%Y%m%d'),
+                # format date to YYYYMM00 for sending date replace days with 00
+                "date": format(sending_date, '%Y%m00'),
                 "payer": "U",
                 "provider": config.CODE_PRESTATAIRE,
                 # patient cns code only 11 digits
