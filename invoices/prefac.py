@@ -9,7 +9,7 @@ def generate_file_line(data):
     for key, value in data.items():
         if isinstance(value, int):
             data[key] = str(value)
-    line = "{version:<1.1}{date:<8.8}{payer:<1.1}{provider:<6.6}{patient:<13.13}{accident_number:<10.10}{invoice_number:<15.15}{prescription_date:<8.8}{validity_date:<8.8}{prescribing_doctor:<6.6}{nurse:<6.6}{service_code:<10.10}{service_date:<8.8}{end_date:<8.8}{start_time:<4.4}{end_time:<4.40}{times_executed:<3.3}{gross_amount:<7.7}{gross_amount_decimals:<2.2}{net_amount:<7.7}{net_amount_decimals:<2.2}{insurance_code:<4.4}{denial_code:<3.3}{currency:<3.3}".format(
+    line = "{version:<1.1}{date:<8.8}{payer:<1.1}{provider:<6.6}{patient:<13.13}{accident_number:<10.10}{invoice_number:<15.15}{prescription_date:<8.8}{validity_date:<8.8}{prescribing_doctor:<6.6}{nurse:<6.6}{service_code:<10.10}{service_date:<8.8}{end_date:<8.8}{start_time:<4.4}{end_time:<4.40}{times_executed:<3.3}{gross_amount:<7.7}{gross_amount_decimals:<2.2}{net_amount:<7.7}{net_amount_decimals:<2.2}{insurance_code:<4.4}{denial_code:<3.3}{currency:<3.3}\n".format(
         version=data.get('version') or ' ' * 1,
         date=data.get('date') or ' ' * 8,
         payer=data.get('payer') or ' ' * 1,
@@ -136,5 +136,7 @@ def generate_all_invoice_lines(invoices, sending_date=None):
                 "currency": "EUR"
             }
             #print(data)
-            lines += "\n" + generate_file_line(data)
+            lines +=  generate_file_line(data)
+    if lines.endswith("\n"):
+        lines = lines[:-1]
     return lines
