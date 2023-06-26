@@ -97,7 +97,8 @@ def _build_recap(recaps):
     total = 0.0
     for recap in recaps:
         i += 1
-        data.append((i, recap[0], recap[1], recap[2], ""))
+        data.append((i, recap[0], Paragraph(recap[1], ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=9)),
+                     recap[2], ""))
         total = decimal.Decimal(total) + decimal.Decimal(recap[2])
     data.append(("", "", u"à reporter", round(total, 2), ""))
 
