@@ -64,7 +64,7 @@ def invoice_itembatch_prefac_filename(instance, filename):
         legal_frame = "PAL"
     else:
         legal_frame = "XXX"
-    newfilename = f"F{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_{legal_frame}_PREFAC_001_{reference_interne}.txt"
+    newfilename = f"F{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_{legal_frame}_PREFAC_001_{reference_interne}"
     # newfilename, file_extension = os.path.splitext(filename)
     return f"inf_invoices/{instance.end_date.year}/{instance.end_date.month}/{newfilename}"
 def invoice_itembatch_medical_prescription_filename(instance, filename):
