@@ -96,7 +96,7 @@ def generate_all_invoice_lines(invoices, sending_date=None):
         for prest in invoice.prestations.order_by('date'):
             #print("working on invoice item: " + str(invoice.id))
             data = {
-                "version": "1",
+                "version": "2",
                 # format date to YYYYMM00 for sending date replace days with 00
                 "date": format(sending_date, '%Y%m00'),
                 "payer": "U",
