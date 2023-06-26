@@ -47,7 +47,7 @@ from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physicia
     Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
-from invoices.prefac import generate_flat_file
+from invoices.prefac import generate_flat_file, generate_flat_file_for_control
 from invoices.resources import ExpenseCard, Car
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
@@ -579,6 +579,7 @@ class InvoiceItemBatchAdmin(admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
     readonly_fields = ('created_date','modified_date')
     list_display = ('start_date', 'end_date', 'batch_type')
+    actions = [generate_flat_file_for_control]
 
 
 @admin.register(InvoiceItemEmailLog)
