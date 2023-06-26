@@ -80,7 +80,7 @@ def generate_invoice_file(instance):
         montantNet = ElementTree.SubElement(demandePrestation, "montantNet")
         montantNet.text = str(invoice_item.long_term_care_item.price)
         i += 1
-    mydata = ElementTree.tostring(root)
+    mydata = ElementTree.tostring(root, pretty_print=True, xml_declaration=True, encoding='UTF-8', standalone=True)
     if xsd_schema.is_valid(mydata):
         print("The XML instance is valid!")
     else:

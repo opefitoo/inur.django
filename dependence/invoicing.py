@@ -249,7 +249,7 @@ class LongTermCareMonthlyStatement(models.Model):
             montantNet = ElementTree.SubElement(demandeFacture, "montantNet")
             montantNet.text = str(invoice.calculate_price())
         # create a new XML file with the results
-        mydata = ElementTree.tostring(root)
+        mydata = ElementTree.tostring(root, pretty_print=True, xml_declaration=True, encoding='UTF-8', standalone=True)
         if xsd_schema.is_valid(mydata):
             print("The XML instance is valid!")
         else:
