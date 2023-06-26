@@ -102,7 +102,7 @@ def _build_recap(recaps):
         total = decimal.Decimal(total) + decimal.Decimal(recap[2])
     data.append(("", "", u"à reporter", round(total, 2), ""))
 
-    table = Table(data, [2 * cm, 3 * cm, 7 * cm, 3 * cm, 3 * cm], (i + 2) * [0.75 * cm])
+    table = Table(data, [2 * cm, 3 * cm, 8 * cm, 2 * cm, 3 * cm], (i + 2) * [0.75 * cm])
     table.setStyle(TableStyle([('ALIGN', (1, 1), (-2, -2), 'LEFT'),
                                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
                                ('FONTSIZE', (0, 0), (-1, -1), 9),
@@ -116,6 +116,10 @@ def _build_verification_page(recaps):
     elements = []
     data = []
     i = 0
+    # add paragraph in red stating "!! Page de controle, ne pas envoyer à la CNS !!"
+    elements.append(Paragraph(u"!! Page de controle, ne pas envoyer à la CNS !!",
+                                ParagraphStyle(name="Normal", alignment=TA_CENTER, fontSize=14, textColor=colors.red)))
+    elements.append(Spacer(1, 0.5 * cm))
     data.append(("No d'ordre", u"Note no°", u"Nom et prénom", "Montant", "Num. cns", "Nb. lignes"))
     total = 0.0
     for recap in recaps:
