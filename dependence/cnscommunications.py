@@ -71,7 +71,7 @@ def generate_xml_using_xmlschema_using_instance(instance):
         Information = ElementTree.SubElement(Changements, "Information")
         Information.text = change.information
     # create a new XML file with the results
-    mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone=True)
+    mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8')
     if xsd_schema.is_valid(mydata):
         print("The XML instance is valid!")
     else:
@@ -262,7 +262,7 @@ class ChangeDeclarationFile(models.Model):
             Information = ElementTree.SubElement(Changements, "Information")
             Information.text = change.information
         # create a new XML file with the results
-        mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone=True)
+        mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8')
         if xsd_schema.is_valid(mydata):
             print("The XML instance is valid!")
         else:

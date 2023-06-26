@@ -140,7 +140,7 @@ class LongTermMonthlyActivityFile(models.Model):
                 # DateActivite
                 DateActivite = ElementTree.SubElement(Activite, "DateActivite")
                 DateActivite.text = dtl['activity_date'].strftime("%Y-%m-%d")
-        mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone=True)
+        mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8')
         if xsd_schema.is_valid(mydata):
             print("The XML instance is valid!")
         else:

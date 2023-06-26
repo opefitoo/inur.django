@@ -182,7 +182,7 @@ class LongTermCareDeclaration(models.Model):
         Information = ElementTree.SubElement(Changements, "Information")
         Information.text = self.information
         # create a new XML file with the results
-        mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone=True)
+        mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8')
         if xsd_schema.is_valid(mydata):
             print("The XML instance is valid!")
         else:
