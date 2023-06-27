@@ -43,7 +43,8 @@ def link_invoice_to_invoice_batch(modeladmin, request, queryset):
     from invoices.models import InvoiceItemBatch
     first_invoice_date = queryset.order_by("invoice_date").first().invoice_date
     last_invoice_date = queryset.order_by("invoice_date").last().invoice_date
-    new_invoice_batch = InvoiceItemBatch.objects.create(start_date=first_invoice_date, end_date=last_invoice_date)
+    new_invoice_batch = InvoiceItemBatch.objects.create(start_date=first_invoice_date, end_date=last_invoice_date,
+                                                        batch_description="Batch created by {0}".format(request.user))
     # now link all invoices that are not already linked another batch to this batch
     queryset.filter(batch__isnull=True).update(batch=new_invoice_batch)
     # now update the batch
