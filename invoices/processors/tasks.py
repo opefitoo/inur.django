@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 
 from PyPDF2 import PdfMerger
@@ -7,7 +8,6 @@ from django_rq import job
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate
 
-from invoices import settings
 from invoices.enums.generic import BatchTypeChoices
 from invoices.invoiceitem_pdf import get_doc_elements
 from invoices.notifications import notify_system_via_google_webhook
@@ -35,7 +35,7 @@ def process_post_save(instance):
             batch_invoices.update(batch=instance)
         batch_invoices = InvoiceItem.objects.filter(batch=instance)
         file_content = generate_all_invoice_lines(batch_invoices, sending_date=instance.send_date, batch_type=instance.batch_type)
-        instance.prefac_file = ContentFile(file_content[0].encode('utf-8'), 'prefac.txt')
+        instance.prefac_file = ContentFile(file_content.encode('utf-8'), 'prefac.txt')
 
         # generate the pdf invoice file
         # Create a BytesIO buffer
@@ -58,7 +58,10 @@ def process_post_save(instance):
         instance.medical_prescriptions = ContentFile(pdf_buffer.read(), 'ordos.pdf')
         instance.save()
         end = datetime.now()
-        notify_system_via_google_webhook("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
+        if os.environ.get('LOCAL_ENV', None):
+            print("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
+        else:
+            notify_system_via_google_webhook("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
 
 #
 # def sync_google_contacts(instance, **kwargs):
