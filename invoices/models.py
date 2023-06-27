@@ -693,11 +693,11 @@ class InvoiceItemBatch(models.Model):
     force_update = models.BooleanField(default=False)
     version = models.IntegerField(default=0)
     medical_prescriptions = models.FileField("Ordonnances", blank=True, null=True,
-                            upload_to=invoice_itembatch_ordo_filename)
+                                             upload_to=invoice_itembatch_ordo_filename)
     prefac_file = models.FileField("Fichier Plat facturation", blank=True, null=True,
                                    upload_to=invoice_itembatch_prefac_filename)
     generated_invoice_files = models.FileField("Facture CNS PDF", blank=True, null=True,
-                                                  upload_to=invoice_itembatch_medical_prescription_filename)
+                                               upload_to=invoice_itembatch_medical_prescription_filename)
     batch_type = models.CharField(max_length=50, choices=BatchTypeChoices.choices, default=BatchTypeChoices.CNS_INF)
 
     # creation technical fields
@@ -1037,21 +1037,30 @@ class Prestation(models.Model):
     def validate_patient_hospitalization(data):
         messages = {}
         invoice_item_id = None
+        care_code_code = None
         if 'patient' in data:
             patient = data['patient']
         else:
             if 'invoice_item' in data:
                 invoice_item_id = data['invoice_item'].id
+                invoice_item = data['invoice_item']
             elif 'invoice_item_id' in data:
                 invoice_item_id = data['invoice_item_id']
             else:
                 messages = {'invoice_item_id': 'Please fill InvoiceItem field'}
-
             patient = Patient.objects.filter(invoice_items__in=[invoice_item_id]).get()
 
-        hospitalizations_cnt = Hospitalization.objects.filter(patient=patient,
-                                                              start_date__lte=data['date'],
-                                                              end_date__gte=data['date']).count()
+        if 'carecode_id' in data:
+            care_code_code = CareCode.objects.filter(pk=data['carecode_id']).get().code
+
+        if care_code_code in ["FSP1", "FSP2"]:
+            hospitalizations_cnt = Hospitalization.objects.filter(patient=patient,
+                                                                  start_date__lt=data['date'],
+                                                                  end_date__gte=data['date']).count()
+        else:
+            hospitalizations_cnt = Hospitalization.objects.filter(patient=patient,
+                                                                  start_date__lte=data['date'],
+                                                                  end_date__gte=data['date']).count()
         if 0 < hospitalizations_cnt:
             messages = {'date': 'Patient has hospitalization records for the chosen date'}
 
