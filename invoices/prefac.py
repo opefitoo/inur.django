@@ -5,6 +5,8 @@ from constance import config
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
+from invoices.enums.generic import BatchTypeChoices
+
 
 def generate_file_line_for_calculation_control(data):
     for key, value in data.items():
@@ -188,7 +190,7 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
         lines = lines[:-1]
     return lines
 
-def generate_all_invoice_lines(invoices, sending_date=None):
+def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
     lines = ""
     for invoice in invoices.order_by('invoice_number'):
         if invoice.invoice_date.year != invoice.invoice_date.year or invoice.invoice_date.month != invoice.invoice_date.month:
@@ -214,7 +216,7 @@ def generate_all_invoice_lines(invoices, sending_date=None):
                                         '%Y%m%d') if (
                             invoice.get_first_medical_prescription() and invoice.get_first_medical_prescription().medical_prescription.end_date) else None,
                 "prescribing_doctor": invoice.get_first_medical_prescription().medical_prescription.prescriptor.provider_code.replace("-", "").replace(" ", "").strip() if invoice.get_first_medical_prescription() else None,
-                "nurse": prest.employee.provider_code.replace("-", "").replace(" ", "").strip(),
+                "nurse": config.CODE_PRESTATAIRE.replace("-", "").replace(" ", "").strip() if BatchTypeChoices.CNS_PAL == batch_type else prest.employee.provider_code.replace("-", "").replace(" ", "").strip(),
                 "service_code": prest.carecode.code,
                 "service_date": format(prest.date, '%Y%m%d'),
                 "end_date": format(prest.date, '%Y%m%d'),
