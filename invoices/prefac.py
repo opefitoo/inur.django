@@ -216,7 +216,7 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
                                         '%Y%m%d') if (
                             invoice.get_first_medical_prescription() and invoice.get_first_medical_prescription().medical_prescription.end_date) else None,
                 "prescribing_doctor": invoice.get_first_medical_prescription().medical_prescription.prescriptor.provider_code.replace("-", "").replace(" ", "").strip() if invoice.get_first_medical_prescription() else None,
-                "nurse": config.CODE_PRESTATAIRE.replace("-", "").replace(" ", "").strip() if BatchTypeChoices.CNS_PAL == batch_type else prest.employee.provider_code.replace("-", "").replace(" ", "").strip(),
+                "nurse": invoice.get_provider_code().replace("-", "").replace(" ", "").strip() if BatchTypeChoices.CNS_PAL == batch_type else prest.employee.provider_code.replace("-", "").replace(" ", "").strip(),
                 "service_code": prest.carecode.code,
                 "service_date": format(prest.date, '%Y%m%d'),
                 "end_date": format(prest.date, '%Y%m%d'),
