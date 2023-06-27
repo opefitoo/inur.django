@@ -578,7 +578,7 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
 class InvoiceItemBatchAdmin(admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
     readonly_fields = ('created_date','modified_date')
-    list_display = ('start_date', 'end_date', 'batch_type')
+    list_display = ('start_date', 'end_date', 'batch_type', 'batch_description')
     actions = [generate_flat_file_for_control]
 
 
