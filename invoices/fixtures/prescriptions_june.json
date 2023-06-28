@@ -1,0 +1,407 @@
+[
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 191,
+    "fields": {
+      "id": 191,
+      "invoice_item": 5156,
+      "medical_prescription": 722
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 192,
+    "fields": {
+      "id": 192,
+      "invoice_item": 5157,
+      "medical_prescription": 724
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 193,
+    "fields": {
+      "id": 193,
+      "invoice_item": 5160,
+      "medical_prescription": 727
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 194,
+    "fields": {
+      "id": 194,
+      "invoice_item": 5161,
+      "medical_prescription": 717
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 195,
+    "fields": {
+      "id": 195,
+      "invoice_item": 5162,
+      "medical_prescription": 726
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 196,
+    "fields": {
+      "id": 196,
+      "invoice_item": 5163,
+      "medical_prescription": 723
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 197,
+    "fields": {
+      "id": 197,
+      "invoice_item": 5164,
+      "medical_prescription": 723
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 198,
+    "fields": {
+      "id": 198,
+      "invoice_item": 5166,
+      "medical_prescription": 704
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 199,
+    "fields": {
+      "id": 199,
+      "invoice_item": 5169,
+      "medical_prescription": 735
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 200,
+    "fields": {
+      "id": 200,
+      "invoice_item": 5170,
+      "medical_prescription": 643
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 203,
+    "fields": {
+      "id": 203,
+      "invoice_item": 5174,
+      "medical_prescription": 660
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 204,
+    "fields": {
+      "id": 204,
+      "invoice_item": 5175,
+      "medical_prescription": 678
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 205,
+    "fields": {
+      "id": 205,
+      "invoice_item": 5176,
+      "medical_prescription": 747
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 206,
+    "fields": {
+      "id": 206,
+      "invoice_item": 5177,
+      "medical_prescription": 751
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 207,
+    "fields": {
+      "id": 207,
+      "invoice_item": 5178,
+      "medical_prescription": 752
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 208,
+    "fields": {
+      "id": 208,
+      "invoice_item": 5179,
+      "medical_prescription": 752
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 209,
+    "fields": {
+      "id": 209,
+      "invoice_item": 5180,
+      "medical_prescription": 753
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 210,
+    "fields": {
+      "id": 210,
+      "invoice_item": 5181,
+      "medical_prescription": 485
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 211,
+    "fields": {
+      "id": 211,
+      "invoice_item": 5182,
+      "medical_prescription": 754
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 212,
+    "fields": {
+      "id": 212,
+      "invoice_item": 5183,
+      "medical_prescription": 755
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 213,
+    "fields": {
+      "id": 213,
+      "invoice_item": 5184,
+      "medical_prescription": 756
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 214,
+    "fields": {
+      "id": 214,
+      "invoice_item": 5185,
+      "medical_prescription": 757
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 215,
+    "fields": {
+      "id": 215,
+      "invoice_item": 5186,
+      "medical_prescription": 637
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 221,
+    "fields": {
+      "id": 221,
+      "invoice_item": 5166,
+      "medical_prescription": 758
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 222,
+    "fields": {
+      "id": 222,
+      "invoice_item": 5193,
+      "medical_prescription": 758
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 223,
+    "fields": {
+      "id": 223,
+      "invoice_item": 5194,
+      "medical_prescription": 758
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 226,
+    "fields": {
+      "id": 226,
+      "invoice_item": 5228,
+      "medical_prescription": 762
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 227,
+    "fields": {
+      "id": 227,
+      "invoice_item": 5229,
+      "medical_prescription": 763
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 228,
+    "fields": {
+      "id": 228,
+      "invoice_item": 5230,
+      "medical_prescription": 768
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 229,
+    "fields": {
+      "id": 229,
+      "invoice_item": 5231,
+      "medical_prescription": 769
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 230,
+    "fields": {
+      "id": 230,
+      "invoice_item": 5264,
+      "medical_prescription": 770
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 231,
+    "fields": {
+      "id": 231,
+      "invoice_item": 5265,
+      "medical_prescription": 623
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 232,
+    "fields": {
+      "id": 232,
+      "invoice_item": 5266,
+      "medical_prescription": 623
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 233,
+    "fields": {
+      "id": 233,
+      "invoice_item": 5267,
+      "medical_prescription": 623
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 234,
+    "fields": {
+      "id": 234,
+      "invoice_item": 5269,
+      "medical_prescription": 771
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 235,
+    "fields": {
+      "id": 235,
+      "invoice_item": 5270,
+      "medical_prescription": 775
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 236,
+    "fields": {
+      "id": 236,
+      "invoice_item": 5271,
+      "medical_prescription": 767
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 237,
+    "fields": {
+      "id": 237,
+      "invoice_item": 5272,
+      "medical_prescription": 767
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 238,
+    "fields": {
+      "id": 238,
+      "invoice_item": 5273,
+      "medical_prescription": 764
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 239,
+    "fields": {
+      "id": 239,
+      "invoice_item": 5274,
+      "medical_prescription": 766
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 240,
+    "fields": {
+      "id": 240,
+      "invoice_item": 5275,
+      "medical_prescription": 766
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 241,
+    "fields": {
+      "id": 241,
+      "invoice_item": 5171,
+      "medical_prescription": 738
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 242,
+    "fields": {
+      "id": 242,
+      "invoice_item": 5277,
+      "medical_prescription": 774
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 243,
+    "fields": {
+      "id": 243,
+      "invoice_item": 5278,
+      "medical_prescription": 773
+    }
+  },
+  {
+    "model": "invoices.InvoiceItemPrescriptionsList",
+    "pk": 244,
+    "fields": {
+      "id": 244,
+      "invoice_item": 5280,
+      "medical_prescription": 778
+    }
+  }
+]
