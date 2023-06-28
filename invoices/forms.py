@@ -64,10 +64,20 @@ class ValidityDateFormSet(BaseInlineFormSet):
 class PrestationInlineFormSet(BaseInlineFormSet):
     def clean(self):
         super(PrestationInlineFormSet, self).clean()
+        from invoices.models import InvoiceItemPrescriptionsList
+        medical_prescription_list = InvoiceItemPrescriptionsList.objects.filter(invoice_item=self.instance).all()
         if hasattr(self, 'cleaned_data'):
+            # self.validate_only_one_prescription_per_invoice(medical_prescriptions)
             self.validate_max_limit(self.cleaned_data)
             self.validate_palliative_care_only(self.cleaned_data)
             self.validate_no_duplicate_carecode_perday(self.cleaned_data)
+            self.validate_prestations_inbetween_prescription_dates(self.cleaned_data, medical_prescription_list)
+    @staticmethod
+    def validate_only_one_prescription_per_invoice(medical_prescriptions):
+        if len(medical_prescriptions) > 1:
+            raise ValidationError(
+                "There should be only one prescription per invoice, please create another invoice for %s" % medical_prescriptions[1].medical_prescription)
+
 
     @staticmethod
     def validate_no_duplicate_carecode_perday(cleaned_data):
@@ -103,6 +113,25 @@ class PrestationInlineFormSet(BaseInlineFormSet):
         if palliative_care and non_palliative_care:
             raise ValidationError(
                 "Prestations should be either only Palliative Care or only Non Palliative Care in the same InvoiceItem, please create another invoice for %s" % non_palliative_care_code)
+    @staticmethod
+    def validate_prestations_inbetween_prescription_dates(cleaned_data, medical_prescription_list):
+        # if the same carecode is used more than once in the same day, raise an error
+        # Collect dates and items seen as we go through the formset
+        for row_data in cleaned_data:
+            if 'DELETE' in row_data and row_data['DELETE']:
+                continue
+            date = row_data['date'].date()
+            item = row_data['carecode'].code
+            check_success = False
+            for mls in medical_prescription_list:
+                if mls.medical_prescription.date <= date <= mls.medical_prescription.end_date:
+                    check_success = True
+                else:
+                    pass
+            if not check_success:
+                raise ValidationError(
+                    "The date %s of item %s is not in between the prescription dates" % (date, item))
+
 
     @staticmethod
     def validate_max_limit(cleaned_data):
