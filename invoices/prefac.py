@@ -122,13 +122,13 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
                 # invoice number on 15 digits completed with 0
                 "invoice_number": invoice.invoice_number.ljust(15, '0'),
                 "prescription_date": format(
-                    invoice.get_first_medical_prescription().medical_prescription.date,
-                    '%Y%m%d') if invoice.get_first_medical_prescription() else None,
-                "validity_date": format(invoice.get_first_medical_prescription().medical_prescription.end_date,
+                    invoice.get_first_valid_medical_prescription(prest.date).medical_prescription.date,
+                    '%Y%m%d') if invoice.get_first_valid_medical_prescription(prest.date) else None,
+                "validity_date": format(invoice.get_first_valid_medical_prescription(prest.date).medical_prescription.end_date,
                                         '%Y%m%d') if (
-                        invoice.get_first_medical_prescription() and invoice.get_first_medical_prescription().medical_prescription.end_date) else None,
+                        invoice.get_first_valid_medical_prescription(prest.date) and invoice.get_first_valid_medical_prescription(prest.date).medical_prescription.end_date) else None,
                 "prescribing_doctor": invoice.get_first_valid_medical_prescription(prest.date).medical_prescription.prescriptor.provider_code.replace(
-                    "-", "").replace(" ", "").strip() if invoice.get_first_medical_prescription() else None,
+                    "-", "").replace(" ", "").strip() if invoice.get_first_valid_medical_prescription(prest.date) else None,
                 "nurse": invoice_dtls.provider_code.replace("-", "").replace(" ",
                                                                              "").strip() if prest.carecode.is_package else prest.employee.provider_code.replace(
                     "-", "").replace(" ", "").strip(),
@@ -183,13 +183,13 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
                 # invoice number on 15 digits completed with 0
                 "invoice_number": invoice.invoice_number.ljust(15, '0'),
                 "prescription_date": format(
-                    invoice.get_first_medical_prescription().medical_prescription.date,
-                    '%Y%m%d') if invoice.get_first_medical_prescription() else None,
-                "validity_date": format(invoice.get_first_medical_prescription().medical_prescription.end_date,
+                    invoice.get_first_valid_medical_prescription(prest.date).medical_prescription.date,
+                    '%Y%m%d') if invoice.get_first_valid_medical_prescription(prest.date) else None,
+                "validity_date": format(invoice.get_first_valid_medical_prescription(prest.date).medical_prescription.end_date,
                                         '%Y%m%d') if (
-                        invoice.get_first_medical_prescription() and invoice.get_first_medical_prescription().medical_prescription.end_date) else None,
-                "prescribing_doctor": invoice.get_first_medical_prescription().medical_prescription.prescriptor.provider_code.replace(
-                    "-", "").replace(" ", "").strip() if invoice.get_first_medical_prescription() else None,
+                        invoice.get_first_valid_medical_prescription(prest.date) and invoice.get_first_valid_medical_prescription(prest.date).medical_prescription.end_date) else None,
+                "prescribing_doctor": invoice.get_first_valid_medical_prescription(prest.date).medical_prescription.prescriptor.provider_code.replace(
+                    "-", "").replace(" ", "").strip() if invoice.get_first_valid_medical_prescription(prest.date) else None,
                 # "nurse": invoice_dtls.provider_code.replace("-", "").replace(" ",
                 #                                                              "").strip() if BatchTypeChoices.CNS_PAL == batch_type else prest.employee.provider_code.replace(
                 #     "-", "").replace(" ", "").strip(),
