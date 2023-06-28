@@ -571,7 +571,7 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
     readonly_fields = ('invoice_number', 'invoice_date',)
     fields = ('invoice_number', 'invoice_date',)
     ordering = ('invoice_date',)
-    # can_delete = False
+    can_delete = False
 
 
 @admin.register(InvoiceItemBatch)
