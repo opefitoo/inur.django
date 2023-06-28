@@ -50,6 +50,7 @@ INSTALLED_APPS = (
     'constance.backends.database',
     'invoices',
     'django_rq',
+    "django_dumpdata_one",
     'api',
     'corsheaders',
     # 'debug_toolbar'
