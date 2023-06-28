@@ -173,7 +173,7 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
             data = {
                 "version": "2",
                 # format date to YYYYMM00 for sending date replace days with 00
-                "date": format(sending_date, '%Y%m00'),
+                "date": format(sending_date, '%Y%m00') if sending_date else format(datetime.now(), '%Y%m00'),
                 "payer": "U",
                 "provider": config.CODE_PRESTATAIRE,
                 # patient cns code only 11 digits
