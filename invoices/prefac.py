@@ -127,7 +127,7 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
                 "validity_date": format(invoice.get_first_medical_prescription().medical_prescription.end_date,
                                         '%Y%m%d') if (
                         invoice.get_first_medical_prescription() and invoice.get_first_medical_prescription().medical_prescription.end_date) else None,
-                "prescribing_doctor": invoice.get_first_medical_prescription().medical_prescription.prescriptor.provider_code.replace(
+                "prescribing_doctor": invoice.get_first_valid_medical_prescription(prest.date).medical_prescription.prescriptor.provider_code.replace(
                     "-", "").replace(" ", "").strip() if invoice.get_first_medical_prescription() else None,
                 "nurse": invoice_dtls.provider_code.replace("-", "").replace(" ",
                                                                              "").strip() if prest.carecode.is_package else prest.employee.provider_code.replace(
