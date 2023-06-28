@@ -60,6 +60,8 @@ class CareCode(models.Model):
                                              help_text=u"Si vous sélectionnez cette option la participation de 12% ne "
                                                        u"sera pas déduite de cette prestation",
                                              default=False)
+    is_package = models.BooleanField("Forfait", default=False,
+                                     help_text="Si vous sélectionnez cette option, cela signifie que cette prestation est un forfait et que le prix est fixe")
     exclusive_care_codes = models.ManyToManyField("self", blank=True)
 
     @property
@@ -91,7 +93,8 @@ class CareCode(models.Model):
     def net_amount(self, date, private_patient, participation_statutaire):
         if not private_patient:
             if self.reimbursed and not self.contribution_undue:
-                return round(((self.gross_amount(date) * 88) / 100), 2) + self._fin_part(date, participation_statutaire)
+                return round(((self.gross_amount(date) * 88) / 100), 2) + self._fin_part(date,
+                                                                                         participation_statutaire=participation_statutaire)
             else:
                 return self.gross_amount(date)
         else:
@@ -427,12 +430,12 @@ class Hospitalization(models.Model):
             end_date = None
 
         conflicts_cnt = Prestation.objects.filter(Q(date__range=(start_date, end_date))).filter(
-            invoice_item__patient_id=patient_id).exclude(carecode__code__in=['FSP1','FSP2']).count()
+            invoice_item__patient_id=patient_id).exclude(carecode__code__in=['FSP1', 'FSP2']).count()
         if 0 < conflicts_cnt:
             messages = {'start_date': 'Prestation(s) exist in selected dates range for this Patient'}
         # conflicts for FSP1 and FSP2 are allowed if start date is 1 day after
         conflicts_cnt_fsp = Prestation.objects.filter(Q(date__range=(start_date + timedelta(days=1), end_date))).filter(
-            invoice_item__patient_id=patient_id).filter(carecode__code__in=['FSP1','FSP2']).count()
+            invoice_item__patient_id=patient_id).filter(carecode__code__in=['FSP1', 'FSP2']).count()
         if 0 < conflicts_cnt_fsp:
             messages = {'start_date': 'Prestation(s) Palliative care exist in selected dates range for this Patient'}
 

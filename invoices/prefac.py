@@ -5,8 +5,6 @@ from constance import config
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
-from invoices.enums.generic import BatchTypeChoices
-
 
 def generate_file_line_for_calculation_control(data):
     for key, value in data.items():
@@ -40,6 +38,7 @@ def generate_file_line_for_calculation_control(data):
     )
 
     return line
+
 
 def generate_file_line(data):
     for key, value in data.items():
@@ -86,6 +85,7 @@ def generate_flat_file(modeladmin, request, queryset):
     response['Content-Disposition'] = 'attachment; filename="flat_file.txt"'
     return response
 
+
 def generate_flat_file_for_control(modeladmin, request, queryset):
     # action only for super user
     if not request.user.is_superuser:
@@ -100,13 +100,15 @@ def generate_flat_file_for_control(modeladmin, request, queryset):
     response['Content-Disposition'] = 'attachment; filename="flat_file.txt"'
     return response
 
+
 def generate_all_invoice_lines_for_control(invoices, sending_date=None):
     lines = ""
     for invoice in invoices.order_by('invoice_number'):
         if invoice.invoice_date.year != invoice.invoice_date.year or invoice.invoice_date.month != invoice.invoice_date.month:
             raise ValueError(_("All invoice items must have same year and month"))
+        invoice_dtls = invoice.invoice_details
         for prest in invoice.prestations.order_by('date'):
-            #print("working on invoice item: " + str(invoice.id))
+            # print("working on invoice item: " + str(invoice.id))
             data = {
                 "version": "2",
                 # format date to YYYYMM00 for sending date replace days with 00 or now
@@ -114,7 +116,7 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
                 "payer": "U",
                 "provider": config.CODE_PRESTATAIRE,
                 # patient cns code only 11 digits
-                "patient": invoice.patient.code_sn.replace(" ","")[:13],
+                "patient": invoice.patient.code_sn.replace(" ", "")[:13],
                 # accident number if exists or empty 10 spaces
                 "accident_number": invoice.accident_id if invoice.accident_id else '0' * 10,
                 # invoice number on 15 digits completed with 0
@@ -124,9 +126,12 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
                     '%Y%m%d') if invoice.get_first_medical_prescription() else None,
                 "validity_date": format(invoice.get_first_medical_prescription().medical_prescription.end_date,
                                         '%Y%m%d') if (
-                            invoice.get_first_medical_prescription() and invoice.get_first_medical_prescription().medical_prescription.end_date) else None,
-                "prescribing_doctor": invoice.get_first_medical_prescription().medical_prescription.prescriptor.provider_code.replace("-", "").replace(" ", "").strip() if invoice.get_first_medical_prescription() else None,
-                "nurse": prest.employee.provider_code.replace("-", "").replace(" ", "").strip(),
+                        invoice.get_first_medical_prescription() and invoice.get_first_medical_prescription().medical_prescription.end_date) else None,
+                "prescribing_doctor": invoice.get_first_medical_prescription().medical_prescription.prescriptor.provider_code.replace(
+                    "-", "").replace(" ", "").strip() if invoice.get_first_medical_prescription() else None,
+                "nurse": invoice_dtls.provider_code.replace("-", "").replace(" ",
+                                                                             "").strip() if prest.carecode.is_package else prest.employee.provider_code.replace(
+                    "-", "").replace(" ", "").strip(),
                 "service_code": prest.carecode.code,
                 "service_date": format(prest.date, '%Y%m%d'),
                 "end_date": format(prest.date, '%Y%m%d'),
@@ -139,19 +144,23 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
                 "gross_amount_decimals": str(int((prest.carecode.gross_amount(prest.date) - int(
                     prest.carecode.gross_amount(prest.date))) * 100)).zfill(2),
                 "net_amount": str(int(
-                    prest.carecode.net_amount(prest.date, False, invoice.patient.participation_statutaire))).zfill(7),
+                    prest.carecode.net_amount(prest.date, False,
+                                              invoice.patient.participation_statutaire and invoice.patient.age > 18))).zfill(
+                    7),
                 "net_amount_decimals": str(int((prest.carecode.net_amount(prest.date, False,
-                                                                  invoice.patient.participation_statutaire) - int(
-                    prest.carecode.net_amount(prest.date, False, invoice.patient.participation_statutaire))) * 100)).zfill(2),
+                                                                          invoice.patient.participation_statutaire) - int(
+                    prest.carecode.net_amount(prest.date, False,
+                                              invoice.patient.participation_statutaire))) * 100)).zfill(2),
                 "insurance_code": None,
                 "denial_code": None,
                 "currency": "EUR"
             }
-            #print(data)
-            lines +=  generate_file_line_for_calculation_control(data)
+            # print(data)
+            lines += generate_file_line_for_calculation_control(data)
     if lines.endswith("\n"):
         lines = lines[:-1]
     return lines
+
 
 def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
     lines = ""
@@ -160,7 +169,7 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
         if invoice.invoice_date.year != invoice.invoice_date.year or invoice.invoice_date.month != invoice.invoice_date.month:
             raise ValueError(_("All invoice items must have same year and month"))
         for prest in invoice.prestations.order_by('date'):
-            #print("working on invoice item: " + str(invoice.id))
+            # print("working on invoice item: " + str(invoice.id))
             data = {
                 "version": "2",
                 # format date to YYYYMM00 for sending date replace days with 00
@@ -168,7 +177,7 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
                 "payer": "U",
                 "provider": config.CODE_PRESTATAIRE,
                 # patient cns code only 11 digits
-                "patient": invoice.patient.code_sn.replace(" ","")[:13],
+                "patient": invoice.patient.code_sn.replace(" ", "")[:13],
                 # accident number if exists or empty 10 spaces
                 "accident_number": invoice.accident_id if invoice.accident_id else '0' * 10,
                 # invoice number on 15 digits completed with 0
@@ -178,9 +187,15 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
                     '%Y%m%d') if invoice.get_first_medical_prescription() else None,
                 "validity_date": format(invoice.get_first_medical_prescription().medical_prescription.end_date,
                                         '%Y%m%d') if (
-                            invoice.get_first_medical_prescription() and invoice.get_first_medical_prescription().medical_prescription.end_date) else None,
-                "prescribing_doctor": invoice.get_first_medical_prescription().medical_prescription.prescriptor.provider_code.replace("-", "").replace(" ", "").strip() if invoice.get_first_medical_prescription() else None,
-                "nurse": invoice_dtls.provider_code.replace("-", "").replace(" ", "").strip() if BatchTypeChoices.CNS_PAL == batch_type else prest.employee.provider_code.replace("-", "").replace(" ", "").strip(),
+                        invoice.get_first_medical_prescription() and invoice.get_first_medical_prescription().medical_prescription.end_date) else None,
+                "prescribing_doctor": invoice.get_first_medical_prescription().medical_prescription.prescriptor.provider_code.replace(
+                    "-", "").replace(" ", "").strip() if invoice.get_first_medical_prescription() else None,
+                # "nurse": invoice_dtls.provider_code.replace("-", "").replace(" ",
+                #                                                              "").strip() if BatchTypeChoices.CNS_PAL == batch_type else prest.employee.provider_code.replace(
+                #     "-", "").replace(" ", "").strip(),
+                "nurse": invoice_dtls.provider_code.replace("-", "").replace(" ",
+                                                                             "").strip() if prest.carecode.is_package else prest.employee.provider_code.replace(
+                    "-", "").replace(" ", "").strip(),
                 "service_code": prest.carecode.code,
                 "service_date": format(prest.date, '%Y%m%d'),
                 "end_date": format(prest.date, '%Y%m%d'),
@@ -193,16 +208,20 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
                 "gross_amount_decimals": str(int((prest.carecode.gross_amount(prest.date) - int(
                     prest.carecode.gross_amount(prest.date))) * 100)).zfill(2),
                 "net_amount": str(int(
-                    prest.carecode.net_amount(prest.date, False, invoice.patient.participation_statutaire))).zfill(7),
+                    prest.carecode.net_amount(prest.date, False,
+                                              invoice.patient.participation_statutaire and invoice.patient.age > 18))).zfill(
+                    7),
                 "net_amount_decimals": str(int((prest.carecode.net_amount(prest.date, False,
-                                                                  invoice.patient.participation_statutaire) - int(
-                    prest.carecode.net_amount(prest.date, False, invoice.patient.participation_statutaire))) * 100)).zfill(2),
+                                                                          invoice.patient.participation_statutaire and invoice.patient.age > 18) - int(
+                    prest.carecode.net_amount(prest.date, False,
+                                              invoice.patient.participation_statutaire and invoice.patient.age > 18))) * 100)).zfill(
+                    2),
                 "insurance_code": None,
                 "denial_code": None,
                 "currency": "EUR"
             }
-            #print(data)
-            lines +=  generate_file_line(data)
+            # print(data)
+            lines += generate_file_line(data)
     if lines.endswith("\n"):
         lines = lines[:-1]
     return lines

@@ -67,7 +67,7 @@ def get_doc_elements(queryset, med_p=False, with_verification_page=False):
                                 if prescription.medical_prescription.file_upload not in copies_of_medical_prescriptions:
                                     copies_of_medical_prescriptions.append(
                                         prescription.medical_prescription.file_upload)
-                        except (FileNotFoundError,ValueError) as ex:
+                        except (FileNotFoundError, ValueError) as ex:
                             print(ex)
                             elements.append(
                                 Paragraph(u"Fichier ordonnance cassé %s  %s%s " % (prescription.medical_prescription,
@@ -118,7 +118,7 @@ def _build_verification_page(recaps):
     i = 0
     # add paragraph in red stating "!! Page de controle, ne pas envoyer à la CNS !!"
     elements.append(Paragraph(u"!! Page de controle, ne pas envoyer à la CNS !!",
-                                ParagraphStyle(name="Normal", alignment=TA_CENTER, fontSize=14, textColor=colors.red)))
+                              ParagraphStyle(name="Normal", alignment=TA_CENTER, fontSize=14, textColor=colors.red)))
     elements.append(Spacer(1, 0.5 * cm))
     data.append(("No d'ordre", u"Note no°", u"Nom et prénom", "Montant", "Num. cns", "Nb. lignes"))
     total = 0.0
@@ -240,9 +240,9 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
                          '1',
                          # keep only 2 decimals
                          round(presta.carecode.gross_amount(presta.date), 2),
-                         round(presta.carecode.net_amount(presta.date, patient.is_private,
-                                                          (patient.participation_statutaire
-                                                           and patient.age > 18)), 2),
+                         round(presta.carecode.net_amount(date=presta.date, private_patient=patient.is_private,
+                                                          participation_statutaire=patient.participation_statutaire
+                                                                                   and patient.age > 18), 2),
                          (presta.date.astimezone(ZoneInfo("Europe/Luxembourg"))).strftime('%H:%M'),
                          "",
                          presta.employee.provider_code))
