@@ -918,9 +918,9 @@ class InvoiceItem(models.Model):
 
     def get_first_valid_medical_prescription(self, prestation_date):
         return InvoiceItemPrescriptionsList.objects.filter(
-            invoice_item=self, medical_prescription__start_date__lte=prestation_date,
+            invoice_item=self, medical_prescription__date__lte=prestation_date,
             medical_prescription__end_date__gte=prestation_date).first() if InvoiceItemPrescriptionsList.objects.filter(
-            invoice_item=self, medical_prescription__start_date__lte=prestation_date,
+            invoice_item=self, medical_prescription__date__lte=prestation_date,
             medical_prescription__end_date__gte=prestation_date).exists() else None
 
     def get_all_medical_prescriptions(self):
