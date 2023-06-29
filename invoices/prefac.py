@@ -108,9 +108,11 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
             raise ValueError(_("All invoice items must have same year and month"))
         invoice_dtls = invoice.invoice_details
         for prest in invoice.prestations.order_by('date'):
-            valid_prescription = invoice.get_first_valid_medical_prescription(prest.date).medical_prescription
-            if not valid_prescription:
-                raise ValueError(_("No valid prescription found for invoice item: " + str(invoice.id)))
+            valid_prescription_list = invoice.get_first_valid_medical_prescription(prest.date)
+            if not valid_prescription_list:
+                print(_("No valid prescription found for invoice item: " + str(invoice.id)))
+            else:
+                valid_prescription = valid_prescription_list.medical_prescription
             data = {
                 "version": "2",
                 # format date to YYYYMM00 for sending date replace days with 00 or now
@@ -166,9 +168,11 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
         if invoice.invoice_date.year != invoice.invoice_date.year or invoice.invoice_date.month != invoice.invoice_date.month:
             raise ValueError(_("All invoice items must have same year and month"))
         for prest in invoice.prestations.order_by('date'):
-            valid_prescription = invoice.get_first_valid_medical_prescription(prest.date).medical_prescription
-            if not valid_prescription:
-                raise ValueError(_("No valid prescription found for invoice item: " + str(invoice.id)))
+            valid_prescription_list = invoice.get_first_valid_medical_prescription(prest.date)
+            if not valid_prescription_list:
+                print(_("No valid prescription found for invoice item: " + str(invoice.id)))
+            else:
+                valid_prescription = valid_prescription_list.medical_prescription
             data = {
                 "version": "2",
                 # format date to YYYYMM00 for sending date replace days with 00
