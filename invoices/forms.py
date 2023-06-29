@@ -117,6 +117,8 @@ class PrestationInlineFormSet(BaseInlineFormSet):
     def validate_prestations_inbetween_prescription_dates(cleaned_data, medical_prescription_list):
         # if the same carecode is used more than once in the same day, raise an error
         # Collect dates and items seen as we go through the formset
+        if not medical_prescription_list or len(medical_prescription_list) == 0:
+            return
         for row_data in cleaned_data:
             if 'DELETE' in row_data and row_data['DELETE']:
                 continue
