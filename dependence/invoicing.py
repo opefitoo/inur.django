@@ -238,7 +238,7 @@ class LongTermCareMonthlyStatement(models.Model):
             demandeFacture = ElementTree.SubElement(facture, "demandeFacture")
             # create sub element nombre
             nombre = ElementTree.SubElement(demandeFacture, "nombre")
-            nombre.text = invoices.count()
+            nombre.text = str(invoices.count())
             # create sub element devise
             devise = ElementTree.SubElement(demandeFacture, "devise")
             devise.text = "EUR"
