@@ -1135,7 +1135,7 @@ class EventListAdmin(admin.ModelAdmin):
     date_hierarchy = 'day'
     exclude = ('event_type',)
 
-    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
+    actions = ['safe_delete', 'duplicate_event_for_next_day', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
                'send_webhook_message']
     inlines = (ReportPictureInLine,)
@@ -1162,6 +1162,20 @@ class EventListAdmin(admin.ModelAdmin):
             return
         for e in queryset:
             e.display_unconnected_events()
+
+    def duplicate_event_for_next_day(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        # only one event at a time
+        if len(queryset) > 1:
+            self.message_user(request, "Only one event at a time", level=messages.ERROR)
+            return
+        for e in queryset:
+            e = e.duplicate_event_for_next_day()
+            if e:
+                self.message_user(request, "Event duplicated for next day %s" % e, level=messages.WARNING)
+            else:
+                self.message_user(request, "Event not duplicated", level=messages.ERROR)
 
     def cleanup_all_events_on_google(self, request, queryset):
         if not request.user.is_superuser:

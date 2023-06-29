@@ -108,6 +108,25 @@ class Event(models.Model):
         content_type = ContentType.objects.get_for_model(self.__class__)
         return reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model), args=(self.id,))
 
+    def duplicate_event_for_next_day(self):
+        # duplicate event for next day
+        # check if event already exists for next day
+        # if not, duplicate event for next day
+        # if yes, do nothing
+        next_day = self.day + datetime.timedelta(days=1)
+        if not Event.objects.filter(day=next_day, time_start_event=self.time_start_event,
+                                    time_end_event=self.time_end_event, event_type=self.event_type,
+                                    employees=self.employees, patient=self.patient).exists():
+            new_event = Event.objects.create(day=next_day, time_start_event=self.time_start_event,
+                                                  time_end_event=self.time_end_event, event_type_enum=self.event_type_enum,
+                                                  state=self.state, notes=self.notes,
+                                                  employees=self.employees, patient=self.patient,
+                                                  event_address=self.event_address)
+            new_event.save()
+            return new_event
+        else:
+            return None
+
     def get_absolute_url(self):
         url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
         event_text = str(self)
@@ -538,8 +557,10 @@ def checks_that_care_plan_is_linked_to_right_patient(data):
         assigned_care_plan = CarePlanDetail.objects.get(pk=data['care_plan_detail_id'])
         if assigned_care_plan:
             if CarePlanMaster.objects.get(patient_id=data['patient_id']) != assigned_care_plan.care_plan_to_master:
-                messages = {'care_plan_detail': _("Plan de soin doit être lié au patient, vous avez choisi le plan lié à %s") % (
-                    str(Patient.objects.get(pk=assigned_care_plan.care_plan_to_master.patient_id)))}
+                messages = {'care_plan_detail': _(
+                    "Plan de soin doit être lié au patient, vous avez choisi le plan lié à %s") % (
+                                                    str(Patient.objects.get(
+                                                        pk=assigned_care_plan.care_plan_to_master.patient_id)))}
     return messages
 
 
