@@ -111,6 +111,7 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
             valid_prescription_list = invoice.get_first_valid_medical_prescription(prest.date)
             if not valid_prescription_list:
                 print(_("No valid prescription found for invoice item: " + str(invoice.id)))
+                valid_prescription = None
             else:
                 valid_prescription = valid_prescription_list.medical_prescription
             data = {
@@ -125,9 +126,9 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
                 "accident_number": invoice.accident_id if invoice.accident_id else '0' * 10,
                 # invoice number on 15 digits completed with 0
                 "invoice_number": invoice.invoice_number.ljust(15, '0'),
-                "prescription_date": format(valid_prescription.date,'%Y%m%d'),
-                "validity_date": format(valid_prescription.end_date,'%Y%m%d'),
-                "prescribing_doctor": valid_prescription.prescriptor.provider_code.replace("-", "").replace(" ", "").strip(),
+                "prescription_date": format(valid_prescription.date,'%Y%m%d') if valid_prescription else None,
+                "validity_date": format(valid_prescription.end_date,'%Y%m%d') if valid_prescription else None,
+                "prescribing_doctor": valid_prescription.prescriptor.provider_code.replace("-", "").replace(" ", "").strip() if valid_prescription else None,
                 "nurse": invoice_dtls.provider_code.replace("-", "").replace(" ",
                                                                              "").strip() if prest.carecode.is_package else prest.employee.provider_code.replace(
                     "-", "").replace(" ", "").strip(),
@@ -171,6 +172,7 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
             valid_prescription_list = invoice.get_first_valid_medical_prescription(prest.date)
             if not valid_prescription_list:
                 print(_("No valid prescription found for invoice item: " + str(invoice.id)))
+                valid_prescription = None
             else:
                 valid_prescription = valid_prescription_list.medical_prescription
             data = {
@@ -185,9 +187,9 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
                 "accident_number": invoice.accident_id if invoice.accident_id else '0' * 10,
                 # invoice number on 15 digits completed with 0
                 "invoice_number": invoice.invoice_number.ljust(15, '0'),
-                "prescription_date": format(valid_prescription.date,'%Y%m%d'),
-                "validity_date": format(valid_prescription.end_date, '%Y%m%d'),
-                "prescribing_doctor": valid_prescription.prescriptor.provider_code.replace("-", "").replace(" ", "").strip(),
+                "prescription_date": format(valid_prescription.date,'%Y%m%d') if valid_prescription else None,
+                "validity_date": format(valid_prescription.end_date, '%Y%m%d') if valid_prescription else None,
+                "prescribing_doctor": valid_prescription.prescriptor.provider_code.replace("-", "").replace(" ", "").strip() if valid_prescription else None,
                 # "nurse": invoice_dtls.provider_code.replace("-", "").replace(" ",
                 #                                                              "").strip() if BatchTypeChoices.CNS_PAL == batch_type else prest.employee.provider_code.replace(
                 #     "-", "").replace(" ", "").strip(),
