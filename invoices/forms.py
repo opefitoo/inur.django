@@ -88,7 +88,7 @@ class PrestationInlineFormSet(BaseInlineFormSet):
         for row_data in cleaned_data:
             if 'DELETE' in row_data and row_data['DELETE']:
                 continue
-            date = row_data['date'].date()
+            date = row_data['date']
             item = row_data['carecode'].code
             if (date, item) in items_seen:
                 raise ValidationError(
