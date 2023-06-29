@@ -126,6 +126,9 @@ class PrestationInlineFormSet(BaseInlineFormSet):
             item = row_data['carecode'].code
             check_success = False
             for mls in medical_prescription_list:
+                if mls.medical_prescription.end_date is None:
+                    raise ValidationError(
+                        "The prescription %s has no end date, please set an end date" % mls.medical_prescription)
                 if mls.medical_prescription.date <= date <= mls.medical_prescription.end_date:
                     check_success = True
                 else:
