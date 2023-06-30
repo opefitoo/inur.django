@@ -121,7 +121,7 @@ class Event(models.Model):
                                                   time_end_event=self.time_end_event, event_type_enum=self.event_type_enum,
                                                   state=self.state, notes=self.notes,
                                                   employees=self.employees, patient=self.patient,
-                                                  event_address=self.event_address)
+                                                  event_address=self.event_address, created_by='duplicate_event_for_next_day')
             new_event.save()
             return new_event
         else:
