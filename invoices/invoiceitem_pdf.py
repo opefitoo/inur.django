@@ -39,7 +39,8 @@ def get_doc_elements(queryset, med_p=False, with_verification_page=False):
 
             elements.extend(_result["elements"])
             summary_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"],
-                                 _result["patient_cns_number"], _result["number_of_lines"]))
+                                 _result["patient_cns_number"], _result["number_of_lines"],
+                                 _result["prescription_date"], _result["prescription_end_date"]))
             elements.append(PageBreak())
             if med_p:
                 if qs.get_all_medical_prescriptions().exists():
@@ -116,19 +117,22 @@ def _build_verification_page(recaps):
     elements = []
     data = []
     i = 0
+    recap_paragraph_sytle = ParagraphStyle(name="Normal", alignment=TA_LEFT, fontSize=8)
     # add paragraph in red stating "!! Page de controle, ne pas envoyer à la CNS !!"
     elements.append(Paragraph(u"!! Page de controle, ne pas envoyer à la CNS !!",
                               ParagraphStyle(name="Normal", alignment=TA_CENTER, fontSize=14, textColor=colors.red)))
     elements.append(Spacer(1, 0.5 * cm))
-    data.append(("No d'ordre", u"Note no°", u"Nom et prénom", "Montant", "Num. cns", "Nb. lignes"))
+    data.append(
+        ("No d'ordre", u"Note no°", u"Nom et prénom", "Montant", "Num. cns", "Nb. lignes", "Ordo D.", "Ordo F."))
     total = 0.0
     for recap in recaps:
         i += 1
-        data.append((i, recap[0], recap[1], recap[2], recap[3], recap[4]))
+        data.append((i, recap[0], recap[1], recap[2], recap[3], recap[4], Paragraph(recap[5], recap_paragraph_sytle),
+                     Paragraph(recap[6], recap_paragraph_sytle)))
         total = decimal.Decimal(total) + decimal.Decimal(recap[2])
     data.append(("", "", u"à reporter", round(total, 2), ""))
 
-    table = Table(data, [2 * cm, 2 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm], (i + 2) * [0.75 * cm])
+    table = Table(data, [1 * cm, 1 * cm, 5 * cm, 2 * cm, 4 * cm, 2 * cm, 2 * cm, 2 * cm], (i + 2) * [0.75 * cm])
     table.setStyle(TableStyle([('ALIGN', (1, 1), (-2, -2), 'LEFT'),
                                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
                                ('FONTSIZE', (0, 0), (-1, -1), 9),
@@ -221,7 +225,17 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     patientAddress = ''
     patient_cns_number = ''
     number_of_lines = 0
-
+    prescription_date = ''
+    prescription_end_date = ''
+    from invoices.models import InvoiceItemPrescriptionsList
+    prescription_list = InvoiceItemPrescriptionsList.objects.filter(invoice_item__invoice_number=invoice_number).all()
+    for prescription_list_item in prescription_list:
+        prescription_date += format(prescription_list_item.medical_prescription.date, '%d/%m/%Y') + ' - '
+        if prescription_list_item.medical_prescription.end_date:
+            prescription_end_date += format(prescription_list_item.medical_prescription.end_date, '%d/%m/%Y') + ' - '
+    if prescription_end_date:
+        prescription_end_date[:-3]
+    prescription_date = prescription_date[:-3]
     data.append(('Num. titre', 'Prestation', 'Date', 'Nombre', 'Brut', 'Net', 'Heure', 'P. Pers', 'Executant'))
     for presta in prestations:
         patient = presta.invoice_item.patient
@@ -332,7 +346,8 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
     elements.append(_pouracquit_signature)
     return {"elements": elements, "invoice_number": invoice_number,
             "patient_name": patientName + " " + patientFirstName, "invoice_amount": newData[23][5],
-            "patient_cns_number": patient_cns_number, "number_of_lines": i}
+            "patient_cns_number": patient_cns_number, "number_of_lines": i, "prescription_date": prescription_date,
+            "prescription_end_date": prescription_end_date}
 
 
 def _compute_sum(data, position):
