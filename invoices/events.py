@@ -119,7 +119,7 @@ class Event(models.Model):
                                     employees=self.employees, patient=self.patient).exists():
             new_event = Event.objects.create(day=next_day, time_start_event=self.time_start_event,
                                                   time_end_event=self.time_end_event, event_type_enum=self.event_type_enum,
-                                                  state=self.state, notes=self.notes,
+                                                  state=2, notes=self.notes,
                                                   employees=self.employees, patient=self.patient,
                                                   event_address=self.event_address, created_by='duplicate_event_for_next_day')
             new_event.save()
