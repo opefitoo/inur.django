@@ -1167,15 +1167,14 @@ class EventListAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             return
         # only one event at a time
-        if len(queryset) > 1:
-            self.message_user(request, "Only one event at a time", level=messages.ERROR)
-            return
+        events_duplicated = []
         for e in queryset:
-            e = e.duplicate_event_for_next_day()
-            if e:
-                self.message_user(request, "Event duplicated for next day %s" % e, level=messages.WARNING)
-            else:
-                self.message_user(request, "Event not duplicated", level=messages.ERROR)
+            events_duplicated.append(e.duplicate_event_for_next_day())
+        self.message_user(request, "Duplicated %s events" % len(events_duplicated))
+        # redirect to list filtering on duplicated events
+        return HttpResponseRedirect(
+            reverse('admin:invoices_eventlist_changelist') + '?id__in=' + ','.join([str(e.id) for e in events_duplicated]))
+    
 
     def cleanup_all_events_on_google(self, request, queryset):
         if not request.user.is_superuser:
