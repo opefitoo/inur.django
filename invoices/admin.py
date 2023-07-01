@@ -1177,7 +1177,7 @@ class EventListAdmin(admin.ModelAdmin):
                 reverse('admin:invoices_eventlist_changelist') + '?id__in=' + ','.join([str(e.id) for e in events_duplicated]))
         else:
             # create array with all selected events
-            from processors.tasks import duplicate_event_for_next_day_for_several_events
+            from invoices.processors.tasks import duplicate_event_for_next_day_for_several_events
             duplicate_event_for_next_day_for_several_events.delay([e.id for e in queryset], request.user.id)
             self.message_user(request, "Il y a %s événements à dupliquer, cela peut prendre quelques minutes, vous allez recevoir une notification par google chat à la fin de la création" % len(queryset))
     def cleanup_all_events_on_google(self, request, queryset):
