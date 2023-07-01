@@ -1,7 +1,9 @@
 import os
+from datetime import datetime
 from io import BytesIO
 
 from PyPDF2 import PdfMerger
+from constance import config
 from django.core.files.base import ContentFile
 from django.db.models import Q
 from django_rq import job
@@ -9,6 +11,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate
 
 from invoices.enums.generic import BatchTypeChoices
+from invoices.events import Event
 from invoices.invoiceitem_pdf import get_doc_elements
 from invoices.notifications import notify_system_via_google_webhook
 from invoices.prefac import generate_all_invoice_lines
@@ -62,7 +65,33 @@ def process_post_save(instance):
             print("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
         else:
             notify_system_via_google_webhook("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
-
+@job
+def duplicate_event_for_next_day_for_several_events(events, who_created):
+    """
+    Duplicate the event for the next day
+    @param events:
+    @return:
+    """
+    events_created = []
+    for event in events:
+        next_day = event.day + datetime.timedelta(days=1)
+        if not Event.objects.filter(day=next_day, time_start_event=event.time_start_event,
+                                    time_end_event=event.time_end_event, event_type=event.event_type,
+                                    employees=event.employees, patient=event.patient).exists():
+            new_event = Event.objects.create(day=next_day, time_start_event=event.time_start_event,
+                                             time_end_event=event.time_end_event, event_type_enum=event.event_type_enum,
+                                             state=2, notes=event.notes,
+                                             employees=event.employees, patient=event.patient,
+                                             event_address=event.event_address,
+                                             created_by='duplicate_event_for_next_day')
+            new_event.save()
+            events_created.append(new_event)
+    if events_created and len(events_created) > 0:
+        # build url to the newly created events
+        url = config.ROOT_URL + 'admin/invoices/event/?id__in=' + ','.join(
+            [str(event.id) for event in events_created])
+        notify_system_via_google_webhook(
+            "The following events were created for the next day: {0} by user {1}".format(url, who_created))
 #
 # def sync_google_contacts(instance, **kwargs):
 #     """

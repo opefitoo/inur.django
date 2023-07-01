@@ -1168,14 +1168,18 @@ class EventListAdmin(admin.ModelAdmin):
             return
         # only one event at a time
         events_duplicated = []
-        for e in queryset:
-            events_duplicated.append(e.duplicate_event_for_next_day())
-        self.message_user(request, "Duplicated %s events" % len(events_duplicated))
-        # redirect to list filtering on duplicated events
-        return HttpResponseRedirect(
-            reverse('admin:invoices_eventlist_changelist') + '?id__in=' + ','.join([str(e.id) for e in events_duplicated]))
-    
-
+        if len(queryset) < 5:
+            for e in queryset:
+                events_duplicated.append(e.duplicate_event_for_next_day())
+            self.message_user(request, "Duplicated %s events" % len(events_duplicated))
+            # redirect to list filtering on duplicated events
+            return HttpResponseRedirect(
+                reverse('admin:invoices_eventlist_changelist') + '?id__in=' + ','.join([str(e.id) for e in events_duplicated]))
+        else:
+            # create array with all selected events
+            from processors.tasks import duplicate_event_for_next_day_for_several_events
+            duplicate_event_for_next_day_for_several_events.delay([e.id for e in queryset], request.user.id)
+            self.message_user(request, "Il y a %s événements à dupliquer, cela peut prendre quelques minutes, vous allez recevoir une notification par google chat à la fin de la création" % len(queryset))
     def cleanup_all_events_on_google(self, request, queryset):
         if not request.user.is_superuser:
             self.message_user(request, "Must be super user", level=messages.ERROR)
