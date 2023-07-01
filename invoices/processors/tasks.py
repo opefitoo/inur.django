@@ -73,7 +73,7 @@ def duplicate_event_for_next_day_for_several_events(events, who_created):
     """
     events_created = []
     for event in events:
-        next_day = event.date + datetime.timedelta(days=1)
+        next_day = event.day + datetime.timedelta(days=1)
         from invoices.events import Event
         if not Event.objects.filter(day=next_day, time_start_event=event.time_start_event,
                                     time_end_event=event.time_end_event, event_type=event.event_type,
