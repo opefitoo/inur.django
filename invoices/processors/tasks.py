@@ -1,4 +1,5 @@
 import os
+import traceback
 from datetime import timedelta
 from io import BytesIO
 
@@ -103,8 +104,9 @@ def duplicate_event_for_next_day_for_several_events(events, who_created):
                 "The following events were created for the next day: {0} by user {1} and it took {3} sec to generate".format(
                     url, who_created, (end - start).seconds))
     except Exception as e:
+        error_detail = traceback.format_exc()
         notify_system_via_google_webhook(
-            "*An error occurred while duplicating events for the next day: {0}*".format(e))
+            "*An error occurred while duplicating events for the next day: {0}*\nDetails:\n{1}".format(e, error_detail))
     #
 # def sync_google_contacts(instance, **kwargs):
 #     """
