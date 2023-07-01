@@ -101,7 +101,7 @@ def duplicate_event_for_next_day_for_several_events(events, who_created):
                 [str(event.id) for event in events_created])
             end = datetime.now()
             notify_system_via_google_webhook(
-                "The following events were created for the next day: {0} by user {1} and it took {3} sec to generate".format(
+                "The following events were created for the next day: {0} by user {1} and it took {2} sec to generate".format(
                     url, who_created, (end - start).seconds))
     except Exception as e:
         error_detail = traceback.format_exc()
