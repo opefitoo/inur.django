@@ -1,4 +1,3 @@
-import datetime
 import os
 from io import BytesIO
 
@@ -36,7 +35,8 @@ def process_post_save(instance):
                 invoice_sent=False)
             batch_invoices.update(batch=instance)
         batch_invoices = InvoiceItem.objects.filter(batch=instance)
-        file_content = generate_all_invoice_lines(batch_invoices, sending_date=instance.send_date, batch_type=instance.batch_type)
+        file_content = generate_all_invoice_lines(batch_invoices, sending_date=instance.send_date,
+                                                  batch_type=instance.batch_type)
         instance.prefac_file = ContentFile(file_content.encode('utf-8'), 'prefac.txt')
 
         # generate the pdf invoice file
@@ -63,7 +63,10 @@ def process_post_save(instance):
         if os.environ.get('LOCAL_ENV', None):
             print("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
         else:
-            notify_system_via_google_webhook("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
+            notify_system_via_google_webhook(
+                "Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
+
+
 @job
 def duplicate_event_for_next_day_for_several_events(events, who_created):
     """
@@ -71,6 +74,8 @@ def duplicate_event_for_next_day_for_several_events(events, who_created):
     @param events:
     @return:
     """
+    from datetime import datetime
+    start = datetime.now()
     events_created = []
     try:
         for event in events:
@@ -80,7 +85,8 @@ def duplicate_event_for_next_day_for_several_events(events, who_created):
                                         time_end_event=event.time_end_event, event_type=event.event_type,
                                         employees=event.employees, patient=event.patient).exists():
                 new_event = Event.objects.create(day=next_day, time_start_event=event.time_start_event,
-                                                 time_end_event=event.time_end_event, event_type_enum=event.event_type_enum,
+                                                 time_end_event=event.time_end_event,
+                                                 event_type_enum=event.event_type_enum,
                                                  state=2, notes=event.notes,
                                                  employees=event.employees, patient=event.patient,
                                                  event_address=event.event_address,
@@ -91,8 +97,10 @@ def duplicate_event_for_next_day_for_several_events(events, who_created):
             # build url to the newly created events
             url = config.ROOT_URL + 'admin/invoices/eventlist/?id__in=' + ','.join(
                 [str(event.id) for event in events_created])
+            end = datetime.now()
             notify_system_via_google_webhook(
-                "The following events were created for the next day: {0} by user {1}".format(url, who_created))
+                "The following events were created for the next day: {0} by user {1} and it took {3} sec to generate".format(
+                    url, who_created, (end - start).seconds))
     except Exception as e:
         notify_system_via_google_webhook(
             "*An error occurred while duplicating events for the next day: {0}*".format(e))
