@@ -1169,6 +1169,7 @@ class EventListAdmin(admin.ModelAdmin):
         # only one event at a time
         events_duplicated = []
         if len(queryset) < 5:
+            print("duplicating %s events [direct call]" % len(queryset))
             for e in queryset:
                 events_duplicated.append(e.duplicate_event_for_next_day())
             self.message_user(request, "Duplicated %s events" % len(events_duplicated))
@@ -1176,6 +1177,7 @@ class EventListAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(
                 reverse('admin:invoices_eventlist_changelist') + '?id__in=' + ','.join([str(e.id) for e in events_duplicated]))
         else:
+            print("duplicating %s events [redis rq call]" % len(queryset))
             # create array with all selected events
             from invoices.processors.tasks import duplicate_event_for_next_day_for_several_events
             duplicate_event_for_next_day_for_several_events.delay([e.id for e in queryset], request.user.id)
