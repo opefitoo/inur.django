@@ -1,5 +1,5 @@
+import datetime
 import os
-from datetime import datetime
 from io import BytesIO
 
 from PyPDF2 import PdfMerger
