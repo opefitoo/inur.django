@@ -108,12 +108,12 @@ class Event(models.Model):
         content_type = ContentType.objects.get_for_model(self.__class__)
         return reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model), args=(self.id,))
 
-    def duplicate_event_for_next_day(self):
+    def duplicate_event_for_next_day(self, number_of_days=1):
         # duplicate event for next day
         # check if event already exists for next day
         # if not, duplicate event for next day
         # if yes, do nothing
-        next_day = self.day + datetime.timedelta(days=1)
+        next_day = self.day + datetime.timedelta(days=number_of_days)
         if not Event.objects.filter(day=next_day, time_start_event=self.time_start_event,
                                     time_end_event=self.time_end_event, event_type=self.event_type,
                                     employees=self.employees, patient=self.patient).exists():

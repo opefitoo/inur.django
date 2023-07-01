@@ -70,9 +70,11 @@ def process_post_save(instance):
 
 
 @job
-def duplicate_event_for_next_day_for_several_events(events, who_created):
+def duplicate_event_for_next_day_for_several_events(events, who_created, number_of_days=1):
     """
     Duplicate the event for the next day
+    @param who_created:
+    @param number_of_days:
     @param events:
     @return:
     """
@@ -81,7 +83,7 @@ def duplicate_event_for_next_day_for_several_events(events, who_created):
     events_created = []
     try:
         for event in events:
-            next_day = event.day + timedelta(days=1)
+            next_day = event.day + timedelta(days=number_of_days)
             from invoices.events import Event
             if not Event.objects.filter(day=next_day, time_start_event=event.time_start_event,
                                         time_end_event=event.time_end_event, event_type=event.event_type,

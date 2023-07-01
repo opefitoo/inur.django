@@ -577,7 +577,7 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
 @admin.register(InvoiceItemBatch)
 class InvoiceItemBatchAdmin(admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
-    readonly_fields = ('created_date','modified_date')
+    readonly_fields = ('created_date', 'modified_date')
     list_display = ('start_date', 'end_date', 'batch_type', 'batch_description')
     actions = [generate_flat_file_for_control]
 
@@ -1135,7 +1135,8 @@ class EventListAdmin(admin.ModelAdmin):
     date_hierarchy = 'day'
     exclude = ('event_type',)
 
-    actions = ['safe_delete', 'duplicate_event_for_next_day', 'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
+    actions = ['safe_delete', 'duplicate_event_for_next_day', 'duplicate_event_for_next_week',
+               'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
                'send_webhook_message']
     inlines = (ReportPictureInLine,)
@@ -1163,6 +1164,29 @@ class EventListAdmin(admin.ModelAdmin):
         for e in queryset:
             e.display_unconnected_events()
 
+    def duplicate_event_for_next_week(self, request, queryset):
+        if not request.user.is_superuser:
+            return
+        # only one event at a time
+        events_duplicated = []
+        if len(queryset) < 6:
+            print("duplicating %s events [direct call]" % len(queryset))
+            for e in queryset:
+                events_duplicated.append(e.duplicate_event_for_next_day(7))
+            self.message_user(request, "Duplicated %s events" % len(events_duplicated))
+            # redirect to list filtering on duplicated events
+            return HttpResponseRedirect(
+                reverse('admin:invoices_eventlist_changelist') + '?id__in=' + ','.join(
+                    [str(e.id) for e in events_duplicated]))
+        else:
+            print("duplicating %s events [redis rq call]" % len(queryset))
+            # create array with all selected events
+            from invoices.processors.tasks import duplicate_event_for_next_day_for_several_events
+            duplicate_event_for_next_day_for_several_events.delay([e for e in queryset], request.user, number_of_days=7)
+            self.message_user(request,
+                              "Il y a %s événements à dupliquer pour j + 7, cela peut prendre quelques minutes, vous allez recevoir une notification par google chat à la fin de la création" % len(
+                                  queryset))
+
     def duplicate_event_for_next_day(self, request, queryset):
         if not request.user.is_superuser:
             return
@@ -1171,17 +1195,21 @@ class EventListAdmin(admin.ModelAdmin):
         if len(queryset) < 6:
             print("duplicating %s events [direct call]" % len(queryset))
             for e in queryset:
-                events_duplicated.append(e.duplicate_event_for_next_day())
+                events_duplicated.append(e.duplicate_event_for_next_day(1))
             self.message_user(request, "Duplicated %s events" % len(events_duplicated))
             # redirect to list filtering on duplicated events
             return HttpResponseRedirect(
-                reverse('admin:invoices_eventlist_changelist') + '?id__in=' + ','.join([str(e.id) for e in events_duplicated]))
+                reverse('admin:invoices_eventlist_changelist') + '?id__in=' + ','.join(
+                    [str(e.id) for e in events_duplicated]))
         else:
             print("duplicating %s events [redis rq call]" % len(queryset))
             # create array with all selected events
             from invoices.processors.tasks import duplicate_event_for_next_day_for_several_events
-            duplicate_event_for_next_day_for_several_events.delay([e for e in queryset], request.user)
-            self.message_user(request, "Il y a %s événements à dupliquer, cela peut prendre quelques minutes, vous allez recevoir une notification par google chat à la fin de la création" % len(queryset))
+            duplicate_event_for_next_day_for_several_events.delay([e for e in queryset], request.user, number_of_days=1)
+            self.message_user(request,
+                              "Il y a %s événements à dupliquer pour j + 1, cela peut prendre quelques minutes, vous allez recevoir une notification par google chat à la fin de la création" % len(
+                                  queryset))
+
     def cleanup_all_events_on_google(self, request, queryset):
         if not request.user.is_superuser:
             self.message_user(request, "Must be super user", level=messages.ERROR)
