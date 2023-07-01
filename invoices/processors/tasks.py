@@ -89,7 +89,7 @@ def duplicate_event_for_next_day_for_several_events(events, who_created):
                 events_created.append(new_event)
         if events_created and len(events_created) > 0:
             # build url to the newly created events
-            url = config.ROOT_URL + 'admin/invoices/event/?id__in=' + ','.join(
+            url = config.ROOT_URL + 'admin/invoices/eventlist/?id__in=' + ','.join(
                 [str(event.id) for event in events_created])
             notify_system_via_google_webhook(
                 "The following events were created for the next day: {0} by user {1}".format(url, who_created))

@@ -1180,7 +1180,7 @@ class EventListAdmin(admin.ModelAdmin):
             print("duplicating %s events [redis rq call]" % len(queryset))
             # create array with all selected events
             from invoices.processors.tasks import duplicate_event_for_next_day_for_several_events
-            duplicate_event_for_next_day_for_several_events.delay([e for e in queryset], request.user.id)
+            duplicate_event_for_next_day_for_several_events.delay([e for e in queryset], request.user)
             self.message_user(request, "Il y a %s événements à dupliquer, cela peut prendre quelques minutes, vous allez recevoir une notification par google chat à la fin de la création" % len(queryset))
     def cleanup_all_events_on_google(self, request, queryset):
         if not request.user.is_superuser:
