@@ -72,27 +72,31 @@ def duplicate_event_for_next_day_for_several_events(events, who_created):
     @return:
     """
     events_created = []
-    for event in events:
-        next_day = event.day + datetime.timedelta(days=1)
-        from invoices.events import Event
-        if not Event.objects.filter(day=next_day, time_start_event=event.time_start_event,
-                                    time_end_event=event.time_end_event, event_type=event.event_type,
-                                    employees=event.employees, patient=event.patient).exists():
-            new_event = Event.objects.create(day=next_day, time_start_event=event.time_start_event,
-                                             time_end_event=event.time_end_event, event_type_enum=event.event_type_enum,
-                                             state=2, notes=event.notes,
-                                             employees=event.employees, patient=event.patient,
-                                             event_address=event.event_address,
-                                             created_by='duplicate_event_for_next_day')
-            new_event.save()
-            events_created.append(new_event)
-    if events_created and len(events_created) > 0:
-        # build url to the newly created events
-        url = config.ROOT_URL + 'admin/invoices/event/?id__in=' + ','.join(
-            [str(event.id) for event in events_created])
+    try:
+        for event in events:
+            next_day = event.day + datetime.timedelta(days=1)
+            from invoices.events import Event
+            if not Event.objects.filter(day=next_day, time_start_event=event.time_start_event,
+                                        time_end_event=event.time_end_event, event_type=event.event_type,
+                                        employees=event.employees, patient=event.patient).exists():
+                new_event = Event.objects.create(day=next_day, time_start_event=event.time_start_event,
+                                                 time_end_event=event.time_end_event, event_type_enum=event.event_type_enum,
+                                                 state=2, notes=event.notes,
+                                                 employees=event.employees, patient=event.patient,
+                                                 event_address=event.event_address,
+                                                 created_by='duplicate_event_for_next_day')
+                new_event.save()
+                events_created.append(new_event)
+        if events_created and len(events_created) > 0:
+            # build url to the newly created events
+            url = config.ROOT_URL + 'admin/invoices/event/?id__in=' + ','.join(
+                [str(event.id) for event in events_created])
+            notify_system_via_google_webhook(
+                "The following events were created for the next day: {0} by user {1}".format(url, who_created))
+    except Exception as e:
         notify_system_via_google_webhook(
-            "The following events were created for the next day: {0} by user {1}".format(url, who_created))
-#
+            "An error occurred while duplicating events for the next day: {0}".format(e))
+    #
 # def sync_google_contacts(instance, **kwargs):
 #     """
 #     Connect to google contacts and sync user details (email, phone, name, avatar)
