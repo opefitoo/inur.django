@@ -1168,7 +1168,7 @@ class EventListAdmin(admin.ModelAdmin):
             return
         # only one event at a time
         events_duplicated = []
-        if len(queryset) < 5:
+        if len(queryset) < 6:
             print("duplicating %s events [direct call]" % len(queryset))
             for e in queryset:
                 events_duplicated.append(e.duplicate_event_for_next_day())
