@@ -275,7 +275,7 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         json_data = json.dumps(serializer.data)
-        print(json_data)
+        #print(json_data)
         return HttpResponse(json_data, content_type='application/json')
 
     def get_queryset(self, *args, **kwargs):
