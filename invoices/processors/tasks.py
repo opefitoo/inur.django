@@ -95,7 +95,7 @@ def duplicate_event_for_next_day_for_several_events(events, who_created):
                 "The following events were created for the next day: {0} by user {1}".format(url, who_created))
     except Exception as e:
         notify_system_via_google_webhook(
-            "An error occurred while duplicating events for the next day: {0}".format(e))
+            "*An error occurred while duplicating events for the next day: {0}*".format(e))
     #
 # def sync_google_contacts(instance, **kwargs):
 #     """
