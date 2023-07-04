@@ -13,12 +13,13 @@ from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 
 
-def get_doc_elements(queryset, med_p=False, with_verification_page=False):
+def get_doc_elements(queryset, med_p=False, with_verification_page=False, batch_file=None):
     elements = []
     summary_data = []
     already_added_images = []
     copies_of_medical_prescriptions = []
     invoicing_details = None
+    total_number_of_lines = 0
     for qs in queryset.order_by("invoice_number"):
         if invoicing_details is None:
             invoicing_details = qs.invoice_details
@@ -27,6 +28,7 @@ def get_doc_elements(queryset, med_p=False, with_verification_page=False):
                 invoicing_details, qs.invoice_details))
         dd = [qs.prestations.all().order_by("date", "carecode__name")[i:i + 20] for i in
               range(0, len(qs.prestations.all()), 20)]
+        total_number_of_lines += len(qs.prestations.all())
         for _prestations in dd:
             _inv = qs.invoice_number + (
                 ("" + str(dd.index(_prestations) + 1) + qs.invoice_date.strftime('%m%Y')) if len(dd) > 1 else "")
@@ -85,7 +87,10 @@ def get_doc_elements(queryset, med_p=False, with_verification_page=False):
         verification_data = _build_verification_page(summary_data)
         elements.extend(verification_data[0])
         elements.append(PageBreak())
-    elements.extend(_build_final_page(recap_data[1], recap_data[2], invoicing_details))
+    elements.extend(_build_final_page(recap_data[1], recap_data[2], invoicing_details,
+                                      batch_start_date=batch_file.start_date,
+                                      batch_end_date=batch_file.end_date if batch_file else None,
+                                      total_number_of_lines=total_number_of_lines if batch_file else None))
 
     return elements, copies_of_medical_prescriptions
 
@@ -142,7 +147,8 @@ def _build_verification_page(recaps):
     return elements, total, i
 
 
-def _build_final_page(total, order_number, invoicing_details):
+def _build_final_page(total, order_number, invoicing_details, batch_start_date=None, batch_end_date=None,
+                      total_number_of_lines=None):
     elements = []
     data = [["RELEVE DES NOTES D’HONORAIRES DES"],
             ["ACTES ET SERVICES DES INFIRMIERS"]]
@@ -178,10 +184,12 @@ def _build_final_page(total, order_number, invoicing_details):
         styles['Justify']))
     elements.append(Spacer(2, 20))
     elements.append(
-        Paragraph(u"Pendant la période du :.................................. au :..................................",
+        Paragraph(u"Pendant la période du :............%s.......... au :...............%s................"
+                  % (batch_start_date.strftime('%d/%m/%Y') if batch_start_date else "..",
+                     batch_end_date.strftime('%d/%m/%Y')) if batch_end_date else "..",
                   styles['Justify']))
     data3 = [["Nombre des mémoires d’honoraires ou\nd’enregistrements du support informatique:",
-              order_number]]
+              total_number_of_lines if total_number_of_lines else order_number]]
     table3 = Table(data3, [9 * cm, 8 * cm], [1.25 * cm])
     table3.setStyle(TableStyle([('ALIGN', (0, 0), (0, 0), 'LEFT'),
                                 ('ALIGN', (-1, -1), (-1, -1), 'CENTER'),
