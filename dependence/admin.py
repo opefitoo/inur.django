@@ -53,7 +53,9 @@ class LongTermCareInvoiceItemInLine(admin.TabularInline):
 class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     inlines = [LongTermCareInvoiceLineInline, LongTermCareInvoiceItemInLine]
     list_display = ('patient', 'invoice_start_period', 'invoice_end_period', 'display_object_actions_list')
-    list_filter = ('patient', 'invoice_start_period', 'invoice_end_period') 
+    list_filter = ('patient', 'invoice_start_period', 'invoice_end_period')
+    date_hierarchy = 'invoice_start_period'
+    readonly_fields = ('created_on', 'updated_on')
 
     object_actions = [
         {
