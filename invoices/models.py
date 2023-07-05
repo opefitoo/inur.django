@@ -288,10 +288,7 @@ class Patient(models.Model):
         address = self.addresses.filter(start_date__lte=current_date).filter(
             Q(end_date__gt=current_date) | Q(end_date__isnull=True)).order_by('-start_date').first()
 
-        if address is None:
-            address = self.full_address
-
-        return address.full_address if address else None
+        return address.full_address if address else self.full_address
 
     def addresses(self):
         return self.addresses.all().order_by('-start_date')
