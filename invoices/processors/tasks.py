@@ -1,5 +1,6 @@
 import os
 import traceback
+from datetime import datetime
 from datetime import timedelta
 from io import BytesIO
 
@@ -20,7 +21,6 @@ from invoices.prefac import generate_all_invoice_lines
 @job
 def process_post_save(instance):
     # calculate how much time it takes to process the batch
-    from datetime import datetime
     start = datetime.now()
     _must_update = False
 
@@ -78,7 +78,6 @@ def duplicate_event_for_next_day_for_several_events(events, who_created, number_
     @param events:
     @return:
     """
-    from datetime import datetime
     start = datetime.now()
     events_created = []
     try:
@@ -109,6 +108,21 @@ def duplicate_event_for_next_day_for_several_events(events, who_created, number_
         error_detail = traceback.format_exc()
         notify_system_via_google_webhook(
             "*An error occurred while duplicating events for the next day: {0}*\nDetails:\n{1}".format(e, error_detail))
+
+def update_events_address(events, address):
+    """
+    Update the address of the events
+    @param events:
+    @param address:
+    @return:
+    """
+    start = datetime.now()
+    for event in events:
+        event.event_address = address
+        event.save()
+    end = datetime.now()
+    notify_system_via_google_webhook("The address of the following events was updated to {0}: {1} and it took {2} sec to generate".format(
+        address, ','.join([str(event.id) for event in events]), (end - start).seconds))
     #
 # def sync_google_contacts(instance, **kwargs):
 #     """

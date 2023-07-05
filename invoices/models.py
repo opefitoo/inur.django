@@ -35,7 +35,7 @@ from invoices.employee import Employee
 from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.modelspackage import InvoicingDetails
-from invoices.processors.tasks import process_post_save
+from invoices.processors.tasks import process_post_save, update_events_address
 from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
 
@@ -376,6 +376,7 @@ class Patient(models.Model):
     def clean_first_name(self):
         return self.cleaned_data['first_name'].capitalize()
 
+
 class AlternateAddress(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='addresses')
     full_address = models.TextField("Adresse complète", help_text="ex: 1 rue de la bonne santé, L-1214 Luxembourg",
@@ -386,6 +387,23 @@ class AlternateAddress(models.Model):
     def __str__(self):  # Python 3: def __str__(self):
         return 'from %s to %s %s is at %s' % (
             self.start_date, self.end_date, self.patient, self.full_address)
+
+    # after save we need to update the address of the all the Events assigned to this patient in between the start and end date, take into consideration that end_date can be null
+    def save(self, *args, **kwargs):
+        super(AlternateAddress, self).save(*args, **kwargs)
+        from invoices.events import Event
+        if self.end_date is None:
+            events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date)
+        else:
+            events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date).filter(
+                day__lte=self.end_date)
+        if len(events) > 5:
+            # call async task
+            update_events_address.delay(events, self.full_address)
+        else:
+            for event in events:
+                event.address = self.full_address
+                event.save()
 
 
 class Hospitalization(models.Model):
