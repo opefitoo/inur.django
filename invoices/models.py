@@ -280,7 +280,21 @@ class Patient(models.Model):
 
     @property
     def full_address(self):
-        return "%s %s %s" % (self.address, self.zipcode, self.city)
+        return "%s %s %s, %s" % (self.address, self.zipcode, self.city, self.country)
+
+    def get_full_address_date_based(self, current_date=now().date()):
+        # gets the address where start_date is less than or equal to current_date
+        # and (end_date is greater than current_date or end_date is None)
+        address = self.addresses.filter(start_date__lte=current_date).filter(
+            Q(end_date__gt=current_date) | Q(end_date__isnull=True)).order_by('-start_date').first()
+
+        if address is None:
+            address = self.full_address
+
+        return address.full_address if address else None
+
+    def addresses(self):
+        return self.addresses.all().order_by('-start_date')
 
     @property
     def age(self):
@@ -361,6 +375,17 @@ class Patient(models.Model):
 
     def clean_first_name(self):
         return self.cleaned_data['first_name'].capitalize()
+
+class AlternateAddress(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='addresses')
+    full_address = models.TextField("Adresse complète", help_text="ex: 1 rue de la bonne santé, L-1214 Luxembourg",
+                                    max_length=255)
+    start_date = models.DateField()
+    end_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):  # Python 3: def __str__(self):
+        return 'from %s to %s %s is at %s' % (
+            self.start_date, self.end_date, self.patient, self.full_address)
 
 
 class Hospitalization(models.Model):

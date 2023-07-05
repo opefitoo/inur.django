@@ -39,12 +39,13 @@ from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMont
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, \
-    InvoiceItemForm, MedicalPrescriptionForm
+    InvoiceItemForm, MedicalPrescriptionForm, AlternateAddressFormSet
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
-    Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList
+    Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList, \
+    AlternateAddress
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
@@ -240,7 +241,10 @@ class PatientAdminFileInline(admin.TabularInline):
         qs = super().get_queryset(request)
         return qs.order_by('-file_date')
 
-
+class AlternateAddressInline(admin.TabularInline):
+    model = AlternateAddress
+    extra = 0
+    formset = AlternateAddressFormSet
 class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     extra = 0
     model = MedicalPrescription
@@ -266,7 +270,7 @@ class PatientAdmin(CSVExportAdmin):
     # actions = [calculate_distance_matrix]
     form = PatientForm
     actions = [generer_forfait_aev_mars, generer_forfait_aev_avril, generer_forfait_aev_mai]
-    inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, ]
+    inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, AlternateAddressInline]
 
     def link_to_invoices(self, instance):
         url = f'{reverse("admin:invoices_invoiceitem_changelist")}?patient__id={instance.id}'

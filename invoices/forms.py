@@ -212,6 +212,12 @@ class InvoiceItemForm(forms.ModelForm):
     )
 
 
+
+class AlternateAddressFormSet(BaseInlineFormSet):
+    def clean(self):
+        super(AlternateAddressFormSet, self).clean()
+        if hasattr(self, 'cleaned_data'):
+            check_for_periods_intersection(self.cleaned_data)
 class HospitalizationFormSet(BaseInlineFormSet):
     def clean(self):
         super(HospitalizationFormSet, self).clean()
