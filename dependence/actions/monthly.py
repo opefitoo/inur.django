@@ -34,10 +34,10 @@ def create_aev_invoices_april_2023(self, request, queryset):
     """
     # get all patients
     # exit date based on timezones
-    end_period = datetime(2023, 4, 30, tzinfo=timezone.utc)
+    start_period = datetime(2023, 4, 1, tzinfo=timezone.utc)
     # either less or equal to end period or null
     patients = Patient.objects.filter(is_under_dependence_insurance=True).filter(
-        Q(date_of_exit__lte=end_period) | Q(date_of_exit__isnull=True))
+        Q(date_of_exit__gte=start_period) | Q(date_of_exit__isnull=True)).filter(Q(date_of_death__gte=start_period) | Q(date_of_death__isnull=True))
     # create invoices for each patient
     statement = create_monthly_invoice(patients, 4, 2023)
 
