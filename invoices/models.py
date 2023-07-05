@@ -282,11 +282,15 @@ class Patient(models.Model):
     def full_address(self):
         return "%s %s %s, %s" % (self.address, self.zipcode, self.city, self.country)
 
-    def get_full_address_date_based(self, current_date=now().date()):
+    def get_full_address_date_based(self, current_date=now().date(), current_time=now().time()):
         # gets the address where start_date is less than or equal to current_date
         # and (end_date is greater than current_date or end_date is None)
+        # take into account that we have now start_time and end_time
         address = self.addresses.filter(start_date__lte=current_date).filter(
-            Q(end_date__gt=current_date) | Q(end_date__isnull=True)).order_by('-start_date').first()
+            Q(end_date__gte=current_date) | Q(end_date__isnull=True)).filter(
+            Q(start_time__lte=current_time) | Q(start_time__isnull=True)).filter(
+            Q(end_time__gte=current_time) | Q(end_time__isnull=True)).first()
+
 
         return address.full_address if address else self.full_address
 
@@ -379,7 +383,9 @@ class AlternateAddress(models.Model):
     full_address = models.TextField("Adresse complète", help_text="ex: 1 rue de la bonne santé, L-1214 Luxembourg",
                                     max_length=255)
     start_date = models.DateField()
+    start_time = models.TimeField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
+    end_time = models.TimeField(blank=True, null=True)
 
     def __str__(self):  # Python 3: def __str__(self):
         return 'from %s to %s %s is at %s' % (
@@ -390,10 +396,12 @@ class AlternateAddress(models.Model):
         super(AlternateAddress, self).save(*args, **kwargs)
         from invoices.events import Event
         if self.end_date is None:
-            events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date)
+            events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date,
+                                                                       time_start_event__gte=self.start_time if self.start_time else '00:00:00')
+
         else:
             events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date).filter(
-                day__lte=self.end_date)
+                day__lte=self.end_date).filter(time_end_event__lte=self.end_time if self.end_time else '23:59:59')
         if len(events) > 5:
             # call async task
             update_events_address.delay(events, self.full_address)

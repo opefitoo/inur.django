@@ -186,8 +186,10 @@ class PrestationGoogleCalendarSurLu:
         elif not event.at_office and event.event_address:
             address = event.event_address
             location = address
-        elif event.patient and event.patient.get_full_address_date_based(current_date=event.day):
-            address = event.patient.get_full_address_date_based(current_date=event.day)
+        elif event.patient and event.patient.get_full_address_date_based(current_date=event.day,
+                                                                         current_time=event.time_start_event):
+            address = event.patient.get_full_address_date_based(current_date=event.day, 
+                                                                current_time=event.time_start_event)
             location = "%s" % address
         if address:
             description += descr_line % (u'Adresse:', address)
