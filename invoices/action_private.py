@@ -29,7 +29,7 @@ class Footer:
 
     def __call__(self, canvas, doc):
         canvas.saveState()
-        canvas.setFont('Helvetica', 8)
+        canvas.setFont('Helvetica', 7)
         canvas.drawString(1 * cm, 0.8 * cm, self.legal_mention)
 
         # Draw logo
