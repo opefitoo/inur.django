@@ -123,6 +123,11 @@ class ChangeDeclarationFile(models.Model):
                                                help_text=_(
                                                    "Force the generation of the XML file, don't forget to check the checkbox before saving the form"),
                                                default=False)
+    # boolean to force the generation of the xml file
+    force_xml_return_check = models.BooleanField(_("Force XML Retour Check"),
+                                               help_text=_(
+                                                   "Force the analysis of the XML Retour file, don't forget to check the checkbox before saving the form"),
+                                               default=False)
     # generated_xml file
     generated_xml = models.FileField(_("Generated XML"),
                                      upload_to=long_term_care_declaration_file_path, blank=True, null=True)
@@ -147,67 +152,6 @@ class ChangeDeclarationFile(models.Model):
         if self.__class__.objects.filter(internal_reference=self.internal_reference).exclude(pk=self.pk).exists():
             raise ValidationError({'internal_reference': [_("Internal reference must be unique")]})
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        # Call full_clean to run all the field validators
-        self.full_clean()
-        # increment the version number, only if data has changed and the object is not new
-        if self.pk:
-            self.generated_xml_version += 1
-        # also generate the xml file
-        # data = self.generate_xml_using_xmlschema()
-        # self.generated_xml = ContentFile(data, name='long_term_care_declaration.xml')
-        if self.generated_return_xml:
-            xsd_schema = xmlschema.XMLSchema('dependence/xsd/ad-declaration-14.xsd')
-
-        # if self.generated_return_xml name is emtpy, then the file has not been generated yet
-        if  self.generated_return_xml.name and self.generated_return_xml.name != '':
-            with self.generated_return_xml as return_file:
-                read_file = TextIOWrapper(return_file, encoding='UTF-8')
-                xml_data = return_file.read()
-                xsd_schema.validate(xml_data)
-                # Get the data from the XML file
-                xml_data = xsd_schema.to_dict(xml_data)
-                # Here use detach
-                read_file.detach()
-                #xml_file = self.generated_return_xml
-                #xml_file.open()
-                #xml_data = xml_file.read()
-                #xml_file.close()
-                #xsd_schema.validate(xml_data)
-                # Get the data from the XML file
-                #xml_data = xsd_schema.to_dict(xml_data)
-                if xml_data['Type']['Type'] == 'RETDCL':
-                    for changement in xml_data['Changements']:
-                        print(changement)
-                        identifiant_changement_organisme = changement['IdentifiantChangementOrganisme']
-                        declaration_changes = DeclarationDetail.objects.filter(
-                            change_reference=changement['ReferenceChangement'],
-                            patient__code_sn=changement['PersonneProtegee'])
-                        for declaration_change in declaration_changes:
-                            if changement.get('AnomalieChangement'):
-                                for anomaly in changement['AnomalieChangement']:
-                                    change_anomaly_string = f"{anomaly['type']} Code : {anomaly['code']} Motif : {anomaly['motif']}"
-                                    if declaration_change.change_anomaly != change_anomaly_string:
-                                        declaration_change.change_anomaly = change_anomaly_string
-                                        if self.updates_log:
-                                            self.updates_log += f"{declaration_change.change_anomaly} Fait le {timezone.now()}\n"
-                                        else:
-                                            self.updates_log = f"{declaration_change.change_anomaly} Fait le {timezone.now()}\n"
-                            if declaration_change.change_organism_identifier != identifiant_changement_organisme:
-                                declaration_change.change_organism_identifier = identifiant_changement_organisme
-                                # previous value of change can be None then we need to display as "Not set" in the logs
-                                if declaration_change.change_organism_identifier:
-                                    previous_value = declaration_change.change_organism_identifier
-                                else:
-                                    previous_value = "Not set"
-                                if self.updates_log:
-                                    self.updates_log += f"Changement from {previous_value} to {identifiant_changement_organisme} on {declaration_change} Fait le {timezone.now()}\n"
-                                else:
-                                    self.updates_log = f"Changement from {previous_value} to {identifiant_changement_organisme} on {declaration_change} Fait le {timezone.now()}\n"
-                            declaration_change.save()
-                else:
-                    raise ValidationError({'generated_return_xml': [_("The XML file is not a return file")]})
-        super().save(force_insert, force_update, using, update_fields)
 
     def generate_xml_using_xmlschema(self):
         # Load the XSD schema file
@@ -274,11 +218,11 @@ class ChangeDeclarationFile(models.Model):
         if self.generated_xml:
             filename = self.generated_xml.name.split('/')[-1]
             return "Echanges électroniques envoyés le %s ref. %s (%s)" % (self.provider_date_of_sending,
-                                                                      self.internal_reference,
-                                                                      filename)
+                                                                          self.internal_reference,
+                                                                          filename)
         else:
             return "Echanges électroniques envoyés le %s ref. %s" % (self.provider_date_of_sending,
-                                                                      self.internal_reference)
+                                                                     self.internal_reference)
 
     def send_xml_to_ftp(self):
         try:
@@ -339,6 +283,7 @@ class DeclarationDetail(models.Model):
     # AnomalieChangement
     change_anomaly = models.TextField(_("Change anomaly"), max_length=80, blank=True, null=True,
                                       help_text=_("Ce champ est optionnel et peut contenir du texte libre."))
+
     # validate unicity of the combination of patient, change_reference
     class Meta:
         unique_together = ('patient', 'change_reference')
@@ -366,9 +311,75 @@ class DeclarationDetail(models.Model):
                         'previous_change_file_id': previous_change.link_to_chg_dec_file},
             )
 
+def treat_xml_return_check(instance):
+    if instance.generated_return_xml:
+        xsd_schema = xmlschema.XMLSchema('dependence/xsd/ad-declaration-14.xsd')
+
+        # if self.generated_return_xml name is emtpy, then the file has not been generated yet
+        if instance.generated_return_xml.name and instance.generated_return_xml.name != '':
+            with instance.generated_return_xml as return_file:
+                read_file = TextIOWrapper(return_file, encoding='UTF-8')
+                xml_data = return_file.read()
+                xsd_schema.validate(xml_data)
+                # Get the data from the XML file
+                xml_data = xsd_schema.to_dict(xml_data)
+                # Here use detach
+                read_file.detach()
+                # xml_file = self.generated_return_xml
+                # xml_file.open()
+                # xml_data = xml_file.read()
+                # xml_file.close()
+                # xsd_schema.validate(xml_data)
+                # Get the data from the XML file
+                # xml_data = xsd_schema.to_dict(xml_data)
+                if xml_data['Type']['Type'] == 'RETDCL':
+                    for changement in xml_data['Changements']:
+                        print(changement)
+                        identifiant_changement_organisme = changement['IdentifiantChangementOrganisme']
+                        declaration_changes = DeclarationDetail.objects.filter(
+                            change_reference=changement['ReferenceChangement'],
+                            patient__code_sn=changement['PersonneProtegee'])
+                        if declaration_changes:
+                            for declaration_change in declaration_changes:
+                                if changement.get('AnomalieChangement'):
+                                    for anomaly in changement['AnomalieChangement']:
+                                        change_anomaly_string = f"{anomaly['type']} Code : {anomaly['code']} Motif : {anomaly['motif']}"
+                                        if declaration_change.change_anomaly != change_anomaly_string:
+                                            declaration_change.change_anomaly = change_anomaly_string
+                                            if instance.updates_log:
+                                                instance.updates_log += f"{declaration_change.change_anomaly} Fait le {timezone.now()}\n"
+                                            else:
+                                                instance.updates_log = f"{declaration_change.change_anomaly} Fait le {timezone.now()}\n"
+                                if declaration_change.change_organism_identifier != identifiant_changement_organisme:
+                                    declaration_change.change_organism_identifier = identifiant_changement_organisme
+                                    # previous value of change can be None then we need to display as "Not set" in the logs
+                                    if declaration_change.change_organism_identifier:
+                                        previous_value = declaration_change.change_organism_identifier
+                                    else:
+                                        previous_value = "Not set"
+                                    if instance.updates_log:
+                                        instance.updates_log += f"Changement from {previous_value} to {identifiant_changement_organisme} on {declaration_change} Fait le {timezone.now()}\n"
+                                    else:
+                                        instance.updates_log = f"Changement from {previous_value} to {identifiant_changement_organisme} on {declaration_change} Fait le {timezone.now()}\n"
+                                declaration_change.save()
+                        else:
+                            for anomaly in changement['AnomalieChangement']:
+                                change_anomaly_string = f"{anomaly['type']} Code : {anomaly['code']} Motif : {anomaly['motif']}"
+                                if instance.updates_log:
+                                    instance.updates_log += f"{change_anomaly_string} Fait le {timezone.now()}\n"
+                                else:
+                                    instance.updates_log = f"{change_anomaly_string} Fait le {timezone.now()}\n"
+                else:
+                    raise ValidationError({'generated_return_xml': [_("The XML file is not a return file")]})
+        # notify via chat
+        message = f"Le fichier de retour de changement {instance} a été traité avec succès. Date heure : {timezone.now()}"
+        notify_system_via_google_webhook(message)
 
 @receiver(pre_save, sender=ChangeDeclarationFile, dispatch_uid="generate_xml_file_and_notify_via_chat")
 def generate_xml_file_and_notify_via_chat(sender, instance, **kwargs):
+    if instance.force_xml_return_check:
+        treat_xml_return_check(instance)
+        instance.force_xml_return_check = False 
     if not instance.force_xml_generation:
         return
     message = f"Le fichier de déclaration de changement {instance} a été généré avec succès. Date heure : {timezone.now()}"
@@ -378,6 +389,7 @@ def generate_xml_file_and_notify_via_chat(sender, instance, **kwargs):
         # update the xml field
         content_file = ContentFile(xml, name='long_term_care_declaration.xml')
         instance.generated_xml = content_file
+        instance.generated_xml_version += 1
     except Exception as e:
         message = f"Le fichier de déclaration de changement {instance} n'a pas pu être généré. Erreur : {e}. Date heure : {timezone.now()}"
         notify_system_via_google_webhook(message)
