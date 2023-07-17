@@ -47,6 +47,12 @@ def send_email_notification(subject, message, to_emails):
         recipient_list=to_emails,
     )
 
+
+def notify_user_that_new_alert_is_created(instance, url, employee_email):
+    to_emails = [employee_email]
+    send_email_notification('New alert has been created',
+                            'New alert has been created, please check %s' % url,
+                            to_emails)
 def notify_user_that_holiday_request_is_created(instance, url, employee_email):
     to_emails = [employee_email]
     send_email_notification('Your holiday request has been created',

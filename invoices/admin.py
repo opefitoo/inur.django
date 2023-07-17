@@ -45,7 +45,7 @@ from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList, \
-    AlternateAddress
+    AlternateAddress, Alert
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
@@ -1382,4 +1382,23 @@ class EventWeekListAdmin(admin.ModelAdmin):
                     return [f for f in fs if f not in ['event_report', 'state']]
                 else:
                     return fs
+        return self.readonly_fields
+
+
+@admin.register(Alert)
+class AlertAdmin(admin.ModelAdmin):
+    list_display = ('text_alert', 'alert_level', 'date_alert', 'is_read', 'date_read', 'is_active', 'link_to_object', 'user')
+    list_filter = ('alert_level', 'is_read', 'is_active', 'user')
+    search_fields = ('text_alert', 'user__username')
+    readonly_fields = ('date_alert', 'date_read', 'alert_created_by')
+    # if not superuser show only alerts assigned by user
+    def get_queryset(self, request):    
+        qs = super(AlertAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(user=request.user, is_active=True)
+    # non superuser can only modify alerts assigned to him and only field is_read
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_superuser:
+            return [f.name for f in self.model._meta.fields if f.name not in ['is_read', 'comment']]
         return self.readonly_fields

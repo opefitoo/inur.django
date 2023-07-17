@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import requests
-from constance import config
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -1239,3 +1238,49 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home = False
             pair.at_home_paired = instance
             pair.save()
+from constance import config
+from django.contrib.auth.models import User
+from django.db import models
+from django.utils.datetime_safe import datetime
+from django.utils.translation import gettext_lazy as _
+
+from invoices.enums.alertlevels import AlertLevels
+from invoices.notifications import notify_user_that_new_alert_is_created
+
+
+class Alert(models.Model):
+    text_alert = models.CharField(_("Text alert"), max_length=255)
+    # alert level 1 = info, 2 = warning, 3 = danger link to alert_level enum
+    alert_level = models.CharField(_("Alert level"), max_length=20, choices=AlertLevels.choices)
+    date_alert = models.DateTimeField(_("Date Alert"), auto_now_add=True)
+    is_read = models.BooleanField(_("Is Read"), default=False)
+    date_read = models.DateTimeField(_("Date Read"), null=True, blank=True)
+    is_active = models.BooleanField(_("Is active"), default=True)
+    link_to_object = models.URLField(max_length=255, null=True, blank=True)
+    link_to_object_name = models.CharField(max_length=255, null=True, blank=True)
+    link_to_object_id = models.IntegerField(null=True, blank=True)
+    comment = models.TextField(_("Comment"), null=True, blank=True, max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    alert_created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,
+                                         related_name="alert_created_by")
+    def __str__(self):
+        return "{0} - {1}".format(self.alert_level, self.text_alert)
+    # when alert is saved check if it is a new alert and send email to user
+    def get_admin_url(self):
+        model_name = self._meta.model_name
+        app_label = self._meta.app_label
+        return reverse('admin:{0}_{1}_change'.format(app_label, model_name), args=[self.id])
+    class Meta:
+        verbose_name = _("Alert")
+        verbose_name_plural = _("Alerts")
+        ordering = ['-date_alert']
+
+@receiver(post_save, sender=Alert, dispatch_uid="post_save_alert_receiver")
+def post_save_alert_receiver(sender, instance, created, *args, **kwargs):
+    if created:
+        if instance.pk is not None and not instance.is_read and instance.is_active:
+            url = "%s%s " % (config.ROOT_URL, instance.get_admin_url())
+            notify_user_that_new_alert_is_created(instance, url, instance.user.email)
+        # if is_read is true set date_read to now
+        if instance.is_read:
+            instance.date_read = datetime.now()
