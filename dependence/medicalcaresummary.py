@@ -105,22 +105,21 @@ def parse_xml_using_xmlschema(instance):
         try:
             plan_par_patient = MedicalCareSummaryPerPatient.objects.create(
                 patient=patient,
-                plan_number=plan_number,
-                decision_number=decision_number,
-                date_of_decision=date_of_decision,
                 date_of_request=date_of_request,
                 referent=referent,
                 date_of_evaluation=date_of_evaluation,
                 date_of_notification=date_of_notification,
+                plan_number=plan_number,
+                decision_number=decision_number,
+                date_of_notification_to_provider=date_of_notification_to_provider,
                 level_of_needs=level_of_needs,
                 start_of_support=start_of_support,
-                date_of_notification_to_provider=date_of_notification_to_provider,
+                date_of_decision=date_of_decision,
                 end_of_support=end_of_support,
                 special_package=special_package,
                 nature_package=nature_package,
                 cash_package=cash_package,
                 fmi_right=fmi_right,
-                parsing_date=timezone.now(),
             )
         except IntegrityError:
             plan_par_patient = MedicalCareSummaryPerPatient.objects.get(patient=patient,
@@ -204,7 +203,7 @@ def parse_xml_using_xmlschema(instance):
                 )
 
 
-instance.save()
+    instance.save()
 
 
 @receiver(post_save, sender=MedicalCareSummary, dispatch_uid="medicalcare_parse_xml_file_and_notify_via_chat_gsfQyUJw")
