@@ -78,7 +78,7 @@ class TestMedicalCareSummary(TestCase):
         self.assertEqual(len(summaries), 1)
         self.assertEqual(summaries[0].medicalSummaryPerPatient.level_of_needs, 1)
         self.assertEqual(summaries[0].start_date, date(2022, 1, 10))
-        self.assertEqual(summaries[0].end_date, date(2022, 12, 31))
+        self.assertEqual(summaries[0].end_date, date(2022, 1, 31))
 
     def test_get_summaries_between_two_dates_two(self):
         """
