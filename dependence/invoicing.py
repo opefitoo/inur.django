@@ -140,6 +140,7 @@ class LongTermCareMonthlyStatement(models.Model):
         montantNet = ElementTree.SubElement(demandeDecompte, "montantNet")
         montantNet.text = str(self.calculate_total_price())
         # loop through all LongTermCareInvoiceFile
+        _counter = 0
         for invoice in invoices:
             # create sub element facture
             facture = ElementTree.SubElement(root, "facture")
@@ -155,14 +156,13 @@ class LongTermCareMonthlyStatement(models.Model):
             dateEtablissementFacture = ElementTree.SubElement(facture, "dateEtablissementFacture")
             dateEtablissementFacture.text = self.date_of_submission.strftime("%Y-%m-%d")
             # loop through all LongTermCareInvoiceLine
-            _counter = 0
             for item in LongTermCareInvoiceItem.objects.filter(invoice=invoice).all().all():
                 _counter += 1
                 # create sub element prestation
                 prestation = ElementTree.SubElement(facture, "prestation")
                 # create sub element codePrestation
                 referencePrestation = ElementTree.SubElement(prestation, "referencePrestation")
-                referencePrestation.text = str(_counter)
+                referencePrestation.text = str(invoice.id) + str(_counter)
                 # create sub element acte
                 acte = ElementTree.SubElement(prestation, "acte")
                 # create sub element codeTarif
@@ -201,7 +201,7 @@ class LongTermCareMonthlyStatement(models.Model):
                     prestation = ElementTree.SubElement(facture, "prestation")
                     # create sub element codePrestation
                     referencePrestation = ElementTree.SubElement(prestation, "referencePrestation")
-                    referencePrestation.text = str(_counter)
+                    referencePrestation.text = str(invoice.id) + str(_counter)
                     # create sub element acte
                     acte = ElementTree.SubElement(prestation, "acte")
                     # create sub element codeTarif
