@@ -192,7 +192,7 @@ def get_summaries_between_two_dates(patient, start_date, end_date):
     summary_data = []
     for summary in summaries:
         medical_start_date = None
-        medical_end_date = None
+        medical_end_date = end_date
 
         if not summary.date_of_start_of_plan_for_us and summary.date_of_decision < start_date:
             medical_start_date = start_date
@@ -204,7 +204,7 @@ def get_summaries_between_two_dates(patient, start_date, end_date):
             medical_start_date = start_date
 
         if summary.date_of_change_to_new_plan and ((not summary.date_of_start_of_plan_for_us) or (
-                summary.date_of_start_of_plan_for_us and summary.date_of_decision <= start_date)):
+                summary.date_of_start_of_plan_for_us and summary.date_of_decision <= start_date)) and summary.date_of_change_to_new_plan <= end_date:
             medical_end_date = summary.date_of_change_to_new_plan
         else:
             medical_end_date = end_date
