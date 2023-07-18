@@ -2,6 +2,7 @@ import xmlschema
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.datetime_safe import datetime
 from django.utils.translation import gettext_lazy as _
 
@@ -55,7 +56,7 @@ def parse_xml_using_xmlschema(instance):
     instance.date_of_submission = xml_data['DateEnvoiPrestataire']
     # get DateEnvoiPrestataire
     # instance.date_of_notification_to_provider = datetime.strptime(xml_data['DateEnvoiPrestataire'], '%Y-%m-%d')
-    instance.parsing_date = datetime.now()
+    instance.parsing_date = timezone.now()
     instance.force_update = False
     # loop through PriseEnCharge elements
     for prise_en_charge in xml_data['PriseEnCharge']:
@@ -90,32 +91,33 @@ def parse_xml_using_xmlschema(instance):
             special_package = prise_en_charge['Decision']['Accord']['ForfaitSpecial']
         # get nature_package if exists
         nature_package = None
-        if prise_en_charge['Decision']['Accord'].get('ForfaitPN'):
+        if prise_en_charge['Decision']['Accord'].get('ForfaitPN') or prise_en_charge['Decision']['Accord'].get('ForfaitPN') == 0:
             nature_package = prise_en_charge['Decision']['Accord']['ForfaitPN']
         # get cash_package if exists
         cash_package = None
-        if prise_en_charge['Decision']['Accord'].get('ForfaitPE'):
+        if prise_en_charge['Decision']['Accord'].get('ForfaitPE') or prise_en_charge['Decision']['Accord'].get('ForfaitPE') == 0:
             cash_package = prise_en_charge['Decision']['Accord']['ForfaitPE']
         # get fmi_right which is a boolean if 'O' is True else False
         fmi_right = True if prise_en_charge['DroitFMI'] == 'O' else False
-        plan_par_patient = MedicalCareSummaryPerPatient.objects.create(
+        plan_par_patient, created = MedicalCareSummaryPerPatient.objects.get_or_create(
             patient=patient,
-            date_of_request=date_of_request,
-            referent=referent,
-            date_of_evaluation=date_of_evaluation,
-            date_of_notification=date_of_notification,
             plan_number=plan_number,
             decision_number=decision_number,
-            date_of_notification_to_provider=date_of_notification_to_provider,
-            level_of_needs=level_of_needs,
-            start_of_support=start_of_support,
             date_of_decision=date_of_decision,
-            end_of_support=end_of_support,
-            special_package=special_package,
-            nature_package=nature_package,
-            cash_package=cash_package,
-            fmi_right=fmi_right,
         )
+        plan_par_patient.date_of_request = date_of_request
+        plan_par_patient.referent = referent
+        plan_par_patient.date_of_evaluation = date_of_evaluation
+        plan_par_patient.date_of_notification = date_of_notification
+        plan_par_patient.level_of_needs = level_of_needs
+        plan_par_patient.start_of_support = start_of_support
+        plan_par_patient.date_of_notification_to_provider = date_of_notification_to_provider
+        plan_par_patient.end_of_support = end_of_support
+        plan_par_patient.special_package = special_package
+        plan_par_patient.nature_package = nature_package
+        plan_par_patient.cash_package = cash_package
+        plan_par_patient.fmi_right = fmi_right
+        plan_par_patient.save()
         if prise_en_charge.get('Descriptions'):
             for act in prise_en_charge['Descriptions']:
                 if not LongTermCareItem.objects.filter(code__exact=act['CodeActe']).exists():
