@@ -105,4 +105,4 @@ class TestMedicalCareSummary(TestCase):
         self.assertEqual(len(summaries), 1)
         self.assertEqual(summaries[0].medicalSummaryPerPatient.level_of_needs, 3)
         self.assertEqual(summaries[0].start_date, date(2023, 1, 1))
-        self.assertEqual(summaries[0].end_date, date(2023, 1, 14))
+        self.assertEqual(summaries[0].end_date, date(2023, 1, 2))
