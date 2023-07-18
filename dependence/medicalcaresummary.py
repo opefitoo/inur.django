@@ -1,5 +1,5 @@
 import xmlschema
-from django.db import models
+from django.db import models, IntegrityError
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -21,6 +21,7 @@ class MedicalCareSummary(models.Model):
     class Meta:
         verbose_name = _("Synthèse de prise en charge de la CNS")
         verbose_name_plural = _("Synthèses de prise en charge de la CNS")
+
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
@@ -91,95 +92,119 @@ def parse_xml_using_xmlschema(instance):
             special_package = prise_en_charge['Decision']['Accord']['ForfaitSpecial']
         # get nature_package if exists
         nature_package = None
-        if prise_en_charge['Decision']['Accord'].get('ForfaitPN') or prise_en_charge['Decision']['Accord'].get('ForfaitPN') == 0:
+        if prise_en_charge['Decision']['Accord'].get('ForfaitPN') or prise_en_charge['Decision']['Accord'].get(
+                'ForfaitPN') == 0:
             nature_package = prise_en_charge['Decision']['Accord']['ForfaitPN']
         # get cash_package if exists
         cash_package = None
-        if prise_en_charge['Decision']['Accord'].get('ForfaitPE') or prise_en_charge['Decision']['Accord'].get('ForfaitPE') == 0:
+        if prise_en_charge['Decision']['Accord'].get('ForfaitPE') or prise_en_charge['Decision']['Accord'].get(
+                'ForfaitPE') == 0:
             cash_package = prise_en_charge['Decision']['Accord']['ForfaitPE']
         # get fmi_right which is a boolean if 'O' is True else False
         fmi_right = True if prise_en_charge['DroitFMI'] == 'O' else False
-        plan_par_patient, created = MedicalCareSummaryPerPatient.objects.get_or_create(
-            patient=patient,
-            plan_number=plan_number,
-            decision_number=decision_number,
-            date_of_decision=date_of_decision,
-        )
-        plan_par_patient.date_of_request = date_of_request
-        plan_par_patient.referent = referent
-        plan_par_patient.date_of_evaluation = date_of_evaluation
-        plan_par_patient.date_of_notification = date_of_notification
-        plan_par_patient.level_of_needs = level_of_needs
-        plan_par_patient.start_of_support = start_of_support
-        plan_par_patient.date_of_notification_to_provider = date_of_notification_to_provider
-        plan_par_patient.end_of_support = end_of_support
-        plan_par_patient.special_package = special_package
-        plan_par_patient.nature_package = nature_package
-        plan_par_patient.cash_package = cash_package
-        plan_par_patient.fmi_right = fmi_right
-        plan_par_patient.save()
-        if prise_en_charge.get('Descriptions'):
-            for act in prise_en_charge['Descriptions']:
-                if not LongTermCareItem.objects.filter(code__exact=act['CodeActe']).exists():
-                    LongTermCareItem.objects.get_or_create(
-                        code=act['CodeActe'],
-                        description=act['Description'],
-                    )
-        # print(prise_en_charge['Partage'])
-        if prise_en_charge.get('Partage') is None:
-            for prestations in prise_en_charge['Prestatations']:
-                # if periodicity is 'SEMAINE' then it is WEEKLY elif 'ANNEE' then it is YEARLY else throw an error
-                periodicity = None
-                if prestations['Frequence']['Periodicite'] == 'SEMAINE':
-                    periodicity = 'W'
-                elif prestations['Frequence']['Periodicite'] == 'ANNEE':
-                    periodicity = 'Y'
-                else:
-                    raise Exception("Periodicity is not valid")
-                MedicalCareSummaryPerPatientDetail.objects.create(
-                    item=LongTermCareItem.objects.get(code__exact=prestations['CodeActe']),
-                    medical_care_summary_per_patient=plan_par_patient,
-                    number_of_care=prestations['Frequence']['Nombre'],
-                    # if periodicity is 'SEMAINE' then it is WEEKLY elif 'ANNEE' then it is YEARLY else throw an error
-                    periodicity=periodicity,
+        try:
+            plan_par_patient = MedicalCareSummaryPerPatient.objects.create(
+                patient=patient,
+                plan_number=plan_number,
+                decision_number=decision_number,
+                date_of_decision=date_of_decision,
+                date_of_request=date_of_request,
+                referent=referent,
+                date_of_evaluation=date_of_evaluation,
+                date_of_notification=date_of_notification,
+                level_of_needs=level_of_needs,
+                start_of_support=start_of_support,
+                date_of_notification_to_provider=date_of_notification_to_provider,
+                end_of_support=end_of_support,
+                special_package=special_package,
+                nature_package=nature_package,
+                cash_package=cash_package,
+                fmi_right=fmi_right,
+                parsing_date=timezone.now(),
+            )
+        except IntegrityError:
+            plan_par_patient = MedicalCareSummaryPerPatient.objects.get(patient=patient,
+                                                                        plan_number=plan_number,
+                                                                        decision_number=decision_number,
+                                                                        date_of_decision=date_of_decision)
 
-                )
-        else:
-            for prestations in prise_en_charge['Partage']['PrestationsPrestataire']:
-                # if periodicity is 'SEMAINE' then it is WEEKLY elif 'ANNEE' then it is YEARLY else throw an error
-                periodicity = None
-                if prestations['Frequence']['Periodicite'] == 'SEMAINE':
-                    periodicity = 'W'
-                elif prestations['Frequence']['Periodicite'] == 'ANNEE':
-                    periodicity = 'Y'
-                else:
-                    raise Exception("Periodicity is not valid")
-                MedicalCareSummaryPerPatientDetail.objects.create(
-                    item=LongTermCareItem.objects.get(code__exact=prestations['CodeActe']),
-                    medical_care_summary_per_patient=plan_par_patient,
-                    number_of_care=prestations['Frequence']['Nombre'],
-                    # if periodicity is 'SEMAINE' then it is WEEKLY elif 'ANNEE' then it is YEARLY else throw an error
-                    periodicity=periodicity,
-
-                )
-            plan_par_patient.sn_code_aidant = prise_en_charge['Partage']['Aidant']
+            plan_par_patient.date_of_request = date_of_request
+            plan_par_patient.referent = referent
+            plan_par_patient.date_of_evaluation = date_of_evaluation
+            plan_par_patient.date_of_notification = date_of_notification
+            plan_par_patient.level_of_needs = level_of_needs
+            plan_par_patient.start_of_support = start_of_support
+            plan_par_patient.date_of_notification_to_provider = date_of_notification_to_provider
+            plan_par_patient.end_of_support = end_of_support
+            plan_par_patient.special_package = special_package
+            plan_par_patient.nature_package = nature_package
+            plan_par_patient.cash_package = cash_package
+            plan_par_patient.fmi_right = fmi_right
             plan_par_patient.save()
-            if prise_en_charge['Partage'].get('PrestationsAidant'):
-                for prestations in prise_en_charge['Partage']['PrestationsAidant']:
-                    periodicity_partage = None
-                    if prestations['Frequence']['Periodicite'] == 'SEMAINE':
-                        periodicity_partage = 'W'
-                    elif prestations['Frequence']['Periodicite'] == 'ANNEE':
-                        periodicity_partage = 'Y'
-                    else:
-                        raise Exception("Periodicity is not valid %s" % prestations['Frequence']['Periodicite'])
-                    SharedMedicalCareSummaryPerPatientDetail.objects.create(
-                        item=LongTermCareItem.objects.get(code__exact=prestations['CodeActe']),
-                        medical_care_summary_per_patient=plan_par_patient,
-                        number_of_care=prestations['Frequence']['Nombre'],
-                        periodicity=periodicity_partage,
-                    )
-    instance.save()
+    if prise_en_charge.get('Descriptions'):
+        for act in prise_en_charge['Descriptions']:
+            if not LongTermCareItem.objects.filter(code__exact=act['CodeActe']).exists():
+                LongTermCareItem.objects.get_or_create(
+                    code=act['CodeActe'],
+                    description=act['Description'],
+                )
+    # print(prise_en_charge['Partage'])
+    if prise_en_charge.get('Partage') is None:
+        for prestations in prise_en_charge['Prestatations']:
+            # if periodicity is 'SEMAINE' then it is WEEKLY elif 'ANNEE' then it is YEARLY else throw an error
+            periodicity = None
+            if prestations['Frequence']['Periodicite'] == 'SEMAINE':
+                periodicity = 'W'
+            elif prestations['Frequence']['Periodicite'] == 'ANNEE':
+                periodicity = 'Y'
+            else:
+                raise Exception("Periodicity is not valid")
+            MedicalCareSummaryPerPatientDetail.objects.create(
+                item=LongTermCareItem.objects.get(code__exact=prestations['CodeActe']),
+                medical_care_summary_per_patient=plan_par_patient,
+                number_of_care=prestations['Frequence']['Nombre'],
+                # if periodicity is 'SEMAINE' then it is WEEKLY elif 'ANNEE' then it is YEARLY else throw an error
+                periodicity=periodicity,
+
+            )
+    else:
+        for prestations in prise_en_charge['Partage']['PrestationsPrestataire']:
+            # if periodicity is 'SEMAINE' then it is WEEKLY elif 'ANNEE' then it is YEARLY else throw an error
+            periodicity = None
+            if prestations['Frequence']['Periodicite'] == 'SEMAINE':
+                periodicity = 'W'
+            elif prestations['Frequence']['Periodicite'] == 'ANNEE':
+                periodicity = 'Y'
+            else:
+                raise Exception("Periodicity is not valid")
+            MedicalCareSummaryPerPatientDetail.objects.create(
+                item=LongTermCareItem.objects.get(code__exact=prestations['CodeActe']),
+                medical_care_summary_per_patient=plan_par_patient,
+                number_of_care=prestations['Frequence']['Nombre'],
+                # if periodicity is 'SEMAINE' then it is WEEKLY elif 'ANNEE' then it is YEARLY else throw an error
+                periodicity=periodicity,
+
+            )
+        plan_par_patient.sn_code_aidant = prise_en_charge['Partage']['Aidant']
+        plan_par_patient.save()
+        if prise_en_charge['Partage'].get('PrestationsAidant'):
+            for prestations in prise_en_charge['Partage']['PrestationsAidant']:
+                periodicity_partage = None
+                if prestations['Frequence']['Periodicite'] == 'SEMAINE':
+                    periodicity_partage = 'W'
+                elif prestations['Frequence']['Periodicite'] == 'ANNEE':
+                    periodicity_partage = 'Y'
+                else:
+                    raise Exception("Periodicity is not valid %s" % prestations['Frequence']['Periodicite'])
+                SharedMedicalCareSummaryPerPatientDetail.objects.create(
+                    item=LongTermCareItem.objects.get(code__exact=prestations['CodeActe']),
+                    medical_care_summary_per_patient=plan_par_patient,
+                    number_of_care=prestations['Frequence']['Nombre'],
+                    periodicity=periodicity_partage,
+                )
+
+
+instance.save()
 
 
 @receiver(post_save, sender=MedicalCareSummary, dispatch_uid="medicalcare_parse_xml_file_and_notify_via_chat_gsfQyUJw")
