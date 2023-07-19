@@ -1,4 +1,5 @@
 import calendar
+import datetime
 import os
 
 import lxml.etree as ElementTree
@@ -185,7 +186,45 @@ class LongTermMonthlyActivity(models.Model):
         return LongTermMonthlyActivityDetail.objects.filter(long_term_monthly_activity=self, activity=activity,
                                                             activity_date__gte=start_date,
                                                             activity_date__lte=end_date).count()
-
+    def duplicate_for_next_month(self):
+        # get last month
+        last_month = self.month
+        last_year = self.year
+        if self.month == 12:
+            new_month = 1
+            new_year = self.year + 1
+        else:
+            new_month = self.month + 1
+            new_year = self.year
+        # get last month activity
+        last_month_activity = LongTermMonthlyActivity.objects.filter(patient=self.patient, month=last_month,
+                                                                     year=last_year).first()
+        # get last month activity details
+        last_month_activity_details = LongTermMonthlyActivityDetail.objects.filter(
+            long_term_monthly_activity=last_month_activity).all()
+        # create new activity
+        new_activity = LongTermMonthlyActivity.objects.create(year=new_year, month=new_month, patient=self.patient)
+        # determine last day of the month
+        last_day_num = calendar.monthrange(new_year, new_month)[1]
+        last_day_of_last_month = calendar.monthrange(last_year, last_month)[1]
+        last_day_date = datetime.date(new_year, new_month, last_day_num)
+        # create new activity details
+        for activity_dtl_instance in last_month_activity_details:
+            how_many_occurrence = self.how_many_occurrence_of_activity(activity_dtl_instance.activity,
+                                                 # first day of previous month
+                                                    activity_dtl_instance.activity_date.replace(day=1),
+                                                    # last day of previous month
+                                                    activity_dtl_instance.activity_date.replace(day=last_day_of_last_month))
+            # if occurence equals number of days of previous month
+            if how_many_occurrence == last_day_of_last_month:
+                # create a new activity details for each day of the month
+                for day in range(1, last_day_num + 1):
+                    new_activity_dtl = LongTermMonthlyActivityDetail(
+                        activity_date=datetime.date(new_year, new_month, day),
+                        activity=activity_dtl_instance.activity,
+                        quantity=activity_dtl_instance.quantity,
+                        long_term_monthly_activity=new_activity)
+                    new_activity_dtl.save()
 
     def __str__(self):
         return f"{self.patient} {self.year} - {self.month}"
@@ -195,6 +234,7 @@ class LongTermMonthlyActivityDetail(models.Model):
     class Meta:
         verbose_name = _("Détail du relevé d'activité mensuel")
         verbose_name_plural = _("Détails des relevés d'activité mensuels")
+        ordering = ['activity_date']
 
     long_term_monthly_activity = models.ForeignKey(LongTermMonthlyActivity, on_delete=models.CASCADE,
                                                    related_name='activity_details')

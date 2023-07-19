@@ -17,6 +17,7 @@ from fieldsets_with_inlines import FieldsetsInlineMixin
 from reportlab.pdfgen import canvas
 
 from dependence.aai import AAITransmission, AAITransDetail
+from dependence.actions.activity import duplicate_for_next_month, export_selected_to_csv
 from dependence.actions.initial_data import create_or_update_long_term_item_based_on_fixture
 from dependence.actions.monthly import create_aev_invoices_april_2023
 from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivityDetail, LongTermMonthlyActivityFile
@@ -639,6 +640,7 @@ class LongTermMonthlyActivityAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
     readonly_fields = ('created_on', 'updated_on')
     inlines = [LongTermMonthlyActivityDetailInLine]
+    actions = [duplicate_for_next_month, export_selected_to_csv]
 
 
 @admin.register(LongTermMonthlyActivityFile)

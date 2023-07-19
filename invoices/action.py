@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import csv
+import datetime
 import io
 
 from PyPDF2 import PdfMerger
@@ -47,6 +48,27 @@ def link_invoice_to_invoice_batch(modeladmin, request, queryset):
                                                         batch_description="Batch created by {0}".format(request.user))
     # now link all invoices that are not already linked another batch to this batch
     queryset.filter(batch__isnull=True).update(batch=new_invoice_batch)
+    # now update the batch
+    new_invoice_batch.save()
+    modeladmin.message_user(request, "Batch {0} created and linked to {1} invoices".format(new_invoice_batch,
+                                                                                           queryset.filter(
+                                                                                               batch__isnull=True).count()))
+
+def generate_forfaits_infirmiers_mars_avril_mai(modeladmin, request, queryset):
+    if not request.user.is_superuser:
+        return
+    # first create a new invoice batch
+    from invoices.models import InvoiceItemBatch
+    from invoices.models import InvoiceItem
+    first_invoice_date = queryset.order_by("invoice_date").first().invoice_date
+    last_invoice_date = queryset.order_by("invoice_date").last().invoice_date
+    new_invoice_batch = InvoiceItemBatch.objects.create(start_date=first_invoice_date, end_date=last_invoice_date,
+                                                        batch_description="Batch created by {0}".format(request.user))
+    # now link all invoices that are not already linked another batch to this batch
+    invoices = InvoiceItem.objects.filter(invoice_date__gte=datetime.date(2020, 3, 1), invoice_date__lte=datetime.date(2020, 6, 30),
+                               created_by='script_assurance_dependance').update(batch=new_invoice_batch)
+    # add the invoice items to the batch
+    new_invoice_batch.invoice_items.add(*invoices)
     # now update the batch
     new_invoice_batch.save()
     modeladmin.message_user(request, "Batch {0} created and linked to {1} invoices".format(new_invoice_batch,
