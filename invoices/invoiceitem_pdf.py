@@ -88,7 +88,7 @@ def get_doc_elements(queryset, med_p=False, with_verification_page=False, batch_
         elements.extend(verification_data[0])
         elements.append(PageBreak())
     elements.extend(_build_final_page(recap_data[1], recap_data[2], invoicing_details,
-                                      batch_start_date=batch_file.start_date,
+                                      batch_start_date=batch_file.start_date if batch_file else None,
                                       batch_end_date=batch_file.end_date if batch_file else None,
                                       total_number_of_lines=total_number_of_lines if batch_file else None))
 
