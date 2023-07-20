@@ -159,35 +159,25 @@
             </tr>
         {% endfor %}
 
-        {% comment %}<tr class="heading">
-            <td>Item</td>
-
-            <td>Price</td>
-        </tr>
-
-        <tr class="item">
-            <td>Website design</td>
-
-            <td>$300.00</td>
-        </tr>
-
-        <tr class="item">
-            <td>Hosting (3 months)</td>
-
-            <td>$75.00</td>
-        </tr>
-
-        <tr class="item last">
-            <td>Domain name (1 year)</td>
-
-            <td>$10.00</td>
-        </tr>
-
         <tr class="total">
-            <td></td>
+            <td colspan="2"></td>
+            <td>Hospitalisations</td>
+        </tr>
 
-            <td>Total: $385.00</td>
-        </tr>{% endcomment %}
+        <tr class="heading">
+            <td>Date Début Hospi.</td>
+            <td>Date Fin Hospi.</td>
+            <td>Description</td>
+        </tr>
+        {% for hospitalization in obj.get_patient_hospitalizations %}
+            <tr class="item">
+                <td>{{ hospitalization.start_date }}</td>
+                <td>{{ hospitalization.end_date }}</td>
+                <td>{{ hospitalization.description }}</td>
+            </tr>
+        {% endfor %}
+
+
     </table>
 </div>
 </body>

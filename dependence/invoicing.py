@@ -19,7 +19,7 @@ from django.utils.translation import gettext_lazy as _
 from dependence.detailedcareplan import get_summaries_between_two_dates, MedicalCareSummaryPerPatientDetail
 from dependence.longtermcareitem import LongTermCareItem, LongTermPackage
 from invoices.employee import Employee
-from invoices.models import Patient
+from invoices.models import Patient, Hospitalization
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_system_via_google_webhook
 
@@ -410,6 +410,9 @@ class LongTermCareInvoiceFile(models.Model):
             return LongTermCareInvoiceLine.objects.filter(invoice=self).order_by(
                 'start_period')
         return None
+
+    def get_patient_hospitalizations(self):
+        return Hospitalization.objects.filter(patient=self.patient).filter(start_date__lte=self.invoice_end_period).filter(end_date__gte=self.invoice_start_period)
 
     class Meta:
         verbose_name = _("Facture assurance dépendance")
