@@ -64,8 +64,8 @@ def process_post_save(instance):
             print("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
         else:
             notify_system_via_google_webhook(
-                "Batch {0} processed in {1} seconds click on link to check {2}".format(instance, (end - start).seconds),
-                instance.get_absolute_url())
+                "Batch {0} processed in {1} seconds click on link to check {2}".format(instance, (end - start).seconds,
+                instance.get_absolute_url()))
 
 
 @job
