@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from constance import config
 from django.contrib import admin
 from django.contrib.admin import TabularInline
+from django.contrib.admin.views.main import ChangeList
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, csrf_protect_m
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -36,7 +37,7 @@ from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event, AssignedAdditionalEmployee, ReportPicture, \
     create_or_update_google_calendar, EventList
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
-from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter
+from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, SmartPatientFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, \
     InvoiceItemForm, MedicalPrescriptionForm, AlternateAddressFormSet
@@ -448,7 +449,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     date_hierarchy = 'invoice_date'
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
                     'number_of_prestations', 'invoice_details', 'has_medical_prescription')
-    list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', 'patient__name',
+    list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', SmartPatientFilter,
                    'prescriptions__medical_prescription', 'created_by']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview', 'created_at', 'updated_at', 'batch')
@@ -502,6 +503,30 @@ class InvoiceItemAdmin(admin.ModelAdmin):
 
     medical_prescription_preview.allow_tags = True
 
+    def changelist_view(self, request, extra_context=None):
+        changelist = ChangeList(request,
+                                self.model,
+                                list(self.get_list_display(request)),
+                                self.get_list_display_links(request, self.get_list_display(request)),
+                                self.get_list_filter(request),
+                                self.date_hierarchy,
+                                self.get_search_fields(request),
+                                self.list_select_related,
+                                self.list_per_page,
+                                self.list_max_show_all,
+                                self.list_editable,
+                                self,
+                                self.sortable_by,
+                                self.get_search_results)
+
+        # Get a distinct list of patients for the filtered queryset
+        patients = list(set(changelist.get_queryset(request).values_list('patient__id', 'patient__name')))
+
+        # Attach it to request
+        request.dynamic_patient_choices = [(str(patient_id), patient_name) for patient_id, patient_name in patients]
+
+        return super().changelist_view(request, extra_context)
+
     def response_change(self, request, obj):
         queryset = InvoiceItem.objects.filter(id=obj.id)
         if "_print_cns" in request.POST:
@@ -543,28 +568,6 @@ class InvoiceItemAdmin(admin.ModelAdmin):
                                   level=messages.ERROR)
             return HttpResponseRedirect(request.path)
         return HttpResponseRedirect(request.path)
-
-    # def response_post_save_change(self, request, obj):
-    #     """This method is called by `self.changeform_view()` when the form
-    #     was submitted successfully and should return an HttpResponse.
-    #     """
-    #     # Check that you clicked the button `_save_and_copy`
-    #     if '_save_and_copy' in request.POST:
-    #         # Create a copy of your object
-    #         # Assuming you have a method `create_from_existing()` in your manager
-    #         new_obj = self.model.objects.create_from_existing(obj)
-    #
-    #         # Get its admin url
-    #         opts = self.model._meta
-    #         info = self.admin_site, opts.app_label, opts.model_name
-    #         route = '{}:{}_{}_change'.format(*info)
-    #         post_url = reverse(route, args=(new_obj.pk,))
-    #
-    #         # And redirect
-    #         return HttpResponseRedirect(post_url)
-    #     else:
-    #         # Otherwise, use default behavior
-    #         return super().response_post_save_change(request, obj)
 
 
 class InvoiceItemInlineAdmin(admin.TabularInline):

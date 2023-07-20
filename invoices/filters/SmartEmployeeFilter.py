@@ -1,6 +1,5 @@
-from datetime import date
-
 from django.contrib import admin
+from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
 from invoices.employee import Employee
@@ -68,3 +67,19 @@ class EventCalendarPeriodFilter(admin.SimpleListFilter):
         # Compare the requested value (either '80s' or '90s')
         # to decide how to filter the queryset.
         return queryset.filter(employees__id=self.value())
+
+class SmartPatientFilter(admin.SimpleListFilter):
+    title = _('patient')
+    parameter_name = 'patient_id'
+
+    def lookups(self, request, model_admin):
+        # request is manipulated in ModelAdmin.changelist_view
+        if isinstance(request, HttpRequest) and hasattr(request, "dynamic_patient_choices"):
+            return request.dynamic_patient_choices
+        return ()
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(patient_id=self.value())
+        else:
+            return queryset
