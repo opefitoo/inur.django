@@ -34,7 +34,7 @@ def process_post_save(instance):
         if BatchTypeChoices.CNS_INF == instance.batch_type:
             batch_invoices = InvoiceItem.objects.filter(
                 Q(invoice_date__gte=instance.start_date) & Q(invoice_date__lte=instance.end_date)).filter(
-                invoice_sent=False)
+                invoice_sent=False).filter(batch__isnull=True)
             batch_invoices.update(batch=instance)
         batch_invoices = InvoiceItem.objects.filter(batch=instance)
         file_content = generate_all_invoice_lines(batch_invoices, sending_date=instance.send_date,
@@ -66,7 +66,8 @@ def process_post_save(instance):
             print("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
         else:
             notify_system_via_google_webhook(
-                "Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
+                "Batch {0} processed in {1} seconds click on link to check {3}".format(instance, (end - start).seconds),
+                instance.get_absolute_url())
 
 
 @job
@@ -109,6 +110,7 @@ def duplicate_event_for_next_day_for_several_events(events, who_created, number_
         notify_system_via_google_webhook(
             "*An error occurred while duplicating events for the next day: {0}*\nDetails:\n{1}".format(e, error_detail))
 
+
 def update_events_address(events, address):
     """
     Update the address of the events
@@ -121,8 +123,9 @@ def update_events_address(events, address):
         event.event_address = address
         event.save()
     end = datetime.now()
-    notify_system_via_google_webhook("The address of the following events was updated to {0}: {1} and it took {2} sec to generate".format(
-        address, ','.join([str(event.id) for event in events]), (end - start).seconds))
+    notify_system_via_google_webhook(
+        "The address of the following events was updated to {0}: {1} and it took {2} sec to generate".format(
+            address, ','.join([str(event.id) for event in events]), (end - start).seconds))
     #
 # def sync_google_contacts(instance, **kwargs):
 #     """
