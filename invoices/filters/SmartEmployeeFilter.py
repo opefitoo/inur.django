@@ -83,3 +83,19 @@ class SmartPatientFilter(admin.SimpleListFilter):
             return queryset.filter(patient_id=self.value())
         else:
             return queryset
+
+class SmartMedicalPrescriptionFilter(admin.SimpleListFilter):
+    title = _('medical prescription')
+    parameter_name = 'medical_prescription_id'
+
+    def lookups(self, request, model_admin):
+        # request is manipulated in ModelAdmin.changelist_view
+        if isinstance(request, HttpRequest) and hasattr(request, "dynamic_medical_prescription_choices"):
+            return request.dynamic_medical_prescription_choices
+        return ()
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(prescriptions__medical_prescription__id=self.value())
+        else:
+            return queryset

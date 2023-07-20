@@ -37,7 +37,7 @@ from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event, AssignedAdditionalEmployee, ReportPicture, \
     create_or_update_google_calendar, EventList
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
-from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, SmartPatientFilter
+from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, SmartPatientFilter, SmartMedicalPrescriptionFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, \
     InvoiceItemForm, MedicalPrescriptionForm, AlternateAddressFormSet
@@ -450,7 +450,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
                     'number_of_prestations', 'invoice_details', 'has_medical_prescription')
     list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', SmartPatientFilter,
-                   'prescriptions__medical_prescription', 'created_by']
+                   SmartMedicalPrescriptionFilter, 'created_by']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview', 'created_at', 'updated_at', 'batch')
     autocomplete_fields = ['patient']
@@ -521,9 +521,15 @@ class InvoiceItemAdmin(admin.ModelAdmin):
 
         # Get a distinct list of patients for the filtered queryset
         patients = list(set(changelist.get_queryset(request).values_list('patient__id', 'patient__name')))
+        prescription_ids = list(
+            set(changelist.get_queryset(request).values_list('prescriptions__medical_prescription__id', flat=True)))
+
+        medical_prescriptions = MedicalPrescription.objects.filter(id__in=prescription_ids)
 
         # Attach it to request
         request.dynamic_patient_choices = [(str(patient_id), patient_name) for patient_id, patient_name in patients]
+        request.dynamic_medical_prescription_choices = [(str(prescription.id), str(prescription)) for prescription in
+                                                        medical_prescriptions]
 
         return super().changelist_view(request, extra_context)
 
@@ -1395,7 +1401,7 @@ class AlertAdmin(admin.ModelAdmin):
     search_fields = ('text_alert', 'user__username')
     readonly_fields = ('date_alert', 'date_read', 'alert_created_by')
     # if not superuser show only alerts assigned by user
-    def get_queryset(self, request):    
+    def get_queryset(self, request):
         qs = super(AlertAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
