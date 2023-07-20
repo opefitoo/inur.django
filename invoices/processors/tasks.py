@@ -7,12 +7,10 @@ from io import BytesIO
 from PyPDF2 import PdfMerger
 from constance import config
 from django.core.files.base import ContentFile
-from django.db.models import Q
 from django_rq import job
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate
 
-from invoices.enums.generic import BatchTypeChoices
 from invoices.invoiceitem_pdf import get_doc_elements
 from invoices.notifications import notify_system_via_google_webhook
 from invoices.prefac import generate_all_invoice_lines
@@ -31,11 +29,11 @@ def process_post_save(instance):
     if _must_update:
         from invoices.models import InvoiceItem
         # Now update all InvoiceItems which have an invoice_date within this range
-        if BatchTypeChoices.CNS_INF == instance.batch_type:
-            batch_invoices = InvoiceItem.objects.filter(
-                Q(invoice_date__gte=instance.start_date) & Q(invoice_date__lte=instance.end_date)).filter(
-                invoice_sent=False).filter(batch__isnull=True)
-            batch_invoices.update(batch=instance)
+        #if BatchTypeChoices.CNS_INF == instance.batch_type:
+            # batch_invoices = InvoiceItem.objects.filter(
+            #     Q(invoice_date__gte=instance.start_date) & Q(invoice_date__lte=instance.end_date)).filter(
+            #     invoice_sent=False).filter(batch__isnull=True)
+            # batch_invoices.update(batch=instance)
         batch_invoices = InvoiceItem.objects.filter(batch=instance)
         file_content = generate_all_invoice_lines(batch_invoices, sending_date=instance.send_date,
                                                   batch_type=instance.batch_type)
@@ -66,7 +64,7 @@ def process_post_save(instance):
             print("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
         else:
             notify_system_via_google_webhook(
-                "Batch {0} processed in {1} seconds click on link to check {3}".format(instance, (end - start).seconds),
+                "Batch {0} processed in {1} seconds click on link to check {2}".format(instance, (end - start).seconds),
                 instance.get_absolute_url())
 
 
