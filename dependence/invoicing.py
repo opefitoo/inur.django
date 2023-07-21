@@ -1,6 +1,7 @@
 import calendar
 import locale
 import os
+import traceback
 from dataclasses import dataclass
 from datetime import timedelta, date
 from xml.etree import ElementTree
@@ -336,6 +337,7 @@ def create_and_save_invoice_file(sender, instance, **kwargs):
             instance.generated_invoice_file = xml_file
         except Exception as e:
             message = f"Le fichier de factures mensuel {instance} n'a pas pu être généré. Erreur : {e}. Date heure : {timezone.now()}"
+            message += f" Détails de l'erreur : {traceback.format_exc()}"
             notify_system_via_google_webhook(message)
             print(e)
         finally:
