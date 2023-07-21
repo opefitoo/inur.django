@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import pre_save, post_delete, post_save
 from django.dispatch import receiver
 from django.utils.timezone import now
@@ -118,9 +119,18 @@ class Employee(models.Model):
                                                        blank=True, null=True)
     miscellaneous = models.TextField("Divers", default="Code Pin tél:...etc", max_length=200)
 
-
     def get_current_contract(self):
-        return self.contract_set.filter(end_date__isnull=True).first()
+        return EmployeeContractDetail.objects.filter(employee_link=self, end_date__isnull=True).get()
+
+    def get_contrat_at_date(self, date):
+        print("get_current_contract for %s and ID: %s" % (self.user, self.id))
+        # start_date__lte=date and end_date__gte date or end_date__isnull = True use | Q(end_date__isnull=True)
+        details = EmployeeContractDetail.objects.filter(Q(employee_link=self) & (
+                    Q(start_date__lte=date) & (Q(end_date__gte=date) | Q(end_date__isnull=True)))).order_by('-id')
+        if details:
+            return details[0]
+        else:
+            return None
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
@@ -134,6 +144,9 @@ class Employee(models.Model):
         if self.abbreviation and self.abbreviation != 'XXX':
             if Employee.objects.filter(abbreviation=self.abbreviation).exclude(id=self.id).exists():
                 raise ValidationError({'abbreviation': 'Abbreviation must be unique across company'})
+
+    def get_occupation(self):
+        return self.occupation.name
 
     @staticmethod
     def is_has_gdrive_access_valid(has_gdrive_access, user):

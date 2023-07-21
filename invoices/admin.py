@@ -1,4 +1,5 @@
 import calendar
+import csv
 import datetime
 from decimal import Decimal
 from zoneinfo import ZoneInfo
@@ -188,8 +189,47 @@ class EmployeeAdmin(admin.ModelAdmin):
     work_certificate.short_description = "Certificat de travail"
     contracts_situation_certificate.short_description = "Situation des contrats"
 
+    def export_employees_data_to_csv(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
+                              level=messages.ERROR)
+            return
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="etp_stats.csv"'
+        writer = csv.writer(response)
+        _stats_date = datetime.date(2023, 4, 30)
+        writer.writerow(['Identifiant anonyme', 'Année de naissance', 'Pays de résidence','Date début du contrat',
+                         'Date fin du contrat (si connue)', 'CCT', 'Carrière','Echelon',
+                         'Points au %s' % _stats_date.strftime("%d/%m/%Y"), 'Durée de travail hebdomadaire (en heures)',
+                         "Structure d'affectation", 'Fonction'])
+        for emp in queryset:
+            # date 30/04/2023
+            _employee_contract = emp.get_contrat_at_date(_stats_date)
+            if not _employee_contract:
+                continue
+            _rank = _employee_contract.career_rank
+            # _rank looks like this C5/120 we need to split it
+            cct = "-"
+            _echelon_rank = []
+            if not _rank:
+                _echelon_rank.append("NA")
+            else:
+                _echelon_rank = _rank.split("/")
+            if len(_echelon_rank) == 1:
+                _echelon_rank.append("NA")
+                cct = "-"
+            else:
+                cct = "SAS"
+            # _emp_start in french format date
+            _emp_start = _employee_contract.start_date.strftime("%d/%m/%Y")
+            _emp_end = _employee_contract.end_date.strftime("%d/%m/%Y") if _employee_contract.end_date else "-"
+            writer.writerow([emp.id, emp.birth_date.year, emp.address, _emp_start , _emp_end, cct,
+                             _echelon_rank[0], _echelon_rank[1], "", _employee_contract.number_of_hours,
+                             "UNIQUE", emp.get_occupation()])
+        return response
+
     # actions = [work_certificate, 'delete_in_google_calendar']
-    actions = [work_certificate, contracts_situation_certificate, entry_declaration]
+    actions = [work_certificate, contracts_situation_certificate, entry_declaration, export_employees_data_to_csv,]
 
     def delete_in_google_calendar(self, request, queryset):
         if not request.user.is_superuser:
