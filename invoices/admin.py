@@ -198,6 +198,7 @@ class EmployeeAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename="etp_stats.csv"'
         writer = csv.writer(response)
         _stats_date = datetime.date(2023, 4, 30)
+        #_stats_date = datetime.date(2023, 7, 21)
         writer.writerow(['Identifiant anonyme', 'Année de naissance', 'Pays de résidence','Date début du contrat',
                          'Date fin du contrat (si connue)', 'CCT', 'Carrière','Echelon',
                          'Points au %s' % _stats_date.strftime("%d/%m/%Y"), 'Durée de travail hebdomadaire (en heures)',
