@@ -492,7 +492,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     list_display = ('invoice_number', 'patient', 'invoice_month', 'invoice_sent', 'invoice_paid',
                     'number_of_prestations', 'invoice_details', 'has_medical_prescription')
     list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', SmartPatientFilter,
-                   SmartMedicalPrescriptionFilter, 'created_by']
+                   SmartMedicalPrescriptionFilter, 'created_by', 'prescriptions__medical_prescription__id']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
     readonly_fields = ('medical_prescription_preview', 'created_at', 'updated_at', 'batch')
     autocomplete_fields = ['patient']
