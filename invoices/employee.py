@@ -239,7 +239,7 @@ class Employee(models.Model):
                 ],
                 "phoneNumbers": [
                     {
-                        "value": employee.phone_number,
+                        "value": str(employee.phone_number) if employee.phone_number else "",
                         "type": "mobile"
                     },
                 ],
