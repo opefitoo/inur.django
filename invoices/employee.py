@@ -212,7 +212,6 @@ class Employee(models.Model):
             }
             print("Creating new Client: %s" % new_contact)
             response = google_contacts.add_or_update_contact(new_contact)
-            print(response)
             # Get the resource name (id) of the contact that was just added
             if response:
                 contact_id = response['resourceName']
@@ -223,7 +222,6 @@ class Employee(models.Model):
 
         employees_who_still_work = Employee.objects.filter(end_contract__isnull=True).order_by('-id')
         for employee in employees_who_still_work:
-            print(employee)
             new_contact_employee = {
                 "names": [
                     {  # Capitalize only first letter of first name all other letters are lower case
@@ -254,7 +252,6 @@ class Employee(models.Model):
             }
             print("Creating employee: %s" % new_contact_employee)
             response = google_contacts.add_or_update_contact(new_contact_employee)
-            print(response)
             # Get the resource name (id) of the contact that was just added
             if response:
                 contact_id = response['resourceName']
