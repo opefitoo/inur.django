@@ -126,7 +126,7 @@ def update_events_address(events, address):
         "The address of the following events was updated to {0}: {1} and it took {2} sec to generate".format(
             address, ','.join([str(event.id) for event in events]), (end - start).seconds))
 
-@job
+@job(timeout=600)
 def sync_google_contacts(employees):
     """
     Sync the google contacts for the given employees
