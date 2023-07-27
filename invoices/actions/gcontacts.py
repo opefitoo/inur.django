@@ -1,5 +1,6 @@
 import os
 
+from django.core.cache import cache
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -26,12 +27,31 @@ class GoogleContacts:
             delegated_credentials = credentials.with_subject(os.environ.get('GOOGLE_EMAIL_CREDENTIALS', None))
         self.creds = delegated_credentials
 
+    def get_contacts(self):
+        # Try to get contacts from cache
+        contacts = cache.get('google_contacts')
+        if contacts is not None:
+            return contacts
+
+        # If contacts were not in cache, fetch them and store in cache
+        contacts_service = self.service.people().connections()
+        request = contacts_service.list(
+            resourceName='people/me',
+            pageSize=100,
+            personFields='names,emailAddresses',
+        )
+        response = request.execute()
+        contacts = response['connections']
+
+        # Cache the contacts for 1 hour (3600 seconds)
+        cache.set('google_contacts', contacts, 3600)
+
+        return contacts
+
     def contact_exists(self, first_name, family_name, sn_code):
         try:
-            results = self.service.people().connections().list(resourceName='people/me',
-                                                               personFields='names,userDefined').execute()
-            connections = results.get('connections', [])
-            for person in connections:
+            contacts = self.get_contacts()
+            for person in contacts:
                 names = person.get('names', [])
                 user_defined_fields = person.get('userDefined', [])
                 for name in names:
