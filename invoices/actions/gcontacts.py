@@ -4,13 +4,15 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from invoices import settings
+
 
 class GoogleContacts:
     SCOPES = ['https://www.googleapis.com/auth/contacts']
 
-    def __init__(self, credential_file, email=None):
+    def __init__(self, json_keyfile_path=None, email=None):
+        self.credential_file = json_keyfile_path or settings.GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2
         self.email = email
-        self.credential_file = credential_file
         self.creds = None
         self.load_credentials()
         self.service = build('people', 'v1', credentials=self.creds)

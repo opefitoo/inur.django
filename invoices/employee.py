@@ -164,15 +164,14 @@ class Employee(models.Model):
         return 'occupation__name', 'user__first_name', 'user__last_name', 'user__username'
 
     def sync_google_contact(self):
-        google_contacts = GoogleContacts('keys/inur-test-environment-71cbf29a05be.json',
-                                         self.user.email)
+        google_contacts = GoogleContacts(email=self.user.email)
         from invoices.models import Patient
         # get 10 first patients that are still alive
         patients_still_alive = Patient.objects.filter(date_of_death__isnull=True).order_by('-id')[:10]
         for patient in patients_still_alive:
             new_contact = {
                 "names": [
-                    {   # Capitalize only first letter of first name all other letters are lower case
+                    {  # Capitalize only first letter of first name all other letters are lower case
                         "givenName": patient.first_name.lower().capitalize(),
                         # CAPITALIZE LAST NAME
                         "familyName": patient.name.upper()
@@ -227,7 +226,7 @@ class Employee(models.Model):
             print(employee)
             new_contact_employee = {
                 "names": [
-                    {   # Capitalize only first letter of first name all other letters are lower case
+                    {  # Capitalize only first letter of first name all other letters are lower case
                         "givenName": employee.user.first_name.lower().capitalize(),
                         # CAPITALIZE LAST NAME
                         "familyName": employee.user.last_name.upper()
