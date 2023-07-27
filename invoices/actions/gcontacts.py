@@ -92,17 +92,16 @@ class GoogleContacts:
 
                                     update_mask = ",".join(
                                         [k for k in data.keys() if k != 'etag'])  # Exclude 'etag' from the update mask
-                                    self.service.people().updateContact(
+                                    return self.service.people().updateContact(
                                         resourceName=existing_contact_resource_name,
                                         updatePersonFields=update_mask,
                                         body=data
                                     ).execute()
-                                    return
                 print(f"Failed to find existing contact {first_name} {family_name} with SN Code {sn_code} for update.")
             else:
                 # If the contact does not exist, create it
                 print(f"Creating new contact {first_name} {family_name} with SN Code {sn_code}...")
-                self.service.people().createContact(body=data).execute()
+                return self.service.people().createContact(body=data).execute()
 
     def get_or_create_contact_group(self, group_name):
         try:
