@@ -188,7 +188,7 @@ class Employee(models.Model):
                         "type": "mobile"
                     },
                     {
-                        "value": patient.additional_phone_number,
+                        "value": str(patient.additional_phone_number) if patient.additional_phone_number else "",
                         "type": "home"
                     },
                 ],
