@@ -125,90 +125,23 @@ def update_events_address(events, address):
     notify_system_via_google_webhook(
         "The address of the following events was updated to {0}: {1} and it took {2} sec to generate".format(
             address, ','.join([str(event.id) for event in events]), (end - start).seconds))
-    #
-# def sync_google_contacts(instance, **kwargs):
-#     """
-#     Connect to google contacts and sync user details (email, phone, name, avatar)
-#     @param user_instance:
-#     @return:
-#     """
-#     from googleapiclient.discovery import build
-#     credentials = get_credentials()
-#     service = build('people', 'v1', credentials=credentials)
-#
-#     # Attempt to find the contact by email
-#     results = service.people().connections().list(
-#         resourceName='people/me',
-#         pageSize=1000,
-#         personFields='emailAddresses').execute()
-#     connections = results.get('connections', [])
-#     for person in connections:
-#         names = person.get('names', [])
-#         if names:
-#             name = names[0].get('displayName')
-#         else:
-#             name = 'No Name'
-#         email_addresses = person.get('emailAddresses', [])
-#         if email_addresses:
-#             email = email_addresses[0].get('value')
-#         else:
-#             email = 'No Email'
-#         print(name, email)
-#         print(person)
-#     # The employee was created. Create a new contact.
-#     contact = {
-#         'names': [{'givenName': instance.user.first_name, 'familyName': instance.user.last_name}],
-#         'emailAddresses': [{'value': instance.user.email}],
-#         # Add other fields as needed...
-#     }
-#
-#     if kwargs.get('created', False):
-#
-#         service.people().createContact(body=contact).execute()
-#     else:
-#         # The employee was updated. Update the contact.
-#         # Here, you'll need to know the 'resourceName' of the contact to update.
-#         contact = service.people().get(resourceName="resourceName").execute()
-#         contact['names'] = [{'givenName': instance.user.first_name, 'familyName': instance.user.last_name}]
-#         contact['emailAddresses'] = [{'value': instance.user.email}]
-#         # Add other fields as needed...
-#         service.people().updateContact(resourceName="resourceName", body=contact).execute()
-#
-#
-# def get_credentials():
-#     import os
-#     from google.oauth2 import service_account
-#
-#     # Load the credentials from an environment variable.
-#     # credentials_json = os.getenv('GOOGLE_OAUTH_CREDENTIALS')
-#
-#     # Parse the JSON string into a Python dictionary.
-#     # credentials_dict = json.loads(credentials_json)
-#
-#     # Convert the dictionary to a Credentials object.
-#     # credentials = Credentials.from_authorized_user_info(credentials_dict)
-#
-#     # SCOPES = ['https://www.googleapis.com/auth/sqlservice.admin',
-#     #          'https://www.googleapis.com/auth/people']
-#
-#     SCOPES = ["https://www.googleapis.com/auth/contacts",
-#               "https://www.googleapis.com/auth/contacts.readonly"]
-#     SCOPES___ = ['https://www.googleapis.com/auth/sqlservice.admin',
-#                  'https://www.googleapis.com/auth/calendar']
-#
-#     _json_keyfile_path = settings.GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2
-#
-#     # credentials_dict = json.loads(_json_keyfile_path)
-#
-#     # credentials = oauth2.credentials.Credentials(
-#     #     credentials_dict["token"],
-#     #     refresh_token=credentials_dict["refresh_token"],
-#     #     token_uri=credentials_dict["token_uri"],
-#     #     client_id=credentials_dict["client_id"],
-#     #     client_secret=credentials_dict["client_secret"],
-#     #     scopes=SCOPES)
-#
-#     delegated_credentials = service_account.Credentials.from_service_account_file(
-#         _json_keyfile_path, scopes=SCOPES, subject=os.environ.get('GOOGLE_EMAIL_CREDENTIALS', None))
-#     # delegated_credentials = credentials.with_subject(os.environ.get('GOOGLE_EMAIL_CREDENTIALS', None))
-#     return delegated_credentials
+
+@job
+def sync_google_contacts(employees):
+    """
+    Sync the google contacts for the given employees
+    @param employees:
+    @return:
+    """
+    start = datetime.now()
+    try:
+        for employee in employees:
+            employee.sync_google_contacts()
+        end = datetime.now()
+        notify_system_via_google_webhook(
+            "The google contacts of the following employees were synced: {0} and it took {1} sec to generate".format(
+                ','.join([str(employee) for employee in employees]), (end - start).seconds))
+    except Exception as e:
+        error_detail = traceback.format_exc()
+        notify_system_via_google_webhook(
+            "*An error occurred while syncing google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))

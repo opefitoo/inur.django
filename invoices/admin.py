@@ -25,7 +25,7 @@ from django_csv_exports.admin import CSVExportAdmin
 from helpers.timesheet import build_use_case_objects
 from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_paid, set_invoice_as_not_paid, \
     set_invoice_as_not_sent, find_all_invoice_items_with_broken_file, \
-    find_all_medical_prescriptions_and_merge_them_in_one_file, link_invoice_to_invoice_batch
+    find_all_medical_prescriptions_and_merge_them_in_one_file, link_invoice_to_invoice_batch, create_google_contact
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
@@ -230,7 +230,8 @@ class EmployeeAdmin(admin.ModelAdmin):
         return response
 
     # actions = [work_certificate, 'delete_in_google_calendar']
-    actions = [work_certificate, contracts_situation_certificate, entry_declaration, export_employees_data_to_csv,]
+    actions = [work_certificate, contracts_situation_certificate, entry_declaration, export_employees_data_to_csv,
+               create_google_contact]
 
     def delete_in_google_calendar(self, request, queryset):
         if not request.user.is_superuser:

@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from invoices.actions.gcontacts import GoogleContacts
 from invoices.enums.generic import GenderType
 from invoices.enums.holidays import ContractType
 from invoices.storages import CustomizedGoogleDriveStorage
@@ -126,7 +127,7 @@ class Employee(models.Model):
         print("get_current_contract for %s and ID: %s" % (self.user, self.id))
         # start_date__lte=date and end_date__gte date or end_date__isnull = True use | Q(end_date__isnull=True)
         details = EmployeeContractDetail.objects.filter(Q(employee_link=self) & (
-                    Q(start_date__lte=date) & (Q(end_date__gte=date) | Q(end_date__isnull=True)))).order_by('-id')
+                Q(start_date__lte=date) & (Q(end_date__gte=date) | Q(end_date__isnull=True)))).order_by('-id')
         if details:
             return details[0]
         else:
@@ -161,6 +162,107 @@ class Employee(models.Model):
     @staticmethod
     def autocomplete_search_fields():
         return 'occupation__name', 'user__first_name', 'user__last_name', 'user__username'
+
+    def sync_google_contact(self):
+        google_contacts = GoogleContacts('keys/inur-test-environment-71cbf29a05be.json',
+                                         self.user.email)
+        from invoices.models import Patient
+        # get 10 first patients that are still alive
+        patients_still_alive = Patient.objects.filter(date_of_death__isnull=True).order_by('-id')[:10]
+        for patient in patients_still_alive:
+            new_contact = {
+                "names": [
+                    {   # Capitalize only first letter of first name all other letters are lower case
+                        "givenName": patient.first_name.lower().capitalize(),
+                        # CAPITALIZE LAST NAME
+                        "familyName": patient.name.upper()
+                    }
+                ],
+                "emailAddresses": [
+                    {
+                        "value": patient.email_address,
+                    }
+                ],
+                "phoneNumbers": [
+                    {
+                        "value": patient.phone_number,
+                        "type": "mobile"
+                    },
+                    {
+                        "value": patient.additional_phone_number,
+                        "type": "home"
+                    },
+                ],
+                "addresses": [
+                    {
+                        "streetAddress": patient.address,
+                        "postalCode": patient.zipcode,
+                        "city": patient.city,
+                        "country": patient.country.name,
+                        "type": "home"
+                    }
+                ],
+                "userDefined": [
+                    {
+                        "key": "sn_code",
+                        # remove all spaces and trim sn_code before adding it
+                        "value": patient.code_sn.replace(" ", "").strip()
+                    }
+                ]
+
+            }
+            print("Creating new Client: %s" % new_contact)
+            response = google_contacts.add_or_update_contact(new_contact)
+            print(response)
+            # Get the resource name (id) of the contact that was just added
+            if response:
+                contact_id = response['resourceName']
+                # Get the id of the "Clients" group, or create it if it doesn't exist
+                group_id = google_contacts.get_or_create_contact_group("Clients")
+                # Add the contact to the group
+                google_contacts.add_contact_to_group(contact_id, group_id)
+
+        employees_who_still_work = Employee.objects.filter(end_contract__isnull=True).order_by('-id')
+        for employee in employees_who_still_work:
+            print(employee)
+            new_contact_employee = {
+                "names": [
+                    {   # Capitalize only first letter of first name all other letters are lower case
+                        "givenName": employee.user.first_name.lower().capitalize(),
+                        # CAPITALIZE LAST NAME
+                        "familyName": employee.user.last_name.upper()
+                    }
+                ],
+                "emailAddresses": [
+                    {
+                        "value": employee.user.email,
+                    }
+                ],
+                "phoneNumbers": [
+                    {
+                        "value": employee.phone_number,
+                        "type": "mobile"
+                    },
+                ],
+                "userDefined": [
+                    {
+                        "key": "sn_code",
+                        # check 1st if sn_code is not null and remove all spaces and trim sn_code before adding it
+                        "value": employee.sn_code.replace(" ", "").strip() if employee.sn_code else ""
+                    }
+                ]
+
+            }
+            print("Creating employee: %s" % new_contact_employee)
+            response = google_contacts.add_or_update_contact(new_contact_employee)
+            print(response)
+            # Get the resource name (id) of the contact that was just added
+            if response:
+                contact_id = response['resourceName']
+                # Get the id of the "Employees" group, or create it if it doesn't exist
+                group_id = google_contacts.get_or_create_contact_group("Equipe SUR.lu")
+                # Add the contact to the group
+                google_contacts.add_contact_to_group(contact_id, group_id)
 
     def __str__(self):
         # return '%s (%s)' % (self.user.username.strip().capitalize(), self.abbreviation)

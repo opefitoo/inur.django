@@ -199,3 +199,8 @@ def export_to_pdf_with_medical_prescription_files(modeladmin, request, queryset)
 
 
 export_to_pdf_with_medical_prescription_files.short_description = "Facture CNS (avec Prescriptions inclues)"
+
+
+def create_google_contact(modeladmin, request, queryset):
+    from invoices.processors.tasks import sync_google_contacts
+    sync_google_contacts.delay(queryset)
