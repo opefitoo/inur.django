@@ -163,7 +163,7 @@ class Employee(models.Model):
     def autocomplete_search_fields():
         return 'occupation__name', 'user__first_name', 'user__last_name', 'user__username'
 
-    def sync_google_contact(self):
+    def sync_google_contacts(self):
         google_contacts = GoogleContacts(email=self.user.email)
         from invoices.models import Patient
         # get 10 first patients that are still alive
