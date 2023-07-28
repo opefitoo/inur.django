@@ -80,7 +80,7 @@ class HospitalizationTestCase(TestCase):
             'end_date': self.end_date,
             'patient': self.patient
         }
-        error_msg = {'start_date': 'Prestation(s) exist in selected dates range for this Patient'}
+        error_msg = {'start_date': 'error 2807 Prestation(s) exist in selected dates range for this Patient'}
         self.assertEqual(Hospitalization.validate_prestation(data), error_msg)
 
         data['start_date'] = data['start_date'].replace(month=1, day=11)
