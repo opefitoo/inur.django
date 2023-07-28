@@ -3,9 +3,9 @@ import csv
 import datetime
 import io
 
-from PyPDF2 import PdfMerger
 from django.http import HttpResponse, FileResponse
 from django.utils.translation import gettext_lazy as _
+from pypdf import PdfMerger
 from reportlab.lib.units import cm
 from reportlab.platypus.doctemplate import SimpleDocTemplate
 

@@ -4,10 +4,10 @@ from datetime import datetime
 from datetime import timedelta
 from io import BytesIO
 
-from PyPDF2 import PdfMerger
 from constance import config
 from django.core.files.base import ContentFile
 from django_rq import job
+from pypdf import PdfMerger
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate
 
