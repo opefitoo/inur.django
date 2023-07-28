@@ -41,7 +41,10 @@ class GoogleContacts:
             personFields='names,emailAddresses',
         )
         response = request.execute()
-        contacts = response['connections']
+        if 'connections' in response:
+            contacts = response['connections']
+        else:
+            raise Exception('No contacts found : %s' % response)
 
         # Cache the contacts for 1 hour (3600 seconds)
         cache.set('google_contacts', contacts, 3600)
