@@ -160,6 +160,7 @@ class VisualAnalogueScaleLvl(models.IntegerChoices):
 
 class BatchTypeChoices(models.TextChoices):
     CNS_INF = 'CNS_INF', _('CNS Infirimier')
+    CNS_INF_PACK = 'CNS_INF_PACK', _('Forfait Infirimier')
     CNS_PAL = 'CNS_PAL', _('CNS Paliatif')
     AD = 'AD', _('Assurance Dépendance')
     OTHER = 'OTHER', _('Autre')

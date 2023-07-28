@@ -2,6 +2,7 @@
 import csv
 import datetime
 import io
+import os
 
 from django.http import HttpResponse, FileResponse
 from django.utils.translation import gettext_lazy as _
@@ -203,4 +204,7 @@ export_to_pdf_with_medical_prescription_files.short_description = "Facture CNS (
 
 def create_google_contact(modeladmin, request, queryset):
     from invoices.processors.tasks import sync_google_contacts
-    sync_google_contacts.delay(queryset)
+    if os.environ.get('LOCAL_ENV', None):
+        sync_google_contacts(queryset)
+    else:
+        sync_google_contacts.delay(queryset)
