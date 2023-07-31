@@ -169,9 +169,8 @@ class Employee(models.Model):
         group_id = google_contacts.get_group_id_by_name(group_name)
         if group_id:
             contacts = google_contacts.get_contacts_in_group(group_id)
-            for contact_id in contacts:
-                print(f"Deleting contact {contact_id}...")
-                google_contacts.delete_contact(contact_id)
+            print(f"Deleting {len(contacts)} contacts in group {group_name}...")
+            google_contacts.batch_delete_contacts(contacts)
         else:
             print(f"Group {group_name} not found.")
     def sync_google_contacts(self):
