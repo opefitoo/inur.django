@@ -59,19 +59,24 @@ class GoogleContacts:
             print(f"Failed to delete contact: {e}")
 
     def delete_all_contacts(self):
-        # take only the 1st 5 contacts
-        contacts = self.get_contacts()[:5]
+        contacts = self.get_contacts()
         for person in contacts:
             print(f"Deleting contact {person['resourceName']}...")
             self.delete_contact(person['resourceName'])
+
+    def batch_delete_contacts(self, contacts):
+        batch = self.service.new_batch_http_request()
+        for contact in contacts:
+            batch.add(self.service.people().deleteContact(resourceName=contact['resourceName']))
+        batch_result = batch.execute()
+        print(f"Batch delete result: {batch_result}")
 
     def delete_all_contacts_in_group(self, group_name):
         group_id = self.get_group_id_by_name(group_name)
         if group_id:
             contacts = self.get_contacts_in_group(group_id)
-            for contact_id in contacts:
-                print(f"Deleting contact {contact_id}...")
-                self.delete_contact(contact_id)
+            print(f"Deleting {len(contacts)} contacts in group {group_name}...")
+            self.batch_delete_contacts(contacts)
         else:
             print(f"Group {group_name} not found.")
 
