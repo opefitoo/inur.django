@@ -164,6 +164,16 @@ class Employee(models.Model):
     def autocomplete_search_fields():
         return 'occupation__name', 'user__first_name', 'user__last_name', 'user__username'
 
+    def delete_all_contacts_in_group(self, group_name):
+        google_contacts = GoogleContacts(email=self.user.email)
+        group_id = google_contacts.get_group_id_by_name(group_name)
+        if group_id:
+            contacts = google_contacts.get_contacts_in_group(group_id)
+            for contact_id in contacts:
+                print(f"Deleting contact {contact_id}...")
+                google_contacts.delete_contact(contact_id)
+        else:
+            print(f"Group {group_name} not found.")
     def sync_google_contacts(self):
         google_contacts = GoogleContacts(email=self.user.email)
         from invoices.models import Patient

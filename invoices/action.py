@@ -208,3 +208,10 @@ def create_google_contact(modeladmin, request, queryset):
         sync_google_contacts(queryset)
     else:
         sync_google_contacts.delay(queryset)
+
+def cleanup_contacts(modeladmin, request, queryset):
+    from invoices.processors.tasks import delete_all_contacts
+    if os.environ.get('LOCAL_ENV', None):
+        delete_all_contacts(queryset)
+    else:
+        delete_all_contacts.delay(queryset)

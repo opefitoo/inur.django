@@ -145,3 +145,19 @@ def sync_google_contacts(employees):
         error_detail = traceback.format_exc()
         notify_system_via_google_webhook(
             "*An error occurred while syncing google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))
+
+@job("default", timeout=6000)
+def delete_all_contacts(employees):
+    start = datetime.now()
+    try:
+        for employee in employees:
+            employee.delete_all_contacts_in_group("Clients")
+            employee.delete_all_contacts_in_group("Equipe SUR.lu")
+        end = datetime.now()
+        notify_system_via_google_webhook(
+            "The google contacts of the following employees were deleted: {0} and it took {1} sec to generate".format(
+                ','.join([str(employee) for employee in employees]), (end - start).seconds))
+    except Exception as e:
+        error_detail = traceback.format_exc()
+        notify_system_via_google_webhook(
+            "*An error occurred while deleting google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))

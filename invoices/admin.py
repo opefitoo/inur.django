@@ -25,7 +25,8 @@ from django_csv_exports.admin import CSVExportAdmin
 from helpers.timesheet import build_use_case_objects
 from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_paid, set_invoice_as_not_paid, \
     set_invoice_as_not_sent, find_all_invoice_items_with_broken_file, \
-    find_all_medical_prescriptions_and_merge_them_in_one_file, link_invoice_to_invoice_batch, create_google_contact
+    find_all_medical_prescriptions_and_merge_them_in_one_file, link_invoice_to_invoice_batch, create_google_contact, \
+    cleanup_contacts
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.certificates import generate_pdf
@@ -231,7 +232,7 @@ class EmployeeAdmin(admin.ModelAdmin):
 
     # actions = [work_certificate, 'delete_in_google_calendar']
     actions = [work_certificate, contracts_situation_certificate, entry_declaration, export_employees_data_to_csv,
-               create_google_contact]
+               create_google_contact, cleanup_contacts]
 
     def delete_in_google_calendar(self, request, queryset):
         if not request.user.is_superuser:
@@ -310,7 +311,7 @@ class PatientAdmin(CSVExportAdmin):
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
                   'country', 'phone_number', 'email_address', 'date_of_death']
     readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions', 'link_to_events')
-    search_fields = ['name', 'first_name', 'code_sn', 'zipcode']
+    search_fields = ['name', 'first_name', 'code_sn', 'zipcode', 'city', 'phone_number', 'email_address']
     # actions = [calculate_distance_matrix]
     form = PatientForm
     actions = [generer_forfait_aev_mars, generer_forfait_aev_avril, generer_forfait_aev_mai, generer_forfait_aev_june]

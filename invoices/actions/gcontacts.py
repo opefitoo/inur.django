@@ -53,9 +53,50 @@ class GoogleContacts:
 
     def delete_contact(self, resource_name):
         try:
-            self.service.people().deleteContact(resourceName=resource_name).execute()
+            deletion_result = self.service.people().deleteContact(resourceName=resource_name).execute()
+            print(f"Contact deleted: {deletion_result}")
         except Exception as e:
             print(f"Failed to delete contact: {e}")
+
+    def delete_all_contacts(self):
+        # take only the 1st 5 contacts
+        contacts = self.get_contacts()[:5]
+        for person in contacts:
+            print(f"Deleting contact {person['resourceName']}...")
+            self.delete_contact(person['resourceName'])
+
+    def delete_all_contacts_in_group(self, group_name):
+        group_id = self.get_group_id_by_name(group_name)
+        if group_id:
+            contacts = self.get_contacts_in_group(group_id)
+            for contact_id in contacts:
+                print(f"Deleting contact {contact_id}...")
+                self.delete_contact(contact_id)
+        else:
+            print(f"Group {group_name} not found.")
+
+    def get_contacts_in_group(self, group_id):
+        try:
+            results = self.service.contactGroups().get(
+                resourceName=group_id,
+                maxMembers=100
+            ).execute()
+            return results['memberResourceNames']
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            return []
+
+    def get_group_id_by_name(self, group_name):
+        try:
+            results = self.service.contactGroups().list().execute()
+            groups = results.get('contactGroups', [])
+            for group in groups:
+                if group['name'] == group_name:
+                    return group['resourceName']
+            return None
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            return None
 
     def contact_exists(self, first_name, family_name, sn_code):
         try:
