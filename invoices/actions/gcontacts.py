@@ -51,6 +51,12 @@ class GoogleContacts:
 
         return contacts
 
+    def delete_contact(self, resource_name):
+        try:
+            self.service.people().deleteContact(resourceName=resource_name).execute()
+        except Exception as e:
+            print(f"Failed to delete contact: {e}")
+
     def contact_exists(self, first_name, family_name, sn_code):
         try:
             contacts = self.get_contacts()

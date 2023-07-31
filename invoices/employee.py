@@ -1,3 +1,4 @@
+import hashlib
 import os
 
 from colorfield.fields import ColorField
@@ -167,7 +168,7 @@ class Employee(models.Model):
         google_contacts = GoogleContacts(email=self.user.email)
         from invoices.models import Patient
         # get 10 first patients that are still alive
-        patients_still_alive = Patient.objects.filter(date_of_death__isnull=True).order_by('-id')
+        patients_still_alive = Patient.objects.filter(date_of_death__isnull=True).order_by('-id')[0:10]
         for patient in patients_still_alive:
             new_contact = {
                 "names": [
@@ -206,6 +207,14 @@ class Employee(models.Model):
                         "key": "sn_code",
                         # remove all spaces and trim sn_code before adding it
                         "value": patient.code_sn.replace(" ", "").strip()
+                    },
+                    {
+                        "key": "user_id",
+                        "value": patient.id
+                    },
+                    {
+                        "key": "created_by",
+                        "value": "inur_system"
                     }
                 ]
 
@@ -245,7 +254,16 @@ class Employee(models.Model):
                     {
                         "key": "sn_code",
                         # check 1st if sn_code is not null and remove all spaces and trim sn_code before adding it
-                        "value": employee.sn_code.replace(" ", "").strip() if employee.sn_code else ""
+                        "value": employee.sn_code.replace(" ",
+                                                          "").strip() if employee.sn_code else employee.generate_unique_hash()
+                    },
+                    {
+                        "key": "employee_id",
+                        "value": employee.id
+                    },
+                    {
+                        "key": "created_by",
+                        "value": "inur_system"
                     }
                 ]
 
@@ -259,6 +277,16 @@ class Employee(models.Model):
                 group_id = google_contacts.get_or_create_contact_group("Equipe SUR.lu")
                 # Add the contact to the group
                 google_contacts.add_contact_to_group(contact_id, group_id)
+
+    def generate_unique_hash(self):
+        # Concatenate the name and first_name
+        combined_string = self.name + self.first_name + self.id
+
+        # Create a SHA256 hash
+        result = hashlib.sha256(combined_string.encode())
+
+        # Return the hexadecimal string
+        return result.hexdigest()
 
     def __str__(self):
         # return '%s (%s)' % (self.user.username.strip().capitalize(), self.abbreviation)
