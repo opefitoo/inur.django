@@ -269,6 +269,15 @@ class Employee(models.Model):
                         "type": "mobile"
                     },
                 ],
+                "birthdays": [
+                    {
+                        "date": {
+                            "year": employee.birth_date.year,
+                            "month": employee.birth_date.month,
+                            "day": employee.birth_date.day
+                        },
+                        'metadata': {'primary': True}
+                    }],
                 "userDefined": [
                     {
                         "key": "sn_code",
