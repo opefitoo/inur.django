@@ -178,7 +178,7 @@ class Employee(models.Model):
         google_contacts = GoogleContacts(email=self.user.email)
         from invoices.models import Patient
         # get 10 first patients that are still alive
-        patients_still_alive = Patient.objects.filter(date_of_death__isnull=True).order_by('-id')[0:10]
+        patients_still_alive = Patient.objects.filter(date_of_death__isnull=True).order_by('-id')
         for patient in patients_still_alive:
             new_contact = {
                 "names": [
