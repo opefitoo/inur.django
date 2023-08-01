@@ -17,7 +17,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 from invoices.actions.gcontacts import GoogleContacts
 from invoices.enums.generic import GenderType
 from invoices.enums.holidays import ContractType
-from invoices.notifications import notify_system_via_google_webhook
 from invoices.storages import CustomizedGoogleDriveStorage
 
 
@@ -309,6 +308,7 @@ class Employee(models.Model):
                     google_contacts.add_contact_to_group(contact_id, group_id)
             else:
                 print("Employee %s has no birth date" % employee)
+                from invoices.notifications import notify_system_via_google_webhook
                 notify_system_via_google_webhook(
                     "*Employee {0} has no birthday, please fill in*".format(employee))
                 new_contact_employee = {
