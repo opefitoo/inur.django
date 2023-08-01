@@ -17,6 +17,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from invoices.actions.gcontacts import GoogleContacts
 from invoices.enums.generic import GenderType
 from invoices.enums.holidays import ContractType
+from invoices.notifications import notify_system_via_google_webhook
 from invoices.storages import CustomizedGoogleDriveStorage
 
 
@@ -250,61 +251,113 @@ class Employee(models.Model):
 
         employees_who_still_work = Employee.objects.filter(end_contract__isnull=True).order_by('-id')
         for employee in employees_who_still_work:
-            new_contact_employee = {
-                "names": [
-                    {  # Capitalize only first letter of first name all other letters are lower case
-                        "givenName": employee.user.first_name.lower().capitalize(),
-                        # CAPITALIZE LAST NAME
-                        "familyName": employee.user.last_name.upper()
-                    }
-                ],
-                "emailAddresses": [
-                    {
-                        "value": employee.user.email,
-                    }
-                ],
-                "phoneNumbers": [
-                    {
-                        "value": str(employee.phone_number) if employee.phone_number else "",
-                        "type": "mobile"
-                    },
-                ],
-                "birthdays": [
-                    {
-                        "date": {
-                            "year": employee.birth_date.year,
-                            "month": employee.birth_date.month,
-                            "day": employee.birth_date.day
+            if employee.birth_date:
+                new_contact_employee = {
+                    "names": [
+                        {  # Capitalize only first letter of first name all other letters are lower case
+                            "givenName": employee.user.first_name.lower().capitalize(),
+                            # CAPITALIZE LAST NAME
+                            "familyName": employee.user.last_name.upper()
+                        }
+                    ],
+                    "emailAddresses": [
+                        {
+                            "value": employee.user.email,
+                        }
+                    ],
+                    "phoneNumbers": [
+                        {
+                            "value": str(employee.phone_number) if employee.phone_number else "",
+                            "type": "mobile"
                         },
-                        'metadata': {'primary': True}
-                    }],
-                "userDefined": [
-                    {
-                        "key": "sn_code",
-                        # check 1st if sn_code is not null and remove all spaces and trim sn_code before adding it
-                        "value": employee.sn_code.replace(" ",
-                                                          "").strip() if employee.sn_code else employee.generate_unique_hash()
-                    },
-                    {
-                        "key": "employee_id",
-                        "value": str(employee.id)
-                    },
-                    {
-                        "key": "created_by",
-                        "value": "inur_system"
-                    }
-                ]
+                    ],
+                    "birthdays": [
+                        {
+                            "date": {
+                                "year": employee.birth_date.year,
+                                "month": employee.birth_date.month,
+                                "day": employee.birth_date.day
+                            },
+                            'metadata': {'primary': True}
+                        }],
+                    "userDefined": [
+                        {
+                            "key": "sn_code",
+                            # check 1st if sn_code is not null and remove all spaces and trim sn_code before adding it
+                            "value": employee.sn_code.replace(" ",
+                                                              "").strip() if employee.sn_code else employee.generate_unique_hash()
+                        },
+                        {
+                            "key": "employee_id",
+                            "value": str(employee.id)
+                        },
+                        {
+                            "key": "created_by",
+                            "value": "inur_system"
+                        }
+                    ]
 
-            }
-            print("Creating employee: %s" % new_contact_employee)
-            response = google_contacts.add_or_update_contact(new_contact_employee)
-            # Get the resource name (id) of the contact that was just added
-            if response:
-                contact_id = response['resourceName']
-                # Get the id of the "Employees" group, or create it if it doesn't exist
-                group_id = google_contacts.get_or_create_contact_group("Equipe SUR.lu")
-                # Add the contact to the group
-                google_contacts.add_contact_to_group(contact_id, group_id)
+                }
+                print("Creating employee: %s" % new_contact_employee)
+                response = google_contacts.add_or_update_contact(new_contact_employee)
+                # Get the resource name (id) of the contact that was just added
+                if response:
+                    contact_id = response['resourceName']
+                    # Get the id of the "Employees" group, or create it if it doesn't exist
+                    group_id = google_contacts.get_or_create_contact_group("Equipe SUR.lu")
+                    # Add the contact to the group
+                    google_contacts.add_contact_to_group(contact_id, group_id)
+            else:
+                print("Employee %s has no birth date" % employee)
+                notify_system_via_google_webhook(
+                    "*Employee {0} has no birthday, please fill in*".format(employee))
+                new_contact_employee = {
+                    "names": [
+                        {  # Capitalize only first letter of first name all other letters are lower case
+                            "givenName": employee.user.first_name.lower().capitalize(),
+                            # CAPITALIZE LAST NAME
+                            "familyName": employee.user.last_name.upper()
+                        }
+                    ],
+                    "emailAddresses": [
+                        {
+                            "value": employee.user.email,
+                        }
+                    ],
+                    "phoneNumbers": [
+                        {
+                            "value": str(employee.phone_number) if employee.phone_number else "",
+                            "type": "mobile"
+                        },
+                    ],
+                    "userDefined": [
+                        {
+                            "key": "sn_code",
+                            # check 1st if sn_code is not null and remove all spaces and trim sn_code before adding it
+                            "value": employee.sn_code.replace(" ",
+                                                              "").strip() if employee.sn_code else employee.generate_unique_hash()
+                        },
+                        {
+                            "key": "employee_id",
+                            "value": str(employee.id)
+                        },
+                        {
+                            "key": "created_by",
+                            "value": "inur_system"
+                        }
+                    ]
+
+                }
+                print("Creating employee: %s" % new_contact_employee)
+                response = google_contacts.add_or_update_contact(new_contact_employee)
+                # Get the resource name (id) of the contact that was just added
+                if response:
+                    contact_id = response['resourceName']
+                    # Get the id of the "Employees" group, or create it if it doesn't exist
+                    group_id = google_contacts.get_or_create_contact_group("Equipe SUR.lu")
+                    # Add the contact to the group
+                    google_contacts.add_contact_to_group(contact_id, group_id)
+
 
     def generate_unique_hash(self):
         # Concatenate the name and first_name
