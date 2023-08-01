@@ -1197,6 +1197,8 @@ class EventListAdmin(admin.ModelAdmin):
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
                'send_webhook_message']
     inlines = (ReportPictureInLine,)
+    search_fields = ['patient__first_name', 'patient__name', 'patient__phone_number', 'patient__email_address',
+                     'notes', 'event_report']
     autocomplete_fields = ['patient']
 
     form = EventForm
