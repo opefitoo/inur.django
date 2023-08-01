@@ -38,7 +38,7 @@ class GoogleContacts:
         request = contacts_service.list(
             resourceName='people/me',
             pageSize=100,
-            personFields='names,emailAddresses',
+            personFields='names,emailAddresses,userDefined',
         )
         response = request.execute()
         if 'connections' in response:
@@ -65,11 +65,27 @@ class GoogleContacts:
             self.delete_contact(person['resourceName'])
 
     def batch_delete_contacts(self, contacts):
-        batch = self.service.new_batch_http_request()
-        for contact in contacts:
-            batch.add(self.service.people().deleteContact(resourceName=contact['resourceName']))
-        batch_result = batch.execute()
-        print(f"Batch delete result: {batch_result}")
+        if len(contacts) > 0:
+            # split contacts into batches of 500
+            contacts_batches = [contacts[i:i + 500] for i in range(0, len(contacts), 500)]
+            for batch in contacts_batches:
+                print(f"Deleting {len(batch)} contacts...")
+                batch_result = self.service.people().batchDeleteContacts(
+                    body={"resourceNames": batch}
+                ).execute()
+                print(f"Batch delete result: {batch_result}")
+        else:
+            print("No contacts to delete.")
+
+    def count_contacts_in_group(self, group_id):
+        try:
+            results = self.service.contactGroups().get(
+                resourceName=group_id
+            ).execute()
+            return results.get('memberCount', 0)
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            return 0
 
     def delete_all_contacts_in_group(self, group_name):
         group_id = self.get_group_id_by_name(group_name)
@@ -81,15 +97,29 @@ class GoogleContacts:
             print(f"Group {group_name} not found.")
 
     def get_contacts_in_group(self, group_id):
-        try:
-            results = self.service.contactGroups().get(
-                resourceName=group_id,
-                maxMembers=100
-            ).execute()
-            return results['memberResourceNames']
-        except HttpError as error:
-            print(f"An error occurred: {error}")
+        number_of_contacts = self.count_contacts_in_group(group_id)
+        if number_of_contacts:
+            print(f"Fetching {number_of_contacts} contacts in group {group_id}...")
+            # loop until all contacts are fetched
+            contacts = []
+            results = self.service.contactGroups().batchGet(resourceNames=group_id,
+                                                            maxMembers=number_of_contacts).execute()
+            if 'memberResourceNames' in results['responses'][0]['contactGroup']:
+                contacts.extend(results['responses'][0]['contactGroup']['memberResourceNames'])
+            if len(contacts) < number_of_contacts:
+                next_page_token = results['responses'][0].get('nextPageToken', None)
+                while next_page_token:
+                    results = self.service.contactGroups().batchGet(resourceNames=group_id,
+                                                                    maxMembers=number_of_contacts,
+                                                                    pageToken=next_page_token).execute()
+                    if 'memberResourceNames' in results['responses'][0]['contactGroup']:
+                        contacts.extend(results['responses'][0]['contactGroup']['memberResourceNames'])
+                    next_page_token = results['responses'][0].get('nextPageToken', None)
+            return contacts
+        else:
+            print(f"Group {group_id} not found.")
             return []
+
 
     def get_group_id_by_name(self, group_name):
         try:
@@ -119,6 +149,22 @@ class GoogleContacts:
             print(f"An error occurred: {error}")
             return False
 
+    def find_contact_by_details(self, first_name, family_name, sn_code=None):
+        ppl = self.service.people().searchContacts(query=f"{first_name} {family_name}",
+                                             readMask='names,userDefined').execute()
+        for person in ppl.get('results', []):
+            names = person['person'].get('names', [])
+            user_defined_fields = person['person'].get('userDefined', [])
+            for name in names:
+                if name['givenName'] == first_name and name['familyName'] == family_name:
+                    if sn_code:
+                        for field in user_defined_fields:
+                            if field['key'] == 'sn_code' and field['value'] == sn_code:
+                                return person['person']
+                    else:
+                        return person['person']
+        return None
+
     def add_contact(self, data):
         # Check if the contact already exists
         names = data.get('names', [])
@@ -127,12 +173,14 @@ class GoogleContacts:
             first_name = names[0]['givenName']
             family_name = names[0]['familyName']
             sn_code = next((field['value'] for field in user_defined_fields if field['key'] == 'sn_code'), None)
-            if self.contact_exists(first_name, family_name, sn_code):
+            existing_contact = self.find_contact_by_details(first_name, family_name, sn_code=sn_code)
+            if existing_contact:
                 print(f"Contact {first_name} {family_name} with SN Code {sn_code} already exists.")
                 return None
 
         # If the contact does not exist, create it
         return self.service.people().createContact(body=data).execute()
+
 
     def add_or_update_contact(self, data):
         names = data.get('names', [])
@@ -141,38 +189,17 @@ class GoogleContacts:
             first_name = names[0]['givenName']
             family_name = names[0]['familyName']
             sn_code = next((field['value'] for field in user_defined_fields if field['key'] == 'sn_code'), None)
-
+            existing_contact = self.find_contact_by_details(first_name, family_name, sn_code=sn_code)
             # Check if the contact already exists
-            if self.contact_exists(first_name, family_name, sn_code):
+            if existing_contact:
                 # If the contact exists, update it
                 print(f"Contact {first_name} {family_name} with SN Code {sn_code} already exists, updating it...")
-
-                # We need to fetch all contacts and find the contact to be updated to get its resourceName
-                results = self.service.people().connections().list(resourceName='people/me',
-                                                                   personFields='names,userDefined,metadata').execute()
-                connections = results.get('connections', [])
-                for person in connections:
-                    person_names = person.get('names', [])
-                    person_user_defined_fields = person.get('userDefined', [])
-                    for name in person_names:
-                        if name['givenName'] == first_name and name['familyName'] == family_name:
-                            for field in person_user_defined_fields:
-                                if field['key'] == 'sn_code' and field['value'] == sn_code:
-                                    # We found the existing contact, now let's update it
-                                    existing_contact_resource_name = person['resourceName']
-                                    existing_contact_etag = person['etag']  # get the etag
-
-                                    # Include the etag in the data for update
-                                    data['etag'] = existing_contact_etag
-
-                                    update_mask = ",".join(
-                                        [k for k in data.keys() if k != 'etag'])  # Exclude 'etag' from the update mask
-                                    return self.service.people().updateContact(
-                                        resourceName=existing_contact_resource_name,
-                                        updatePersonFields=update_mask,
-                                        body=data
-                                    ).execute()
-                print(f"Failed to find existing contact {first_name} {family_name} with SN Code {sn_code} for update.")
+                data['etag'] = existing_contact['etag']
+                updated_contact = self.service.people().updateContact(
+                    resourceName=existing_contact['resourceName'],
+                    updatePersonFields='names,emailAddresses,phoneNumbers,addresses,userDefined',
+                    body=data).execute()
+                return updated_contact
             else:
                 # If the contact does not exist, create it
                 print(f"Creating new contact {first_name} {family_name} with SN Code {sn_code}...")
@@ -192,6 +219,7 @@ class GoogleContacts:
         except HttpError as error:
             print(f"An error occurred: {error}")
             return None
+
 
     def add_contact_to_group(self, contact_id, group_id):
         try:

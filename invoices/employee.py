@@ -173,6 +173,7 @@ class Employee(models.Model):
             google_contacts.batch_delete_contacts(contacts)
         else:
             print(f"Group {group_name} not found.")
+
     def sync_google_contacts(self):
         google_contacts = GoogleContacts(email=self.user.email)
         from invoices.models import Patient
@@ -211,6 +212,15 @@ class Employee(models.Model):
                         "type": "home"
                     }
                 ],
+                "birthdays": [
+                    {
+                        "date": {
+                            "year": patient.birth_date_as_object().year,
+                            "month": patient.birth_date_as_object().month,
+                            "day": patient.birth_date_as_object().day
+                        },
+                        'metadata': {'primary': True}
+                    }],
                 "userDefined": [
                     {
                         "key": "sn_code",
@@ -219,7 +229,7 @@ class Employee(models.Model):
                     },
                     {
                         "key": "user_id",
-                        "value": patient.id
+                        "value": str(patient.id)
                     },
                     {
                         "key": "created_by",
@@ -268,7 +278,7 @@ class Employee(models.Model):
                     },
                     {
                         "key": "employee_id",
-                        "value": employee.id
+                        "value": str(employee.id)
                     },
                     {
                         "key": "created_by",

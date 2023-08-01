@@ -307,6 +307,9 @@ class Patient(models.Model):
     def birth_date(self):
         return extract_birth_date_fr(self.code_sn)
 
+    def birth_date_as_object(self):
+        return extract_birth_date(self.code_sn)
+
     def clean_phone_number(self):
         return self.phone_number.replace(" ", ".")
 
