@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timedelta
 from json import dumps
 
+from constance import config
 from httplib2 import Http
 
 from invoices import settings
@@ -28,8 +29,9 @@ def post_webhook_pic_urls(description=None, event_pictures_url=None):
     print(response)
 
 
-def post_webhook(employees, patient, event_report, state, event_date=None, event_pictures_urls=None):
+def post_webhook(employees, patient, event_report, state, event_date=None, event_pictures_urls=None, event=None):
     """Hangouts Chat incoming webhook quickstart.
+    @param event:
     @param event_pictures_urls:
     @param event_report:
     @param state:
@@ -54,9 +56,11 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
         else:
             string_event_date = "programmé à  %s" % event_date.time().strftime("%Hh%M")
     if 3 == state:
-        message = 'Passage %s FAIT par *%s* chez *%s* : %s' % (string_event_date, employees.user.first_name,
-                                                               patient.name,
-                                                               event_report)
+        message = '<%s%s|Passage> %s FAIT par *%s* chez *%s* : %s  ' % (config.ROOT_URL, event.get_admin_url(),
+                                                                        string_event_date, employees.user.first_name,
+                                                                        patient.name,
+                                                                        event_report
+                                                                        )
     # FIXME: remove hardcoded value for state
     elif state in [5, 6]:
         # if date is in the future, message will contain the date
@@ -68,17 +72,20 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
         else:
             # or in the past
             string_event_date = "du %s à " % (
-            event_date.date().strftime('%d-%h-%Y'), event_date.time().strftime("%Hh%M"))
+                event_date.date().strftime('%d-%h-%Y'), event_date.time().strftime("%Hh%M"))
         if state == 5:
-            message = 'Attention *ANNULÉ* le passage %s pour *%s* chez *%s* : %s' % (
-            string_event_date, employees.user.first_name,
-            patient.name,
-            event_report)
+            message = 'Attention *NON FAIT* le <%s%s|passage> %s pour *%s* chez *%s* : %s' % (
+                config.ROOT_URL, event.get_admin_url(),
+                string_event_date, employees.user.first_name,
+                patient.name,
+                event_report)
         else:
-            message = 'Attention *NON FAIT* le passage %s pour *%s* chez *%s* : %s' % (string_event_date,
-                                                                                      employees.user.first_name,
-                                                                                      patient.name,
-                                                                                      event_report)
+            message = 'Attention *ANNULÉ* le <%s%s|passage> %s pour *%s* chez *%s* : %s' % (
+                config.ROOT_URL, event.get_admin_url(),
+                string_event_date,
+                employees.user.first_name,
+                patient.name,
+                event_report)
 
     url = settings.GOOGLE_CHAT_WEBHOOK_URL
     if event_pictures_urls:

@@ -452,7 +452,7 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
                                    for a in instance.report_pictures.all()]
         post_webhook(instance.employees, instance.patient, instance.event_report, instance.state,
                      event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
-                         ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls)
+                         ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls, event=instance)
 
 
 @receiver(post_save, sender=EventList, dispatch_uid="send_update_via_chat_1413")
@@ -467,7 +467,7 @@ def send_update_via_chat(sender, instance: EventList, **kwargs):
                                    for a in instance.report_pictures.all()]
         post_webhook(instance.employees, instance.patient, instance.event_report, instance.state,
                      event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
-                         ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls)
+                         ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls, event=instance)
 
 
 @receiver(post_save, sender=ReportPicture, dispatch_uid="send_update_via_chat_via_report_picture_1710")
