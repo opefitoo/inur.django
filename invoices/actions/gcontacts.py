@@ -229,3 +229,156 @@ class GoogleContacts:
             ).execute()
         except HttpError as error:
             print(f"An error occurred: {error}")
+
+    def create_new_patient(self, patient):
+        new_contact = {
+            "names": [{
+                "givenName": patient.first_name,
+                "familyName": patient.name,
+            }],
+            "phoneNumbers": [
+                {
+                    "value": patient.phone_number,
+                    "type": "mobile"
+                },
+                {
+                    "value": str(patient.additional_phone_number) if patient.additional_phone_number else "",
+                    "type": "home"
+                },
+            ],
+            "emailAddresses": [{
+                "value": patient.email,
+                "type": "home"
+            }],
+            "addresses": [{
+                "streetAddress": patient.address,
+                "postalCode": patient.zip_code,
+                "city": patient.city,
+                "country": patient.country,
+                "type": "home"
+            }],
+            "userDefined": [
+                {
+                    "key": "sn_code",
+                    # remove all spaces and trim sn_code before adding it
+                    "value": patient.code_sn.replace(" ", "").strip()
+                },
+                {
+                    "key": "user_id",
+                    "value": str(patient.id)
+                },
+                {
+                    "key": "created_by",
+                    "value": "inur_system"
+                }
+            ]
+        }
+
+        if patient.birth_date:
+            new_contact[
+            "birthdays": [
+                {
+                    "date": {
+                        "year": patient.birth_date_as_object().year,
+                        "month": patient.birth_date_as_object().month,
+                        "day": patient.birth_date_as_object().day
+                    },
+                    'metadata': {'primary': True}
+                }]
+            ]
+        else:
+            from invoices.notifications import notify_system_via_google_webhook
+            notify_system_via_google_webhook("*WARNING* While creating patient on Google contacts, we noticed that Patient %s has no birth date" % patient)
+        print("Creating new Client: %s" % new_contact)
+        response = self.add_or_update_contact(new_contact)
+        # Get the resource name (id) of the contact that was just added
+        if response:
+            contact_id = response['resourceName']
+            # Get the id of the "Clients" group, or create it if it doesn't exist
+            group_id = self.get_or_create_contact_group("Clients")
+            # Add the contact to the group
+            self.add_contact_to_group(contact_id, group_id)
+
+    def create_new_employee(self, employee):
+        new_contact_employee = {
+            "names": [
+                {  # Capitalize only first letter of first name all other letters are lower case
+                    "givenName": employee.user.first_name.lower().capitalize(),
+                    # CAPITALIZE LAST NAME
+                    "familyName": employee.user.last_name.upper()
+                }
+            ],
+            "emailAddresses": [
+                {
+                    "value": employee.user.email,
+                }
+            ],
+            "phoneNumbers": [
+                {
+                    "value": str(employee.phone_number) if employee.phone_number else "",
+                    "type": "mobile"
+                },
+            ],
+            "userDefined": [
+                {
+                    "key": "sn_code",
+                    # check 1st if sn_code is not null and remove all spaces and trim sn_code before adding it
+                    "value": employee.sn_code.replace(" ",
+                                                      "").strip() if employee.sn_code else employee.generate_unique_hash()
+                },
+                {
+                    "key": "employee_id",
+                    "value": str(employee.id)
+                },
+                {
+                    "key": "created_by",
+                    "value": "inur_system"
+                }
+            ]
+
+        }
+        if employee.birth_date:
+            new_contact_employee[
+                "birthdays": [
+                    {
+                        "date": {
+                            "year": employee.birth_date_as_object().year,
+                            "month": employee.birth_date_as_object().month,
+                            "day": employee.birth_date_as_object().day
+                        },
+                        'metadata': {'primary': True}
+                    }]
+            ]
+        else:
+            from invoices.notifications import notify_system_via_google_webhook
+            notify_system_via_google_webhook("*WARNING* While creating employee on Google contacts, we noticed that Employee %s has no birth date" % employee)
+        print("Creating employee: %s" % new_contact_employee)
+        response = self.add_or_update_contact(new_contact_employee)
+        # Get the resource name (id) of the contact that was just added
+        if response:
+            contact_id = response['resourceName']
+            # Get the id of the "Employees" group, or create it if it doesn't exist
+            group_id = self.get_or_create_contact_group("Equipe SUR.lu")
+            # Add the contact to the group
+            self.add_contact_to_group(contact_id, group_id)
+
+    def delete_patient(self, patient):
+        contact = self.find_contact_by_details(patient.first_name, patient.name, sn_code=patient.code_sn)
+        if contact:
+            self.delete_contact(contact['resourceName'])
+        else:
+            print(f"Patient {patient} not found on Google contacts.")
+
+    def delete_employee(self, employee):
+        contact = self.find_contact_by_details(employee.user.first_name, employee.user.last_name)
+        if contact:
+            self.delete_contact(contact['resourceName'])
+        else:
+            print(f"Employee {employee} not found on Google contacts.")
+
+    def delete_contact(self, resource_name):
+        try:
+            deletion_result = self.service.people().deleteContact(resourceName=resource_name).execute()
+            print(f"Contact deleted: {deletion_result}")
+        except Exception as e:
+            print(f"Failed to delete contact: {e}")

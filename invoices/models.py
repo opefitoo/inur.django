@@ -34,7 +34,7 @@ from invoices.employee import Employee
 from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.modelspackage import InvoicingDetails
-from invoices.processors.tasks import process_post_save, update_events_address
+from invoices.processors.tasks import process_post_save, update_events_address, sync_google_contacts
 from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
 
@@ -1241,6 +1241,15 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home = False
             pair.at_home_paired = instance
             pair.save()
+
+@receiver(post_save, sender=Patient, dispatch_uid="create_contact_in_employees_google_contacts")
+def create_contact_in_employees_google_contacts(sender, patient, **kwargs):
+    all_active_employees = Employee.objects.filter(end_contract__isnull=True)
+    if os.environ.get('LOCAL_ENV', None):
+        sync_google_contacts(all_active_employees)
+    else:
+        sync_google_contacts.delay(all_active_employees)
+
 from constance import config
 from django.contrib.auth.models import User
 from django.db import models
