@@ -275,8 +275,7 @@ class GoogleContacts:
         }
 
         if patient.birth_date:
-            new_contact[
-            "birthdays": [
+            new_contact["birthdays"] = [
                 {
                     "date": {
                         "year": patient.birth_date_as_object().year,
@@ -285,7 +284,6 @@ class GoogleContacts:
                     },
                     'metadata': {'primary': True}
                 }]
-            ]
         else:
             from invoices.notifications import notify_system_via_google_webhook
             notify_system_via_google_webhook("*WARNING* While creating patient on Google contacts, we noticed that Patient %s has no birth date" % patient)
