@@ -247,7 +247,7 @@ class GoogleContacts:
                 },
             ],
             "emailAddresses": [{
-                "value": patient.email,
+                "value": patient.email_address,
                 "type": "home"
             }],
             "addresses": [{
