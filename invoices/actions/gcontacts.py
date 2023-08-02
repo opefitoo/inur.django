@@ -252,7 +252,7 @@ class GoogleContacts:
             }],
             "addresses": [{
                 "streetAddress": patient.address,
-                "postalCode": patient.zip_code,
+                "postalCode": patient.zipcode,
                 "city": patient.city,
                 "country": patient.country,
                 "type": "home"
