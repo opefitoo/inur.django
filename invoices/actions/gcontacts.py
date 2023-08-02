@@ -254,7 +254,7 @@ class GoogleContacts:
                 "streetAddress": patient.address,
                 "postalCode": patient.zipcode,
                 "city": patient.city,
-                "country": patient.country,
+                "country": patient.country.name,
                 "type": "home"
             }],
             "userDefined": [
