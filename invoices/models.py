@@ -1243,7 +1243,7 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.save()
 
 @receiver(post_save, sender=Patient, dispatch_uid="create_contact_in_employees_google_contacts")
-def create_contact_in_employees_google_contacts(sender, patient, **kwargs):
+def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
     all_active_employees = Employee.objects.filter(end_contract__isnull=True)
     if os.environ.get('LOCAL_ENV', None):
         sync_google_contacts(all_active_employees)
