@@ -28,13 +28,14 @@ from gdstorage.storage import GoogleDriveStorage
 from pdf2image import convert_from_bytes
 from phonenumber_field.modelfields import PhoneNumberField
 
+from invoices.actions.gcontacts import GoogleContacts
 from invoices.actions.helpers import invoice_itembatch_medical_prescription_filename, invoice_itembatch_prefac_filename, \
     invoice_itembatch_ordo_filename
 from invoices.employee import Employee
 from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.modelspackage import InvoicingDetails
-from invoices.processors.tasks import process_post_save, update_events_address, sync_google_contacts
+from invoices.processors.tasks import process_post_save, update_events_address
 from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
 
@@ -1245,10 +1246,9 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
 @receiver(post_save, sender=Patient, dispatch_uid="create_contact_in_employees_google_contacts")
 def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
     all_active_employees = Employee.objects.filter(end_contract__isnull=True)
-    if os.environ.get('LOCAL_ENV', None):
-        sync_google_contacts(all_active_employees)
-    else:
-        sync_google_contacts.delay(all_active_employees)
+    for employee in all_active_employees:
+        google_contact = GoogleContacts(employee.user.email)
+        google_contact.create_new_patient(instance)
 
 from constance import config
 from django.contrib.auth.models import User
