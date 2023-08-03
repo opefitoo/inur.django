@@ -1246,9 +1246,16 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
 @receiver(post_save, sender=Patient, dispatch_uid="create_contact_in_employees_google_contacts")
 def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
     all_active_employees = Employee.objects.filter(end_contract__isnull=True)
+    # is it a new patient or an update
     for employee in all_active_employees:
-        google_contact = GoogleContacts(employee.user.email)
-        google_contact.create_new_patient(instance)
+        google_contact = GoogleContacts(email=employee.user.email)
+        google_contact.create_or_update_new_patient(instance)
+@receiver(post_delete, sender=Patient, dispatch_uid="delete_contact_in_employees_google_contacts")
+def delete_contact_in_employees_google_contacts(sender, instance, **kwargs):
+    all_active_employees = Employee.objects.filter(end_contract__isnull=True)
+    for employee in all_active_employees:
+        google_contact = GoogleContacts(email=employee.user.email)
+        google_contact.delete_patient(instance)
 
 from constance import config
 from django.contrib.auth.models import User

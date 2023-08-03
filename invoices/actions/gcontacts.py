@@ -55,8 +55,10 @@ class GoogleContacts:
         try:
             deletion_result = self.service.people().deleteContact(resourceName=resource_name).execute()
             print(f"Contact deleted: {deletion_result}")
+            return deletion_result
         except Exception as e:
             print(f"Failed to delete contact: {e}")
+            return None
 
     def delete_all_contacts(self):
         contacts = self.get_contacts()
@@ -319,7 +321,7 @@ class GoogleContacts:
         batches = [patients[i:i + 200] for i in range(0, len(patients), 200)]
         for batch in batches:
             self.batch_create_new_patients_max_200(batch)
-    def create_new_patient(self, patient):
+    def create_or_update_new_patient(self, patient):
         new_contact = {
             "names": [{
                 "givenName": patient.first_name,
@@ -452,16 +454,17 @@ class GoogleContacts:
     def delete_patient(self, patient):
         contact = self.find_contact_by_details(patient.first_name, patient.name, sn_code=patient.code_sn)
         if contact:
-            self.delete_contact(contact['resourceName'])
+            result = self.delete_contact(contact['resourceName'])
+            print(f"Contact {patient} from {self.email} deleted: {result}")
         else:
-            print(f"Patient {patient} not found on Google contacts.")
+            print(f"Patient {patient} not found on Google contacts of {self.email}")
 
     def delete_employee(self, employee):
         contact = self.find_contact_by_details(employee.user.first_name, employee.user.last_name)
         if contact:
             self.delete_contact(contact['resourceName'])
         else:
-            print(f"Employee {employee} not found on Google contacts.")
+            print(f"Employee {employee} not found on Google contacts of {self.email}")
 
     def delete_contact(self, resource_name):
         try:
@@ -469,3 +472,14 @@ class GoogleContacts:
             print(f"Contact deleted: {deletion_result}")
         except Exception as e:
             print(f"Failed to delete contact: {e}")
+
+    def update_patient(self, patient):
+        contact = self.find_contact_by_details(patient.first_name, patient.name, sn_code=patient.code_sn)
+        if contact:
+            contact_id = contact['resourceName']
+            # Get the id of the "Clients" group, or create it if it doesn't exist
+            group_id = self.get_or_create_contact_group("Clients")
+            # Add the contact to the group
+            self.add_contact_to_group(contact_id, group_id)
+        else:
+            print(f"Patient {patient} not found on Google contacts of {self.email}")
