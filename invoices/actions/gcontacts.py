@@ -120,7 +120,6 @@ class GoogleContacts:
             print(f"Group {group_id} not found.")
             return []
 
-
     def get_group_id_by_name(self, group_name):
         try:
             results = self.service.contactGroups().list().execute()
@@ -151,7 +150,7 @@ class GoogleContacts:
 
     def find_contact_by_details(self, first_name, family_name, sn_code=None):
         ppl = self.service.people().searchContacts(query=f"{first_name} {family_name}",
-                                             readMask='names,userDefined').execute()
+                                                   readMask='names,userDefined').execute()
         for person in ppl.get('results', []):
             names = person['person'].get('names', [])
             user_defined_fields = person['person'].get('userDefined', [])
@@ -180,7 +179,6 @@ class GoogleContacts:
 
         # If the contact does not exist, create it
         return self.service.people().createContact(body=data).execute()
-
 
     def add_or_update_contact(self, data):
         names = data.get('names', [])
@@ -220,7 +218,6 @@ class GoogleContacts:
             print(f"An error occurred: {error}")
             return None
 
-
     def add_contact_to_group(self, contact_id, group_id):
         try:
             self.service.contactGroups().members().modify(
@@ -230,6 +227,98 @@ class GoogleContacts:
         except HttpError as error:
             print(f"An error occurred: {error}")
 
+    def batch_create_new_patients_max_200(self, patients):
+        if len(patients) > 200:
+            raise Exception("You can only create 200 contacts at a time")
+        contacts_to_create_in_batches = []
+        for patient in patients:
+            new_contact = {
+                'contactPerson': {
+                    "names": [{
+                        "givenName": patient.first_name,
+                        "familyName": patient.name,
+                    }],
+                    "phoneNumbers": [
+                        {
+                            "value": patient.phone_number,
+                            "type": "mobile"
+                        },
+                        {
+                            "value": str(
+                                patient.additional_phone_number) if patient.additional_phone_number else "",
+                            "type": "home"
+                        },
+                    ],
+                    "emailAddresses": [{
+                        "value": patient.email_address,
+                        "type": "home"
+                    }],
+                    "addresses": [{
+                        "streetAddress": patient.address,
+                        "postalCode": patient.zipcode,
+                        "city": patient.city,
+                        "country": patient.country.name,
+                        "type": "home"
+                    }],
+                    "userDefined": [
+                        {
+                            "key": "sn_code",
+                            # remove all spaces and trim sn_code before adding it
+                            "value": patient.code_sn.replace(" ", "").strip()
+                        },
+                        {
+                            "key": "user_id",
+                            "value": str(patient.id)
+                        },
+                        {
+                            "key": "created_by",
+                            "value": "inur_system"
+                        }
+                    ]
+                }
+            }
+
+            if patient.birth_date_as_object():
+                new_contact["contactPerson"]["birthdays"] = [
+                    {
+                        "date": {
+                            "year": patient.birth_date_as_object().year,
+                            "month": patient.birth_date_as_object().month,
+                            "day": patient.birth_date_as_object().day
+                        },
+                        'metadata': {'primary': True}
+                    }]
+            else:
+                from invoices.notifications import notify_system_via_google_webhook
+                print("Patient %s has no birth date" % patient)
+                notify_system_via_google_webhook(
+                   "*WARNING* While creating patient on Google contacts, we noticed that Patient %s has no birth date" % patient)
+            contacts_to_create_in_batches.append(new_contact)
+        # Make the request
+        print("Creating %s new Clients by Batch ..." % len(contacts_to_create_in_batches))
+        response = self.service.people().batchCreateContacts(
+            body={
+                'contacts': contacts_to_create_in_batches,
+                'readMask': 'names,emailAddresses'  # fields to return in the response
+            }
+        ).execute()
+        print("Batch create result: %s" % response)
+        created_people = response.get('createdPeople', [])
+        resource_names = [person['person']['resourceName'] for person in created_people]
+        clients_group_id = self.get_or_create_contact_group("Clients")
+        response = self.service.contactGroups().members().modify(
+            resourceName=clients_group_id,
+            body={
+                'resourceNamesToAdd': resource_names
+            }
+        ).execute()
+        print("Group add result: %s" % response)
+    def batch_create_new_patients(self, patients):
+        # divide the contacts into batches of 200
+        print("Creating %s new Clients..." % len(patients))
+        batches = [patients[i:i + 200] for i in range(0, len(patients), 200)]
+        for batch in batches:
+            self.batch_create_new_patients_max_200(batch)
     def create_new_patient(self, patient):
         new_contact = {
             "names": [{
@@ -286,7 +375,8 @@ class GoogleContacts:
                 }]
         else:
             from invoices.notifications import notify_system_via_google_webhook
-            notify_system_via_google_webhook("*WARNING* While creating patient on Google contacts, we noticed that Patient %s has no birth date" % patient)
+            notify_system_via_google_webhook(
+                "*WARNING* While creating patient on Google contacts, we noticed that Patient %s has no birth date" % patient)
         print("Creating new Client: %s" % new_contact)
         response = self.add_or_update_contact(new_contact)
         # Get the resource name (id) of the contact that was just added
@@ -336,20 +426,19 @@ class GoogleContacts:
 
         }
         if employee.birth_date:
-            new_contact_employee[
-                "birthdays": [
-                    {
-                        "date": {
-                            "year": employee.birth_date_as_object().year,
-                            "month": employee.birth_date_as_object().month,
-                            "day": employee.birth_date_as_object().day
-                        },
-                        'metadata': {'primary': True}
-                    }]
-            ]
+            new_contact_employee["birthdays"] = [
+                {
+                    "date": {
+                        "year": employee.birth_date.year,
+                        "month": employee.birth_date.month,
+                        "day": employee.birth_date.day
+                    },
+                    'metadata': {'primary': True}
+                }]
         else:
             from invoices.notifications import notify_system_via_google_webhook
-            notify_system_via_google_webhook("*WARNING* While creating employee on Google contacts, we noticed that Employee %s has no birth date" % employee)
+            notify_system_via_google_webhook(
+                "*WARNING* While creating employee on Google contacts, we noticed that Employee %s has no birth date" % employee)
         print("Creating employee: %s" % new_contact_employee)
         response = self.add_or_update_contact(new_contact_employee)
         # Get the resource name (id) of the contact that was just added
