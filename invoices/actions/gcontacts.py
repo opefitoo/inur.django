@@ -1,6 +1,7 @@
 import os
 
 from django.core.cache import cache
+from django_rq import job
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
