@@ -215,3 +215,10 @@ def cleanup_contacts(modeladmin, request, queryset):
         delete_all_contacts(queryset)
     else:
         delete_all_contacts.delay(queryset)
+
+def cleanup_some_contacts(modeladmin, request, queryset):
+    from invoices.processors.tasks import delete_some_contacts
+    if os.environ.get('LOCAL_ENV', None):
+        delete_some_contacts(queryset)
+    else:
+        delete_some_contacts.delay(queryset)

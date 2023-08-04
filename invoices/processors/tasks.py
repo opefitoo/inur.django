@@ -11,6 +11,7 @@ from pypdf import PdfMerger
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate
 
+from invoices.actions.gcontacts import GoogleContacts
 from invoices.invoiceitem_pdf import get_doc_elements
 from invoices.notifications import notify_system_via_google_webhook
 from invoices.prefac import generate_all_invoice_lines
@@ -69,7 +70,7 @@ def process_post_save(instance):
                 url))
 
 
-@job
+@job("default", timeout=6000)
 def duplicate_event_for_next_day_for_several_events(events, who_created, number_of_days=1):
     """
     Duplicate the event for the next day
@@ -161,3 +162,25 @@ def delete_all_contacts(employees):
         error_detail = traceback.format_exc()
         notify_system_via_google_webhook(
             "*An error occurred while deleting google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))
+
+
+
+def delete_some_contacts(employees):
+    """
+    Cleanup the Google contacts for the given employees
+    @param employees:
+    @return:
+    """
+    start = datetime.now()
+    try:
+        for employee in employees:
+            gc = GoogleContacts(email=employee.user.email)
+            gc.delete_patient_by_details(first_name="Mehdi", family_name="test", sn_code="1942010345522")
+        end = datetime.now()
+        notify_system_via_google_webhook(
+            "The google contacts of the following employees were cleaned up: {0} and it took {1} sec to generate".format(
+                ','.join([str(employee) for employee in employees]), (end - start).seconds))
+    except Exception as e:
+        error_detail = traceback.format_exc()
+        notify_system_via_google_webhook(
+            "*An error occurred while cleaning up google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))
