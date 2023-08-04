@@ -28,7 +28,7 @@ from gdstorage.storage import GoogleDriveStorage
 from pdf2image import convert_from_bytes
 from phonenumber_field.modelfields import PhoneNumberField
 
-from invoices.actions.gcontacts import GoogleContacts
+from invoices.actions.gcontacts import GoogleContacts, async_delete_patient, async_create_or_update_new_patient
 from invoices.actions.helpers import invoice_itembatch_medical_prescription_filename, invoice_itembatch_prefac_filename, \
     invoice_itembatch_ordo_filename
 from invoices.employee import Employee
@@ -1252,7 +1252,7 @@ def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
         if os.environ.get('LOCAL_ENV', None):
             google_contact.create_or_update_new_patient(instance)
         else:
-            google_contact.async_create_or_update_new_patient.delay(patient=instance)
+            async_create_or_update_new_patient.delay(patient=instance)
 @receiver(post_delete, sender=Patient, dispatch_uid="delete_contact_in_employees_google_contacts")
 def delete_contact_in_employees_google_contacts(sender, instance, **kwargs):
     all_active_employees = Employee.objects.filter(end_contract__isnull=True)
@@ -1262,7 +1262,7 @@ def delete_contact_in_employees_google_contacts(sender, instance, **kwargs):
         if os.environ.get('LOCAL_ENV', None):
             google_contact.delete_patient(instance)
         else:
-            google_contact.async_delete_patient.delay(patient=instance)
+            async_delete_patient.delay(patient=instance)
 
 from constance import config
 from django.contrib.auth.models import User
