@@ -56,8 +56,13 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
         else:
             string_event_date = "programmé à  %s" % event_date.time().strftime("%Hh%M")
     if 3 == state:
-        message = '<%s%s|Passage> %s FAIT par *%s* chez *%s* : %s  ' % (config.ROOT_URL, event.get_admin_url(),
-                                                                        string_event_date, employees.user.first_name,
+        if employees.google_user_id:
+            made_by = "<users/%s>" % employees.google_user_id
+        else:
+            made_by = "*%s*" % employees.user.first_name
+        message = '<%s%s|Passage> %s FAIT par %s chez *%s* : %s  ' % (config.ROOT_URL, event.get_admin_url(),
+                                                                        string_event_date,
+                                                                        made_by,
                                                                         patient.name,
                                                                         event_report
                                                                         )
@@ -80,10 +85,14 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
                 patient.name,
                 event_report)
         else:
+            if employees.google_user_id:
+                made_by = "<users/%s>" % employees.google_user_id
+            else:
+                made_by = "*%s*" % employees.user.first_name
             message = 'Attention *ANNULÉ* le <%s%s|passage> %s pour *%s* chez *%s* : %s' % (
                 config.ROOT_URL, event.get_admin_url(),
                 string_event_date,
-                employees.user.first_name,
+                made_by,
                 patient.name,
                 event_report)
 

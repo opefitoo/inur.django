@@ -83,6 +83,7 @@ class Employee(models.Model):
                                    on_delete=models.CASCADE)
     has_gdrive_access = models.BooleanField(u"Allow access to Google Drive files", default=False)
     has_gcalendar_access = models.BooleanField(u"Allow access to Prestations' calendar", default=False)
+    google_user_id = models.CharField(u'Google User ID', max_length=100, blank=True, null=True)
     driving_licence_number = models.CharField(u'Driver Licence Number',
                                               help_text=u'Enter the driver licence number',
                                               max_length=20,

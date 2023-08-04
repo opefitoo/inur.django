@@ -491,6 +491,14 @@ class GoogleContacts:
         else:
             print(f"Patient {patient} not found on Google contacts of {self.email}")
 
+    def search_person_in_directory(self, **kwargs):
+        # build query from kwargs
+        query = ""
+        for key, value in kwargs.items():
+            query += f"{value} "
+        results = self.service.people().searchDirectoryPeople(query=query).execute()
+        return results.get('people', [])
+
 @job("default", timeout=6000)
 def async_create_or_update_new_patient(google_contacts_instance, patient):
     google_contacts_instance.create_or_update_new_patient(patient)
