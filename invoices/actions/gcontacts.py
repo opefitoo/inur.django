@@ -55,7 +55,7 @@ class GoogleContacts:
     def delete_contact(self, resource_name):
         try:
             deletion_result = self.service.people().deleteContact(resourceName=resource_name).execute()
-            print(f"Contact deleted: {deletion_result}")
+            print(f"Contact {resource_name} deleted: {deletion_result} from {self.email}")
             return deletion_result
         except Exception as e:
             print(f"Failed to delete contact: {e}")
@@ -154,6 +154,10 @@ class GoogleContacts:
     def find_contact_by_details(self, first_name, family_name, sn_code=None):
         ppl = self.service.people().searchContacts(query=f"{first_name} {family_name}",
                                                    readMask='names,userDefined').execute()
+        if not ppl:
+            # call it again with a different query
+            ppl = self.service.people().searchContacts(query=f"{family_name} {first_name}",
+                                                       readMask='names,userDefined').execute()
         for person in ppl.get('results', []):
             names = person['person'].get('names', [])
             user_defined_fields = person['person'].get('userDefined', [])
@@ -454,16 +458,20 @@ class GoogleContacts:
             # Add the contact to the group
             self.add_contact_to_group(contact_id, group_id)
 
-    def delete_patient(self, patient):
-        contact = self.find_contact_by_details(patient.first_name, patient.name, sn_code=patient.code_sn)
+    def delete_patient_by_details(self, first_name, family_name, sn_code):
+        contact = self.find_contact_by_details(first_name, family_name, sn_code=sn_code)
         if contact:
             result = self.delete_contact(contact['resourceName'])
-            print(f"Contact {patient} from {self.email} deleted: {result}")
+            print(f"Contact {first_name} {family_name} with SN Code {sn_code} deleted: {result}")
             from invoices.notifications import notify_system_via_google_webhook
             notify_system_via_google_webhook(
-                "Patient %s deleted from Google contacts for email %s" % (patient, self.email))
+                "Patient %s %s with SN Code %s deleted from Google contacts for email %s" % (
+                    first_name, family_name, sn_code, self.email))
         else:
-            print(f"Patient {patient} not found on Google contacts of {self.email}")
+            print(f"Patient {first_name} {family_name} with SN Code {sn_code} not found on Google contacts of {self.email}")
+
+    def delete_patient(self, patient):
+        self.delete_patient_by_details(patient.first_name, patient.name, sn_code=patient.code_sn)
 
     def delete_contact(self, resource_name):
         try:
