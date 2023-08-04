@@ -129,7 +129,7 @@ def update_events_address(events, address):
 @job("default", timeout=6000)
 def sync_google_contacts(employees):
     """
-    Sync the google contacts for the given employees
+    Sync the Google contacts for the given employees
     @param employees:
     @return:
     """

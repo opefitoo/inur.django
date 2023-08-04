@@ -1252,7 +1252,7 @@ def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
         if os.environ.get('LOCAL_ENV', None):
             google_contact.create_or_update_new_patient(instance)
         else:
-            google_contact.async_create_or_update_new_patient.delay(instance)
+            google_contact.async_create_or_update_new_patient.delay(patient=instance)
 @receiver(post_delete, sender=Patient, dispatch_uid="delete_contact_in_employees_google_contacts")
 def delete_contact_in_employees_google_contacts(sender, instance, **kwargs):
     all_active_employees = Employee.objects.filter(end_contract__isnull=True)
@@ -1262,7 +1262,7 @@ def delete_contact_in_employees_google_contacts(sender, instance, **kwargs):
         if os.environ.get('LOCAL_ENV', None):
             google_contact.delete_patient(instance)
         else:
-            google_contact.async_delete_patient.delay(instance)
+            google_contact.async_delete_patient.delay(patient=instance)
 
 from constance import config
 from django.contrib.auth.models import User
