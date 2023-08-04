@@ -392,10 +392,6 @@ class GoogleContacts:
                 "Patient %s created on Google contacts for email %s and assigned to group %s" % (
                     patient, self.email, group_id))
 
-@job("default", timeout=6000)
-def async_create_or_update_new_patient(google_contacts_instance, patient):
-    google_contacts_instance.create_or_update_new_patient(patient)
-
     def create_new_employee(self, employee):
         new_contact_employee = {
             "names": [
@@ -469,17 +465,6 @@ def async_create_or_update_new_patient(google_contacts_instance, patient):
         else:
             print(f"Patient {patient} not found on Google contacts of {self.email}")
 
-@job("default", timeout=6000)
-def async_delete_patient(google_contacts_instance, patient):
-    google_contacts_instance.delete_patient(patient)
-
-    def delete_employee(self, employee):
-        contact = self.find_contact_by_details(employee.user.first_name, employee.user.last_name)
-        if contact:
-            self.delete_contact(contact['resourceName'])
-        else:
-            print(f"Employee {employee} not found on Google contacts of {self.email}")
-
     def delete_contact(self, resource_name):
         try:
             deletion_result = self.service.people().deleteContact(resourceName=resource_name).execute()
@@ -497,3 +482,17 @@ def async_delete_patient(google_contacts_instance, patient):
             self.add_contact_to_group(contact_id, group_id)
         else:
             print(f"Patient {patient} not found on Google contacts of {self.email}")
+
+@job("default", timeout=6000)
+def async_create_or_update_new_patient(google_contacts_instance, patient):
+    google_contacts_instance.create_or_update_new_patient(patient)
+@job("default", timeout=6000)
+def async_delete_patient(google_contacts_instance, patient):
+    google_contacts_instance.delete_patient(patient)
+
+    def delete_employee(self, employee):
+        contact = self.find_contact_by_details(employee.user.first_name, employee.user.last_name)
+        if contact:
+            self.delete_contact(contact['resourceName'])
+        else:
+            print(f"Employee {employee} not found on Google contacts of {self.email}")
