@@ -389,6 +389,9 @@ class GoogleContacts:
             group_id = self.get_or_create_contact_group("Clients")
             # Add the contact to the group
             self.add_contact_to_group(contact_id, group_id)
+            notify_system_via_google_webhook(
+                "Patient %s created on Google contacts for email %s and assigned to group %s" % (
+                    patient, self.email, group_id))
 
 @job("default", timeout=6000)
 def async_create_or_update_new_patient(google_contacts_instance, patient):
@@ -461,6 +464,9 @@ def async_create_or_update_new_patient(google_contacts_instance, patient):
         if contact:
             result = self.delete_contact(contact['resourceName'])
             print(f"Contact {patient} from {self.email} deleted: {result}")
+            from invoices.notifications import notify_system_via_google_webhook
+            notify_system_via_google_webhook(
+                "Patient %s deleted from Google contacts for email %s" % (patient, self.email))
         else:
             print(f"Patient {patient} not found on Google contacts of {self.email}")
 
