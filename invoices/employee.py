@@ -62,7 +62,7 @@ class JobPosition(models.Model):
 
 class Employee(models.Model):
     class Meta:
-        ordering = ['-id']
+        ordering = ['-end_contract', 'id']
 
     gender = models.CharField("Sex",
                               max_length=5,
