@@ -389,6 +389,10 @@ class GoogleContacts:
             # Add the contact to the group
             self.add_contact_to_group(contact_id, group_id)
 
+    @job("default", timeout=6000)
+    def async_create_or_update_new_patient(self, patient):
+        self.create_or_update_new_patient(patient)
+
     def create_new_employee(self, employee):
         new_contact_employee = {
             "names": [
@@ -458,6 +462,10 @@ class GoogleContacts:
             print(f"Contact {patient} from {self.email} deleted: {result}")
         else:
             print(f"Patient {patient} not found on Google contacts of {self.email}")
+
+    @job("default", timeout=6000)
+    def async_delete_patient(self, patient):
+        self.delete_patient(patient)
 
     def delete_employee(self, employee):
         contact = self.find_contact_by_details(employee.user.first_name, employee.user.last_name)
