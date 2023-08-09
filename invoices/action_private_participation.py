@@ -34,7 +34,7 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False)
         _recap_date = now().date().strftime('%d-%m-%Y')
         response['Content-Disposition'] = 'attachment; filename="invoice%s.pdf"' % (_file_name.replace(" ", "")[:150])
     else:
-        _payment_ref = "PP.%s %s" % (queryset[0].invoice_number, queryset[0].invoice_date.strftime('%d.%m.%Y'))
+        _payment_ref = "PP%s %s" % (queryset[0].invoice_number, queryset[0].invoice_date.strftime('%d.%m.%Y'))
         _recap_date = queryset[0].invoice_date.strftime('%d-%m-%Y')
         response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s-part-personnelle.pdf"' % (
             queryset[0].patient.name,
