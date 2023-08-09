@@ -24,13 +24,17 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False)
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
     # Append invoice number and invoice date
+    # generate payment reference as a hash of the invoice numbers
+    payment_reference_hash  = ""
+    for qs in queryset.order_by("invoice_number"):
+        payment_reference_hash += str(qs.invoice_number)
+    _payment_ref = "PP%s" % str(abs(hash(payment_reference_hash)))[:6]
     if len(queryset) != 1:
         _file_name = '-'.join([a.invoice_number for a in queryset.order_by("invoice_number")])
-        _payment_ref = _file_name.replace(" ", "")[:10]
         _recap_date = now().date().strftime('%d-%m-%Y')
         response['Content-Disposition'] = 'attachment; filename="invoice%s.pdf"' % (_file_name.replace(" ", "")[:150])
     else:
-        _payment_ref = "PI.%s %s" % (queryset[0].invoice_number, queryset[0].invoice_date.strftime('%d.%m.%Y'))
+        _payment_ref = "PP.%s %s" % (queryset[0].invoice_number, queryset[0].invoice_date.strftime('%d.%m.%Y'))
         _recap_date = queryset[0].invoice_date.strftime('%d-%m-%Y')
         response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s-part-personnelle.pdf"' % (
             queryset[0].patient.name,
@@ -121,7 +125,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         data.append((i, presta.carecode.code,
                      (presta.date).strftime('%d/%m/%Y'),
                      '1',
-                     presta.carecode.gross_amount(presta.date),
+                     round(presta.carecode.gross_amount(presta.date), 2),
                      presta.carecode.net_amount(presta.date,
                                                 patient.is_private,
                                                 patient.participation_statutaire
@@ -267,7 +271,7 @@ def _build_recap(_recap_date, _recap_ref, recaps):
     elements.append(Spacer(1, 18))
 
     elements.append(Spacer(1, 18))
-    _infos_iban = Table([["Lors du virement, veuillez indiquer la r" + u"é" + "f" + u"é" + "rence: %s " % _recap_ref]],
+    _infos_iban = Table([["Lors du virement, veuillez indiquer la référence : %s " % _recap_ref]],
                         [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
     _date_infos = Table([["Date facture : %s " % _recap_date]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT')
 
