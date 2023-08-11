@@ -33,14 +33,14 @@ class Footer:
         canvas.drawString(1 * cm, 0.8 * cm, self.legal_mention)
 
         # Draw logo
-        logo = 'invoices/static/images/logo_sur.lu.png'
+        logo = 'invoices/static/images/Logo_SUR_quadri_transparent_pour_copas.png'
         # resize image but keep ratio
         img = Image(logo)
         img.drawHeight = 1.75 * cm * img.drawHeight / img.drawWidth
         img.drawWidth = 1.75 * cm
         img.wrapOn(canvas, doc.width, doc.topMargin)
         # draw on right, vertical-align middle
-        img.drawOn(canvas, doc.width - 0.25 * cm, (doc.bottomMargin - img.drawHeight) / 2 + 1 * cm)
+        img.drawOn(canvas, doc.width - 0.25 * cm, (doc.bottomMargin - img.drawHeight) / 2 + 1.5 * cm)
         canvas.restoreState()
 
 
@@ -68,14 +68,17 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
                                                                                                    '%d-%m-%Y'))
 
     elements = []
+    payment_reference_hash = ""
+    for qs in queryset.order_by("invoice_number"):
+        payment_reference_hash += str(qs.invoice_number)
+    _payment_ref = "PP%s" % str(abs(hash(payment_reference_hash)))[:6]
     if attach_to_email:
         io_buffer = BytesIO()
         doc = SimpleDocTemplate(io_buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
-        _payment_ref = "PR-MX-%s" % _file_name.replace(" ", "")[:10]
+        _payment_ref = "MX-%s" % _payment_ref
     else:
         doc = SimpleDocTemplate(response, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
-        _payment_ref = "PR-%s" % _file_name.replace(" ", "")[:10]
-
+    # build a string with invoicing details with the name of the company, zipcode address, phone number and bank account
     recapitulatif_data = []
     _recap_dates = []
     for qs in queryset.order_by("invoice_number"):
@@ -121,7 +124,7 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
                         f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account}"
     else:
         legal_mention = f"{invoicing_details.name} {invoicing_details.address} {invoicing_details.zipcode_city} " \
-                        f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account} rc:{invoicing_details.rc} autorisations:{invoicing_details.af}-{invoicing_details.aa}"
+                        f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account} RC:{invoicing_details.rc} Autorisations:{invoicing_details.af}-{invoicing_details.aa}"
     footer2 = Footer(legal_mention)
 
     doc.build(elements, onFirstPage=footer2, onLaterPages=footer2)
@@ -182,7 +185,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                      (presta.date.astimezone(zoneinfo)).strftime('%d/%m/%Y'),
                      (presta.date.astimezone(zoneinfo)).strftime('%H:%M'),
                      presta.quantity,
-                     presta.carecode.gross_amount(presta.date) * presta.quantity,
+                     round(presta.carecode.gross_amount(presta.date), 2) * presta.quantity,
                      presta.carecode.net_amount(presta.date,
                                                 patient.is_private,
                                                 patient.participation_statutaire

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import decimal
+
 from constance import config
 from django.http import HttpResponse
 from django.utils.encoding import smart_text
+from django.utils.timezone import localtime, now
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -10,22 +13,24 @@ from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
-from django.utils.timezone import localtime, now
-import decimal
+
 
 def pdf_private_invoice_with_recap(modeladmin, request, queryset):
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
     # Append invoice number and invoice date
-    _payment_ref = ''
+    payment_reference_hash = ""
+    for qs in queryset.order_by("invoice_number"):
+        payment_reference_hash += str(qs.invoice_number)
+    _payment_ref = "PP%s" % str(abs(hash(payment_reference_hash)))[:6]
     _recap_date = ''
     if len(queryset) != 1:
         _file_name = '-'.join([a.invoice_number for a in queryset.order_by("invoice_number")])
-        _payment_ref = _file_name.replace(" ", "")[:10]
+        #_payment_ref = _file_name.replace(" ", "")[:10]
         _recap_date = now().date().strftime('%d-%m-%Y')
         response['Content-Disposition'] = 'attachment; filename="invoice%s.pdf"' %(_file_name.replace(" ", "")[:150])
     else:
-        _payment_ref = "PI.%s %s" % (queryset[0].invoice_number, queryset[0].invoice_date.strftime('%d.%m.%Y'))
+        _payment_ref = "PI%s %s" % (queryset[0].invoice_number, queryset[0].invoice_date.strftime('%d%m%y'))
         _recap_date = queryset[0].invoice_date.strftime('%d-%m-%Y')
         response['Content-Disposition'] = 'attachment; filename="invoice-%s-%s-%s.pdf"' %(queryset[0].private_patient.name,
                                                                                           queryset[0].invoice_number, 
@@ -50,7 +55,6 @@ def pdf_private_invoice_with_recap(modeladmin, request, queryset):
             elements.extend(_result["elements"])
             recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"]))
             elements.append(PageBreak())
-    import datetime
     elements.extend(_build_recap( _recap_date, _payment_ref , recapitulatif_data))
     doc.build(elements)
     return response
