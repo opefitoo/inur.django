@@ -79,9 +79,13 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
             string_event_date = "du %s à " % (
                 event_date.date().strftime('%d-%h-%Y'), event_date.time().strftime("%Hh%M"))
         if state == 5:
+            if employees.google_user_id:
+                made_by = "<users/%s>" % employees.google_user_id
+            else:
+                made_by = "*%s*" % employees.user.first_name
             message = 'Attention *NON FAIT* le <%s%s|passage> %s pour *%s* chez *%s* : %s' % (
                 config.ROOT_URL, event.get_admin_url(),
-                string_event_date, employees.user.first_name,
+                string_event_date, made_by,
                 patient.name,
                 event_report)
         else:
