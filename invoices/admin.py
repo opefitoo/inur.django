@@ -26,9 +26,10 @@ from helpers.timesheet import build_use_case_objects
 from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_paid, set_invoice_as_not_paid, \
     set_invoice_as_not_sent, find_all_invoice_items_with_broken_file, \
     find_all_medical_prescriptions_and_merge_them_in_one_file, link_invoice_to_invoice_batch, create_google_contact, \
-    cleanup_contacts
+    cleanup_contacts, cleanup_some_contacts
 from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
+from invoices.actions.carecodes import update_prices_for_september_2023
 from invoices.actions.certificates import generate_pdf
 from invoices.actions.invoices import generer_forfait_aev_mars, generer_forfait_aev_avril, generer_forfait_aev_mai, \
     generer_forfait_aev_june
@@ -100,7 +101,7 @@ class CareCodeAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
     inlines = [ValidityDateInline]
-    # actions = [update_prices_for_jan_2023, update_prices_for_feb_2023, , cleanup_2023]
+    actions = [update_prices_for_september_2023 ]
     # actions = [update_prices_for_april_2022]
 
 
@@ -232,7 +233,7 @@ class EmployeeAdmin(admin.ModelAdmin):
 
     # actions = [work_certificate, 'delete_in_google_calendar']
     actions = [work_certificate, contracts_situation_certificate, entry_declaration, export_employees_data_to_csv,
-               create_google_contact, cleanup_contacts]
+               create_google_contact, cleanup_contacts, cleanup_some_contacts]
 
     def delete_in_google_calendar(self, request, queryset):
         if not request.user.is_superuser:

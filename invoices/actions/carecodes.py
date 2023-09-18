@@ -1,5 +1,5 @@
 import csv
-from datetime import date
+from datetime import date, timedelta
 
 from django.db import transaction
 
@@ -128,6 +128,53 @@ def update_prices_for_april_2023(self, request, queryset):
 
                     print(f"Updated CareCode {care_code_str} with gross amount {new_gross_amount}")
 
+def update_prices_for_september_2023(self, request, queryset):
+
+
+    # Replace 'your_csv_file.csv' with the actual path to your CSV file
+    csv_file_path = 'initialdata/2023_SEPTEMBER_cns_codes.csv'
+    # Replace 'your_start_date' with the actual date you want to use
+    your_start_date = date(2023, 9, 1)
+
+
+    with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile, delimiter=';', quotechar='"')
+        list_of_care_codes_updated = []
+
+        with transaction.atomic():
+            for row in reader:
+                print(row)
+                if len(row) < 4:
+                    continue
+                care_code_str = row[1].strip()
+                new_gross_amount = float(row[3].strip())
+
+                care_code = CareCode.objects.filter(code=care_code_str).first()
+
+                if care_code:
+                    validity_date, created = ValidityDate.objects.get_or_create(
+                        care_code=care_code,
+                        end_date=None,
+                        defaults={
+                            'start_date': your_start_date,
+                            'gross_amount': new_gross_amount,
+                        }
+                    )
+                    if not created:
+                        # set validity end_date to one day before the start date of the new validity date
+                        validity_date.end_date = your_start_date - timedelta(days=1)
+                        # and create a new validity date object with the new start date and end_date None (open)
+                        validity_date.save()
+                        ValidityDate.objects.create(
+                            care_code=care_code,
+                            start_date=your_start_date,
+                            gross_amount=new_gross_amount,
+                        )
+
+
+                    print(f"Updated CareCode {care_code_str} with gross amount {new_gross_amount}")
+                    list_of_care_codes_updated.append(care_code_str)
+        self.message_user(request, f"Updated {len(list_of_care_codes_updated)} CareCodes {list_of_care_codes_updated} ")
 
 
 def update_prices_for_april_2022(self, request, queryset):
