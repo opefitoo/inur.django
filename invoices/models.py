@@ -1249,10 +1249,13 @@ def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
     # is it a new patient or an update
     for employee in all_active_employees:
         google_contact = GoogleContacts(email=employee.user.email)
-        if os.environ.get('LOCAL_ENV', None):
-            google_contact.create_or_update_new_patient(instance)
+        if settings.TESTING:
+            print("** TEST mode")
         else:
-            async_create_or_update_new_patient.delay(google_contacts_instance=google_contact, patient=instance)
+            if os.environ.get('LOCAL_ENV', None):
+                google_contact.create_or_update_new_patient(instance)
+            else:
+                async_create_or_update_new_patient.delay(google_contacts_instance=google_contact, patient=instance)
 @receiver(post_delete, sender=Patient, dispatch_uid="delete_contact_in_employees_google_contacts")
 def delete_contact_in_employees_google_contacts(sender, instance, **kwargs):
     all_active_employees = Employee.objects.filter(end_contract__isnull=True)
