@@ -574,7 +574,7 @@ class MedicalPrescription(models.Model):
     date = models.DateField('Date ordonnance')
     end_date = models.DateField('Date fin des soins', null=True, blank=True)
     notes = models.TextField("Notes ou remarques",
-                             help_text="Veuillez mettre le text de l'ordonnance ou des notes concernant les soins prescrits",
+                             help_text="Veuillez suivre la nomenclature suivante: Pathologies: ...; Antécédents: ...; Traitements: ...; Allergies: ...; Autres: ...",
                              max_length=1000,
                              blank=True, null=True)
     file = models.ImageField(storage=gd_storage, blank=True,

@@ -1,5 +1,3 @@
-from datetime import timezone
-
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
@@ -10,6 +8,8 @@ from django.db.models import Count
 from django.forms import ModelMultipleChoiceField
 from django.http import HttpResponse
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 # report lab library
 from django.utils.translation import gettext as _
@@ -37,7 +37,7 @@ from dependence.models import AssignedPhysician, ContactPerson, DependenceInsura
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from dependence.pdf.basedata import basedata_view
 from dependence.print_fall_declaration import generate_pdf_fall_declaration
-from invoices.models import Patient
+from invoices.models import Patient, MedicalPrescription
 
 
 class LongTermCareInvoiceLineInline(admin.TabularInline):
@@ -463,6 +463,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
 
     readonly_fields = ("created_on", "updated_on",
                        'display_object_actions_detail',
+                       'medical_prescriptions_details'
                        )
 
     fieldsets_with_inlines = [
@@ -481,7 +482,8 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         }),
         ('Informations médicales', {
             'fields': ('health_care_dossier_location', 'preferred_hospital',
-                       'informal_caregiver', 'pathologies', 'medical_background', 'treatments', 'allergies'),
+                       'informal_caregiver', 'pathologies', 'medical_background', 'treatments', 'allergies',
+                       'medical_prescriptions_details'),
         }),
         ('Aides techniques', {
             'fields': ('electrical_bed', 'walking_frame', 'cane', 'aqualift', 'remote_alarm', 'technical_help',
@@ -599,6 +601,53 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'patientanamnesis/print_cover.html', {'obj': obj})
+
+    def medical_prescriptions_details(self, obj):
+        # Get all prescriptions for the patient that have end_date is null or end_date is before today
+        current_prescriptions = MedicalPrescription.objects.filter(patient=obj.patient, end_date__isnull=True) | \
+                                MedicalPrescription.objects.filter(patient=obj.patient, end_date__lt=timezone.now())
+        previous_prescriptions = MedicalPrescription.objects.filter(patient=obj.patient, end_date__isnull=False,
+                                                                    end_date__gte=timezone.now())
+
+        details = []
+        for prescription in current_prescriptions:
+            # Generate the admin URL for the current prescription
+            url = reverse('admin:%s_%s_change' % (prescription._meta.app_label, prescription._meta.model_name),
+                          args=[prescription.pk])
+
+            # Format the details with the admin URL and title
+            detail = format_html('<a href="{}">{}</a><br>'
+                                 '{}',
+                                 url, str(prescription),
+                                 prescription.notes)
+            details.append(detail)
+        if len(previous_prescriptions)  > 0:
+            # append a straight html line break
+            details.append(format_html('<br><b>Anciennes Prescriptions</b>:<br>'))
+
+        for prescription in previous_prescriptions:
+            # Generate the admin URL for the current prescription
+            url = reverse('admin:%s_%s_change' % (prescription._meta.app_label, prescription._meta.model_name),
+                          args=[prescription.pk])
+
+            # Format the details with the admin URL and title
+            detail = format_html('<a href="{}">{}</a><br>'
+                                 '{}',
+                                 url, str(prescription),
+                                 prescription.notes)
+            details.append(detail)
+
+        return format_html("<br>".join(details))
+
+
+        # separate current and previous prescriptions with a blank line
+        prescriptions_formatted += [""] if len(current_prescriptions) > 0 and len(previous_prescriptions) > 0 else []
+        prescriptions_formatted += [f"{prescription.date} : {prescription.notes}" for prescription
+                                        in previous_prescriptions]
+        return "\n".join(prescriptions_formatted)
+
+    # Change the display name of the calculated field in the admin interface
+    medical_prescriptions_details.short_description = 'Medical Prescriptions Details'
 
 
 class AAITransDetailInLine(admin.TabularInline):
