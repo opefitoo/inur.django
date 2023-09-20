@@ -385,6 +385,8 @@ class Bedsore(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     identification_date = models.DateField()
     location = models.CharField(max_length=255, help_text="Exemple: Dos, Talon droit, etc.")
+    # bedsore origin can be liée à la prise en charge  ou non liée à la prise en charge
+    is_linked_to_care = models.BooleanField(default=True, help_text="Si vous sélectionnez cette option, cela signifie que l'escarre est liée à la prise en charge")
     initial_description = models.TextField()  # Description initiale de l'escarre
     class Meta:
         ordering = ['-identification_date']
