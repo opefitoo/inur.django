@@ -30,7 +30,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from invoices.actions.gcontacts import GoogleContacts, async_delete_patient, async_create_or_update_new_patient
 from invoices.actions.helpers import invoice_itembatch_medical_prescription_filename, invoice_itembatch_prefac_filename, \
-    invoice_itembatch_ordo_filename
+    invoice_itembatch_ordo_filename, update_bedsore_pictures_filenames
 from invoices.employee import Employee
 from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.gcalendar import PrestationGoogleCalendar
@@ -379,6 +379,31 @@ class Patient(models.Model):
 
     def clean_first_name(self):
         return self.cleaned_data['first_name'].capitalize()
+
+
+class Bedsore(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    identification_date = models.DateField()
+    location = models.CharField(max_length=255, help_text="Exemple: Dos, Talon droit, etc.")
+    initial_description = models.TextField()  # Description initiale de l'escarre
+    class Meta:
+        ordering = ['-identification_date']
+        verbose_name = "Escarre"
+        verbose_name_plural = "Escarres"
+
+class BedsoreEvaluation(models.Model):
+    bedsore = models.ForeignKey(Bedsore, on_delete=models.CASCADE)
+    evaluation_date = models.DateField()
+    stage = models.IntegerField(choices=[(1, 'Stage 1'), (2, 'Stage 2'), (3, 'Stage 3'), (4, 'Stage 4')])
+    size = models.DecimalField(max_digits=5, decimal_places=2)  # Size in cm² for example
+    depth = models.DecimalField(max_digits=5, decimal_places=2)  # Depth in cm
+    # treatment can be null
+    treatment = models.TextField(blank=True, null=True)  # Treatment description
+    remarks = models.TextField(blank=True, null=True)
+    image = models.ImageField(storage=gd_storage, upload_to=update_bedsore_pictures_filenames)
+    class Meta:
+        verbose_name = "Evaluation"
+        verbose_name_plural = "Evaluations"
 
 
 class AlternateAddress(models.Model):

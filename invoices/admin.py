@@ -50,7 +50,7 @@ from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList, \
-    AlternateAddress, Alert
+    AlternateAddress, Alert, Bedsore, BedsoreEvaluation
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
@@ -343,6 +343,16 @@ class PatientAdmin(CSVExportAdmin):
         """Only super users can export as CSV"""
         if request.user.is_superuser:
             return True
+
+class BedsoreEvaluationInline(admin.TabularInline):
+    model = BedsoreEvaluation
+    extra = 1
+
+@admin.register(Bedsore)
+class BedsoreAdmin(admin.ModelAdmin):
+    inlines = [BedsoreEvaluationInline]
+    autocomplete_fields = ['patient']
+
 
 
 # @admin.register(Prestation)
