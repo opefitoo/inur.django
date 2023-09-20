@@ -1339,7 +1339,7 @@ class EventListAdmin(admin.ModelAdmin):
             return Event.objects.all()
         else:
             # Display only today's and yesterday's events for non admin users
-            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).exclude(state=5).filter(
+            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).exclude(state=5).exclude(state=6).filter(
                 day__year=today.year).filter(day__month=today.month).filter(day__day__gte=today.day - 1).order_by(
                 "-day")
 
