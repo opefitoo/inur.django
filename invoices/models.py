@@ -33,6 +33,7 @@ from invoices.actions.helpers import invoice_itembatch_medical_prescription_file
     invoice_itembatch_ordo_filename, update_bedsore_pictures_filenames
 from invoices.employee import Employee
 from invoices.enums.generic import GenderType, BatchTypeChoices
+from invoices.enums.medical import BedsoreEvolutionStatus
 from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.modelspackage import InvoicingDetails
 from invoices.processors.tasks import process_post_save, update_events_address
@@ -291,7 +292,6 @@ class Patient(models.Model):
             Q(start_time__lte=current_time) | Q(start_time__isnull=True)).filter(
             Q(end_time__gte=current_time) | Q(end_time__isnull=True)).first()
 
-
         return address.full_address if address else self.full_address
 
     def addresses(self):
@@ -386,23 +386,44 @@ class Bedsore(models.Model):
     identification_date = models.DateField()
     location = models.CharField(max_length=255, help_text="Exemple: Dos, Talon droit, etc.")
     # bedsore origin can be liée à la prise en charge  ou non liée à la prise en charge
-    is_linked_to_care = models.BooleanField(default=True, help_text="Si vous sélectionnez cette option, cela signifie que l'escarre est liée à la prise en charge")
+    is_linked_to_care = models.BooleanField(default=True,
+                                            help_text="Si vous sélectionnez cette option, cela signifie que l'escarre est liée à la prise en charge")
     initial_description = models.TextField()  # Description initiale de l'escarre
+
+    def __str__(self):  # Python 3: def __str__(self):
+        return 'Escarre de %s datant de %s sur "%s"' % (self.patient, self.identification_date, self.location)
+
     class Meta:
         ordering = ['-identification_date']
         verbose_name = "Escarre"
         verbose_name_plural = "Escarres"
 
+
+def validate_image(image):
+    try:
+        file_size = image.file.size
+    except:
+        return
+    limit_kb = 10
+    if file_size > limit_kb * 1024 * 1024:
+        raise ValidationError("Taille maximale du fichier est %s MO" % limit_kb)
+
+
 class BedsoreEvaluation(models.Model):
     bedsore = models.ForeignKey(Bedsore, on_delete=models.CASCADE)
     evaluation_date = models.DateField()
     stage = models.IntegerField(choices=[(1, 'Stage 1'), (2, 'Stage 2'), (3, 'Stage 3'), (4, 'Stage 4')])
-    size = models.DecimalField(max_digits=5, decimal_places=2)  # Size in cm² for example
-    depth = models.DecimalField(max_digits=5, decimal_places=2)  # Depth in cm
+    size = models.DecimalField(verbose_name="Taille en cm", max_digits=5, decimal_places=2)  # Size in cm² for example
+    depth = models.DecimalField(verbose_name="Profondeur en cm", max_digits=5, decimal_places=2)  # Depth in cm
+    bedsore_evolution = models.CharField(
+        max_length=8,
+        choices=BedsoreEvolutionStatus.choices,
+        default=BedsoreEvolutionStatus.NA)
     # treatment can be null
     treatment = models.TextField(blank=True, null=True)  # Treatment description
     remarks = models.TextField(blank=True, null=True)
-    image = models.ImageField(storage=gd_storage, upload_to=update_bedsore_pictures_filenames)
+    image = models.ImageField(upload_to=update_bedsore_pictures_filenames, validators=[validate_image])
+
     class Meta:
         verbose_name = "Evaluation"
         verbose_name_plural = "Evaluations"
@@ -515,7 +536,8 @@ class Hospitalization(models.Model):
         conflicts_cnt_fsp = Prestation.objects.filter(Q(date__range=(start_date + timedelta(days=1), end_date))).filter(
             invoice_item__patient_id=patient_id).filter(carecode__code__in=['FSP1', 'FSP2']).count()
         if 0 < conflicts_cnt_fsp:
-           messages = {'start_date': 'error 2807953 Prestation(s) Palliative care exist in selected dates range for this Patient'}
+            messages = {
+                'start_date': 'error 2807953 Prestation(s) Palliative care exist in selected dates range for this Patient'}
 
         return messages
 
@@ -1270,6 +1292,7 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.at_home_paired = instance
             pair.save()
 
+
 @receiver(post_save, sender=Patient, dispatch_uid="create_contact_in_employees_google_contacts")
 def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
     all_active_employees = Employee.objects.filter(end_contract__isnull=True)
@@ -1283,6 +1306,8 @@ def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
                 google_contact.create_or_update_new_patient(instance)
             else:
                 async_create_or_update_new_patient.delay(google_contacts_instance=google_contact, patient=instance)
+
+
 @receiver(post_delete, sender=Patient, dispatch_uid="delete_contact_in_employees_google_contacts")
 def delete_contact_in_employees_google_contacts(sender, instance, **kwargs):
     all_active_employees = Employee.objects.filter(end_contract__isnull=True)
@@ -1293,6 +1318,7 @@ def delete_contact_in_employees_google_contacts(sender, instance, **kwargs):
             google_contact.delete_patient(instance)
         else:
             async_delete_patient.delay(google_contacts_instance=google_contact, patient=instance)
+
 
 from constance import config
 from django.contrib.auth.models import User
@@ -1319,17 +1345,21 @@ class Alert(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     alert_created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,
                                          related_name="alert_created_by")
+
     def __str__(self):
         return "{0} - {1}".format(self.alert_level, self.text_alert)
+
     # when alert is saved check if it is a new alert and send email to user
     def get_admin_url(self):
         model_name = self._meta.model_name
         app_label = self._meta.app_label
         return reverse('admin:{0}_{1}_change'.format(app_label, model_name), args=[self.id])
+
     class Meta:
         verbose_name = _("Alert")
         verbose_name_plural = _("Alerts")
         ordering = ['-date_alert']
+
 
 @receiver(post_save, sender=Alert, dispatch_uid="post_save_alert_receiver")
 def post_save_alert_receiver(sender, instance, created, *args, **kwargs):

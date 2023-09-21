@@ -93,5 +93,4 @@ def invoice_itembatch_ordo_filename(instance, filename):
 def update_bedsore_pictures_filenames(instance, filename):
     # instance is a BedSorePicture object
     # filename is the original filename
-    print("update_bedsore_pictures_filenames")
-    return instance.bedsore.get_bedsore_picture_filename(filename)
+    return "bedsores/" + instance.bedsore.patient.name + "/" + filename

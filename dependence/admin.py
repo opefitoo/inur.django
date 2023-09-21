@@ -37,7 +37,7 @@ from dependence.models import AssignedPhysician, ContactPerson, DependenceInsura
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from dependence.pdf.basedata import basedata_view
 from dependence.print_fall_declaration import generate_pdf_fall_declaration
-from invoices.models import Patient, MedicalPrescription
+from invoices.models import Patient, MedicalPrescription, Bedsore
 
 
 class LongTermCareInvoiceLineInline(admin.TabularInline):
@@ -459,6 +459,12 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
             'form_method': 'GET',
             'view': 'generate_report',
         },
+        {
+            'slug': 'print_bedsore_report',
+            'verbose_name': 'Rapport Escarres',
+            'form_method': 'GET',
+            'view': 'print_bedsore_report',
+        },
     ]
 
     readonly_fields = ("created_on", "updated_on",
@@ -601,6 +607,12 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'patientanamnesis/print_cover.html', {'obj': obj})
+
+    def print_bedsore_report(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        bedsore_objects = Bedsore.objects.filter(patient=obj.patient)
+        return TemplateResponse(request, 'patientanamnesis/print_bedsore.html', {'bedsore_objects': bedsore_objects})
 
     def medical_prescriptions_details(self, obj):
         # Get all prescriptions for the patient that have end_date is null or end_date is before today
