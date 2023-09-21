@@ -65,7 +65,9 @@
             }
 
 
-            .div1 img,
+            .div1 img {
+                height: 175px;
+            }
             .div13 img {
                 height: 75px;
             }
@@ -125,6 +127,9 @@
 
 <body>
 {% block content %}
+<div class="div1">
+    <img src="{% static 'images/Logo_SUR_quadri_transparent_pour_copas.png' %}" alt="">
+</div>
 <h1>Rapport D'escarres</h1>
 <table class="table">
     <thead>
@@ -166,7 +171,7 @@
         </td>
         <td>{{ evaluation.evaluation_date }}</td>
         <td>
-        {% if evaluation.bedsore_evolution == "NA" %}
+            {% if evaluation.bedsore_evolution == "NA" %}
             <div class="status-NA">NA</div>
             {% elif evaluation.bedsore_evolution == "BETTER" %}
             <div class="status-BETTER">Mieux</div>
