@@ -50,7 +50,7 @@ from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList, \
-    AlternateAddress, Alert, Bedsore, BedsoreEvaluation
+    AlternateAddress, Alert, Bedsore, BedsoreEvaluation, BedsoreRiskAssessment
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
@@ -304,6 +304,9 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
 
     scan_preview.allow_tags = True
 
+class BedsoreRiskAssessment(admin.TabularInline):
+    model = BedsoreRiskAssessment
+    extra = 0
 
 @admin.register(Patient)
 class PatientAdmin(CSVExportAdmin):
@@ -316,7 +319,8 @@ class PatientAdmin(CSVExportAdmin):
     # actions = [calculate_distance_matrix]
     form = PatientForm
     actions = [generer_forfait_aev_mars, generer_forfait_aev_avril, generer_forfait_aev_mai, generer_forfait_aev_june]
-    inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, AlternateAddressInline]
+    inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, AlternateAddressInline,
+               BedsoreRiskAssessment]
 
     def link_to_invoices(self, instance):
         url = f'{reverse("admin:invoices_invoiceitem_changelist")}?patient__id={instance.id}'

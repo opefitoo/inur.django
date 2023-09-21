@@ -34,13 +34,11 @@ from invoices.actions.helpers import invoice_itembatch_medical_prescription_file
 from invoices.employee import Employee
 from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.enums.medical import BedsoreEvolutionStatus
-from invoices.gcalendar import PrestationGoogleCalendar
 from invoices.modelspackage import InvoicingDetails
 from invoices.processors.tasks import process_post_save, update_events_address
 from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
 
-prestation_gcalendar = PrestationGoogleCalendar()
 gd_storage: CustomizedGoogleDriveStorage = CustomizedGoogleDriveStorage()
 batch_gd_storage: GoogleDriveStorage = GoogleDriveStorage()
 # else:
@@ -427,6 +425,42 @@ class BedsoreEvaluation(models.Model):
     class Meta:
         verbose_name = "Evaluation"
         verbose_name_plural = "Evaluations"
+class BedsoreRiskAssessment(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    assessment_date = models.DateField()
+
+    # Critères du score de Braden
+    sensory_perception = models.IntegerField(choices=[(1, 'Complètement limitée'), (2, 'Très limitée'), (3, 'Légèrement limitée'), (4, 'Pas de limitation')])
+    moisture = models.IntegerField(choices=[(1, 'Constamment humide'), (2, 'Très humide'), (3, 'Occasionnellement humide'), (4, 'Rarement humide')])
+    activity = models.IntegerField(choices=[(1, 'Alité'), (2, 'Fauteuil'), (3, 'Marche occasionnellement'), (4, 'Marche fréquemment')])
+    mobility = models.IntegerField(choices=[(1, 'Complètement immobile'), (2, 'Très limitée'), (3, 'Légèrement limitée'), (4, 'Pas de limitation')])
+    nutrition = models.IntegerField(choices=[(1, 'Très mauvaise'), (2, 'Probablement inadéquate'), (3, 'Adéquate'), (4, 'Excellente')])
+    friction_shear = models.IntegerField(choices=[(1, 'Problème significatif'), (2, 'Problème potentiel'), (3, 'Pas de problème apparent')])
+
+    def calculate_braden_score(self):
+        return self.sensory_perception + self.moisture + self.activity + self.mobility + self.nutrition + self.friction_shear
+
+    def __str__(self):
+        braden_score = self.calculate_braden_score()
+        risk_level = ""
+
+        if braden_score <= 9:
+            risk_level = "Très haut risque"
+        elif 10 <= braden_score <= 12:
+            risk_level = "Haut risque"
+        elif 13 <= braden_score <= 14:
+            risk_level = "Risque modéré"
+        elif 15 <= braden_score <= 18:
+            risk_level = "Risque faible"
+        else:
+            risk_level = "Risque très faible"
+
+        return f"Évaluation du risque pour {self.patient.first_name} {self.patient.name} le {self.assessment_date}. Score de Braden : {braden_score} ({risk_level})"
+
+    class Meta:
+        verbose_name = "Évaluation du risque de développer une escarre"
+        verbose_name_plural = "Évaluations du risque de développer une escarre"
+        ordering = ['-assessment_date']
 
 
 class AlternateAddress(models.Model):
