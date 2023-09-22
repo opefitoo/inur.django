@@ -7,8 +7,6 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import pre_save, post_delete, post_save
-from django.dispatch import receiver
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
@@ -17,7 +15,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 from invoices.actions.gcontacts import GoogleContacts
 from invoices.enums.generic import GenderType
 from invoices.enums.holidays import ContractType
-from invoices.storages import CustomizedGoogleDriveStorage
 
 
 def avatar_storage_location(instance, filename):
@@ -284,67 +281,3 @@ class EmployeeAdminFile(models.Model):
     file_description = models.CharField("description", max_length=60)
     document_expiry_date = models.DateField(u'Date d\'expiration du document', blank=True, null=True)
     file_upload = models.FileField(null=True, blank=True, upload_to=update_filename)
-
-
-@receiver(pre_save, sender=User, dispatch_uid="user_pre_save_gservices_permissions")
-def user_pre_save_gservices_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    from invoices.models import gd_storage
-    try:
-        origin_user = User.objects.filter(pk=instance.id).get()
-        origin_email = origin_user.email
-        email = instance.email
-        if origin_email != email:
-            has_access = False
-            prestation_gcalendar.update_calendar_permissions(origin_email, has_access)
-            path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-            gd_storage.update_folder_permissions_v3(path, origin_email, has_access)
-            gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, origin_email, has_access)
-    except User.DoesNotExist:
-        pass
-
-
-@receiver(post_delete, sender=User, dispatch_uid="user_revoke_gservices_permissions")
-def user_revoke_gservices_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    from invoices.models import gd_storage
-    email = instance.email
-    if email:
-        has_access = False
-        prestation_gcalendar.update_calendar_permissions(email, has_access)
-        path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-        gd_storage.update_folder_permissions_v3(path, email, has_access)
-        gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
-
-
-@receiver([post_save, post_delete], sender=Employee, dispatch_uid="employee_update_gdrive_permissions")
-def medical_prescription_clean_gdrive_post_delete(sender, instance, **kwargs):
-    from invoices.models import gd_storage
-    email = instance.user.email
-    if email:
-        path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-        has_access = instance.has_gdrive_access
-        gd_storage.update_folder_permissions_v3(path, email, has_access)
-        gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
-
-
-@receiver(post_save, sender=Employee, dispatch_uid="employee_update_gcalendar_permissions")
-def employee_update_gcalendar_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    email = instance.user.email
-    if email:
-        has_access = instance.has_gcalendar_access
-        prestation_gcalendar.update_calendar_permissions(email, has_access)
-
-
-@receiver(post_delete, sender=Employee, dispatch_uid="employee_revoke_gservices_permissions")
-def employee_revoke_gservices_permissions(sender, instance, **kwargs):
-    from invoices.models import prestation_gcalendar
-    from invoices.models import gd_storage
-    email = instance.user.email
-    if email:
-        has_access = False
-        prestation_gcalendar.update_calendar_permissions(email, has_access)
-        path = CustomizedGoogleDriveStorage.MEDICAL_PRESCRIPTION_FOLDER
-        gd_storage.update_folder_permissions_v3(path, email, has_access)
-        gd_storage.update_folder_permissions_v3(gd_storage.INVOICEITEM_BATCH_FOLDER, email, has_access)
