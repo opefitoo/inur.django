@@ -378,6 +378,7 @@ class PatientAnamnesis(models.Model):
     def validate(instance_id, data):
         result = {}
         # result.update(PatientAnamnesis.validate_only_one_type_for_inlines(instance_id, data))
+        result.update(PatientAnamnesis.validate_patient_has_only_one_anamnesis())
         return result
 
     @staticmethod
@@ -387,6 +388,12 @@ class PatientAnamnesis(models.Model):
             code_sn = data['code_sn'].replace(" ", "")
             if Patient.objects.filter(code_sn=code_sn).exclude(pk=instance_id).count() > 0:
                 messages = {'code_sn': 'Code SN must be unique'}
+        return messages
+
+    def validate_patient_has_only_one_anamnesis(self):
+        messages = {}
+        if PatientAnamnesis.objects.filter(patient_id=self.patient_id).count() > 1:
+            messages = {'patient': 'Patient must have only one anamnesis'}
         return messages
 
     def __str__(self):
