@@ -425,6 +425,7 @@ class BedsoreEvaluation(models.Model):
     class Meta:
         verbose_name = "Evaluation"
         verbose_name_plural = "Evaluations"
+        ordering = ['-evaluation_date']
 class BedsoreRiskAssessment(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     assessment_date = models.DateField()

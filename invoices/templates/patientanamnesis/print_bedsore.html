@@ -68,7 +68,6 @@
             .div1 img {
                 height: 175px;
             }
-
             .div13 img {
                 height: 75px;
             }
@@ -161,7 +160,7 @@
         <th>Profondeur en CM</th>
         <th>Traitement + Notes</th>
     </tr>
-    {% for evaluation in bedsore.bedsoreevaluation_set.all|dictsort:"-evaluation_date" %}
+    {% for evaluation in bedsore.bedsoreevaluation_set.all %}
     <tr>
         <td>
             {% if evaluation.image %}
