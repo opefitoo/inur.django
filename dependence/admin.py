@@ -437,6 +437,7 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
 @admin.register(PatientAnamnesis)
 class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, admin.ModelAdmin):
     list_display = ('patient', 'display_object_actions_list',)
+    list_filter = ('patient',)
     autocomplete_fields = ['patient']
 
     object_actions = [
