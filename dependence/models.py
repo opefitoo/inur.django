@@ -473,10 +473,10 @@ class AssignedPhysician(models.Model):
     assigned_physician = models.ForeignKey(Physician, related_name='dep_assigned_physicians',
                                            help_text='Please enter physician of the patient',
                                            verbose_name=u"Médecin",
-                                           on_delete=models.PROTECT, null=True, blank=True, default=None)
+                                           on_delete=models.SET_NULL, null=True, blank=True, default=None)
     anamnesis = models.ForeignKey(PatientAnamnesis, related_name='dep_patient_anamnesis',
                                   help_text='Please enter hospitalization dates of the patient',
-                                  on_delete=models.PROTECT, null=True, blank=True, default=None)
+                                  on_delete=models.SET_NULL, null=True, blank=True, default=None)
 
 
 class DependenceInsurance(models.Model):
@@ -523,7 +523,7 @@ class ContactPerson(models.Model):
         verbose_name_plural = "Personnes de contact"
 
     patient_anamnesis = models.ForeignKey(PatientAnamnesis, related_name='dep_contactpers_to_anamnesis',
-                                          on_delete=models.PROTECT)
+                                          on_delete=models.SET_NULL, null=True)
     priority = models.PositiveSmallIntegerField(u"Priorité",
                                                 default=None,
                                                 blank=True,
