@@ -37,6 +37,7 @@ from dependence.models import AssignedPhysician, ContactPerson, DependenceInsura
     PatientAnamnesis, ActivityHabits, SocialHabits, MonthlyParameters, TensionAndTemperatureParameters
 from dependence.pdf.basedata import basedata_view
 from dependence.print_fall_declaration import generate_pdf_fall_declaration
+from invoices.filters.anamnesis import DeceasedFilter, ClientLeftFilter
 from invoices.models import Patient, MedicalPrescription, Bedsore
 
 
@@ -437,7 +438,7 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
 @admin.register(PatientAnamnesis)
 class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, admin.ModelAdmin):
     list_display = ('patient', 'display_object_actions_list', 'created_on', 'updated_on')
-    list_filter = ('patient',)
+    list_filter = ('patient', DeceasedFilter, ClientLeftFilter)
     autocomplete_fields = ['patient']
 
     object_actions = [
