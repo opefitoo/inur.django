@@ -1,22 +1,23 @@
 
 
+import io
+import locale
+from textwrap import wrap
+
+from constance import config
+from django.http import HttpResponse
 # report lab library
 from django.utils.translation import gettext as _
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-from constance import config
-from dependence.enums import falldeclaration_enum
-from datetime import datetime
-from reportlab.lib.units import mm, inch
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import Table, TableStyle, Paragraph
-from textwrap import wrap
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_JUSTIFY
+from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet
-import numpy as np
-from django.http import HttpResponse
-import io
-from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER
+from reportlab.lib.units import mm, inch
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle, Paragraph
+
+from dependence.enums import falldeclaration_enum
 
 
 def get_fall_mobility_disability(mobility_disability):
@@ -92,15 +93,39 @@ def generate_pdf_fall_declaration(objects):
         #################        HEADER        ##########################
         #################     LOGO  + text below ########################
         # set the position and size of the logo
+        # set the position and size of the logo
+        # set the position and size of the logo
         logo_x = 20
-        logo_y = 770
-        logo_width = 60
-        logo_height = 60
-        # read the image file and draw it on the PDF canvas
-        logo_path = "invoices/static/patientanamnesis/images/xyz.png"
+
+        # read the image file
+        logo_path = "invoices/static/images/Logo_SUR_quadri_transparent_pour_copas.png"
         logo_img = ImageReader(logo_path)
-        p.drawImage(logo_img, logo_x, logo_y,
-                    width=logo_width, height=logo_height)
+
+        # Read the image dimensions
+        img_width, img_height = logo_img.getSize()
+
+        # Calculate the aspect ratio
+        aspect = img_height / float(img_width)
+
+        # Set the desired width
+        desired_width = 70
+
+        # Calculate the height based on the aspect ratio and desired width
+        desired_height = desired_width * aspect
+
+        # Convert 8mm to points
+        mm_to_points = 2.83465
+        top_margin = 5 * mm_to_points
+
+        # Assuming a standard letter size (11 inches tall or 792 points)
+        page_height = 792
+
+        # Adjust the y-position based on the desired height and top margin
+        logo_y = page_height - desired_height - top_margin
+
+        # Draw the image on the PDF canvas
+        p.drawImage(logo_img, logo_x, logo_y, width=desired_width, height=desired_height, mask='auto')
+
         # add some text below the logo
         p.setFont("Helvetica-Bold", 9)
 
@@ -118,25 +143,25 @@ def generate_pdf_fall_declaration(objects):
         patient_zipcode = fall_declaration.patient.zipcode
         patient_clean_phone_number = fall_declaration.patient.phone_number
 
-        p.drawString(logo_x,  logo_y - 15, f"{nurse_name} - ")
-        p.drawString(logo_x + 100,  logo_y - 15, f"{nurse_code}")
-        p.drawString(logo_x,  logo_y - 30, f"{nurse_address} - ")
-        p.drawString(logo_x + 90,  logo_y - 30, f"{nurse_zip_code_city}")
-        p.drawString(logo_x,  logo_y - 45, f"{nurse_phone_number}")
+        # p.drawString(logo_x,  logo_y - 15, f"{nurse_name} - ")
+        # p.drawString(logo_x + 100,  logo_y - 15, f"{nurse_code}")
+        # p.drawString(logo_x,  logo_y - 30, f"{nurse_address} - ")
+        # p.drawString(logo_x + 90,  logo_y - 30, f"{nurse_zip_code_city}")
+        # p.drawString(logo_x,  logo_y - 45, f"{nurse_phone_number}")
 
         if patient_gender == 'MAL':
-            p.drawString(logo_x + 400,  logo_y,
+            p.drawString(logo_x + 100,  logo_y,
                          f" Monsieur {patient_name} {patient_first_name}")
         elif patient_gender == 'FEM':
-            p.drawString(logo_x + 400,  logo_y,
+            p.drawString(logo_x + 100,  logo_y,
                          f" Madame {patient_name} {patient_first_name}")
         else:
-            p.drawString(logo_x + 400,  logo_y,
+            p.drawString(logo_x + 100,  logo_y,
                          f"{patient_name} {patient_first_name}")
 
-        p.drawString(logo_x + 400,  logo_y - 10, f"{patient_address}")
-        p.drawString(logo_x + 400,  logo_y - 20, f"{patient_zipcode}")
-        p.drawString(logo_x + 400,  logo_y - 30,
+        p.drawString(logo_x + 100,  logo_y - 10, f"{patient_address}")
+        p.drawString(logo_x + 100,  logo_y - 20, f"{patient_zipcode}")
+        p.drawString(logo_x + 100,  logo_y - 30,
                      f"Tél.:  {patient_clean_phone_number}")
 
         #############################   End  HEADER ####################################
@@ -193,14 +218,16 @@ def generate_pdf_fall_declaration(objects):
         title_y = 670
 
         p.setFont('Helvetica-Bold', 9)
-        p.drawString(50, title_y, "À remplir : après chaque chute.")
+        #p.drawString(50, title_y, "À remplir : après chaque chute.")
 
         # A •••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
         A_y = title_y - 40
 
-        date_fall = fall_declaration.datetimeOfFall
-        formatted_date_fall = datetime.strftime(date_fall, "%d %B %Y %H:%M")
+        locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
+
+        date_fall = fall_declaration.datetimeOfFall  # Example date for demonstration
+        formatted_date_fall = date_fall.strftime("%d %B %Y %H:%M")
 
         place_fall = fall_declaration.placeOfFall
 
@@ -217,25 +244,28 @@ def generate_pdf_fall_declaration(objects):
         # -----------------------------------------------------------------
 
         # List of Lists
+        styles = getSampleStyleSheet()
+        # Create a justified text style
+        justified_style = styles["BodyText"]
+        justified_style.alignment = TA_JUSTIFY
 
-        data = [[f"A. Date, heure de la chute: {formatted_date_fall}", f"Lieu de la chute:  {place_fall}"],
-                [f"Déclaré par:{declared_by_fall_f} {declared_by_fall_n}",
-                    witnesses_value()],
+        data = [[Paragraph(f"A. Date, heure de la chute: {formatted_date_fall}", justified_style),
+                 Paragraph(f"Lieu de la chute:  {place_fall}", justified_style)],
+                [Paragraph(f"Déclaré par:{declared_by_fall_f} {declared_by_fall_n}", justified_style),
+                 Paragraph(witnesses_value(), justified_style)],
                 ]
-        cell_width = 0.1*inch
-        cell_height = 0.1*inch
 
-        table = Table(data, colWidths=240, rowHeights=20)
+        # Adjusted colWidths to split the width evenly between the two columns
+        table = Table(data, colWidths=[240, 240])
 
         p.setFont('Helvetica-Bold', 9)
 
         # Add borders
         ts = TableStyle(
             [
-                ('BACKGROUND', (0, 0), (3, 0), colors.green),
+                ('BACKGROUND', (0, 0), (1, 0), colors.green),  # Adjusted column index
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('SIZE', (0, 0), (-1, -1), cell_width, cell_height),
                 ('FONTSIZE', (0, 0), (-1, -1), 9),
             ]
         )
@@ -278,23 +308,24 @@ def generate_pdf_fall_declaration(objects):
             if fall_circumstance != "FCI_OTHER_CAUSES":
                 return str_fall
             else:
-                return f"   • {ot_fall_circumstance}"
+                return f"{ot_fall_circumstance}"
 
         fall_incident_circumstance = fall_declaration.incident_circumstance
 
         # -----------------------------------------------------------------
 
         # List of Lists
+        styles = getSampleStyleSheet()
+        # Create a justified text style
+        justified_style = styles["BodyText"]
+        justified_style.alignment = TA_JUSTIFY
 
         data = [["B. Circonstances de la chute"],
-                ["      " + fall_circumstance_value()],
-                [f"   Circonstances de l’incident:{fall_incident_circumstance}"],
+                [Paragraph(fall_circumstance_value(), justified_style)],
+                [Paragraph(f"Circonstances de l’incident:{fall_incident_circumstance}", justified_style)],
                 ]
 
-        cell_width = 0.1*inch
-        cell_height = 0.1*inch
-
-        table = Table(data, colWidths=480, rowHeights=20)
+        table = Table(data, colWidths=480)  # Removed rowHeights
 
         # Add borders
         ts = TableStyle(
@@ -302,11 +333,11 @@ def generate_pdf_fall_declaration(objects):
                 ('BACKGROUND', (0, 0), (3, 0), colors.green),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('SIZE', (0, 0), (-1, -1), cell_width, cell_height),
                 ('FONTSIZE', (0, 0), (-1, -1), 9),
             ]
         )
         table.setStyle(ts)
+
         # Calculate the width and height of the table
         width, height = table.wrapOn(p, inch, inch)
         # Calculate the x and y coordinates to center the title on the canvas
