@@ -606,6 +606,7 @@ class Hospitalization(models.Model):
         date_of_death = patient.date_of_death
         if date_of_death and data['end_date'] is None:
             messages = {'end_date': "Hospitalization end date must be set"}
+            return messages
         if date_of_death and data['end_date'] > date_of_death:
             messages = {'end_date': "Hospitalization cannot be later than or include Patient's death date"}
 
