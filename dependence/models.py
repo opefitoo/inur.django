@@ -11,7 +11,7 @@ from invoices.db.fields import CurrentUserField
 from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
     MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType, \
     MonthsNames, StoolsQty, VisualAnalogueScaleLvl, HelpForCleaning
-from invoices.models import Patient, Physician
+from invoices.models import Patient, Physician, Bedsore
 
 
 def current_year():
@@ -367,7 +367,6 @@ class PatientAnamnesis(models.Model):
                 return shared_care_plan_dict
             else:
                 raise shared_care_plan_dict
-
     def clean(self, *args, **kwargs):
         super(PatientAnamnesis, self).clean_fields()
         messages = self.validate(self.id, self.__dict__)

@@ -379,6 +379,18 @@ class Patient(models.Model):
         return self.cleaned_data['first_name'].capitalize()
 
 
+    def bedsore_count(self):
+        if self.id:
+            return Bedsore.objects.filter(patient_id=self.id).count()
+        return 0
+
+    def fall_count(self):
+        if self.id:
+            from dependence.falldeclaration import FallDeclaration
+            return FallDeclaration.objects.filter(patient_id=self.id).count()
+        return 0
+
+
 class Bedsore(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     identification_date = models.DateField()

@@ -437,7 +437,7 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
 
 @admin.register(PatientAnamnesis)
 class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, admin.ModelAdmin):
-    list_display = ('patient', 'display_object_actions_list', 'created_on', 'updated_on')
+    list_display = ('patient', 'display_object_actions_list', 'bedsore_count', 'fall_count', 'updated_on')
     list_filter = ('patient', DeceasedFilter, ClientLeftFilter)
     autocomplete_fields = ['patient']
 
@@ -600,6 +600,17 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         p.save()
         return basedata_view(request, obj)
 
+    def bedsore_count(self, obj):
+        return obj.patient.bedsore_count()
+    bedsore_count.short_description = "Nombre d'escarres"
+
+
+    def fall_count(self, obj):
+        return obj.patient.fall_count()
+
+    fall_count.short_description = "Nombre de chutes"
+
+
     def print_view(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
@@ -609,7 +620,6 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'patientanamnesis/print_cover.html', {'obj': obj})
-
     def print_bedsore_report(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
