@@ -601,12 +601,21 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         return basedata_view(request, obj)
 
     def bedsore_count(self, obj):
-        return obj.patient.bedsore_count()
+        count = obj.patient.bedsore_count()
+        if count == 0:
+            return count
+        url = reverse('admin:invoices_bedsore_changelist') + f'?patient__id__exact={obj.patient.id}'
+        return format_html('<a href="{}">{}</a>', url, count)
     bedsore_count.short_description = "Nombre d'escarres"
 
 
     def fall_count(self, obj):
-        return obj.patient.fall_count()
+        # Assuming the related model for falls is named 'FallDeclaration' and has a ForeignKey to 'Patient'
+        count = obj.patient.fall_count()
+        if count == 0:
+            return count
+        url = reverse('admin:dependence_falldeclaration_changelist') + f'?patient__id__exact={obj.patient.id}'
+        return format_html('<a href="{}">{}</a>', url, count)
 
     fall_count.short_description = "Nombre de chutes"
 
@@ -749,6 +758,7 @@ class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
               )
     form = FallDeclarationForm
     list_display = ('patient', 'datetimeOfFall', 'display_object_actions_list',)
+    list_filter = ('patient', 'datetimeOfFall',)
     autocomplete_fields = ['patient']
     readonly_fields = ('user',
                        'created_on',
