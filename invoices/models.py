@@ -578,13 +578,15 @@ class Hospitalization(models.Model):
         conflicts = Prestation.objects.filter(Q(date__range=(start_date, end_date))).filter(
             invoice_item__patient_id=patient_id).exclude(carecode__code__in=['FSP1', 'FSP2'])
         # build string of codes and dates of conflicts to display in error message CODE , DATE  - CODE , DATE (date should be in format dd/mm/yyyy)
-        display_codes_and_dates_of_conflicts = conflicts.values_list('carecode__code', 'date')
+        # Assuming your QuerySet is named 'qs'
+        # InvoiceItem.objects.get(conflicts[0].id)
+        display_codes_and_dates_of_conflicts = [f"Code: {item.carecode.code}, Date: {item.date.strftime('%d-%m-%Y %H:%M')} (invoice: {item.invoice_item.invoice_number})" for item in conflicts]
         if 0 < conflicts.count():
             messages = {'start_date': 'error 2807 Prestation(s) exist in selected dates range for this Patient %s' % display_codes_and_dates_of_conflicts}
         # conflicts for FSP1 and FSP2 are allowed if start date is 1 day after
         conflicts_fsp = Prestation.objects.filter(Q(date__range=(start_date + timedelta(days=1), end_date))).filter(
             invoice_item__patient_id=patient_id).filter(carecode__code__in=['FSP1', 'FSP2'])
-        display_codes_and_dates_of_conflicts_fsp = conflicts_fsp.values_list('carecode__code', 'date')
+        display_codes_and_dates_of_conflicts_fsp = [f"Code: {item.carecode.code}, Date: {item.date.strftime('%d-%m-%Y %H:%M')} (invoice: {item.invoice_item.invoice_number})" for item in conflicts_fsp]
         if 0 < conflicts_fsp.count():
             messages = {
                 'start_date': 'error 2807953 Prestation(s) Palliative care exist in selected dates range for this Patient %s' % display_codes_and_dates_of_conflicts_fsp}

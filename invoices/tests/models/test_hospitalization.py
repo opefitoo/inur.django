@@ -81,13 +81,14 @@ class HospitalizationTestCase(TestCase):
             'patient': self.patient
         }
         error_msg = {'start_date': 'error 2807 Prestation(s) exist in selected dates range for this Patient'}
-        self.assertEqual(Hospitalization.validate_prestation(data), error_msg)
+        validation_result = Hospitalization.validate_prestation(data)
+        self.assertTrue(error_msg['start_date'] in validation_result['start_date'])
 
         data['start_date'] = data['start_date'].replace(month=1, day=11)
         self.assertEqual(Hospitalization.validate_prestation(data), {})
 
         data['start_date'] = data['start_date'].replace(month=1, day=5)
-        self.assertEqual(Hospitalization.validate_prestation(data), error_msg)
+        self.assertTrue(error_msg['start_date'] in Hospitalization.validate_prestation(data)['start_date'])
 
         data['patient'] = Patient.objects.create(code_sn='1245789764822',
                                                  first_name='first name 0',
