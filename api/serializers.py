@@ -144,8 +144,8 @@ class PatientSerializer(CountryFieldMixin, serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = '__all__'
-        participation_statutaire = serializers.NullBooleanField(required=False)
-        is_private = serializers.NullBooleanField(required=False)
+        participation_statutaire = serializers.BooleanField(required=False, allow_null=True)
+        is_private = serializers.BooleanField(required=False, allow_null=True)
         depth = 1
 
 
