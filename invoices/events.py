@@ -19,7 +19,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from dependence.careplan import CarePlanMaster, CarePlanDetail
 from invoices import settings
 from invoices.employee import Employee
 from invoices.enums.event import EventTypeEnum
@@ -486,6 +485,8 @@ def event_end_time_and_address_is_sometimes_mandatory(data):
     messages = {}
     if data['event_type_enum'] != EventTypeEnum.BIRTHDAY and data['time_end_event'] is None:
         messages = {'time_end_event': _("Heure fin est obligatoire pour type %s") % _(data['event_type_enum'])}
+    if data['event_type_enum'] != EventTypeEnum.BIRTHDAY and data['time_start_event'] is None:
+        messages = {'time_start_event': _("Heure début est obligatoire pour type %s") % _(data['event_type_enum'])}
     return messages
 
 
@@ -554,7 +555,7 @@ def validate_date_range(instance_id, data):
     conflicts = None
     if data['state'] in [5, 6]:
         return messages
-    if data['employees_id']:
+    if data['employees_id'] and data['time_start_event'] and data['time_end_event']:
         conflicts = Event.objects.filter(day=data['day']).filter(
             Q(time_start_event__range=(data['time_start_event'], data['time_end_event'])) |
             Q(time_end_event__range=(data['time_start_event'], data['time_end_event'])) |

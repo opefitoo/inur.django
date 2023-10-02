@@ -5,7 +5,6 @@ from django.forms import BaseInlineFormSet, ValidationError, ModelForm
 from django.utils import timezone
 from django_select2.forms import ModelSelect2Widget
 
-from dependence.careplan import CarePlanDetail
 from invoices.events import Event
 from invoices.models import InvoiceItem, MedicalPrescription
 from invoices.timesheet import SimplifiedTimesheet, SimplifiedTimesheetDetail
@@ -267,9 +266,6 @@ def cannot_validate_in_future(instance, user):
 
 
 class EventForm(ModelForm):
-    care_plan_detail = forms.ModelChoiceField(queryset=CarePlanDetail.objects.all(), required=False,
-                                              label="Plan de soin", to_field_name="id", )
-
     class Meta:
         model = Event
         exclude = ('event_type',)
