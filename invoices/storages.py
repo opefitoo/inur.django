@@ -1,12 +1,11 @@
-import mimetypes
 import logging
 import mimetypes
 import ntpath
 import os
 
+from apiclient import errors
 from gdstorage.storage import GoogleDriveStorage, GoogleDrivePermissionType, GoogleDrivePermissionRole \
     , GoogleDriveFilePermission
-from apiclient import errors
 from googleapiclient.http import MediaIoBaseUpload
 from rq import Queue
 
@@ -16,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class CustomizedGoogleDriveStorage(GoogleDriveStorage):
+    # FIXME: this hole class needs to be removed, kept here just for migration purpose
     INVOICEITEM_BATCH_FOLDER = 'Invoice Item Batch'
     MEDICAL_PRESCRIPTION_FOLDER = 'Medical Prescription'
 

@@ -24,7 +24,6 @@ from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django_countries.fields import CountryField
-from gdstorage.storage import GoogleDriveStorage
 from pdf2image import convert_from_bytes
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -36,11 +35,8 @@ from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.enums.medical import BedsoreEvolutionStatus
 from invoices.modelspackage import InvoicingDetails
 from invoices.processors.tasks import process_post_save, update_events_address
-from invoices.storages import CustomizedGoogleDriveStorage
 from invoices.validators.validators import MyRegexValidator
 
-gd_storage: CustomizedGoogleDriveStorage = CustomizedGoogleDriveStorage()
-batch_gd_storage: GoogleDriveStorage = GoogleDriveStorage()
 # else:
 #    gd_storage = FileSystemStorage()
 
@@ -693,9 +689,6 @@ class MedicalPrescription(models.Model):
                              help_text="Veuillez suivre la nomenclature suivante: Pathologies: ...; Antécédents: ...; Traitements: ...; Allergies: ...; Autres: ...",
                              max_length=1000,
                              blank=True, null=True)
-    file = models.ImageField(storage=gd_storage, blank=True,
-                             upload_to=update_medical_prescription_filename,
-                             validators=[validate_image])
     file_upload = models.FileField(null=True, blank=True, upload_to=update_medical_prescription_filename)
     # image_file = _modelscloudinary.CloudinaryField('Scan or picture', default=None,
     #                                                blank=True,
