@@ -1,0 +1,158 @@
+{% load static %}
+<head xmlns="http://www.w3.org/1999/html">
+    <meta charset="utf-8"/>
+    <title>Print All Parameters</title>
+
+    <style>
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            font-size: 12px;
+            line-height: 20px;
+            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            color: #555;
+        }
+
+        .invoice-box table {
+            width: 100%;
+            line-height: inherit;
+            text-align: left;
+        }
+
+        .invoice-box table td {
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .invoice-box table tr.top table td {
+            padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.top table td:nth-child(2) {
+            text-align: right;
+        }
+
+        .invoice-box table tr.top table td.title {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 20px;
+            color: #333;
+        }
+
+        .invoice-box table tr.information table td {
+            padding-bottom: 40px;
+            font-size: 14px;
+        }
+
+        .invoice-box table tr.heading td {
+            background: #eee;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .invoice-box table tr.details td {
+            padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.item td {
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+
+        .invoice-box table tr.item.last td {
+            border-bottom: none;
+        }
+
+        .invoice-box table tr.total td:nth-child(2) {
+            border-top: 2px solid #eee;
+            font-weight: bold;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .invoice-box table tr.top table td {
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+
+            .invoice-box table tr.information table td {
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+        }
+
+        /** RTL **/
+        .invoice-box.rtl {
+            direction: rtl;
+            font-family: Tahoma, 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+        }
+
+        .invoice-box.rtl table {
+            text-align: right;
+        }
+
+        .invoice-box.rtl table tr td:nth-child(2) {
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+<div class="invoice-box">
+    <table cellpadding="0" cellspacing="0">
+
+        {% for invoice in obj.get_invoices %}
+        <table>
+            <tr class="heading">
+                <td colspan="3"> Invoice pour Patient: {{invoice.patient}} numero: {{invoice.invoice_number}}
+                </td>
+            <tr class="heading">
+                <td>Prestation Date</td>
+                <td>Code</td>
+                <td>Evt</td>
+            </tr>
+            {% for prest in invoice.get_prestations_and_events_associated %}
+            <tr class="item">
+                <td>{{ prest.events }}</td>
+                <td>{{ prest.prestation.carecode.code }}</td>
+                <td>{{ prest.care_date }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+
+        <table>
+            <tr class="heading">
+                <td colspan="5"> Ici sont listées les évènements qui n'ont pas de prestations associées le jour mm
+                </td>
+            </tr>
+            <tr class="heading">
+                <td>Event Date</td>
+                <td>lien</td>
+                <td>Patient</td>
+                <td>Type</td>
+                <td>Etat</td>
+                <td>Qui</td>
+            </tr>
+            {% for evt in obj.events_during_batch_periods %}
+            <tr class="item">
+                <td>{{ evt.day }}</td>
+                <td>{{ evt.get_absolute_url|safe }}</td>
+                <td>{{ evt.patient }}</td>
+                <td>{{ evt.event_type_enum }}</td>
+                <td>{{ evt.state }}</td>
+                <td>{{ evt.employees }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+
+    </table>
+</div>
+</body>
+</html>

@@ -378,7 +378,6 @@ class Patient(models.Model):
     def clean_first_name(self):
         return self.cleaned_data['first_name'].capitalize()
 
-
     def bedsore_count(self):
         if self.id:
             return Bedsore.objects.filter(patient_id=self.id).count()
@@ -438,17 +437,27 @@ class BedsoreEvaluation(models.Model):
         verbose_name = "Evaluation"
         verbose_name_plural = "Evaluations"
         ordering = ['-evaluation_date']
+
+
 class BedsoreRiskAssessment(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     assessment_date = models.DateField()
 
     # Critères du score de Braden
-    sensory_perception = models.IntegerField(choices=[(1, 'Complètement limitée'), (2, 'Très limitée'), (3, 'Légèrement limitée'), (4, 'Pas de limitation')])
-    moisture = models.IntegerField(choices=[(1, 'Constamment humide'), (2, 'Très humide'), (3, 'Occasionnellement humide'), (4, 'Rarement humide')])
-    activity = models.IntegerField(choices=[(1, 'Alité'), (2, 'Fauteuil'), (3, 'Marche occasionnellement'), (4, 'Marche fréquemment')])
-    mobility = models.IntegerField(choices=[(1, 'Complètement immobile'), (2, 'Très limitée'), (3, 'Légèrement limitée'), (4, 'Pas de limitation')])
-    nutrition = models.IntegerField(choices=[(1, 'Très mauvaise'), (2, 'Probablement inadéquate'), (3, 'Adéquate'), (4, 'Excellente')])
-    friction_shear = models.IntegerField(choices=[(1, 'Problème significatif'), (2, 'Problème potentiel'), (3, 'Pas de problème apparent')])
+    sensory_perception = models.IntegerField(
+        choices=[(1, 'Complètement limitée'), (2, 'Très limitée'), (3, 'Légèrement limitée'), (4, 'Pas de limitation')])
+    moisture = models.IntegerField(
+        choices=[(1, 'Constamment humide'), (2, 'Très humide'), (3, 'Occasionnellement humide'),
+                 (4, 'Rarement humide')])
+    activity = models.IntegerField(
+        choices=[(1, 'Alité'), (2, 'Fauteuil'), (3, 'Marche occasionnellement'), (4, 'Marche fréquemment')])
+    mobility = models.IntegerField(
+        choices=[(1, 'Complètement immobile'), (2, 'Très limitée'), (3, 'Légèrement limitée'),
+                 (4, 'Pas de limitation')])
+    nutrition = models.IntegerField(
+        choices=[(1, 'Très mauvaise'), (2, 'Probablement inadéquate'), (3, 'Adéquate'), (4, 'Excellente')])
+    friction_shear = models.IntegerField(
+        choices=[(1, 'Problème significatif'), (2, 'Problème potentiel'), (3, 'Pas de problème apparent')])
 
     def calculate_braden_score(self):
         return self.sensory_perception + self.moisture + self.activity + self.mobility + self.nutrition + self.friction_shear
@@ -580,13 +589,18 @@ class Hospitalization(models.Model):
         # build string of codes and dates of conflicts to display in error message CODE , DATE  - CODE , DATE (date should be in format dd/mm/yyyy)
         # Assuming your QuerySet is named 'qs'
         # InvoiceItem.objects.get(conflicts[0].id)
-        display_codes_and_dates_of_conflicts = [f"Code: {item.carecode.code}, Date: {item.date.strftime('%d-%m-%Y %H:%M')} (invoice: {item.invoice_item.invoice_number})" for item in conflicts]
+        display_codes_and_dates_of_conflicts = [
+            f"Code: {item.carecode.code}, Date: {item.date.strftime('%d-%m-%Y %H:%M')} (invoice: {item.invoice_item.invoice_number})"
+            for item in conflicts]
         if 0 < conflicts.count():
-            messages = {'start_date': 'error 2807 Prestation(s) exist in selected dates range for this Patient %s' % display_codes_and_dates_of_conflicts}
+            messages = {
+                'start_date': 'error 2807 Prestation(s) exist in selected dates range for this Patient %s' % display_codes_and_dates_of_conflicts}
         # conflicts for FSP1 and FSP2 are allowed if start date is 1 day after
         conflicts_fsp = Prestation.objects.filter(Q(date__range=(start_date + timedelta(days=1), end_date))).filter(
             invoice_item__patient_id=patient_id).filter(carecode__code__in=['FSP1', 'FSP2'])
-        display_codes_and_dates_of_conflicts_fsp = [f"Code: {item.carecode.code}, Date: {item.date.strftime('%d-%m-%Y %H:%M')} (invoice: {item.invoice_item.invoice_number})" for item in conflicts_fsp]
+        display_codes_and_dates_of_conflicts_fsp = [
+            f"Code: {item.carecode.code}, Date: {item.date.strftime('%d-%m-%Y %H:%M')} (invoice: {item.invoice_item.invoice_number})"
+            for item in conflicts_fsp]
         if 0 < conflicts_fsp.count():
             messages = {
                 'start_date': 'error 2807953 Prestation(s) Palliative care exist in selected dates range for this Patient %s' % display_codes_and_dates_of_conflicts_fsp}
@@ -910,6 +924,22 @@ class InvoiceItemBatch(models.Model):
 
         return messages
 
+    def get_invoices(self):
+        return InvoiceItem.objects.filter(batch=self)
+
+    def events_during_batch_periods(self):
+        from invoices.events import Event
+        from invoices.enums.event import EventTypeEnum
+        events = Event.objects.filter(day__range=(self.start_date, self.end_date)).exclude(patient__isnull=True).filter(
+            patient__is_under_dependence_insurance=False).exclude(event_type_enum=EventTypeEnum.BIRTHDAY).order_by("patient__name, day")
+        # grouped_events = events.values('patient__name').annotate(event_count=Count('id'))
+        dirty_events = []
+        for evt in events:
+            count_prestas = Prestation.objects.filter(date__date=evt.day, invoice_item__patient=evt.patient).count()
+            if count_prestas == 0:
+                dirty_events.append(evt)
+        return dirty_events
+
 
 # @receiver(pre_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_pre_save")
 # def invoiceitembatch_generate_pdf_name(sender, instance, **kwargs):
@@ -1008,6 +1038,26 @@ class InvoiceItem(models.Model):
         if self.prestations.count() >= self.PRESTATION_LIMIT_MAX:
             raise ValidationError("Maximum number of prestations reached")
         self.prestations.add(prestation)
+
+    def get_prestations(self):
+        return self.prestations.all().order_by('date')
+
+    def get_prestations_and_events_associated(self):
+        # get prestations and group them by date
+        prestations = self.prestations.all().order_by('date')
+        from invoices.events import Event
+        from invoices.data.invoice_checks import PrestationEvent
+        prestation_evts = []
+        for prestation in prestations:
+            # get event of same date
+            evt = Event.objects.filter(day=prestation.date.date(), patient=self.patient).all()
+            evts = []
+            for e in evt:
+                evts.append(e)
+            # PrestationEvent(care_date=prestation.date.date(), events=evts, prestation=prestation)
+            prestation_evts.append(
+                PrestationEvent(care_date=prestation.date.date(), events=evts, prestation=prestation))
+        return prestation_evts
 
     @staticmethod
     def validate_is_private(data):

@@ -4,6 +4,7 @@ import datetime
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
+from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from constance import config
 from django.contrib import admin
 from django.contrib.admin import TabularInline
@@ -647,11 +648,25 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
 
 
 @admin.register(InvoiceItemBatch)
-class InvoiceItemBatchAdmin(admin.ModelAdmin):
+class InvoiceItemBatchAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
     readonly_fields = ('created_date', 'modified_date')
-    list_display = ('start_date', 'end_date', 'batch_type', 'batch_description')
+    list_display = ('start_date', 'end_date', 'batch_type', 'batch_description', 'display_object_actions_list')
     actions = [generate_flat_file_for_control]
+
+    object_actions = [
+        {
+            'slug': 'print_events_associated_with_invoices',
+            'verbose_name': 'Invoice Check',
+            'form_method': 'GET',
+            'view': 'print_events_associated_with_invoices',
+        },
+    ]
+
+    def print_events_associated_with_invoices(self, request, object_id, form_url='', extra_context=None, action=None):
+        from django.template.response import TemplateResponse
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'invoicing/print_events_associated_with_invoices.html', {'obj': obj})
 
 
 @admin.register(InvoiceItemEmailLog)
