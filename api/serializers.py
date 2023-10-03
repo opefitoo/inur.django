@@ -178,7 +178,7 @@ class MedicalPrescriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MedicalPrescription
-        fields = ('id', 'prescriptor', 'patient', 'date', 'end_date', 'file')
+        fields = ('id', 'prescriptor', 'patient', 'date', 'end_date', 'file_upload')
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
