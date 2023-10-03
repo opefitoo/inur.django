@@ -924,7 +924,7 @@ class InvoiceItemBatch(models.Model):
         from invoices.events import Event
         from invoices.enums.event import EventTypeEnum
         events = Event.objects.filter(day__range=(self.start_date, self.end_date)).exclude(patient__isnull=True).filter(
-            patient__is_under_dependence_insurance=False).exclude(event_type_enum=EventTypeEnum.BIRTHDAY).order_by("patient__name, day")
+            patient__is_under_dependence_insurance=False).exclude(event_type_enum=EventTypeEnum.BIRTHDAY).order_by("patient__name", "day")
         # grouped_events = events.values('patient__name').annotate(event_count=Count('id'))
         dirty_events = []
         for evt in events:
