@@ -40,8 +40,6 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
     @param event_date:
     """
     # FIXME: remove hardcoded value for state
-    if patient is None:
-        return
     if state not in [3, 5, 6]:
         return
     string_event_date = ""
@@ -55,7 +53,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
                                                           event_date.time().strftime("%Hh%M"))
         else:
             string_event_date = "programmé à  %s" % event_date.time().strftime("%Hh%M")
-    if 3 == state:
+    if 3 == state and patient:
         if employees.google_user_id:
             made_by = "<users/%s>" % employees.google_user_id
         else:
@@ -66,8 +64,19 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
                                                                         patient.name,
                                                                         event_report
                                                                         )
+    elif 3 == state and patient is None:
+        if employees.google_user_id:
+            made_by = "<users/%s>" % employees.google_user_id
+        else:
+            made_by = "*%s*" % employees.user.first_name
+        message = '<%s%s|Passage> %s FAIT par %s : %s  ' % (config.ROOT_URL, event.get_admin_url(),
+                                                                        string_event_date,
+                                                                        made_by,
+                                                                        event_report
+                                                                        )
+
     # FIXME: remove hardcoded value for state
-    elif state in [5, 6]:
+    elif state in [5, 6] and patient:
         # if date is in the future, message will contain the date
         if event_date.date() > datetime.now().date():
             string_event_date = "du %s programmé à %s" % (event_date.date().strftime('%d-%h-%Y'),
@@ -98,6 +107,36 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
                 string_event_date,
                 made_by,
                 patient.name,
+                event_report)
+    elif  state in [5, 6] and patient is None:
+        # if date is in the future, message will contain the date
+        if event_date.date() > datetime.now().date():
+            string_event_date = "du %s programmé à %s" % (event_date.date().strftime('%d-%h-%Y'),
+                                                          event_date.time().strftime("%Hh%M"))
+        elif event_date.date() == datetime.now().date():
+            string_event_date = "d'aujourd'hui programmé à %s" % event_date.time().strftime("%Hh%M")
+        else:
+            # or in the past
+            string_event_date = "du %s à " % (
+                event_date.date().strftime('%d-%h-%Y'), event_date.time().strftime("%Hh%M"))
+        if state == 5:
+            if employees.google_user_id:
+                made_by = "<users/%s>" % employees.google_user_id
+            else:
+                made_by = "*%s*" % employees.user.first_name
+            message = 'Attention *NON FAIT* le <%s%s|passage> %s pour *%s* : %s' % (
+                config.ROOT_URL, event.get_admin_url(),
+                string_event_date, made_by,
+                event_report)
+        else:
+            if employees.google_user_id:
+                made_by = "<users/%s>" % employees.google_user_id
+            else:
+                made_by = "*%s*" % employees.user.first_name
+            message = 'Attention *ANNULÉ* le <%s%s|passage> %s pour *%s* : %s' % (
+                config.ROOT_URL, event.get_admin_url(),
+                string_event_date,
+                made_by,
                 event_report)
 
     url = settings.GOOGLE_CHAT_WEBHOOK_URL
