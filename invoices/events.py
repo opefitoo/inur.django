@@ -506,7 +506,7 @@ def patient_maybe_mandatory(data):
 
 def address_mandatory_for_generic_employee(data):
     messages = {}
-    if data['event_type_enum'] == EventTypeEnum.GNRC_EMPL and len(data['event_address']) == 0:
+    if data['event_type_enum'] == EventTypeEnum.GNRC_EMPL and len(data['event_address']) == 0 and not data['at_office']:
         messages = {'event_address': _("Adresse est obligatoire pour %s") % _(data['event_type_enum'])}
     return messages
 
