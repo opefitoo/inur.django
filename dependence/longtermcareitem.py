@@ -35,7 +35,7 @@ class LongTermPackage(models.Model):
     description = models.TextField(max_length=50)
     package = models.BooleanField("Forfait", default=False)
     dependence_level = models.PositiveIntegerField(blank=True, null=True,
-                                                   validators=[MinValueValidator(0), MaxValueValidator(15)])
+                                                   validators=[MinValueValidator(0), MaxValueValidator(780)])
     # forfait hebdomadaire en minutes
     weekly_package = models.PositiveIntegerField(blank=True, null=True)
 
