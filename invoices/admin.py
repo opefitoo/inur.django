@@ -33,7 +33,7 @@ from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.carecodes import update_prices_for_september_2023
 from invoices.actions.certificates import generate_pdf
 from invoices.actions.invoices import generer_forfait_aev_mars, generer_forfait_aev_avril, generer_forfait_aev_mai, \
-    generer_forfait_aev_june
+    generer_forfait_aev_july
 # from invoices.actions.maps import calculate_distance_matrix
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
@@ -319,7 +319,7 @@ class PatientAdmin(CSVExportAdmin):
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode', 'city', 'phone_number', 'email_address']
     # actions = [calculate_distance_matrix]
     form = PatientForm
-    actions = [generer_forfait_aev_mars, generer_forfait_aev_avril, generer_forfait_aev_mai, generer_forfait_aev_june]
+    actions = [generer_forfait_aev_mars, generer_forfait_aev_avril, generer_forfait_aev_mai, generer_forfait_aev_july]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, AlternateAddressInline,
                BedsoreRiskAssessment]
 
