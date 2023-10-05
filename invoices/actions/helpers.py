@@ -16,7 +16,7 @@ def decode_payment_reference(hash_to_decode):
     return hashlib.sha1(hash_to_decode.decode("utf-8"))
 
 
-def invoxia_position(invoxia_identifier: str):
+def invoxia_position_and_battery(invoxia_identifier: str):
     # if not self.is_connected_to_invoxia:
     #     return "n/a"
     # if self.is_connected_to_invoxia and not self.invoxia_identifier:
@@ -29,7 +29,7 @@ def invoxia_position(invoxia_identifier: str):
     # get position of tracker with id invoxia_identifier
     for tracker in trackers:
         if tracker.id == int(invoxia_identifier):
-            return invoxia_client.get_locations(device=tracker, max_count=1)[0]
+            return invoxia_client.get_locations(device=tracker, max_count=1)[0], invoxia_client.get_tracker_status(device=tracker).battery
     return None
 
 def invoice_itembatch_prefac_filename(instance, filename):

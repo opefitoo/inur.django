@@ -14,7 +14,7 @@ from oauthlib.oauth2 import LegacyApplicationClient, TokenExpiredError
 from requests_oauthlib import OAuth2Session
 from vininfo import Vin
 
-from invoices.actions.helpers import invoxia_position
+from invoices.actions.helpers import invoxia_position_and_battery
 
 
 def get_last_token():
@@ -91,6 +91,15 @@ class Car(models.Model):
                                null=True, blank=True)
     vin_number = models.CharField(max_length=20, default=None, blank=True, null=True)
 
+    @property
+    def battery_or_fuel_level(self):
+        if self.invoxia_identifier:
+            battery_level = invoxia_position_and_battery(self.invoxia_identifier)[1]
+            if battery_level:
+                return battery_level
+            else:
+                return "n/a"
+
 
     @property
     def geo_localisation_of_car(self):
@@ -104,7 +113,7 @@ class Car(models.Model):
             if not self.convadis_identifier:
                 return "n/a Error: convadis id is not set"
         elif self.invoxia_identifier:
-            position = invoxia_position(self.invoxia_identifier)
+            position = invoxia_position_and_battery(self.invoxia_identifier)[0]
             if position:
                 return position.datetime.strftime('%Y-%m-%dT%H:%M:%S%z'), position.lat, position.lng
             else:
