@@ -51,6 +51,10 @@ def long_term_care_monthly_statement_file_path(instance, filename):
     # newfilename, file_extension = os.path.splitext(filename)
     return f"long_term_invoices/{instance.year}/{instance.month}/{newfilename}"
 
+def long_term_care_monthly_statement_response_file_path(instance, filename):
+    return f"long_term_invoices/{instance.year}/{instance.month}/{filename}"
+
+
 
 # décompte mensuel de factures
 class LongTermCareMonthlyStatement(models.Model):
@@ -68,7 +72,9 @@ class LongTermCareMonthlyStatement(models.Model):
     # dateEnvoi
     date_of_submission = models.DateField(_('Date d\'envoi du fichier'), blank=True, null=True)
     # dateReception
-    generated_invoice_file_response = models.FileField(_('Generated Invoice Response File'), blank=True, null=True)
+    generated_invoice_file_response = models.FileField(_('Generated Invoice Response File'),
+                                                       upload_to=long_term_care_monthly_statement_response_file_path,
+                                                       blank=True, null=True)
     date_of_receipt = models.DateField(_('Date de réception du fichier'), blank=True, null=True)
 
     # Technical Fields
