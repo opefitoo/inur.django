@@ -166,7 +166,7 @@
                 <td>{{ param.systolic_blood_press }}/{{ param.diastolic_blood_press }}</td>
                 <td>{% if param.heart_pulse > 0 %} {{ param.heart_pulse }} {% else %} - {% endif %}</td>
                 <td>{% if param.temperature > 0 %} {{ param.temperature }} {% else %} - {% endif %}</td>
-                <td>{% if param.stools %} {{ param.stools }} {% else %} - {% endif %}</td>
+                <td>{% if param.stools_parameter %} OUI {% else %} NON {% endif %}</td>
                 <td>{% if param.vas > 0 %} {{ param.vas }} {% else %} - {% endif %}</td>
                 <td>{% if param.weight > 0 %} {{ param.weight }} {% else %} - {% endif %}</td>
                 <td>{% if param.oximeter_saturation %} {{ param.oximeter_saturation }} {% else %} - {% endif %}</td>

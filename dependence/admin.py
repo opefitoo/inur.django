@@ -395,7 +395,7 @@ class TensionAndTemperatureParametersInLine(admin.TabularInline):
     model = TensionAndTemperatureParameters
     formset = TensionAndTemperatureParametersFormset
     fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'heart_pulse', 'temperature',
-              'stools', 'oximeter_saturation', 'vas', 'weight', 'blood_glucose', 'general_remarks', 'user', 'created_on'
+              'stools_parameter', 'oximeter_saturation', 'vas', 'weight', 'blood_glucose', 'general_remarks', 'user', 'created_on'
               , "updated_on")
     readonly_fields = ('user', 'created_on', 'updated_on')
 

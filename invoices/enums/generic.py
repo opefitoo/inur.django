@@ -138,12 +138,6 @@ class MonthsNames(models.IntegerChoices):
     dec = 12, _(u'Décembre')
 
 
-class StoolsQty(models.IntegerChoices):
-    none = 0, "-"
-    little = 1, "+"
-    medium = 2, "++"
-    lot = 3, "+++"
-
 
 class VisualAnalogueScaleLvl(models.IntegerChoices):
     none = 0, "0 (aucune douleur)"

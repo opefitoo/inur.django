@@ -10,7 +10,7 @@ from dependence.detailedcareplan import MedicalCareSummaryPerPatient, SharedMedi
 from invoices.db.fields import CurrentUserField
 from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
     MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType, \
-    MonthsNames, StoolsQty, VisualAnalogueScaleLvl, HelpForCleaning
+    MonthsNames, VisualAnalogueScaleLvl, HelpForCleaning
 from invoices.models import Patient, Physician, Bedsore
 
 
@@ -115,7 +115,8 @@ class TensionAndTemperatureParameters(models.Model):
     diastolic_blood_press = models.PositiveSmallIntegerField("Tension min.", default=0)
     heart_pulse = models.PositiveSmallIntegerField("Pouls", default=None, blank=True, null=True)
     temperature = models.DecimalField("Température", max_digits=3, decimal_places=1, default=0, blank=True, null=True)
-    stools = models.PositiveSmallIntegerField("Selles", choices=StoolsQty.choices, default=None, blank=True, null=True)
+    stools_parameter = models.BooleanField("Selles",
+                                        default=False)
     vas = models.PositiveSmallIntegerField("EVA", choices=VisualAnalogueScaleLvl.choices, default=None, blank=True,
                                            null=True)
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1, default=None, blank=True, null=True)
