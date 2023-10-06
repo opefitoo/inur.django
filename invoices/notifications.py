@@ -67,6 +67,9 @@ def notify_user_that_holiday_request_is_created(instance, url, employee_email):
 
 def notify_system_via_google_webhook(message):
     url = config.GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL
+    #  check if url looks like a url
+    if not url.startswith("https://"):
+        url = settings.GOOGLE_CHAT_WEBHOOK_URL
     bot_message = {
         'text': message}
     message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
