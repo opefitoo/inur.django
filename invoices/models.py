@@ -918,7 +918,7 @@ class InvoiceItemBatch(models.Model):
         return messages
 
     def get_invoices(self):
-        return InvoiceItem.objects.filter(batch=self)
+        return InvoiceItem.objects.filter(batch=self).order_by('patient_id', 'invoice_number')
 
     def events_during_batch_periods(self):
         from invoices.events import Event

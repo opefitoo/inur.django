@@ -6,6 +6,7 @@ from io import BytesIO
 
 from constance import config
 from django.core.files.base import ContentFile
+from django.db.models import Case, Value, When, IntegerField
 from django_rq import job
 from pypdf import PdfMerger
 from reportlab.lib.units import cm
@@ -30,12 +31,18 @@ def process_post_save(instance):
     if _must_update:
         from invoices.models import InvoiceItem
         # Now update all InvoiceItems which have an invoice_date within this range
-        #if BatchTypeChoices.CNS_INF == instance.batch_type:
-            # batch_invoices = InvoiceItem.objects.filter(
-            #     Q(invoice_date__gte=instance.start_date) & Q(invoice_date__lte=instance.end_date)).filter(
-            #     invoice_sent=False).filter(batch__isnull=True)
-            # batch_invoices.update(batch=instance)
-        batch_invoices = InvoiceItem.objects.filter(batch=instance)
+        # if BatchTypeChoices.CNS_INF == instance.batch_type:
+        # batch_invoices = InvoiceItem.objects.filter(
+        #     Q(invoice_date__gte=instance.start_date) & Q(invoice_date__lte=instance.end_date)).filter(
+        #     invoice_sent=False).filter(batch__isnull=True)
+        # batch_invoices.update(batch=instance)
+        batch_invoices = InvoiceItem.objects.filter(batch=instance).annotate(
+            is_under_dependence_insurance_order=Case(
+                When(patient__is_under_dependence_insurance=False, then=Value(0)),
+                When(patient__is_under_dependence_insurance=True, then=Value(1)),
+                default=Value(2),
+                output_field=IntegerField(),
+            )).order_by('is_under_dependence_insurance_order', 'patient_id')
         file_content = generate_all_invoice_lines(batch_invoices, sending_date=instance.send_date,
                                                   batch_type=instance.batch_type)
         instance.prefac_file = ContentFile(file_content.encode('utf-8'), 'prefac.txt')
@@ -67,8 +74,7 @@ def process_post_save(instance):
             url = config.ROOT_URL + 'admin/invoices/invoiceitembatch/?id=' + '{0}'.format(instance.id)
             notify_system_via_google_webhook(
                 "Batch {0} processed in {1} seconds click on link to check {2}".format(instance, (end - start).seconds,
-                url))
-
+                                                                                   url))
 
 @job("default", timeout=6000)
 def duplicate_event_for_next_day_for_several_events(events, who_created, number_of_days=1):
@@ -127,6 +133,7 @@ def update_events_address(events, address):
         "The address of the following events was updated to {0}: {1} and it took {2} sec to generate".format(
             address, ','.join([str(event.id) for event in events]), (end - start).seconds))
 
+
 @job("default", timeout=6000)
 def sync_google_contacts(employees):
     """
@@ -147,6 +154,7 @@ def sync_google_contacts(employees):
         notify_system_via_google_webhook(
             "*An error occurred while syncing google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))
 
+
 @job("default", timeout=6000)
 def delete_all_contacts(employees):
     start = datetime.now()
@@ -162,7 +170,6 @@ def delete_all_contacts(employees):
         error_detail = traceback.format_exc()
         notify_system_via_google_webhook(
             "*An error occurred while deleting google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))
-
 
 
 def delete_some_contacts(employees):

@@ -1,6 +1,7 @@
 from zoneinfo import ZoneInfo
 
 from constance import config
+from django.db.models import Case, When, Value, IntegerField
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
@@ -163,7 +164,13 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
 
 def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
     lines = ""
-    for invoice in invoices.order_by('invoice_number'):
+    for invoice in invoices.annotate(
+            is_under_dependence_insurance_order=Case(
+                When(patient__is_under_dependence_insurance=False, then=Value(0)),
+                When(patient__is_under_dependence_insurance=True, then=Value(1)),
+                default=Value(2),
+                output_field=IntegerField(),
+            )).order_by('is_under_dependence_insurance_order', 'patient_id'):
         invoice_dtls = invoice.invoice_details
         if invoice.invoice_date.year != invoice.invoice_date.year or invoice.invoice_date.month != invoice.invoice_date.month:
             raise ValueError(_("All invoice items must have same year and month"))

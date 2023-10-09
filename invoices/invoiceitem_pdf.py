@@ -4,6 +4,7 @@ import os
 from zoneinfo import ZoneInfo
 
 from constance import config
+from django.db.models import Case, Value, When, IntegerField
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -20,7 +21,13 @@ def get_doc_elements(queryset, med_p=False, with_verification_page=False, batch_
     copies_of_medical_prescriptions = []
     invoicing_details = None
     total_number_of_lines = 0
-    for qs in queryset.order_by("invoice_number"):
+    for qs in queryset.annotate(
+            is_under_dependence_insurance_order=Case(
+                When(patient__is_under_dependence_insurance=False, then=Value(0)),
+                When(patient__is_under_dependence_insurance=True, then=Value(1)),
+                default=Value(2),
+                output_field=IntegerField(),
+            )).order_by('is_under_dependence_insurance_order', 'patient_id'):
         if invoicing_details is None:
             invoicing_details = qs.invoice_details
         elif invoicing_details != qs.invoice_details:
@@ -67,9 +74,8 @@ def get_doc_elements(queryset, med_p=False, with_verification_page=False, batch_
                                                       width=234.94,
                                                       height=389.595))
                                 already_added_images.append(prescription.medical_prescription.file_upload.file.name)
-                                if prescription.medical_prescription.file_upload not in copies_of_medical_prescriptions:
-                                    copies_of_medical_prescriptions.append(
-                                        prescription.medical_prescription.file_upload)
+                            if prescription.medical_prescription.file_upload not in copies_of_medical_prescriptions:
+                                copies_of_medical_prescriptions.append(prescription.medical_prescription.file_upload)
                         except (FileNotFoundError, ValueError) as ex:
                             print(ex)
                             elements.append(
