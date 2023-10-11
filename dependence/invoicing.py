@@ -205,6 +205,9 @@ class LongTermCareMonthlyStatement(models.Model):
         # loop through all LongTermCareInvoiceFile
         _counter = 0
         for invoice in invoices:
+            if invoice.calculate_price() == 0:
+                # skip invoice already paid
+                continue
             # create sub element facture
             facture = ElementTree.SubElement(root, "facture")
             print(invoice)
@@ -220,12 +223,15 @@ class LongTermCareMonthlyStatement(models.Model):
             dateEtablissementFacture.text = self.date_of_submission.strftime("%Y-%m-%d")
             # loop through all LongTermCareInvoiceLine
             for item in LongTermCareInvoiceItem.objects.filter(invoice=invoice).all().all():
+                if item.paid:
+                    # skip invoice line already paid
+                    continue
                 _counter += 1
                 # create sub element prestation
                 prestation = ElementTree.SubElement(facture, "prestation")
                 # create sub element codePrestation
                 referencePrestation = ElementTree.SubElement(prestation, "referencePrestation")
-                referencePrestation.text = str(invoice.id) + str(_counter)
+                referencePrestation.text = str(invoice.id) + str(_counter) + str(item.id)
                 # create sub element acte
                 acte = ElementTree.SubElement(prestation, "acte")
                 # create sub element codeTarif
@@ -258,6 +264,9 @@ class LongTermCareMonthlyStatement(models.Model):
                 identifiantExecutant.text = config.CODE_PRESTATAIRE
 
             for line in LongTermCareInvoiceLine.objects.filter(invoice=invoice).all().all():
+                if line.paid:
+                    # skip invoice line already paid
+                    continue
                 for line_per_day in line.get_line_item_per_each_day_of_period():
                     _counter += 1
                     # create sub element prestation
