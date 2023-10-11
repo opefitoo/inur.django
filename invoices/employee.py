@@ -144,6 +144,14 @@ class Employee(models.Model):
         if self.abbreviation and self.abbreviation != 'XXX':
             if Employee.objects.filter(abbreviation=self.abbreviation).exclude(id=self.id).exists():
                 raise ValidationError({'abbreviation': 'Abbreviation must be unique across company'})
+        # call validate_unique_phone_number
+        self.validate_unique_phone_number()
+
+    # validate that phone_number is unique
+    def validate_unique_phone_number(self, exclude=None):
+        super(Employee, self).validate_unique(exclude)
+        if Employee.objects.filter(phone_number=self.phone_number).exclude(id=self.id).exists():
+            raise ValidationError({'phone_number': 'Phone number must be unique across company'})
 
     def get_occupation(self):
         return self.occupation.name
