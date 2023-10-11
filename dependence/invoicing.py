@@ -378,7 +378,11 @@ class LongTermCareMonthlyStatement(models.Model):
 
     @property
     def get_number_of_invoices(self):
-        return LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().count()
+        all_invoices = LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all()
+        for inv in all_invoices:
+            if inv.calculate_price() == 0:
+                all_invoices = all_invoices.exclude(id=inv.id)
+        return all_invoices.count()
 
     @property
     def get_month_in_2_digits(self):
@@ -638,9 +642,9 @@ class LongTermCareInvoiceFile(models.Model):
         _number_of_lines = 0
         for line in LongTermCareInvoiceLine.objects.filter(
                 invoice=self).all():
-            _number_of_lines += len(line.get_line_item_per_each_day_of_period())
+            _number_of_lines += len(line.get_line_item_per_each_day_of_period_not_paid())
         return _number_of_lines + LongTermCareInvoiceItem.objects.filter(
-            invoice=self).count()
+            invoice=self, paid=False).count()
 
     @property
     def get_invoice_items(self):
@@ -820,6 +824,21 @@ class LongTermCareInvoiceLine(models.Model):
                                                                     month=self.start_period.month)
 
     def get_line_item_per_each_day_of_period(self):
+        # loop through all days of period and create an object for each day
+        number_of_days_inclusive = (self.end_period - self.start_period).days + 1
+        data_to_return = []
+        for day in range(number_of_days_inclusive):
+            date_of_line = self.start_period + timedelta(days=day)
+            # format date YYYYMMDD
+            date_of_line_str = date_of_line.strftime("%Y%m%d")
+            reference_prestation = "%s%s%s" % (self.invoice.id, self.long_term_care_package.id, date_of_line_str)
+            data_to_return.append(
+                LongTermCareInvoiceLinePerDay(reference_prestation, date_of_line, self.long_term_care_package))
+        return data_to_return
+
+    def get_line_item_per_each_day_of_period_not_paid(self):
+        if self.paid:
+            return []
         # loop through all days of period and create an object for each day
         number_of_days_inclusive = (self.end_period - self.start_period).days + 1
         data_to_return = []
