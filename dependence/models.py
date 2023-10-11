@@ -38,7 +38,8 @@ class MonthlyParameters(models.Model):
     # Patient
     patient = models.ForeignKey(Patient, related_name='health_params_to_patient',
                                 on_delete=models.PROTECT,
-                                limit_choices_to=Q(is_under_dependence_insurance=True) | Q(is_eligible_to_parameter_surveillance=True))
+                                limit_choices_to=Q(is_under_dependence_insurance=True) | Q(
+                                    is_eligible_to_parameter_surveillance=True))
     weight = models.DecimalField("Poids (KG)", max_digits=4, decimal_places=1)
 
     def clean(self):
@@ -147,7 +148,8 @@ class PatientAnamnesis(models.Model):
                                 on_delete=models.PROTECT,
                                 limit_choices_to={'is_under_dependence_insurance': True})
     nationality = CountryField(u'Nationalité', blank_label='...', blank=True, null=True)
-    birth_place = models.CharField(u'Lieu de naissance', help_text="Ville/Pays", max_length=50, default=None, blank=True, null=True)
+    birth_place = models.CharField(u'Lieu de naissance', help_text="Ville/Pays", max_length=50, default=None,
+                                   blank=True, null=True)
     contract_file = models.FileField(u"Contrat", upload_to='contracts/', default=None, blank=True, null=True)
     contract_signed_date = models.DateField(u"Date de signature du contrat", default=None, blank=True, null=True)
     contract_start_date = models.DateField(u"Date de début du contrat", default=None, blank=True, null=True)
@@ -161,41 +163,39 @@ class PatientAnamnesis(models.Model):
                                     blank=True,
                                     null=True
                                     )
-    plan_of_share = models.CharField(u"Plan de partage", #
+    plan_of_share = models.CharField(u"Plan de partage",  #
                                      max_length=45,
                                      blank=True,
                                      null=True
                                      )
-    help_for_cleaning = models.CharField(u"Aide pour le ménage", #
+    help_for_cleaning = models.CharField(u"Aide pour le ménage",  #
                                          max_length=10,
                                          choices=HelpForCleaning.choices,
                                          default=None,
                                          blank=True,
                                          null=True
                                          )
-    reason_for_dependence = models.CharField(u"Motif de prise en charge", #
+    reason_for_dependence = models.CharField(u"Motif de prise en charge",  #
                                              max_length=45,
                                              blank=True,
                                              null=True
                                              )
-    anticipated_directives = models.CharField(u"Directives anticipées", #
-                                             max_length=45,
-                                             blank=True,
-                                             null=True
-                                             )
-    anticipated_directives_doc_link = models.FileField(u"Doc. directives anticipées", #
-                                                      upload_to='documents/anticipated_directives',
-                                                      default=None,
-                                                      blank=True,
-                                                      null=True
-                                                      )
-    religious_beliefs = models.CharField(u"Religion", #
+    anticipated_directives = models.CharField(u"Directives anticipées",  #
+                                              max_length=45,
+                                              blank=True,
+                                              null=True
+                                              )
+    anticipated_directives_doc_link = models.FileField(u"Doc. directives anticipées",  #
+                                                       upload_to='documents/anticipated_directives',
+                                                       default=None,
+                                                       blank=True,
+                                                       null=True
+                                                       )
+    religious_beliefs = models.CharField(u"Religion",  #
                                          max_length=45,
                                          blank=True,
                                          null=True
                                          )
-
-
 
     # habitudes
     preferred_drinks = models.TextField("Boissons préfèrées", max_length=250, default=None, blank=True, null=True)
@@ -228,9 +228,9 @@ class PatientAnamnesis(models.Model):
                                                     default=None,
                                                     blank=True,
                                                     null=True)
-    elevator = models.BooleanField(u"Ascenseur", default=None, #
-                                      blank=True,
-                                      null=True)
+    elevator = models.BooleanField(u"Ascenseur", default=None,  #
+                                   blank=True,
+                                   null=True)
 
     ppl_circle = models.CharField("Entourage",
                                   max_length=50,
@@ -245,7 +245,7 @@ class PatientAnamnesis(models.Model):
                                   default=None,
                                   blank=True,
                                   null=True)
-    domestic_animals = models.CharField(u"Animaux domestiques", max_length=50, #
+    domestic_animals = models.CharField(u"Animaux domestiques", max_length=50,  #
                                         default=None,
                                         blank=True,
                                         null=True)
@@ -259,12 +259,11 @@ class PatientAnamnesis(models.Model):
                                                     null=True)
     informal_caregiver = models.CharField("Aidant informel", max_length=50, default=None, blank=True, null=True)
     pathologies = models.TextField("Pathologies", max_length=500, default=None, blank=True, null=True)
-    technical_help = models.TextField("Aides techniques", max_length=500, default=None, blank=True, null=True) #
-
+    technical_help = models.TextField("Aides techniques", max_length=500, default=None, blank=True, null=True)  #
 
     medical_background = models.TextField(u"Antécédents", max_length=500, default=None, blank=True,
                                           null=True)
-    treatments = models.TextField("Traitements", max_length=1000, default=None, blank=True, null=True) #
+    treatments = models.TextField("Traitements", max_length=1000, default=None, blank=True, null=True)  #
     allergies = models.TextField("Allergies", max_length=250, default=None, blank=True, null=True)
     # aides techniques
     electrical_bed = models.BooleanField(u"Lit électrique", default=None, blank=True, null=True)
@@ -289,7 +288,7 @@ class PatientAnamnesis(models.Model):
     drugs_distribution = models.CharField("Distribution", max_length=30, default=None, blank=True, null=True)
     drugs_ordering = models.CharField(u"Commande des médicaments", max_length=30, default=None, blank=True, null=True)
     pharmacy_visits = models.CharField(u"Passages en pharmacie", max_length=30, default=None, blank=True, null=True)
-    preferred_pharmacies = models.TextField("Pharmacie(s)", max_length=500, default=None, blank=True, null=True) #
+    preferred_pharmacies = models.TextField("Pharmacie(s)", max_length=500, default=None, blank=True, null=True)  #
 
     # Mobilisation
     mobilization = models.CharField(u"Mobilisation", choices=MobilizationsType.choices,
@@ -368,6 +367,7 @@ class PatientAnamnesis(models.Model):
                 return shared_care_plan_dict
             else:
                 raise shared_care_plan_dict
+
     def clean(self, *args, **kwargs):
         super(PatientAnamnesis, self).clean_fields()
         messages = self.validate(self.id, self.__dict__)
@@ -394,7 +394,9 @@ class PatientAnamnesis(models.Model):
     def validate_patient_has_only_one_anamnesis(instance_id, data):
         messages = {}
         if PatientAnamnesis.objects.filter(patient_id=data['patient_id']).count() > 1:
-            messages = {'patient': 'Patient must have only one anamnesis another anamnesis already exists with id %s' % PatientAnamnesis.objects.filter(patient_id=data['patient_id']).first().id}
+            messages = {
+                'patient': 'Patient must have only one anamnesis another anamnesis already exists with id %s' % PatientAnamnesis.objects.filter(
+                    patient_id=data['patient_id']).first().id}
         return messages
 
     def __str__(self):

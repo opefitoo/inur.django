@@ -30,7 +30,7 @@ from dependence.falldeclaration import FallDeclaration
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
     TensionAndTemperatureParametersFormset, CarePlanDetailForm, LongTermMonthlyActivityFileAdminForm
 from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceLine, LongTermCareMonthlyStatement, \
-    LongTermCareInvoiceItem
+    LongTermCareInvoiceItem, LongTermCareMonthlyStatementSending
 from dependence.longtermcareitem import LongTermPackage, LongTermPackagePrice, LongTermCareItem
 from dependence.medicalcaresummary import MedicalCareSummary
 from dependence.models import AssignedPhysician, ContactPerson, DependenceInsurance, OtherStakeholder, BiographyHabits, \
@@ -54,10 +54,12 @@ class LongTermCareInvoiceItemInLine(admin.TabularInline):
 @admin.register(LongTermCareInvoiceFile)
 class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     inlines = [LongTermCareInvoiceLineInline, LongTermCareInvoiceItemInLine]
-    list_display = ('patient', 'invoice_start_period', 'invoice_end_period', 'display_object_actions_list')
+    list_display = ('patient', 'invoice_start_period', 'invoice_end_period', 'invoice_reference', 'has_errors_col',
+                    'display_object_actions_list')
     list_filter = ('patient', 'invoice_start_period', 'invoice_end_period')
     date_hierarchy = 'invoice_start_period'
-    readonly_fields = ('created_on', 'updated_on')
+    readonly_fields = ('has_errors_col', 'display_errors_as_html',
+                       'invoice_reference', 'created_on', 'updated_on')
 
     object_actions = [
         {
@@ -69,16 +71,26 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
 
     ]
 
+    def has_errors_col(self, obj):
+        return not obj.has_errors
+
+    has_errors_col.short_description = 'No Errors'  # Column header
+    has_errors_col.boolean = True
+
     def print_long_term_invoice(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'invoicing/print_long_term_invoice.html', {'obj': obj})
 
 
+class LongTermCareMonthlyStatementSendingInline(admin.TabularInline):
+    model = LongTermCareMonthlyStatementSending
+    extra = 0
 @admin.register(LongTermCareMonthlyStatement)
 class LongTermCareMonthlyStatementAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     list_display = ('year', 'month', 'date_of_submission', 'display_object_actions_list')
     readonly_fields = ('created_on', 'updated_on')
+    inlines = [LongTermCareMonthlyStatementSendingInline]
 
     object_actions = [
         {

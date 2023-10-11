@@ -1,7 +1,9 @@
 import calendar
+import hashlib
 import locale
 import os
 import traceback
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import timedelta, date
 from xml.etree import ElementTree
@@ -10,11 +12,14 @@ import xmlschema
 from constance import config
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F, CharField
+from django.db.models.functions import Concat, ExtractYear, ExtractMonth
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from dependence.detailedcareplan import get_summaries_between_two_dates, MedicalCareSummaryPerPatientDetail
@@ -48,12 +53,63 @@ def long_term_care_monthly_statement_file_path(instance, filename):
     year_of_count = f"{instance.year:04d}"
     _internal_reference = instance.date_of_submission.strftime("%Y%m%d")
     newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_FAC_002_{_internal_reference}{instance.id}.XML"
-    # newfilename, file_extension = os.path.splitext(filename)
-    return f"long_term_invoices/{instance.year}/{instance.month}/{newfilename}"
+    path = f"long_term_invoices/{instance.year}/{instance.month}/{newfilename}"
+
+    # Check if file exists
+    counter = 1
+    original_path = path
+    while default_storage.exists(path):
+        # If file exists, modify the filename to avoid overwriting
+        path_parts = os.path.splitext(original_path)  # Separate filename and extension
+        path = f"{path_parts[0]}_{counter}{path_parts[1]}"  # Append counter before extension
+        counter += 1
+
+    return path
+
+
+def long_term_care_monthly_statement_file_path_bis(instance, filename):
+    # Ainsi le nom des fichiers commence toujours :
+    # - par la lettre ‘D’ pour les fichiers de l’assurance dépendance
+    # − puis par le code prestataire à 8 positions
+    # − puis par l’année de décompte sur 4 positions
+    # − puis par le mois de décompte ou numéro d’envoi sur 2 positions
+    # − puis par le caractère ‘_’
+    # − puis par un identifiant convention à 3 positions qui définit une convention dans le cadre
+    # de laquelle la facturation est demandée.
+    # − puis par le caractère ‘_’
+    # − puis par le type fichier
+    # − puis par le caractère ‘_’
+    # − puis par le numéro de layout
+    # − puis par le caractère ‘_’
+    # − puis par une référence.
+    # − puis par le caractère ‘_’
+    # Illustration schématique :
+    # [F/D][Code prestataire][Année][Envoi]_[Cadre légal]_[Type Fichier]_[Numéro Layout]_[Référence]
+    # format integer to display 2 digits
+    month_of_count = f"{instance.link_to_monthly_statement.month:02d}"
+    year_of_count = f"{instance.link_to_monthly_statement.year:04d}"
+    _internal_reference = instance.link_to_monthly_statement.date_of_submission.strftime("%Y%m%d")
+    newfilename = f"D{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_ASD_FAC_002_{_internal_reference}{instance.id}.XML"
+    path = f"long_term_invoices/{instance.link_to_monthly_statement.year}/{instance.link_to_monthly_statement.month}/{newfilename}"
+
+    # Check if file exists
+    counter = 1
+    original_path = path
+    while default_storage.exists(path):
+        # If file exists, modify the filename to avoid overwriting
+        path_parts = os.path.splitext(original_path)  # Separate filename and extension
+        path = f"{path_parts[0]}_{counter}{path_parts[1]}"  # Append counter before extension
+        counter += 1
+
+    return path
+
 
 def long_term_care_monthly_statement_response_file_path(instance, filename):
     return f"long_term_invoices/{instance.year}/{instance.month}/{filename}"
 
+
+def long_term_care_monthly_statement_response_file_path_bis(instance, filename):
+    return f"long_term_invoices/{instance.link_to_monthly_statement.year}/{instance.link_to_monthly_statement.month}/{filename}"
 
 
 # décompte mensuel de factures
@@ -329,8 +385,6 @@ class LongTermCareMonthlyStatement(models.Model):
         return f"{self.year} - {self.month}"
 
 
-@receiver(pre_save, sender=LongTermCareMonthlyStatement,
-          dispatch_uid="generate_xml_monthly_statement_and_notify_via_chat")
 def create_and_save_invoice_file(sender, instance, **kwargs):
     if not instance.force_regeneration:
         return
@@ -349,6 +403,182 @@ def create_and_save_invoice_file(sender, instance, **kwargs):
         finally:
             notify_system_via_google_webhook(message)
             instance.force_regeneration = False
+
+
+@receiver(pre_save, sender=LongTermCareMonthlyStatement,
+          dispatch_uid="generate_xml_monthly_statement_and_notify_via_chat")
+def create_and_save_invoice_file(sender, instance, **kwargs):
+    if not instance.force_regeneration:
+        return
+    message = f"Le fichier de factures mensuel {instance} a été généré avec succès. Date heure : {timezone.now()}"
+    sending_files = LongTermCareMonthlyStatementSending.objects.filter(link_to_monthly_statement=instance,
+                                                                       received_invoice_file_response=None).all()
+    if sending_files.count() > 1:
+        raise ValidationError(
+            "Il y a plus d'un fichier de facture mensuel envoyé. Veuillez supprimer les fichiers en trop.")
+    if sending_files.count() == 1:
+        sending_to_update = sending_files.first()
+    elif sending_files.count() == 0:
+        sending_to_update = LongTermCareMonthlyStatementSending.objects.create(link_to_monthly_statement=instance)
+    if instance.force_regeneration:
+        try:
+            xml_str = instance.generate_xml_using_xmlschema()
+            # save the file
+            xml_file = ContentFile(xml_str, name=f"{instance.year}_{instance.month}.xml")
+            sending_to_update.xml_invoice_file = xml_file
+            sending_to_update.link_to_monthly_statement = instance
+            sending_to_update.save()
+        except Exception as e:
+            message = f"Le fichier de factures mensuel {instance} n'a pas pu être généré. Erreur : {e}. Date heure : {timezone.now()}"
+            message += f" Détails de l'erreur : {traceback.format_exc()}"
+            notify_system_via_google_webhook(message)
+            print(e)
+        finally:
+            notify_system_via_google_webhook(message)
+            instance.force_regeneration = False
+
+
+class LongTermCareMonthlyStatementSending(models.Model):
+    link_to_monthly_statement = models.ForeignKey(LongTermCareMonthlyStatement, on_delete=models.CASCADE,
+                                                  related_name='monthly_statement_xml_file', blank=True, null=True)
+    xml_invoice_file = models.FileField(_('Generated Invoice File'),
+                                        upload_to=long_term_care_monthly_statement_file_path_bis,
+                                        blank=True, null=True)
+    received_invoice_file_response = models.FileField(_('Received Invoice Response File'),
+                                                      upload_to=long_term_care_monthly_statement_response_file_path_bis,
+                                                      blank=True, null=True)
+    scan_of_signed_invoice = models.FileField(_('Scan of Signed Invoice'),
+                                              upload_to='long_term_invoices/signed/',
+                                              blank=True, null=True)
+    date_of_receipt_of_response_file = models.DateField(_('Date de réception du fichier de retour'), blank=True,
+                                                        null=True)
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+    def __str__(self):
+        return f"{self.link_to_monthly_statement} - date of receipt of response file : {self.date_of_receipt_of_response_file}"
+
+
+def normalize_and_hash_xml(xml_file):
+    # Parse the XML
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    # Normalize: Implement normalization logic as per your requirements
+    normalized_xml_str = ET.tostring(root, encoding='utf-8', method='xml')
+
+    # Compute hash
+    sha256 = hashlib.sha256()
+    sha256.update(normalized_xml_str)
+    return sha256.hexdigest()
+
+
+def detect_anomalies(instance):
+    # Parse the XML file
+    tree = ET.parse(instance.received_invoice_file_response)
+    root = tree.getroot()
+
+    # Navigate to the 'montantNet' element and extract its text content
+    montant_net_element = root.find('./entete/paiementGroupeTraitement/montantNet')
+    montant_brut_element = root.find('./entete/paiementGroupeTraitement/montantBrut')
+
+    if montant_brut_element is None or montant_net_element is None:
+        raise ValueError("Could not find montantBrut or montantNet in the XML.")
+
+    montant_brut = float(montant_brut_element.text)
+    montant_net = float(montant_net_element.text)
+
+    # Compare montantBrut and montantNet
+    if montant_brut != montant_net:
+        print(f"Warning: montantBrut ({montant_brut}) and montantNet ({montant_net}) are not equal.")
+
+        # Extract facture elements with anomalies
+        anomalies = []
+        for facture in root.findall('.//facture'):
+            reference_facture = facture.find('./referenceFacture').text if facture.find(
+                './referenceFacture') is not None else "Unknown"
+            anomalie = facture.find('./anomalieFacture')
+            items = LongTermCareInvoiceFile.objects.annotate(
+                invoice_reference_filter=Concat(
+                    ExtractYear('invoice_start_period'),
+                    ExtractMonth('invoice_start_period'),
+                    F('id'),
+                    output_field=CharField()
+                )
+            )
+            if anomalie is not None:
+                code = anomalie.find('./code').text if anomalie.find('./code') is not None else "Unknown"
+                motif = anomalie.find('./motif').text if anomalie.find('./motif') is not None else "Unknown"
+                error_messages = []
+                # Find all 'prestation' elements with 'anomaliePrestation' child within the current 'facture'
+                prestations_with_anomalies = facture.findall('.//prestation[anomaliePrestation]')
+                error_messages.append(f"Facture {reference_facture} has anomaly {code} - {motif}")
+                for prestation in prestations_with_anomalies:
+                    reference_prestation = prestation.find('referencePrestation').text
+                    code_acte_paye = prestation.find('codeActePaye').text
+                    anomalie = prestation.find('anomaliePrestation')
+                    anomalie_type = anomalie.find('type').text
+                    anomalie_code = anomalie.find('code').text
+                    anomalie_motif = anomalie.find('motif').text
+
+                    # Display the extracted information
+                    print(f"  - Prestation Reference: {reference_prestation}")
+                    print(f"    Anomalie Type: {anomalie_type}")
+                    print(f"    Anomalie Code: {anomalie_code}")
+                    print(f"    Anomalie Motif: {anomalie_motif}")
+                    error_messages.append(
+                        f"reference prestation : {reference_prestation} - Code : {code_acte_paye} - Type: {anomalie_type} - Code: {anomalie_code} - Motif: {anomalie_motif}")
+
+                invoice_in_error = items.filter(invoice_reference_filter=reference_facture).get()
+                # generate a hash for all error_messages
+                error_messages_hash = hashlib.sha256(str(error_messages).encode('utf-8')).hexdigest()
+                # check if error message already exists
+                if not InvoiceError.objects.filter(invoice=invoice_in_error,
+                                                   statement_sending=instance,
+                                                   error_message_hash=error_messages_hash).exists():
+                    InvoiceError.objects.create(invoice=invoice_in_error,
+                                                statement_sending=instance,
+                                                error_message=error_messages)
+                    print(f"Facture {invoice_in_error} has anomaly {code} - {motif}")
+                else:
+                    print(f"Facture {invoice_in_error} has anomaly {code} - {motif} but already exists in database")
+                anomalies.append((reference_facture, code, motif))
+            else:
+                print(f"Facture {reference_facture} has no anomalies")
+                montant_net_facture = facture.find('./montantNet').text
+                montant_brut_facture = facture.find('./montantBrut').text
+                if float(montant_net_facture) == float(montant_brut_facture):
+                    invoice_paid = items.filter(invoice_reference_filter=reference_facture).get()
+                    # set lines and items as paid
+                    LongTermCareInvoiceLine.objects.filter(invoice=invoice_paid).update(paid=True)
+                    LongTermCareInvoiceItem.objects.filter(invoice=invoice_paid).update(paid=True)
+                else:
+                    raise ValueError("Montant net and montant brut are not equal {montant_net_facture} {montant_brut_facture}")
+        return anomalies
+    else:
+        print("No anomalies detected.")
+        return None
+
+
+@receiver(pre_save, sender=LongTermCareMonthlyStatementSending,
+          dispatch_uid="generate_xml_monthly_statement_and_notify_via_chat")
+def process_xml_response_file(sender, instance, **kwargs):
+    # detect if received_invoice_file_response has changed
+    if not instance.received_invoice_file_response:
+        return
+    if not instance.link_to_monthly_statement:
+        return
+    if instance.pk:
+        stored_instance = LongTermCareMonthlyStatementSending.objects.get(pk=instance.pk)
+        if stored_instance.received_invoice_file_response and normalize_and_hash_xml(
+                stored_instance.received_invoice_file_response) == normalize_and_hash_xml(
+                instance.received_invoice_file_response):
+            print("No change in received_invoice_file_response")
+            return
+    # parse the xml file
+    print("Processing XML file")
+    print(detect_anomalies(instance))
 
 
 class LongTermCareInvoiceFile(models.Model):
@@ -412,6 +642,29 @@ class LongTermCareInvoiceFile(models.Model):
         return None
 
     @property
+    def invoice_reference(self):
+        return f"{self.invoice_start_period.year}{self.invoice_start_period.month}{self.id}"
+
+    @property
+    def has_errors(self):
+        return InvoiceError.objects.filter(invoice=self).exists()
+
+    def get_errors(self):
+        return InvoiceError.objects.filter(invoice=self).all()
+
+    @property
+    def display_errors_as_html(self):
+        anomalies_html = ""
+        for error in self.get_errors():
+            anomalies_html += f"<br> {error}"
+            anomalies = error.error_message.split(', ')
+            anomalies_html += "<ul>"
+            for error_msg in anomalies:
+                anomalies_html += f"<li>{error_msg}</li>"
+            anomalies_html += "</ul>"
+        return mark_safe(anomalies_html)
+
+    @property
     def get_invoice_lines(self):
         # get LongTermCareInvoiceItem linked to this invoice
         if self.id:
@@ -420,7 +673,8 @@ class LongTermCareInvoiceFile(models.Model):
         return None
 
     def get_patient_hospitalizations(self):
-        return Hospitalization.objects.filter(patient=self.patient).filter(start_date__lte=self.invoice_end_period).filter(end_date__gte=self.invoice_start_period)
+        return Hospitalization.objects.filter(patient=self.patient).filter(
+            start_date__lte=self.invoice_end_period).filter(end_date__gte=self.invoice_start_period)
 
     class Meta:
         verbose_name = _("Facture assurance dépendance")
@@ -460,12 +714,27 @@ class LongTermCareActivity(models.Model):
                                                                                  self.invoice.patient)
 
 
+class InvoiceError(models.Model):
+    invoice = models.ForeignKey(LongTermCareInvoiceFile, on_delete=models.CASCADE)
+    statement_sending = models.ForeignKey(LongTermCareMonthlyStatementSending, on_delete=models.CASCADE, null=True,
+                                          blank=True)
+    error_message = models.TextField()
+    error_message_hash = models.CharField(max_length=255, blank=True, null=True)
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+    def __str__(self):
+        return f"Error for invoice {self.invoice}"
+
+
 class LongTermCareInvoiceItem(models.Model):
     invoice = models.ForeignKey(LongTermCareInvoiceFile, on_delete=models.CASCADE, related_name='invoice_item')
     care_date = models.DateField(_('Date Début période'), )
     long_term_care_package = models.ForeignKey(LongTermPackage, on_delete=models.CASCADE,
                                                related_name='from_item_to_long_term_care_package')
     quantity = models.IntegerField(_('Quantité'), default=1)
+    paid = models.BooleanField(_('Paid'), default=False)
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
@@ -479,6 +748,8 @@ class LongTermCareInvoiceItem(models.Model):
         verbose_name_plural = _("Item de facture assurance dépendance")
 
     def calculate_price(self):
+        if self.paid:
+            return 0
         if self.long_term_care_package.package:
             raise ValidationError("Item seulement pour un non forfait (package doit etre false)")
         else:
@@ -516,11 +787,14 @@ class LongTermCareInvoiceLine(models.Model):
     long_term_care_package = models.ForeignKey(LongTermPackage, on_delete=models.CASCADE,
                                                null=True, blank=True,
                                                related_name='long_term_care_package')
+    paid = models.BooleanField(_('Paid'), default=False)
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
     def calculate_price(self):
+        if self.paid:
+            return 0
         number_of_days_inclusive = (self.end_period - self.start_period).days + 1
         if self.long_term_care_package.package:
             return self.long_term_care_package.price_per_year_month(year=self.start_period.year,
@@ -572,17 +846,20 @@ class LongTermCareInvoiceLine(models.Model):
             raise ValidationError("Le forfait FAMDM n'a pas été encodé dans la synthèse")
         elif "FAMDM" != self.long_term_care_package.code:
             if plan_for_period[0].medicalSummaryPerPatient.nature_package \
-                    and plan_for_period[0].medicalSummaryPerPatient.nature_package != self.long_term_care_package.dependence_level:
-                raise ValidationError("Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
-                    self.long_term_care_package,
-                    self.long_term_care_package.dependence_level,
-                    plan_for_period[0].medicalSummaryPerPatient.nature_package))
+                    and plan_for_period[
+                0].medicalSummaryPerPatient.nature_package != self.long_term_care_package.dependence_level:
+                raise ValidationError(
+                    "Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
+                        self.long_term_care_package,
+                        self.long_term_care_package.nature_package,
+                        plan_for_period[0].medicalSummaryPerPatient.nature_package))
             if not plan_for_period[0].medicalSummaryPerPatient.nature_package and plan_for_period[
                 0].medicalSummaryPerPatient.level_of_needs != self.long_term_care_package.dependence_level:
-                raise ValidationError("Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
-                    self.long_term_care_package,
-                    self.long_term_care_package.dependence_level,
-                    plan_for_period[0].medicalSummaryPerPatient.level_of_needs))
+                raise ValidationError(
+                    "Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
+                        self.long_term_care_package,
+                        self.long_term_care_package.dependence_level,
+                        plan_for_period[0].medicalSummaryPerPatient.level_of_needs))
 
     def __str__(self):
         return "Ligne de facture assurance dépendance de {0} à {1} patient {2}".format(self.start_period,

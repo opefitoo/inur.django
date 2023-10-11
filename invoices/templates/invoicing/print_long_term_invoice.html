@@ -177,6 +177,16 @@
             </tr>
         {% endfor %}
 
+        <tr class="total">
+            <td colspan="1"></td>
+            <td>Erreurs De Facturation</td>
+        </tr>
+        {% for error in obj.get_errors %}
+            <tr class="item">
+                <td>{{ error.statement_sending }}</td>
+                <td>{{ error.error_message }}</td>
+            </tr>
+        {% endfor %}
 
     </table>
 </div>
