@@ -137,7 +137,7 @@ class LongTermCareMonthlyStatement(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
-    def generate_xml_using_xmlschema(self):
+    def generate_xml_using_xmlschema(self, sending_to_update=None):
 
         # Load the XSD schema file
         # go one folder up
@@ -173,8 +173,11 @@ class LongTermCareMonthlyStatement(models.Model):
         organisme = ElementTree.SubElement(entete, "organisme")
         organisme.text = "19"
         # create sub element dateEnvoi
-        dateEnvoi = ElementTree.SubElement(entete, "dateEnvoi")
-        dateEnvoi.text = self.date_of_submission.strftime("%Y-%m-%d")
+        if sending_to_update:
+            dateEnvoi = ElementTree.SubElement(entete, "dateEnvoi")
+            dateEnvoi.text = sending_to_update.date_of_sending_xml_file.strftime("%Y-%m-%d")
+        else:
+            raise Exception("Sending to update is not implemented yet")
         # create sub element referenceFichierFacturation
         referenceFichierFacturation = ElementTree.SubElement(entete, "referenceFichierFacturation")
         referenceFichierFacturation.text = str(self.id)
@@ -219,8 +222,11 @@ class LongTermCareMonthlyStatement(models.Model):
             identifiantPersonneProtegee = ElementTree.SubElement(facture, "identifiantPersonneProtegee")
             identifiantPersonneProtegee.text = invoice.patient.code_sn
             # create sub element dateEtablissementFacture
-            dateEtablissementFacture = ElementTree.SubElement(facture, "dateEtablissementFacture")
-            dateEtablissementFacture.text = self.date_of_submission.strftime("%Y-%m-%d")
+            if sending_to_update:
+                dateEtablissementFacture = ElementTree.SubElement(facture, "dateEtablissementFacture")
+                dateEtablissementFacture.text = sending_to_update.date_of_sending_xml_file.strftime("%Y-%m-%d")
+            else:
+                raise Exception("Sending to update is not implemented yet")
             # loop through all LongTermCareInvoiceLine
             for item in LongTermCareInvoiceItem.objects.filter(invoice=invoice).all().all():
                 if item.paid:
@@ -435,7 +441,9 @@ def create_and_save_invoice_file(sender, instance, **kwargs):
         sending_to_update = LongTermCareMonthlyStatementSending.objects.create(link_to_monthly_statement=instance)
     if instance.force_regeneration:
         try:
-            xml_str = instance.generate_xml_using_xmlschema()
+            if sending_to_update.date_of_sending_xml_file is None:
+                sending_to_update.date_of_sending_xml_file = timezone.now()
+            xml_str = instance.generate_xml_using_xmlschema(sending_to_update=sending_to_update)
             # save the file
             xml_file = ContentFile(xml_str, name=f"{instance.year}_{instance.month}.xml")
             sending_to_update.xml_invoice_file = xml_file
@@ -457,6 +465,7 @@ class LongTermCareMonthlyStatementSending(models.Model):
     xml_invoice_file = models.FileField(_('Generated Invoice File'),
                                         upload_to=long_term_care_monthly_statement_file_path_bis,
                                         blank=True, null=True)
+    date_of_sending_xml_file = models.DateField(_('Date d\'envoi du fichier'), blank=True, null=True)
     received_invoice_file_response = models.FileField(_('Received Invoice Response File'),
                                                       upload_to=long_term_care_monthly_statement_response_file_path_bis,
                                                       blank=True, null=True)
