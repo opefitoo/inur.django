@@ -195,7 +195,7 @@ class LongTermCareMonthlyStatement(models.Model):
         nombre = ElementTree.SubElement(demandeDecompte, "nombre")
         # set number of invoices per patient
         invoices = LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all()
-        nombre.text = str(invoices.count())
+        nombre.text = str(self.get_number_of_invoices)
         # create sub element devise
         devise = ElementTree.SubElement(demandeDecompte, "devise")
         devise.text = "EUR"
