@@ -55,7 +55,7 @@ from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physicia
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
-from invoices.resources import ExpenseCard, Car
+from invoices.resources import ExpenseCard, Car, MaintenanceFile
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 from invoices.utils import EventCalendar
@@ -251,10 +251,14 @@ class ExpenseCardDetailInline(TabularInline):
     extra = 0
     model = ExpenseCard
 
+class MaintenanceFileInline(TabularInline):
+    extra = 0
+    model = MaintenanceFile
+
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
-    inlines = [ExpenseCardDetailInline]
+    inlines = [ExpenseCardDetailInline, MaintenanceFileInline]
     list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'battery_or_fuel_level', 'car_movement')
 
     def geo_localisation_of_car_url(self, obj):

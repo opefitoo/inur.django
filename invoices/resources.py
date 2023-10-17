@@ -66,12 +66,22 @@ def vehicle_mileage(convadis_identifier, mil):
         if mil["vehicleId"] == int(convadis_identifier):
             return mil["totalMileage"]["value"]
 
+
 def registration_card_storage_location(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
     path = os.path.join("Doc. Resources", "%s" % instance.licence_plate)
     filename = '%s_%s_%s_%s%s' % (
         instance.licence_plate, timezone.now().date().strftime('%Y'), timezone.now().date().strftime('%b'),
         "carte_grise", file_extension)
+    return os.path.join(path, filename)
+
+
+def maintenance_file_storage_location(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    path = os.path.join("Doc. Resources", "%s" % instance.car_link.licence_plate)
+    filename = '%s_%s_%s_%s%s' % (
+        instance.car_link.licence_plate, timezone.now().date().strftime('%Y'), timezone.now().date().strftime('%b'),
+        "maintenance", file_extension)
     return os.path.join(path, filename)
 
 
@@ -87,8 +97,8 @@ class Car(models.Model):
     invoxia_identifier = models.CharField(max_length=20, default=None, blank=True, null=True)
     convadis_identifier = models.CharField(max_length=20, default=None, blank=True, null=True)
     registration_card = models.FileField(upload_to=registration_card_storage_location,
-                               help_text=_("You can attach the scan of the registration card of the car"),
-                               null=True, blank=True)
+                                         help_text=_("You can attach the scan of the registration card of the car"),
+                                         null=True, blank=True)
     vin_number = models.CharField(max_length=20, default=None, blank=True, null=True)
 
     @property
@@ -99,7 +109,6 @@ class Car(models.Model):
                 return battery_level
             else:
                 return "n/a"
-
 
     @property
     def geo_localisation_of_car(self):
@@ -253,3 +262,17 @@ class ExpenseCard(models.Model):
 
     def __str__(self):
         return 'Card: %s - %s' % (self.name, self.number)
+
+
+class MaintenanceFile(models.Model):
+    class Meta:
+        ordering = ['-file_date']
+
+    file_date = models.DateField()
+    description = models.CharField(max_length=50)
+    mileage = models.IntegerField(blank=True, null=True)
+    file = models.FileField(upload_to=maintenance_file_storage_location)
+    car_link = models.ForeignKey(Car, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return 'File: %s - %s' % (self.file_date, self.description)
