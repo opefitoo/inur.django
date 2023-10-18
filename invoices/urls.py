@@ -2,7 +2,9 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.urls import include, re_path
+from django.urls import path
 from django.views.generic import RedirectView
+from django.views.generic import TemplateView
 from django.views.static import serve
 from rest_framework.authtoken import views as authtoken_views
 
@@ -179,6 +181,10 @@ urlpatterns += [
 urlpatterns += [
     # Other urls
     re_path(r'^django-rq/', include('django_rq.urls')),
+]
+urlpatterns += [
+# Serve the Angular app's index.html from /mt940-ofx
+    path('mt940-ofx/', TemplateView.as_view(template_name='mt940-ofx/index.html')),
 ]
 
     # if settings.DEBUG:
