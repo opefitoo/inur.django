@@ -27,7 +27,7 @@ reportlab==4.0.6
 requests==2.31.0
 rsa==4.9
 six==1.16.0
-SQLAlchemy==2.0.21
+SQLAlchemy==2.0.22
 sqlparse==0.4.4
 static3==0.7.0
 uritemplate==4.1.1
