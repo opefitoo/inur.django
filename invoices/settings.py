@@ -82,6 +82,11 @@ MIDDLEWARE = (
 
 MIDDLEWARE += ('crum.CurrentRequestUserMiddleware',)
 
+# Allow all origins to make requests
+CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = ['http://localhost:4200']  # or whatever your Angular dev server is running on
+
+
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'api.views.exception_handler.custom_exception_handler',
 }

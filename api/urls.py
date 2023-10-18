@@ -1,7 +1,9 @@
 from django.urls import include, re_path
+from django.urls import path
 from rest_framework import routers
 
 from api import views
+from api.converterview import MT940toOFXConverterView
 
 router = routers.DefaultRouter()
 # router.register(r'users', views.UserViewSet)
@@ -30,4 +32,8 @@ router.register(r'longtermcare-activity', views.LongTermMonthlyActivityViewSet)
 
 urlpatterns = [
     re_path(r'^', include(router.urls)),
+]
+
+urlpatterns = [
+    path('convert/', MT940toOFXConverterView.as_view(), name='convert-mt940-to-ofx'),
 ]
