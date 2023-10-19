@@ -30,6 +30,8 @@ class MT940toOFXConverter:
         transactions = []
         current_transaction = {}
         is_transaction = False
+        closing_balance = None
+        closing_date = None
 
         # Iterate through the lines
         for line in lines:
@@ -39,18 +41,20 @@ class MT940toOFXConverter:
             elif line.startswith(':86:') and is_transaction:
                 current_transaction['86'] = line[4:]
             elif line.startswith('?21') and is_transaction:
-                current_transaction['payment_reference'] = line[3:].strip()
+                current_transaction['payment_reference'] = line[4:].strip()
             elif line.startswith('?32') and is_transaction:
-                current_transaction['payee'] = line[3:].strip()
-                transactions.append(current_transaction)
-                current_transaction = {}
-                is_transaction = False
+                current_transaction['payee'] = line[4:].strip()
             elif line.startswith(':62F:'):
                 cleaned_string = line.replace('\n', '').replace('\r', '')
-                match = re.search( r'^:62F:[CD](?P<date>\d{6})[A-Z]{3}(?P<amount>[\d,]+,\d{2})$', cleaned_string)
+                match = re.search(r'^:62F:[CD](?P<date>\d{6})[A-Z]{3}(?P<amount>[\d,]+,\d{2})$', cleaned_string)
                 if match:
-                    current_transaction['closing_date'] = datetime.strptime(match.group('date'), '%y%m%d').strftime('%Y%m%d000000')
-                    current_transaction['closing_balance'] = match.group('amount').replace(',', '.')
+                    closing_date = datetime.strptime(match.group('date'), '%y%m%d').strftime('%Y%m%d000000')
+                    closing_balance = match.group('amount').replace(',', '.')
+                if is_transaction:
+                    transactions.append(current_transaction)
+                    current_transaction = {}
+                    is_transaction = False
+
         # Convert MT940 transactions to OFX format
         ofx_transactions = []
         for transaction in transactions:
@@ -79,30 +83,22 @@ class MT940toOFXConverter:
             ofx_transactions.append(stmttrn)
 
         bankfrom = BANKACCTFROM(bankid='111000025', acctid='123456789012', accttype='CHECKING')
-        banktranlist = BANKTRANLIST(*ofx_transactions,
-                                    dtstart=value_date_utc,
-                                    dtend=value_date_utc)
+        banktranlist = BANKTRANLIST(*ofx_transactions, dtstart=value_date_utc, dtend=value_date_utc)
         stmtrs = STMTRS(
             curdef='EUR',
             bankacctfrom=bankfrom,
             banktranlist=banktranlist,
-            ledgerbal=LEDGERBAL(balamt=Decimal(current_transaction['closing_balance']),
-                                dtasof=current_transaction['closing_date']))  # Placeholder ledger balance and date. Adjust as needed.
+            ledgerbal=LEDGERBAL(balamt=Decimal(closing_balance), dtasof=closing_date)
+        )
 
         stmttrnrs = STMTTRNRS(trnuid='5678',
                               status=STATUS(code=0, severity='INFO', message="Transaction completed successfully"),
                               stmtrs=stmtrs)
 
-        sonrs = SONRS(
-            status=STATUS(code=0, severity='INFO'),
-            dtserver=datetime(2015, 1, 2, 17, tzinfo=UTC),
-            language='FRA'
-        )
+        sonrs = SONRS(status=STATUS(code=0, severity='INFO'), dtserver=datetime(2015, 1, 2, 17, tzinfo=UTC),
+                      language='FRA')
 
-        ofx = OFX(
-            signonmsgsrsv1=SIGNONMSGSRSV1(sonrs=sonrs),
-            bankmsgsrsv1=BANKMSGSRSV1(stmttrnrs),
-        )
+        ofx = OFX(signonmsgsrsv1=SIGNONMSGSRSV1(sonrs=sonrs), bankmsgsrsv1=BANKMSGSRSV1(stmttrnrs), )
 
         root = ofx.to_etree()
         message = ET.tostring(root).decode()
@@ -110,6 +106,7 @@ class MT940toOFXConverter:
         response = header + message
 
         return response
+
 
 
 
