@@ -70,7 +70,11 @@ class MT940toOFXConverter:
             transaction_id = match.group('transaction_id')
 
             # Convert operation type from MT940 to OFX format
-            trntype = "CREDIT" if operation_type == 'CR' else 'DEBIT'
+            if operation_type == 'CR':
+                trntype = "CREDIT"
+            else:
+                amount_in_decimal = -amount_in_decimal
+                trntype = "DEBIT"
 
             stmttrn = STMTTRN(
                 trntype=trntype,
