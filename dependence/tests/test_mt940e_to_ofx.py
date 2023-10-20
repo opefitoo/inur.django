@@ -20,7 +20,7 @@ class TestMT940toOFXConverter(unittest.TestCase):
 ?23FT2315786F6M                       
 :62F:C230606EUR000000007044,07
 """
-        
+
         self.sample_mt940_data2 = """
         :20:00103431-0001
 :25:CCRALULL/LU860099780001034313
@@ -89,6 +89,10 @@ class TestMT940toOFXConverter(unittest.TestCase):
         self.assertIn('<NAME>MME MMMM PPPPP TTTT C</NAME>', result)
         self.assertIn('<NAME>Ccccc Nnnnnnn</NAME>', result)
         self.assertIn('<MEMO>sous traitance Mai 2023</MEMO>', result)
+        self.assertIn('<NAME>M. XXXX YYYY</NAME>', result)
+        self.assertIn('MEMO>REF: PP110869</MEMO>', result)
+        self.assertIn('<NAME>MME MMMM PPPPP TTTT C</NAME>', result)
+        self.assertIn('<MEMO>27/11039-66706</MEMO>', result)
 
     # Add more tests as needed
 
