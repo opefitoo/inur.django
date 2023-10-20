@@ -34,6 +34,6 @@ urlpatterns = [
     re_path(r'^', include(router.urls)),
 ]
 
-urlpatterns = [
+urlpatterns += [
     path('convert/', MT940toOFXConverterView.as_view(), name='convert-mt940-to-ofx'),
 ]
