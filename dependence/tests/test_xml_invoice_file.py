@@ -30,8 +30,6 @@ class XMLParsingTestCase(unittest.TestCase):
                 montantBrut = float(prestation.find('.//demandePrestation/montantBrut').text)
                 montantNet = float(prestation.find('.//demandePrestation/montantNet').text)
 
-                print(f"montantBrut for facture {facture.find('.//referenceFacture').text}: {montantBrut}")
-                print(f"montantNet for facture {facture.find('.//referenceFacture').text}: {montantNet}")
 
                 total_montantBrut += montantBrut
                 total_montantNet += montantNet
@@ -50,8 +48,6 @@ class XMLParsingTestCase(unittest.TestCase):
 
         self.assertEqual(round(grand_total_montantBrut, 2), float(root.find('.//demandeDecompte/montantBrut').text))
         self.assertEqual(round(grand_total_montantNet, 2), float(root.find('.//demandeDecompte/montantNet').text))
-        print(f"Grand total montantBrut: {grand_total_montantBrut}")
-        print(f"Grand total montantNet: {grand_total_montantNet}")
 
     def test_parse_xml_2(self):
         # Load XML data from file
