@@ -1,5 +1,7 @@
+import io
 import re
 import xml.etree.ElementTree as ET
+import zipfile
 from datetime import datetime
 from decimal import Decimal
 
@@ -11,14 +13,24 @@ from ofxtools.utils import UTC
 
 
 class MT940toOFXConverter:
-    # def __init__(self, filename):
-    #     with open(filename, 'r') as mt940_file:
-    #         self.data = mt940_file.read()
-    #     self.parsed_data = {}
-
-    def __init__(self, file_content: str):
-        self.data = file_content
+    def __init__(self, file_path_or_content, is_zip=False):
+        self.is_zip = is_zip
+        if is_zip:
+            self.file_path = file_path_or_content
+            self.data = self._extract_zip_contents()
+        else:
+            self.data = file_path_or_content
         self.parsed_data = {}
+
+    def _extract_zip_contents(self):
+        # Extract and concatenate all MT940 files from the ZIP
+        combined_data = ""
+        zip_content = io.BytesIO(self.file_path)
+        with zipfile.ZipFile(zip_content, 'r') as zip_ref:
+            for file_name in zip_ref.namelist():
+                with zip_ref.open(file_name) as file:
+                    combined_data += file.read().decode('utf-8') + "\n"
+        return combined_data
 
     def convert(self):
         mt940_data = self.data
