@@ -36,24 +36,27 @@ class MT940toOFXConverter:
         # Iterate through the lines
         for line in lines:
             if line.startswith(':61:'):
+                if is_transaction:  # If a transaction is already in progress, save it
+                    transactions.append(current_transaction)
+                    current_transaction = {}
                 is_transaction = True
                 current_transaction['61'] = line[4:]
             elif line.startswith(':86:') and is_transaction:
                 current_transaction['86'] = line[4:]
             elif line.startswith('?21') and is_transaction:
-                current_transaction['payment_reference'] = line[4:].strip()
+                current_transaction['payment_reference'] = line[3:].strip()
             elif line.startswith('?32') and is_transaction:
-                current_transaction['payee'] = line[4:].strip()
+                current_transaction['payee'] = line[3:].strip()
             elif line.startswith(':62F:'):
                 cleaned_string = line.replace('\n', '').replace('\r', '')
                 match = re.search(r'^:62F:[CD](?P<date>\d{6})[A-Z]{3}(?P<amount>[\d,]+,\d{2})$', cleaned_string)
                 if match:
                     closing_date = datetime.strptime(match.group('date'), '%y%m%d').strftime('%Y%m%d000000')
                     closing_balance = match.group('amount').replace(',', '.')
-                if is_transaction:
-                    transactions.append(current_transaction)
-                    current_transaction = {}
-                    is_transaction = False
+
+        # Append the last transaction if it exists
+        if is_transaction:
+            transactions.append(current_transaction)
 
         # Convert MT940 transactions to OFX format
         ofx_transactions = []
