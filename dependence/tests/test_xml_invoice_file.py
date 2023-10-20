@@ -90,8 +90,6 @@ class XMLParsingTestCase(unittest.TestCase):
             self.assertEqual(total_montantBrut_rounded, float(facture.find('.//demandeFacture/montantBrut').text))
             self.assertEqual(total_montantNet_rounded, float(facture.find('.//demandeFacture/montantNet').text))
 
-            print(f"Total montantBrut for facture {facture.find('.//referenceFacture').text}: {total_montantBrut}")
-            print(f"Total montantNet for facture {facture.find('.//referenceFacture').text}: {total_montantNet}")
 
             grand_total_montantBrut += total_montantBrut_rounded
             grand_total_montantNet += total_montantNet_rounded
