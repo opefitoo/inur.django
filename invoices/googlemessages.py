@@ -85,7 +85,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
             string_event_date = "d'aujourd'hui programmé à %s" % event_date.time().strftime("%Hh%M")
         else:
             # or in the past
-            string_event_date = "du %s à " % (
+            string_event_date = "du %s à %s" % (
                 event_date.date().strftime('%d-%h-%Y'), event_date.time().strftime("%Hh%M"))
         if state == 5:
             if employees.google_user_id:
