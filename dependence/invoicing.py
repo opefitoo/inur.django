@@ -864,7 +864,13 @@ class LongTermCareInvoiceLine(models.Model):
         verbose_name = _("Ligne de facture assurance dépendance")
         verbose_name_plural = _("Lignes de facture assurance dépendance")
 
+    def delete(self, *args, **kwargs):
+        self._deleting = True
+        super().delete(*args, **kwargs)
+
     def clean(self):
+        if hasattr(self, '_deleting') and self._deleting:
+            return
         self.validate_line_are_coherent_with_medical_care_summary_per_patient()
 
     def validate_line_are_coherent_with_medical_care_summary_per_patient(self):
