@@ -864,15 +864,6 @@ class LongTermCareInvoiceLine(models.Model):
         verbose_name = _("Ligne de facture assurance dépendance")
         verbose_name_plural = _("Lignes de facture assurance dépendance")
 
-    def delete(self, *args, **kwargs):
-        self._deleting = True
-        super().delete(*args, **kwargs)
-
-    def clean(self):
-        if hasattr(self, '_deleting') and self._deleting:
-            return
-        self.validate_line_are_coherent_with_medical_care_summary_per_patient()
-
     def validate_line_are_coherent_with_medical_care_summary_per_patient(self):
         plan_for_period = get_summaries_between_two_dates(self.invoice.patient, self.start_period, self.end_period)
         if len(plan_for_period) == 0:
@@ -909,11 +900,3 @@ class LongTermCareInvoiceLine(models.Model):
                                                                                        self.end_period,
                                                                                        self.invoice.patient)
 
-# @receiver(post_save, sender=LongTermCareInvoiceFile, dispatch_uid="generate_invoice_file_and_notify_via_chat_5QH9cN")
-# def parse_xml_and_notify_via_chat(sender, instance, **kwargs):
-#     if instance.generated_invoice_file:
-#         message = "Le fichier de facture %s a été mis à jour." % instance.generated_invoice_file
-#     if instance.force_regeneration:
-#         generate_invoice_file(instance)
-#         notify_system_via_google_webhook(message)
-#         return
