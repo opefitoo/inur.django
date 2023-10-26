@@ -141,3 +141,13 @@ class LongTermMonthlyActivityFileAdminForm(forms.ModelForm):
                                                                                                 month=instance.month)
         else:
             self.fields['monthly_activities'].queryset = LongTermMonthlyActivity.objects.none()
+
+
+class LongTermCareInvoiceLineInlineFormset(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+
+        for form in self.forms:
+            if not form.cleaned_data.get('DELETE'):
+                instance = form.instance
+                instance.validate_line_are_coherent_with_medical_care_summary_per_patient()
