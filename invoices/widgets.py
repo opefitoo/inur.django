@@ -26,7 +26,7 @@ class ContaboImageWidget(AdminFileWidget):
 
     def get_context(self, name, value, attrs):
         super().get_context(name, value, attrs)
-        if value:
+        if value and value.instance.file_upload:
             r = requests.get(value.url, stream=True)
             encoded = ("data:" +
                        r.headers['Content-Type'] + ";" +
