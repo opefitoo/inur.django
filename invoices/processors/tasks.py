@@ -116,7 +116,7 @@ def duplicate_event_for_next_day_for_several_events(events, who_created, number_
         notify_system_via_google_webhook(
             "*An error occurred while duplicating events for the next day: {0}*\nDetails:\n{1}".format(e, error_detail))
 
-
+@job("default", timeout=6000)
 def update_events_address(events, address):
     """
     Update the address of the events
