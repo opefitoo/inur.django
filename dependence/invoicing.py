@@ -576,7 +576,8 @@ def detect_anomalies(instance):
                     LongTermCareInvoiceLine.objects.filter(invoice=invoice_paid).update(paid=True)
                     LongTermCareInvoiceItem.objects.filter(invoice=invoice_paid).update(paid=True)
                 else:
-                    raise ValueError("Montant net and montant brut are not equal {montant_net_facture} {montant_brut_facture}")
+                    raise ValueError(
+                        "Montant net and montant brut are not equal {montant_net_facture} {montant_brut_facture}")
         return anomalies
     else:
         print("No anomalies detected.")
@@ -595,7 +596,7 @@ def process_xml_response_file(sender, instance, **kwargs):
         stored_instance = LongTermCareMonthlyStatementSending.objects.get(pk=instance.pk)
         if stored_instance.received_invoice_file_response and normalize_and_hash_xml(
                 stored_instance.received_invoice_file_response) == normalize_and_hash_xml(
-                instance.received_invoice_file_response):
+            instance.received_invoice_file_response):
             print("No change in received_invoice_file_response")
             return
     # parse the xml file
@@ -618,7 +619,6 @@ class LongTermCareInvoiceFile(models.Model):
 
     # must be linked to a monthly statement that is same period as invoice file
     def clean(self):
-        self.validate_lines_are_same_period()
         # MedicalCareSummaryPerPatient
         if self.link_to_monthly_statement.month != self.invoice_start_period.month:
             raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
@@ -629,13 +629,6 @@ class LongTermCareInvoiceFile(models.Model):
         if self.link_to_monthly_statement.year != self.invoice_end_period.year:
             raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
 
-    def validate_lines_are_same_period(self):
-        lines = LongTermCareInvoiceLine.objects.filter(invoice=self)
-        for line in lines:
-            if line.start_period.month != self.invoice_start_period.month or line.start_period.year != self.invoice_start_period.year:
-                raise ValidationError("La ligne doit être dans le même mois que la facture")
-            if line.end_period.month != self.invoice_end_period.month or line.end_period.year != self.invoice_end_period.year:
-                raise ValidationError("La ligne doit être dans le même mois que la facture")
 
     def calculate_price(self):
         lines = LongTermCareInvoiceLine.objects.filter(invoice=self)
@@ -864,6 +857,13 @@ class LongTermCareInvoiceLine(models.Model):
         verbose_name = _("Ligne de facture assurance dépendance")
         verbose_name_plural = _("Lignes de facture assurance dépendance")
 
+    def validate_lines_are_same_period(self):
+        long_term_invoice = self.invoice
+        if self.start_period.month != long_term_invoice.invoice_start_period.month or self.start_period.year != long_term_invoice.invoice_start_period.year:
+            raise ValidationError("La ligne doit être dans le même mois que la facture sur la ligne %s" % self)
+        if self.end_period.month != long_term_invoice.invoice_end_period.month or self.end_period.year != long_term_invoice.invoice_end_period.year:
+            raise ValidationError("La ligne doit être dans le même mois que la facture sur la ligne %s" % self)
+
     def validate_line_are_coherent_with_medical_care_summary_per_patient(self):
         plan_for_period = get_summaries_between_two_dates(self.invoice.patient, self.start_period, self.end_period)
         if len(plan_for_period) == 0:
@@ -899,4 +899,3 @@ class LongTermCareInvoiceLine(models.Model):
         return "Ligne de facture assurance dépendance de {0} à {1} patient {2}".format(self.start_period,
                                                                                        self.end_period,
                                                                                        self.invoice.patient)
-
