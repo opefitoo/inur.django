@@ -40,7 +40,22 @@ def create_assurance_dependance_invoices_june_2023(self, request, queryset):
         Q(date_of_exit__gte=start_period) | Q(date_of_exit__isnull=True)).filter(Q(date_of_death__gte=start_period) | Q(date_of_death__isnull=True))
     # create invoices for each patient
     statement = create_monthly_invoice(patients, 6, 2023)
+@transaction.atomic
+def create_assurance_dependance_invoices_june_selected_patient_2023(self, request, queryset):
+    """
+    Create AEV invoices for all patients for the month of March 2023
+    """
+    # get all patients
+    # exit date based on timezones
+    start_period = datetime(2023, 6, 1, tzinfo=timezone.utc)
+    medical_care_summary_per_patient_objects = queryset.all()
 
+    # Retrieve the patients from the selected MedicalCareSummaryPerPatient objects
+    selected_patients = [mcspp.patient for mcspp in medical_care_summary_per_patient_objects]
+
+    statement = create_monthly_invoice(selected_patients, 6, 2023)
+    # display admin message
+    self.message_user(request, "Factures AEV créées pour les patients sélectionnés {}".format(statement))
 
 def create_monthly_invoice(patient_list, month, year):
     """
