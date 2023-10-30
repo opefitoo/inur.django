@@ -723,6 +723,7 @@ class LongTermCareActivity(models.Model):
     class Meta:
         verbose_name = _("Ligne d'activité assurance dépendance")
         verbose_name_plural = _("Lignes d'activités assurance dépendance")
+        ordering = ['item_date']
 
     def __str__(self):
         return "Ligne de facture assurance dépendance de {0} patient {1}".format(self.item_date,
