@@ -240,7 +240,7 @@ class LongTermMonthlyActivityDetail(models.Model):
                                                    related_name='activity_details')
     activity_date = models.DateField(_('Activity Date'))
     activity = models.ForeignKey(LongTermCareItem, on_delete=models.CASCADE, related_name='activity_dtl_to_item')
-    quantity = models.PositiveIntegerField(_('Quantity'))
+    quantity = models.DecimalField(_('Quantity'), max_digits=5, decimal_places=2)
 
     def did_activity_happen(self, date, patient):
         if self.activity_date == date and self.long_term_monthly_activity.patient == patient:
