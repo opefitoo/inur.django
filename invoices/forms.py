@@ -185,6 +185,8 @@ class SimplifiedTimesheetDetailForm(BaseInlineFormSet):
         model = SimplifiedTimesheetDetail
         fields = '__all__'
 
+        js = ('js/tsheet_update_location.js',)
+
     def clean(self):
         super(SimplifiedTimesheetDetailForm, self).clean()
         all_clean_data = []
@@ -274,7 +276,7 @@ class EventForm(ModelForm):
         self.request = kwargs.pop('request', None)
         super(EventForm, self).__init__(*args, **kwargs)
 
-        if self.instance.at_office:
+        if self.instance.at_office and self.fields.get('event_address'):
             self.fields['event_address'].disabled = True
 
     def clean(self):
