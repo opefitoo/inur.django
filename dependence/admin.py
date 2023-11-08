@@ -27,7 +27,7 @@ from dependence.careplan_pdf import generate_pdf
 from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetail
 from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCareSummaryPerPatientDetail, \
     SharedMedicalCareSummaryPerPatientDetail
-from dependence.falldeclaration import FallDeclaration
+from dependence.falldeclaration import FallDeclaration, FallDeclarationReportPicture
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
     TensionAndTemperatureParametersFormset, CarePlanDetailForm, LongTermMonthlyActivityFileAdminForm, \
     LongTermCareInvoiceLineInlineFormset
@@ -747,6 +747,10 @@ class LongTermMonthlyActivityFileAdmin(admin.ModelAdmin):
     form = LongTermMonthlyActivityFileAdminForm
 
 
+class FallDeclarationReportPictureInLine(admin.TabularInline):
+    extra = 0
+    model = FallDeclarationReportPicture
+
 @admin.register(FallDeclaration)
 class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     fields = ('patient',
@@ -772,6 +776,7 @@ class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
               'physician_informed',
               )
     form = FallDeclarationForm
+    inlines = [FallDeclarationReportPictureInLine]
     list_display = ('patient', 'datetimeOfFall', 'display_object_actions_list',)
     list_filter = ('patient', 'datetimeOfFall',)
     autocomplete_fields = ['patient']

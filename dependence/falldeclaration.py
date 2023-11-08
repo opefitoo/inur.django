@@ -1,5 +1,14 @@
+import os
+
+from constance import config
+from django import template
+from django.core.exceptions import ValidationError
 from django.db import models
-from invoices.db.fields import CurrentUserField
+from django.db.models.signals import pre_save, post_delete
+from django.dispatch import receiver
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
+
 from dependence.enums.falldeclaration_enum import (
     FallCircumstances,
     FallCognitiveMoodDiorders,
@@ -9,19 +18,9 @@ from dependence.enums.falldeclaration_enum import (
     FallRequiredMedicalActs,
     FallmMbilityDisability
 )
-
-from invoices.models import Patient
-from constance import config
-
+from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
-from django.core.exceptions import ValidationError
-import os
-from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
-from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_delete
-
-from django import template
+from invoices.models import Patient
 
 register = template.Library()
 
@@ -174,6 +173,22 @@ class FallDeclaration(models.Model):
         ]
     def __str__(self):
         return _("Chute de %s en %s") % (self.patient, self.datetimeOfFall)
+
+class FallDeclarationReportPicture(models.Model):
+    class Meta:
+        verbose_name = u'Image attachée au rapport'
+        verbose_name_plural = u'Images attachées au rapport'
+
+    description = models.TextField("Description",
+                                   blank=True, null=True,
+                                   help_text='Please, give a description of the uploaded image.',
+                                   max_length=250, default='')
+    fall = models.ForeignKey(FallDeclaration, related_name='fall_declaration_report_pictures',
+                              help_text='Here, you can upload pictures if needed',
+                              on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="fall_declaration_report_pictures/",
+                              help_text='Please, upload a picture.',
+                              verbose_name='Image')
 
 
 @receiver(post_delete, sender=FallDeclaration, dispatch_uid="fall_decaration_file_upload_clean_s3_post_delete")
