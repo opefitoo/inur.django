@@ -656,7 +656,7 @@ class InvoiceItemBatchAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
     readonly_fields = ('created_date', 'modified_date')
     list_filter = ('start_date', 'end_date', 'batch_type', 'batch_description')
-    list_display = ('start_date', 'end_date', 'batch_type', 'batch_description', 'display_object_actions_list')
+    list_display = ('start_date', 'end_date', 'send_date', 'batch_type', 'batch_description', 'display_object_actions_list')
     actions = [generate_flat_file_for_control]
 
     object_actions = [
@@ -922,9 +922,15 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
     extra = 1
     model = SimplifiedTimesheetDetail
     # fields = ('start_date', 'end_date', 'time_delta')
-    readonly_fields = ('time_delta',)
+    readonly_fields = ('time_delta', )
+                       #'coordinates_at_start_date', 'coordinates_at_end_date')
     ordering = ['start_date']
     formset = SimplifiedTimesheetDetailForm
+    # template = 'admin/invoices/simplifiedtimesheetdetail/tabular.html'
+    # class Media:
+    #     js = [
+    #         'js/tsheet_update_location.js',
+    #     ]
 
 
 def calculate_balance_for_previous_months(month, year, user_id):
