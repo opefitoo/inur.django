@@ -40,6 +40,8 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
     @param event_date:
     """
     # FIXME: remove hardcoded value for state
+    if patient:
+        _patient_name = patient.name.capitalize() + " " + patient.first_name[0].capitalize() + "."
     if state not in [3, 5, 6]:
         return
     string_event_date = ""
@@ -61,7 +63,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
         message = '<%s%s|Passage> %s FAIT par %s chez *%s* : %s  ' % (config.ROOT_URL, event.get_admin_url(),
                                                                         string_event_date,
                                                                         made_by,
-                                                                        patient.name,
+                                                                        _patient_name,
                                                                         event_report
                                                                         )
     elif 3 == state and patient is None:
@@ -95,7 +97,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
             message = 'Attention *NON FAIT* le <%s%s|passage> %s pour *%s* chez *%s* : %s' % (
                 config.ROOT_URL, event.get_admin_url(),
                 string_event_date, made_by,
-                patient.name,
+                _patient_name,
                 event_report)
         else:
             if employees.google_user_id:
@@ -106,7 +108,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
                 config.ROOT_URL, event.get_admin_url(),
                 string_event_date,
                 made_by,
-                patient.name,
+                _patient_name,
                 event_report)
     elif  state in [5, 6] and patient is None:
         # if date is in the future, message will contain the date
