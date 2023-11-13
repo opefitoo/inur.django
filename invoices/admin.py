@@ -637,6 +637,22 @@ class InvoiceItemAdmin(admin.ModelAdmin):
                 self.message_user(request, "La facture n'a pas pu être envoyée au client.",
                                   level=messages.ERROR)
             return HttpResponseRedirect(request.path)
+        elif "_email_private_invoice_xero" in request.POST:
+            if pdf_private_invoice(self, request, queryset, attach_to_email=True, only_to_xero_or_any_accounting_system=True):
+                self.message_user(request, "La facture a bien été envoyée au client.",
+                                  level=messages.INFO)
+            else:
+                self.message_user(request, "La facture n'a pas pu être envoyée au client.",
+                                  level=messages.ERROR)
+            return HttpResponseRedirect(request.path)
+        elif "_email_personal_participation_xero" in request.POST:
+            if pdf_private_invoice_pp(self, request, queryset, attach_to_email=True, only_to_xero_or_any_accounting_system=True):
+                self.message_user(request, "La facture a bien été envoyée au client.",
+                                  level=messages.INFO)
+            else:
+                self.message_user(request, "La facture n'a pas pu être envoyée au client.",
+                                  level=messages.ERROR)
+            return HttpResponseRedirect(request.path)
         return HttpResponseRedirect(request.path)
 
 

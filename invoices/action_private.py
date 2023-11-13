@@ -44,7 +44,7 @@ class Footer:
         canvas.restoreState()
 
 
-def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
+def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False, only_to_xero_or_any_accounting_system=False):
     # Create the HttpResponse object with the appropriate PDF headers.
     invoicing_details = None
     response = HttpResponse(content_type='application/pdf')
@@ -136,7 +136,10 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False):
         message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe.\nSi ce courrier a croisé votre paiement, veuillez considérer ce message (rappel) comme nul et non avenu.\nCordialement \n -- \n%s \n%s " \
                   "%s\n%s\n%s" % (invoicing_details.name, invoicing_details.address, invoicing_details.zipcode_city,
                                   invoicing_details.phone_number, invoicing_details.bank_account)
-        emails = [qs.patient.email_address]
+        if only_to_xero_or_any_accounting_system:
+            emails = []
+        else:
+            emails = [qs.patient.email_address]
         if config.CC_EMAIL_SENT:
             emails += config.CC_EMAIL_SENT.split(",")
         mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
