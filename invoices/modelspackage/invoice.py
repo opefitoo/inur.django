@@ -26,6 +26,7 @@ class InvoicingDetails(models.Model):
     # autorisation ministère de la famille activités aides à domicile
     aa = models.CharField("Autorisation ministère de la famille activités aides à domicile", max_length=50, null=True, blank=True)
     default_invoicing = models.BooleanField(default=False)
+    xero_tenant_id = models.CharField(max_length=50, null=True, blank=True)
 
     def get_full_address(self):
         return '%s, %s %s' % (self.address, self.zipcode_city, self.country)
