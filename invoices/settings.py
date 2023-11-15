@@ -31,7 +31,7 @@ if 'SECRET_KEY' in os.environ:
 DEBUG = True
 
 # Do not Allow all host headers
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.sur.lu', '.herokuapp.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.sur.lu', '.herokuapp.com', '.ngrok-free.app']
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
@@ -123,11 +123,9 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 DATABASES = {'default': dj_database_url.config(default='postgres://inur:inur@localhost:5432/inur')}
-if 'CIRCLECI' in os.sys.argv:
-    DATABASES['default'] = dj_database_url.config(default='postgresql://root@localhost/circle_test?sslmode=disable')
 
-# Enable Connection Pooling
-# DATABASES['default']['ENGINE'] = 'django_postgrespool'
+# Set the database engine to PostGIS
+#DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 DATABASES['default']['AUTOCOMMIT'] = True
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
@@ -392,3 +390,24 @@ RQ_QUEUES = {
         'DEFAULT_TIMEOUT': 500,
     },
 }
+
+
+# Fetch GDAL environment variables
+#GDAL_PATH = os.getenv('GDAL_PATH', default='')
+#GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '')
+#GDAL_INCLUDE_PATH = os.getenv('GDAL_INCLUDE_PATH', default='')
+
+#os.environ['PATH'] = f"{GDAL_PATH}:{os.environ['PATH']}"
+#os.environ['LDFLAGS'] = f"-L{GDAL_LIBRARY_PATH}"
+#os.environ['CPPFLAGS'] = f"-I{GDAL_INCLUDE_PATH}"
+
+
+from decouple import config
+
+XERO_CLIENT_ID = config('XERO_CLIENT_ID')
+XERO_CLIENT_SECRET = config('XERO_CLIENT_SECRET')
+XERO_REDIRECT_URI = config('XERO_REDIRECT_URI')
+XERO_AUTHORIZATION_URL = 'https://login.xero.com/identity/connect/authorize'
+XERO_TOKEN_URL = 'https://identity.xero.com/connect/token'
+XERO_SCOPES = ['openid', 'profile', 'email', 'offline_access', 'accounting.transactions', "accounting.transactions",
+               "accounting.attachments", "accounting.contacts" , "files"] # Adjust the scopes as needed
