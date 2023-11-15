@@ -15,6 +15,7 @@ from api.views import EventProcessorView, cleanup_event, whois_off, whois_availa
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
 from invoices.views import delete_prestation
+from invoices.xero.views import xero_auth, xero_callback
 
 admin.autodiscover()
 
@@ -185,6 +186,12 @@ urlpatterns += [
 urlpatterns += [
 # Serve the Angular app's index.html from /mt940-ofx
     path('mt940-ofx/', TemplateView.as_view(template_name='mt940-ofx/index.html')),
+]
+
+urlpatterns += [
+    path('xero/auth/', xero_auth, name='xero-auth'),
+    path('xero/callback/', xero_callback, name='xero-callback'),
+    # ... other url patterns ...
 ]
 
     # if settings.DEBUG:

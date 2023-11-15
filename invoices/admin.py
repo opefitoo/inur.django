@@ -59,6 +59,7 @@ from invoices.resources import ExpenseCard, Car, MaintenanceFile
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 from invoices.utils import EventCalendar
+from invoices.xeromodels import XeroToken
 
 
 @admin.register(JobPosition)
@@ -1514,3 +1515,8 @@ class AlertAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             return [f.name for f in self.model._meta.fields if f.name not in ['is_read', 'comment']]
         return self.readonly_fields
+
+
+@admin.register(XeroToken)
+class XeroTokenAdmin(admin.ModelAdmin):
+    list_filter = ('access_token', 'expires_at', )

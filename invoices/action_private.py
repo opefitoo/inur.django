@@ -21,6 +21,7 @@ from invoices import settings
 from invoices.models import InvoiceItemEmailLog
 from invoices.modelspackage import InvoicingDetails
 from invoices.settings import BASE_DIR
+from invoices.xero.invoice import create_xero_invoice
 
 
 class Footer:
@@ -137,13 +138,14 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False, on
                   "%s\n%s\n%s" % (invoicing_details.name, invoicing_details.address, invoicing_details.zipcode_city,
                                   invoicing_details.phone_number, invoicing_details.bank_account)
         if only_to_xero_or_any_accounting_system:
+            create_xero_invoice(queryset[0], _result["invoice_amount"], io_buffer.getvalue())
             emails = []
         else:
             emails = [qs.patient.email_address]
         if config.CC_EMAIL_SENT:
             emails += config.CC_EMAIL_SENT.split(",")
-        mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
-        mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
+            mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
+            mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
 
         try:
             status = mail.send(fail_silently=False)
