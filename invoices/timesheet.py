@@ -398,7 +398,6 @@ class SimplifiedTimesheetDetail(models.Model):
     end_date = models.TimeField('Heure fin')
     simplified_timesheet = models.ForeignKey(SimplifiedTimesheet,
                                              on_delete=models.CASCADE)
-
     class Meta(object):
         verbose_name = u'Détail temps de travail'
         verbose_name_plural = u'Détails temps de travail'
