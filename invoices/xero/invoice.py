@@ -10,6 +10,17 @@ from invoices.xero.utils import get_xero_token, ensure_contact_exists, attach_pd
 def create_xero_invoice(invoice_item: InvoiceItem, invoice_amount: Decimal, invoice_pdf_file=None):
     token = get_xero_token()
 
+    # headers = {
+    #     'Authorization': f'Bearer {token.access_token}',
+    #     'Content-Type': 'application/json'
+    # }
+    # response = requests.get('https://api.xero.com/connections', headers=headers)
+    # tenants = response.json()
+    # print("tenants: ", tenants)
+
+    if invoice_item.invoice_details.xero_tenant_id is None:
+        raise Exception("No xero_tenant_id for invoice_details: ", invoice_item.invoice_details)
+
     contact_name = invoice_item.patient.name + " " + invoice_item.patient.first_name
     contact = ensure_contact_exists(token.access_token,
                                     invoice_item.invoice_details.xero_tenant_id,
