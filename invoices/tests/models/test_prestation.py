@@ -1,10 +1,10 @@
-from django.utils import timezone
-from django.test import TestCase
-from django.contrib.auth.models import User
-
 from constance import config
-from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Hospitalization
+from django.contrib.auth.models import User
+from django.test import TestCase
+from django.utils import timezone
+
 from invoices.employee import Employee, JobPosition
+from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Hospitalization
 from invoices.modelspackage import InvoicingDetails
 
 
@@ -59,6 +59,11 @@ class PrestationTestCase(TestCase):
         self.hospitalization = Hospitalization.objects.create(start_date=start_date,
                                                               end_date=end_date,
                                                               patient=self.patient)
+
+        self.at_home_care_code = CareCode.objects.create(code=config.AT_HOME_CARE_CODE,
+                                                        name='TEST NF01',
+                                                        description='description',
+                                                        reimbursed=False)
 
     def test_validate_carecode(self):
         data = {
