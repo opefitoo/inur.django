@@ -404,9 +404,9 @@ RQ_QUEUES = {
 
 from decouple import config
 
-XERO_CLIENT_ID = config('XERO_CLIENT_ID')
-XERO_CLIENT_SECRET = config('XERO_CLIENT_SECRET')
-XERO_REDIRECT_URI = config('XERO_REDIRECT_URI')
+XERO_CLIENT_ID = config('XERO_CLIENT_ID', default='NOT_SET')
+XERO_CLIENT_SECRET = config('XERO_CLIENT_SECRET', default='NOT_SET')
+XERO_REDIRECT_URI = config('XERO_REDIRECT_URI', default='NOT_SET')
 XERO_AUTHORIZATION_URL = 'https://login.xero.com/identity/connect/authorize'
 XERO_TOKEN_URL = 'https://identity.xero.com/connect/token'
 XERO_SCOPES = ['openid', 'profile', 'email', 'offline_access', 'accounting.transactions', "accounting.transactions",
