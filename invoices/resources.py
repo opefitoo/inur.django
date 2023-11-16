@@ -164,6 +164,9 @@ class Car(models.Model):
                     'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-position' % config.CONVADIS_ORG_ID)
                 text_last = r_last.text
                 vehicles_last_position = json.loads(text_last)
+                # {'code': 'CLIENT_ID_SECRET_INVALID', 'message': 'The client_id and/or client_secret is invalid.'}
+                if 'code' in vehicles_last_position:
+                    return "Error: %s" % vehicles_last_position['message']
                 # cache 30 seconds
                 cache.set('vehicles-last-position', vehicles_last_position, 30)
                 return find_vehicle_position(convadis_identifier=self.convadis_identifier,
