@@ -32,6 +32,11 @@ def get_oauth2_convadis_rest_client_v2(refresh_token=False):
     if not refresh_token:
         token = get_last_token()
         if token:
+            # check if token is expired knowing that oken['expires_at'] is of type float
+            if token['expires_at'] < datetime.now().timestamp():
+                # print formatted date
+                print("token expired at: %s" % datetime.fromtimestamp(token['expires_at']))
+                token = None
             return OAuth2Session('SUR.lu', token=token)
         else:
             return None
