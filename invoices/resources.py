@@ -154,6 +154,8 @@ class Car(models.Model):
             except TokenExpiredError as e:
                 client = get_oauth2_convadis_rest_client_v2(refresh_token=True)
                 print(e)
+            except Exception as e:
+                return "Error: %s" % e
             if client:
                 r_post = client.post(
                     'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles/%s/commands/request-last-position' % (
