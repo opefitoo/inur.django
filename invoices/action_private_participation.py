@@ -104,7 +104,7 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False,
                 InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
                                                    subject=subject, body=message, cc=emails, status=0, error=e)
                 return False
-    io_buffer.close()
+        io_buffer.close()
     return response
 
 
