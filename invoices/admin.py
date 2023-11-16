@@ -55,7 +55,7 @@ from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physicia
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
-from invoices.resources import ExpenseCard, Car, MaintenanceFile
+from invoices.resources import ExpenseCard, Car, MaintenanceFile, ConvadisOAuth2Token
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 from invoices.utils import EventCalendar
@@ -264,7 +264,7 @@ class CarAdmin(admin.ModelAdmin):
 
     def geo_localisation_of_car_url(self, obj):
         _geo_localisation_of_car = obj.geo_localisation_of_car
-        if type(_geo_localisation_of_car) is not tuple and _geo_localisation_of_car.startswith('n/a'):
+        if type(_geo_localisation_of_car) is not tuple and _geo_localisation_of_car.startswith('n/a') or 'Error' in _geo_localisation_of_car:
             return _geo_localisation_of_car
         else:
 
@@ -1520,3 +1520,6 @@ class AlertAdmin(admin.ModelAdmin):
 @admin.register(XeroToken)
 class XeroTokenAdmin(admin.ModelAdmin):
     list_filter = ('access_token', 'expires_at', )
+@admin.register(ConvadisOAuth2Token)
+class ConvadisOAuth2TokenAdmin(admin.ModelAdmin):
+    pass

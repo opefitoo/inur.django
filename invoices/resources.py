@@ -68,6 +68,8 @@ def find_vehicle_position(convadis_identifier, vehicles_last_position):
     return "n/a"
 
 def vehicle_speed(convadis_identifier, speed):
+    if 'code' in speed:
+        return "Error: %s" % speed['message']
     for speed in speed:
         if speed['vehicleId'] == int(convadis_identifier):
             return speed['sog']
@@ -229,7 +231,8 @@ class Car(models.Model):
                 'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-position' % config.CONVADIS_ORG_ID)
         speed = json.loads(r_get.text)
 
-        if vehicle_speed(self.convadis_identifier, speed) > 1:
+        if isinstance(vehicle_speed(self.convadis_identifier, speed), int) and vehicle_speed(self.convadis_identifier,
+                                                                                             speed) > 0:
             return "Car is in movement"
         else:
             return "Car is stopped"
