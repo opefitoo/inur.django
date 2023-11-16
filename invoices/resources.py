@@ -50,6 +50,8 @@ class ConvadisOAuth2Token(models.Model):
 
 
 def find_vehicle_position(convadis_identifier, vehicles_last_position):
+    print("*** convadis_identifier: {} and vehicles last position in cache is {}".format(convadis_identifier,
+                                                                                     vehicles_last_position))
     for vehicle_last_position in vehicles_last_position:
         try:
             vehicle_id = vehicle_last_position.get('vehicleId')
