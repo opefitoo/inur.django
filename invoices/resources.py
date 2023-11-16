@@ -51,9 +51,14 @@ class ConvadisOAuth2Token(models.Model):
 
 def find_vehicle_position(convadis_identifier, vehicles_last_position):
     for vehicle_last_position in vehicles_last_position:
-        vehicle_id = vehicle_last_position['vehicleId']
-        if isinstance(vehicle_id, int) and vehicle_id == int(convadis_identifier):
-            return vehicle_last_position['timestamp'], vehicle_last_position['lat'], vehicle_last_position['lon']
+        try:
+            vehicle_id = int(vehicle_last_position['vehicleId'])
+            if isinstance(vehicle_id, int) and vehicle_id == int(convadis_identifier):
+                return vehicle_last_position['timestamp'], vehicle_last_position['lat'], vehicle_last_position['lon']
+        except ValueError:
+            return "error %s" % vehicle_last_position['vehicleId']
+        except KeyError:
+            return "error %s" % vehicle_last_position['vehicleId']
     return "n/a"
 
 def vehicle_speed(convadis_identifier, speed):
