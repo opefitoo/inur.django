@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from constance import config
 from django.core.mail import EmailMessage
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from reportlab.lib import colors
@@ -21,6 +22,7 @@ from invoices import settings
 from invoices.models import InvoiceItemEmailLog
 from invoices.modelspackage import InvoicingDetails
 from invoices.settings import BASE_DIR
+from invoices.xero.exceptions import XeroTokenRefreshError
 from invoices.xero.invoice import create_xero_invoice
 
 
@@ -138,7 +140,10 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False, on
                   "%s\n%s\n%s" % (invoicing_details.name, invoicing_details.address, invoicing_details.zipcode_city,
                                   invoicing_details.phone_number, invoicing_details.bank_account)
         if only_to_xero_or_any_accounting_system:
-            create_xero_invoice(queryset[0], _result["invoice_amount"], io_buffer.getvalue())
+            try:
+                create_xero_invoice(queryset[0], _result["invoice_amount"], io_buffer.getvalue())
+            except XeroTokenRefreshError as e:
+                return redirect('xero-auth')
             emails = []
         else:
             emails = [qs.patient.email_address]

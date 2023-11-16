@@ -4,6 +4,8 @@ import requests
 from django.db import models
 from django.utils import timezone
 
+from invoices.xero.exceptions import XeroTokenRefreshError
+
 
 class XeroToken(models.Model):
     access_token = models.TextField()
@@ -39,4 +41,7 @@ class XeroToken(models.Model):
                 expires_at=timezone.now() + datetime.timedelta(seconds=data['expires_in'])
             )
             return new_token
+        elif latest_token is None:
+            # Redirect to the Xero authorization URL
+            raise XeroTokenRefreshError("No XeroToken found in database")
         return latest_token

@@ -1007,6 +1007,7 @@ class InvoiceItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.CharField(max_length=50, null=True, blank=True)
+    xero_invoice_url = models.URLField(null=True, blank=True)
 
     def clean(self, *args, **kwargs):
         super(InvoiceItem, self).clean_fields()

@@ -21,10 +21,10 @@ def create_xero_invoice(invoice_item: InvoiceItem, invoice_amount: Decimal, invo
     if invoice_item.invoice_details.xero_tenant_id is None:
         raise Exception("No xero_tenant_id for invoice_details: ", invoice_item.invoice_details)
 
-    contact_name = invoice_item.patient.name + " " + invoice_item.patient.first_name
+    # upper case first letter of first_name and capitalize all letters of name
     contact = ensure_contact_exists(token.access_token,
                                     invoice_item.invoice_details.xero_tenant_id,
-                                    contact_name)
+                                    invoice_item.patient)
 
     invoice_data = {
         "Invoices": [
@@ -65,9 +65,14 @@ def create_xero_invoice(invoice_item: InvoiceItem, invoice_amount: Decimal, invo
 
     if response.status_code == 200:
         xero_invoice_id = response.json().get('Invoices', [])[0]['InvoiceID']
+        invoice_item.xero_invoice_url = 'https://go.xero.com/AccountsReceivable/View.aspx?InvoiceID=%s' % xero_invoice_id
+        invoice_item.save()
     else:
         # Handle error (e.g., log the issue or throw an exception)
         response.raise_for_status()
+        if invoice_item.xero_invoice_url:
+            invoice_item.xero_invoice_url = None
+            invoice_item.save()
     response = attach_pdf_to_invoice(token.access_token,
                                      invoice_item.invoice_details.xero_tenant_id,
                                      xero_invoice_id,

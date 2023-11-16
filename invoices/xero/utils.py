@@ -22,8 +22,10 @@ def get_xero_tenants():
     return response.json()
 
 
-def get_contact_by_identifier(access_token, xero_tenant_id, identifier):
-    url = f'https://api.xero.com/api.xro/2.0/Contacts?where=Name=="{identifier}"'
+def get_contact_by_identifier(access_token, xero_tenant_id, account_number=None):
+    # search by AccountNumber
+    url = 'https://api.xero.com/api.xro/2.0/Contacts?where=AccountNumber=="%s"' % account_number
+
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Xero-tenant-id': xero_tenant_id,
@@ -37,22 +39,72 @@ def get_contact_by_identifier(access_token, xero_tenant_id, identifier):
     return contacts[0] if contacts else None
 
 
-def ensure_contact_exists(access_token, xero_tenant_id, contact_name):
-    existing_contact = get_contact_by_identifier(access_token, xero_tenant_id, contact_name)
+def ensure_contact_exists(access_token, xero_tenant_id, patient):
+    _contact_name = patient.name.upper() + " " + patient.first_name.capitalize()
+    # xero unique AccountNumber is 4011 + patient.id + patient.name.first_letter + patient.first_name.first_letter
+    _xero_account_number = "4011" + str(patient.id) + patient.name[0].upper() + patient.first_name[0].upper()
+    existing_contact = get_contact_by_identifier(access_token, xero_tenant_id, _xero_account_number)
 
     if not existing_contact:
         # Define the new contact details
         new_contact_details = {
-            'Name': contact_name,
+            'Name': _contact_name,
+            'AccountNumber':_xero_account_number,
             # Add other contact details as necessary
+            'FirstName': patient.first_name.capitalize(),
+            'LastName': patient.name.upper(),
+            'EmailAddress': patient.email_address,
+            'Addresses': [
+                {
+                    'AddressType': 'STREET',
+                    'AddressLine1': patient.address,
+                    'City': patient.city,
+                    'PostalCode': patient.zipcode,
+                    'Country': patient.country.code
+                }
+            ],
+            'Phones': [
+                {
+                    'PhoneType': 'DEFAULT',
+                    'PhoneNumber': patient.phone_number
+                }
+            ]
+
         }
         existing_contact = create_contact(access_token, xero_tenant_id, new_contact_details)
+    else:
+        # update contact details
+        existing_contact['EmailAddress'] = patient.email_address
+        existing_contact['Phones'][0]['PhoneNumber'] = patient.phone_number
+        existing_contact['Addresses'][0]['AddressLine1'] = patient.address
+        existing_contact['Addresses'][0]['City'] = patient.city
+        existing_contact['Addresses'][0]['PostalCode'] = patient.zipcode
+        existing_contact['Addresses'][0]['Country'] = patient.country.code
+
+        existing_contact = update_contact(access_token, xero_tenant_id, existing_contact)
+
 
     return existing_contact
 
 
 def create_contact(access_token, xero_tenant_id, contact_details):
     url = 'https://api.xero.com/api.xro/2.0/Contacts'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Xero-tenant-id': xero_tenant_id,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+
+    response = requests.post(url, headers=headers, json={'Contacts': [contact_details]})
+    if response.status_code == 200:
+        return response.json().get('Contacts', [])[0]
+    else:
+        # Handle error (e.g., log the issue or throw an exception)
+        response.raise_for_status()
+
+def update_contact(access_token, xero_tenant_id, contact_details):
+    url = f'https://api.xero.com/api.xro/2.0/Contacts/{contact_details["ContactID"]}'
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Xero-tenant-id': xero_tenant_id,

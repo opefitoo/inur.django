@@ -517,7 +517,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', SmartPatientFilter,
                    SmartMedicalPrescriptionFilter, 'created_by', 'prescriptions__medical_prescription__id']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
-    readonly_fields = ('medical_prescription_preview', 'created_at', 'updated_at', 'batch')
+    readonly_fields = ('medical_prescription_preview', 'created_at', 'updated_at', 'batch', 'xero_invoice_url') 
     autocomplete_fields = ['patient']
 
     def has_medical_prescription(self, obj):
@@ -557,7 +557,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
             'fields': ('accident_id', 'accident_date', 'is_valid', 'validation_comment',
                        'patient_invoice_date', 'invoice_send_date', 'invoice_sent', 'invoice_paid',
-                       'medical_prescription', 'created_at', 'updated_at', 'batch'),
+                       'medical_prescription', 'created_at', 'updated_at', 'batch', 'xero_invoice_url'),
         }),
     )
     verbose_name = u"Mémoire d'honoraire"
