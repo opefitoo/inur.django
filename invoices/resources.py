@@ -187,6 +187,9 @@ class Car(models.Model):
             if not self.convadis_identifier:
                 return "n/a Error: convadis id is not set"
         geo_loc_car = self.geo_localisation_of_car
+        # if geo_loc_car contains Error just display it
+        if isinstance(geo_loc_car, str):
+            return geo_loc_car
         position_lon = geo_loc_car[2]
         position_lat = geo_loc_car[1]
         position_time = geo_loc_car[0]
