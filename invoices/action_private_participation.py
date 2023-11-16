@@ -84,7 +84,7 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False,
                                   config.NURSE_PHONE_NUMBER, config.MAIN_BANK_ACCOUNT)
         if only_to_xero_or_any_accounting_system:
             try:
-                create_xero_invoice(queryset[0], _result["invoice_amount"], io_buffer.getvalue())
+                create_xero_invoice(queryset[0], _result["invoice_pp"], io_buffer.getvalue())
             except XeroTokenRefreshError as e:
                 return redirect('xero-auth')
         else:
