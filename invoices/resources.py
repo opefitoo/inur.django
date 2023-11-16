@@ -49,7 +49,7 @@ class ConvadisOAuth2Token(models.Model):
     token = models.JSONField()
 
 
-def get_vehicle_info(vehicles_last_position, convadis_identifier):
+def find_vehicle_position(vehicles_last_position, convadis_identifier):
     for vehicle_last_position in vehicles_last_position:
         try:
             vehicle_id = int(vehicle_last_position.get('vehicleId'))
