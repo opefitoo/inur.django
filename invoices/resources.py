@@ -60,9 +60,9 @@ def find_vehicle_position(convadis_identifier, vehicles_last_position):
                     vehicle_last_position.get('lon', 'n/a')
                 )
         except ValueError:
-            return "error: vehicleId is not an integer"
+            raise ValueError("error: vehicleId is not an integer %s" % vehicle_last_position)
         except AttributeError:
-            return "error: vehicleId is not an integer %s" % vehicle_last_position
+            raise AttributeError("error: vehicleId is not an integer %s" % vehicle_last_position)
     return "n/a"
 
 def vehicle_speed(convadis_identifier, speed):
@@ -139,7 +139,8 @@ class Car(models.Model):
                 return "n/a"
         vehicles_last_position = cache.get('vehicles-last-position')
         if vehicles_last_position:
-            return find_vehicle_position(self.convadis_identifier, vehicles_last_position)
+            return find_vehicle_position(convadis_identifier=self.convadis_identifier,
+                                         vehicles_last_position=vehicles_last_position)
         else:
             client = get_oauth2_convadis_rest_client_v2()
             try:
