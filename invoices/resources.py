@@ -62,9 +62,9 @@ def find_vehicle_position(convadis_identifier, vehicles_last_position):
                     vehicle_last_position.get('lon', 'n/a')
                 )
         except ValueError:
-            raise ValueError("error: vehicleId is not an integer %s" % vehicle_last_position)
+            raise ValueError("error: vehicleId is not an integer %s - %s" %  (vehicle_last_position, vehicles_last_position))
         except AttributeError:
-            raise AttributeError("error: vehicleId is not an integer %s" % vehicle_last_position)
+            raise AttributeError("error: vehicleId is not an integer %s - %s" % (vehicle_last_position, vehicles_last_position))
     return "n/a"
 
 def vehicle_speed(convadis_identifier, speed):
