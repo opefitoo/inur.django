@@ -31,7 +31,10 @@ def token_saver(token):
 def get_oauth2_convadis_rest_client_v2(refresh_token=False):
     if not refresh_token:
         token = get_last_token()
-        return OAuth2Session('SUR.lu', token=token)
+        if token:
+            return OAuth2Session('SUR.lu', token=token)
+        else:
+            return None
     else:
         oauth_session = OAuth2Session(client=LegacyApplicationClient(client_id=config.CONVADIS_CLIENT_ID))
         token = oauth_session.fetch_token(
@@ -147,17 +150,20 @@ class Car(models.Model):
                                          vehicles_last_position=vehicles_last_position)
         else:
             client = get_oauth2_convadis_rest_client_v2()
-            try:
-                r_post = client.post(
-                    'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles/%s/commands/request-last-position' % (
-                        config.CONVADIS_ORG_ID, self.convadis_identifier))
-                r_last = client.get(
-                    'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-position' % config.CONVADIS_ORG_ID)
-            except TokenExpiredError as e:
-                client = get_oauth2_convadis_rest_client_v2(refresh_token=True)
-                print(e)
-            except Exception as e:
-                return "Error: %s" % e
+            if client:
+                try:
+                    r_post = client.post(
+                        'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles/%s/commands/request-last-position' % (
+                            config.CONVADIS_ORG_ID, self.convadis_identifier))
+                    r_last = client.get(
+                        'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-position' % config.CONVADIS_ORG_ID)
+                except TokenExpiredError as e:
+                    client = get_oauth2_convadis_rest_client_v2(refresh_token=True)
+                    print(e)
+                except Exception as e:
+                    return "Error: %s" % e
+            else:
+                client  = get_oauth2_convadis_rest_client_v2(refresh_token=True)
             if client:
                 r_post = client.post(
                     'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles/%s/commands/request-last-position' % (
