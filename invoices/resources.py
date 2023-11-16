@@ -49,10 +49,10 @@ class ConvadisOAuth2Token(models.Model):
     token = models.JSONField()
 
 
-def find_vehicle_position(vehicles_last_position, convadis_identifier):
+def find_vehicle_position(convadis_identifier, vehicles_last_position):
     for vehicle_last_position in vehicles_last_position:
         try:
-            vehicle_id = int(vehicle_last_position.get('vehicleId'))
+            vehicle_id = vehicle_last_position.get('vehicleId')
             if isinstance(vehicle_id, int) and vehicle_id == int(convadis_identifier):
                 return (
                     vehicle_last_position.get('timestamp', 'n/a'),
@@ -61,6 +61,8 @@ def find_vehicle_position(vehicles_last_position, convadis_identifier):
                 )
         except ValueError:
             return "error: vehicleId is not an integer"
+        except AttributeError:
+            return "error: vehicleId is not an integer %s" % vehicle_last_position
     return "n/a"
 
 def vehicle_speed(convadis_identifier, speed):
@@ -159,7 +161,8 @@ class Car(models.Model):
                 vehicles_last_position = json.loads(text_last)
                 # cache 30 seconds
                 cache.set('vehicles-last-position', vehicles_last_position, 30)
-                return find_vehicle_position(self.convadis_identifier, vehicles_last_position)
+                return find_vehicle_position(convadis_identifier=self.convadis_identifier,
+                                             vehicles_last_position=vehicles_last_position)
 
                 # v_states = client.get(
                 #     "https://iccom.convadis.ch/api/v1/organizations/%s/vehicles-last-state" %
