@@ -49,16 +49,18 @@ class ConvadisOAuth2Token(models.Model):
     token = models.JSONField()
 
 
-def find_vehicle_position(convadis_identifier, vehicles_last_position):
+def get_vehicle_info(vehicles_last_position, convadis_identifier):
     for vehicle_last_position in vehicles_last_position:
         try:
-            vehicle_id = int(vehicle_last_position['vehicleId'])
+            vehicle_id = int(vehicle_last_position.get('vehicleId'))
             if isinstance(vehicle_id, int) and vehicle_id == int(convadis_identifier):
-                return vehicle_last_position['timestamp'], vehicle_last_position['lat'], vehicle_last_position['lon']
+                return (
+                    vehicle_last_position.get('timestamp', 'n/a'),
+                    vehicle_last_position.get('lat', 'n/a'),
+                    vehicle_last_position.get('lon', 'n/a')
+                )
         except ValueError:
-            return "error %s" % vehicle_last_position['vehicleId']
-        except KeyError:
-            return "error %s" % vehicle_last_position['vehicleId']
+            return "error: vehicleId is not an integer"
     return "n/a"
 
 def vehicle_speed(convadis_identifier, speed):
