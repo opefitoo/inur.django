@@ -120,8 +120,8 @@ def update_contact(access_token, xero_tenant_id, contact_details):
         response.raise_for_status()
 
 
-def attach_pdf_to_invoice(access_token, xero_tenant_id, invoice_id, pdf_content):
-    url = f'https://api.xero.com/api.xro/2.0/Invoices/{invoice_id}/Attachments/sample.pdf'
+def attach_pdf_to_invoice(access_token, xero_tenant_id, invoice_id, pdf_content, invoice_number):
+    url = f'https://api.xero.com/api.xro/2.0/Invoices/{invoice_id}/Attachments/{invoice_number}.pdf'
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Xero-tenant-id': xero_tenant_id,

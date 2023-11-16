@@ -76,7 +76,8 @@ def create_xero_invoice(invoice_item: InvoiceItem, invoice_amount: Decimal, invo
     response = attach_pdf_to_invoice(token.access_token,
                                      invoice_item.invoice_details.xero_tenant_id,
                                      xero_invoice_id,
-                                     invoice_pdf_file)
+                                     invoice_pdf_file,
+                                     invoice_item.invoice_number)
     if response.status_code == 200:
         return response.json().get('Status', [])
     else:

@@ -517,7 +517,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     list_filter = ['invoice_date', 'invoice_details', 'invoice_sent', 'invoice_paid', SmartPatientFilter,
                    SmartMedicalPrescriptionFilter, 'created_by', 'prescriptions__medical_prescription__id']
     search_fields = ['patient__name', 'patient__first_name', 'invoice_number', 'patient__code_sn']
-    readonly_fields = ('medical_prescription_preview', 'created_at', 'updated_at', 'batch', 'xero_invoice_url') 
+    readonly_fields = ('medical_prescription_preview', 'created_at', 'updated_at', 'batch', 'xero_invoice_url')
     autocomplete_fields = ['patient']
 
     def has_medical_prescription(self, obj):
@@ -640,18 +640,18 @@ class InvoiceItemAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(request.path)
         elif "_email_private_invoice_xero" in request.POST:
             if pdf_private_invoice(self, request, queryset, attach_to_email=True, only_to_xero_or_any_accounting_system=True):
-                self.message_user(request, "La facture a bien été envoyée au client.",
+                self.message_user(request, "La facture a bien été envoyée à Xero.",
                                   level=messages.INFO)
             else:
-                self.message_user(request, "La facture n'a pas pu être envoyée au client.",
+                self.message_user(request, "La facture n'a pas pu être envoyée à Xero.",
                                   level=messages.ERROR)
             return HttpResponseRedirect(request.path)
         elif "_email_personal_participation_xero" in request.POST:
             if pdf_private_invoice_pp(self, request, queryset, attach_to_email=True, only_to_xero_or_any_accounting_system=True):
-                self.message_user(request, "La facture a bien été envoyée au client.",
+                self.message_user(request, "La facture a bien été à Xero.",
                                   level=messages.INFO)
             else:
-                self.message_user(request, "La facture n'a pas pu être envoyée au client.",
+                self.message_user(request, "La facture n'a pas pu être envoyée à Xero.",
                                   level=messages.ERROR)
             return HttpResponseRedirect(request.path)
         return HttpResponseRedirect(request.path)

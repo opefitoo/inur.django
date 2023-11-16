@@ -144,26 +144,24 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False, on
                 create_xero_invoice(queryset[0], _result["invoice_amount"], io_buffer.getvalue())
             except XeroTokenRefreshError as e:
                 return redirect('xero-auth')
-            emails = []
         else:
             emails = [qs.patient.email_address]
-        if config.CC_EMAIL_SENT:
-            emails += config.CC_EMAIL_SENT.split(",")
-            mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
-            mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
+            if config.CC_EMAIL_SENT:
+                emails += config.CC_EMAIL_SENT.split(",")
+                mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
+                mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
 
-        try:
-            status = mail.send(fail_silently=False)
-            InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
-                                               subject=subject, body=message, cc=emails, status=status)
-            return status
-        except Exception as e:
-            print(e)
-            InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
-                                               subject=subject, body=message, cc=emails, status=0, error=e)
-            return False
-        finally:
-            io_buffer.close()
+            try:
+                status = mail.send(fail_silently=False)
+                InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
+                                                   subject=subject, body=message, cc=emails, status=status)
+                return status
+            except Exception as e:
+                print(e)
+                InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
+                                                   subject=subject, body=message, cc=emails, status=0, error=e)
+                return False
+        io_buffer.close()
     return response
 
 
