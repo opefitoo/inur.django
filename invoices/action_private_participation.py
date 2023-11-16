@@ -5,6 +5,7 @@ from io import BytesIO
 from constance import config
 from django.core.mail import EmailMessage
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from reportlab.lib import colors
@@ -18,14 +19,17 @@ from reportlab.platypus.tables import Table, TableStyle
 
 from invoices import settings
 from invoices.models import InvoiceItemEmailLog
+from invoices.xero.exceptions import XeroTokenRefreshError
+from invoices.xero.invoice import create_xero_invoice
 
 
-def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False):
+def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False,
+                           only_to_xero_or_any_accounting_system=False):
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
     # Append invoice number and invoice date
     # generate payment reference as a hash of the invoice numbers
-    payment_reference_hash  = ""
+    payment_reference_hash = ""
     for qs in queryset.order_by("invoice_number"):
         payment_reference_hash += str(qs.invoice_number)
     _payment_ref = "PP%s" % str(abs(hash(payment_reference_hash)))[:6]
@@ -78,24 +82,29 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False)
         message = "Bonjour, \nVeuillez trouver ci-joint la facture en pièce jointe. \nCordialement \n -- \n%s \n%s " \
                   "%s\n%s\n%s" % (config.NURSE_NAME, config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY,
                                   config.NURSE_PHONE_NUMBER, config.MAIN_BANK_ACCOUNT)
-        emails = [qs.patient.email_address]
-        if config.CC_EMAIL_SENT:
-            emails += config.CC_EMAIL_SENT.split(",")
-        mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
-        mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
+        if only_to_xero_or_any_accounting_system:
+            try:
+                create_xero_invoice(queryset[0], _result["invoice_amount"], io_buffer.getvalue())
+            except XeroTokenRefreshError as e:
+                return redirect('xero-auth')
+        else:
+            emails = [qs.patient.email_address]
+            if config.CC_EMAIL_SENT:
+                emails += config.CC_EMAIL_SENT.split(",")
+            mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
+            mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
 
-        try:
-            status = mail.send(fail_silently=False)
-            InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
-                                               subject=subject, body=message, cc=emails, status=status)
-            return status
-        except Exception as e:
-            print(e)
-            InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
-                                               subject=subject, body=message, cc=emails, status=0, error=e)
-            return False
-        finally:
-            io_buffer.close()
+            try:
+                status = mail.send(fail_silently=False)
+                InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
+                                                   subject=subject, body=message, cc=emails, status=status)
+                return status
+            except Exception as e:
+                print(e)
+                InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
+                                                   subject=subject, body=message, cc=emails, status=0, error=e)
+                return False
+    io_buffer.close()
     return response
 
 
@@ -216,7 +225,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
         import locale
         locale.setlocale(locale.LC_ALL, "fr_FR.UTF-8")
         elements.append(Table([[u"Date envoi de la présente facture: %s " % patient_invoice_date.strftime(
-                    '%d %B %Y')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
+            '%d %B %Y')]], [10 * cm], 1 * [0.5 * cm], hAlign='LEFT'))
         elements.append(Spacer(1, 10))
 
     return {"elements": elements
