@@ -42,7 +42,7 @@ def create_xero_invoice(invoice_item: InvoiceItem, invoice_amount: Decimal, invo
                         "Description": "Soins infirmiers facture: %s" % invoice_item.invoice_number,
                         "Quantity": 1.0,
                         "UnitAmount":str(invoice_amount),
-                        "TaxType": "EXEMPTEXPENSES",
+                        "TaxType": "NONE",
                         "AccountCode": "200"  # Replace with a valid account code
                     }
                 ],
