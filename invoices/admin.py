@@ -36,13 +36,14 @@ from invoices.actions.invoices import generer_forfait_aev_mars, generer_forfait_
     generer_forfait_aev_july
 # from invoices.actions.maps import calculate_distance_matrix
 from invoices.actions.print_pdf import do_it, PdfActionType
-from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile
+from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile, EmployeeProxy
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event, AssignedAdditionalEmployee, ReportPicture, \
     create_or_update_google_calendar, EventList
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, SmartPatientFilter, SmartMedicalPrescriptionFilter
+from invoices.filters.SmartPatientFilter import UnderAssuranceDependanceFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, \
     InvoiceItemForm, MedicalPrescriptionForm, AlternateAddressFormSet
@@ -1246,7 +1247,7 @@ class EventListAdmin(admin.ModelAdmin):
     list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees',
                     'created_on']
     change_list_template = 'admin/change_list.html'
-    list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
+    list_filter = ('employees', 'event_type_enum', 'state', SmartPatientFilter, 'created_by', UnderAssuranceDependanceFilter)
     date_hierarchy = 'day'
     exclude = ('event_type',)
 
@@ -1417,12 +1418,37 @@ class EventListAdmin(admin.ModelAdmin):
     def get_inlines(self, request, obj):
         return [ReportPictureInLine]
 
+    def changelist_view(self, request, extra_context=None):
+        changelist = ChangeList(request,
+                                self.model,
+                                list(self.get_list_display(request)),
+                                self.get_list_display_links(request, self.get_list_display(request)),
+                                self.get_list_filter(request),
+                                self.date_hierarchy,
+                                self.get_search_fields(request),
+                                self.list_select_related,
+                                self.list_per_page,
+                                self.list_max_show_all,
+                                self.list_editable,
+                                self,
+                                self.sortable_by,
+                                self.get_search_results)
+
+        # Get a distinct list of patients for the filtered queryset
+        patients = list(set(changelist.get_queryset(request).values_list('patient__id', 'patient__name')))
+
+        # Attach it to request
+        request.dynamic_patient_choices = [(str(patient_id), patient_name) for patient_id, patient_name in patients]
+
+        return super().changelist_view(request, extra_context)
+
+
 
 class EventWeekList(Event):
     class Meta:
         proxy = True
-        verbose_name = "Nouveau Plannig (Ne modifiez pas les événements à partir d'ici)"
-        verbose_name_plural = "Nouveaux Plannigs (Ne modifiez pas les événements à partir d'ici)"
+        verbose_name = "Nouveau Planning (Ne modifiez pas les événements à partir d'ici)"
+        verbose_name_plural = "Nouveaux Plannings (Ne modifiez pas les événements à partir d'ici)"
 
 
 @admin.register(EventWeekList)
@@ -1523,3 +1549,30 @@ class XeroTokenAdmin(admin.ModelAdmin):
 @admin.register(ConvadisOAuth2Token)
 class ConvadisOAuth2TokenAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(EmployeeProxy)
+class EmployeeProxyAdmin(admin.ModelAdmin):
+
+    list_display = ['user']
+    # all fields are read-only
+    readonly_fields = [f.name for f in Employee._meta.fields]
+
+    def get_queryset(self, request):
+        """
+        Filter the queryset to only include the employee data for the logged-in user.
+        """
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs  # Superuser sees all records
+        return qs.filter(user=request.user)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        # Optionally, restrict the ability to change records
+        return request.user.is_superuser or (obj is not None and obj.user == request.user)
+

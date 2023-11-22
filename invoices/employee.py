@@ -289,3 +289,10 @@ class EmployeeAdminFile(models.Model):
     file_description = models.CharField("description", max_length=60)
     document_expiry_date = models.DateField(u'Date d\'expiration du document', blank=True, null=True)
     file_upload = models.FileField(null=True, blank=True, upload_to=update_filename)
+
+
+class EmployeeProxy(Employee):
+    class Meta:
+        proxy = True
+        #verbose_name = "XXX"
+        #verbose_name_plural = "XXXs"
