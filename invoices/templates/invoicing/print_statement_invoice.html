@@ -112,14 +112,14 @@
                         <td class="title">
                             <img src="{% static 'patientanamnesis/images/xyz.png' %}"
                                  style="width: 100%; max-width: 50px"/>
-                            <div class="information">Total : {{ obj.calculate_total_price  }} <br />
-                            {{ obj.header_details.2 }} - {{ obj.header_details.3 }} <br />
-                            {{ obj.header_details.4 }}</div>
+                            <div class="information">Total : {{ obj.calculate_total_price  }} <br/>
+                                {{ obj.header_details.2 }} - {{ obj.header_details.3 }} <br/>
+                                {{ obj.header_details.4 }}</div>
                         </td>
                         <td>
 
                             {% if obj.patient.gender == 'MAL' %} Monsieur {% elif obj.patient.gender == 'FEM' %}
-                                Madame {% else %} {% endif %} {{ obj.patient }} <br/>
+                            Madame {% else %} {% endif %} {{ obj.patient }} <br/>
                             {{ obj.patient.code_sn }} <br/>
                             {{ obj.patient.address }} <br/>
                             {{ obj.patient.zipcode }} {{ obj.patient.city }} <br/>
@@ -131,21 +131,24 @@
         </tr>
 
         <tr class="heading">
+            <td>Compteur</td>
             <td>Date Début</td>
             <td>Date Fin</td>
             <td>Patient</td>
             <td>Total</td>
         </tr>
         {% for invoice in obj.get_invoices %}
-            <tr class="item">
-                <td>{{ invoice.invoice_start_period }}</td>
-                <td>{{ invoice.invoice_end_period }}</td>
-                <td>{{ invoice.patient }}</td>
-                <td>{{ invoice.calculate_price }}</td>
-            </tr>
+        <tr class="item">
+            <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
+            <td>{{ invoice.invoice_start_period }}</td>
+            <td>{{ invoice.invoice_end_period }}</td>
+            <td>{{ invoice.patient }}</td>
+            <td>{{ invoice.calculate_price }}</td>
+        </tr>
         {% endfor %}
 
-        {% comment %}<tr class="heading">
+        {% comment %}
+        <tr class="heading">
             <td>Item</td>
 
             <td>Price</td>
@@ -173,7 +176,8 @@
             <td></td>
 
             <td>Total: $385.00</td>
-        </tr>{% endcomment %}
+        </tr>
+        {% endcomment %}
     </table>
 </div>
 </body>
