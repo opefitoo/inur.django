@@ -79,10 +79,17 @@ class SmartPatientFilter(admin.SimpleListFilter):
         return ()
 
     def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(patient_id=self.value())
-        else:
-            return queryset
+        # Handle empty or invalid filter values
+        value = self.value()
+        if value is None:
+            return queryset  # No filtering
+        try:
+            if self.value():
+                return queryset.filter(patient_id=self.value())
+            else:
+                return queryset
+        except (ValueError, TypeError):
+            return queryset  # Return the original queryset if the value is invalid
 
 class SmartMedicalPrescriptionFilter(admin.SimpleListFilter):
     title = _('medical prescription')

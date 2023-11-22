@@ -1249,6 +1249,7 @@ class EventListAdmin(admin.ModelAdmin):
     change_list_template = 'admin/change_list.html'
     list_filter = ('employees', 'event_type_enum', 'state', SmartPatientFilter, 'created_by', UnderAssuranceDependanceFilter)
     date_hierarchy = 'day'
+    date_hierarchy_format = '%Y-%m-%d'
     exclude = ('event_type',)
 
     actions = ['safe_delete', 'duplicate_event_for_next_day', 'duplicate_event_for_next_week',
