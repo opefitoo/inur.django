@@ -43,7 +43,7 @@ def process_post_save(instance):
                 default=Value(2),
                 output_field=IntegerField(),
             )).order_by('is_under_dependence_insurance_order', 'patient_id')
-        file_content = generate_all_invoice_lines(batch_invoices, sending_date=instance.send_date,
+        file_content = generate_all_invoice_lines(batch_invoices, invoice_batch_date=instance.end_date,
                                                   batch_type=instance.batch_type)
         instance.prefac_file = ContentFile(file_content.encode('utf-8'), 'prefac.txt')
 

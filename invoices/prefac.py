@@ -162,7 +162,7 @@ def generate_all_invoice_lines_for_control(invoices, sending_date=None):
     return lines
 
 
-def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
+def generate_all_invoice_lines(invoices, invoice_batch_date=None, batch_type=None):
     lines = ""
     for invoice in invoices.annotate(
             is_under_dependence_insurance_order=Case(
@@ -184,7 +184,7 @@ def generate_all_invoice_lines(invoices, sending_date=None, batch_type=None):
             data = {
                 "version": "2",
                 # format date to YYYYMM00 for sending date replace days with 00
-                "date": format(prest.date, '%Y%m00'),
+                "date": format(invoice_batch_date, '%Y%m00'),
                 "payer": "U",
                 "provider": config.CODE_PRESTATAIRE,
                 # patient cns code only 11 digits
