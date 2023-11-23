@@ -337,7 +337,7 @@ class Patient(models.Model):
             if Prestation.objects.filter(date__gte=data['date_of_death'], invoice_item__patient_id=instance_id).count():
                 messages = {'date_of_death': 'Prestation for a later date exists'}
 
-            if Hospitalization.objects.filter(end_date__gte=data['date_of_death'], patient_id=instance_id).count():
+            if Hospitalization.objects.filter(end_date__gt=data['date_of_death'], patient_id=instance_id).count():
                 messages = {'date_of_death': 'Hospitalization that ends later exists like for example %s' % Hospitalization.objects.filter(end_date__gte=data['date_of_death'], patient_id=instance_id).first()}
 
         return messages
