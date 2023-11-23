@@ -883,6 +883,10 @@ class InvoiceItemBatch(models.Model):
         super(InvoiceItemBatch, self).__init__(*args, **kwargs)
         self._original_file = self.generated_invoice_files
 
+    @property
+    def count_invoices(self):
+        return self.get_invoices().count()
+
     def get_original_file(self):
         return self._original_file
 

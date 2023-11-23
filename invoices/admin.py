@@ -671,10 +671,10 @@ class InvoiceItemInlineAdmin(admin.TabularInline):
 @admin.register(InvoiceItemBatch)
 class InvoiceItemBatchAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
-    readonly_fields = ('created_date', 'modified_date')
+    readonly_fields = ('count_invoices', 'created_date', 'modified_date')
     list_filter = ('start_date', 'end_date', 'batch_type', 'batch_description')
-    list_display = ('start_date', 'end_date', 'send_date', 'batch_type', 'batch_description', 'display_object_actions_list')
-    actions = [generate_flat_file_for_control]
+    list_display = ('start_date', 'end_date', 'send_date', 'count_invoices', 'batch_type', 'batch_description', 'display_object_actions_list')
+    actions = [generate_flat_file_for_control, 'merge_invoices']
 
     object_actions = [
         {
@@ -684,6 +684,42 @@ class InvoiceItemBatchAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
             'view': 'print_events_associated_with_invoices',
         },
     ]
+
+    def merge_invoices(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
+                              level=messages.ERROR)
+            return
+        if queryset.count() < 2:
+            self.message_user(request, "Vous devez sélectionner au moins deux lots de factures.",
+                              level=messages.ERROR)
+            return
+        # merge all invoices in one
+        # if one of the batch has a different type, we cannot merge
+        for batch in queryset:
+            if batch.batch_type != queryset[0].batch_type:
+                self.message_user(request, "Vous ne pouvez pas fusionner des lots de factures de types différents.",
+                                  level=messages.ERROR)
+                return
+        batch_ids = []
+        youngest_start_date = queryset[0].start_date
+        for invoice_batch in queryset:
+            batch_ids.append(invoice_batch.id)
+        new_invoice_batch = InvoiceItemBatch.objects.create(start_date=queryset[0].start_date,
+                                                            end_date=queryset[0].end_date,
+                                                            batch_type=queryset[0].batch_type,
+                                                            batch_description="Merge of %s" % batch_ids)
+        for batch in queryset:
+            # attach all invoices to the new batch
+            for invoice in batch.get_invoices():
+                invoice.batch = new_invoice_batch
+                invoice.save()
+
+            # delete the batch
+            # batch.delete()
+        self.message_user(request, "Les lots de factures sélectionnés ont été fusionnés.",
+                          level=messages.INFO)
+
 
     def print_events_associated_with_invoices(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
