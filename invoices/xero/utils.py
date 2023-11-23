@@ -134,7 +134,7 @@ def attach_pdf_to_invoice(access_token, xero_tenant_id, invoice_id, pdf_content,
     return response
 
 def get_account_transactions_between_dates(access_token, xero_tenant_id, account_code, start_date, end_date):
-    _contact_name = "To S.C.I Lavandier Frères"
+    _contact_name = "XXXX"
     xero_contact = get_contact_by_name(access_token, xero_tenant_id, _contact_name)
     if not xero_contact:
         raise Exception("Contact not found in Xero")
