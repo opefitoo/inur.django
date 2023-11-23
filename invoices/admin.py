@@ -534,6 +534,18 @@ class InvoiceItemAdmin(admin.ModelAdmin):
 
     cns_invoice_bis.short_description = "CNS Invoice (new)"
 
+    def action_remove_invoice_from_batch(self, request, queryset):
+        # only super-users can do this
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
+                              level=messages.ERROR)
+            return
+        for invoice_item in queryset:
+            invoice_item.batch = None
+            invoice_item.save()
+        self.message_user(request, "Factures retirées du batch.",
+                          level=messages.INFO)
+
     def pdf_private_invoice_pp_bis(self, request, queryset):
         try:
             return do_it(queryset, action=PdfActionType.PERSONAL_PARTICIPATION)
@@ -543,7 +555,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
 
     pdf_private_invoice_pp_bis.short_description = "Facture client participation personnelle (new)"
 
-    actions = [link_invoice_to_invoice_batch, generate_flat_file,
+    actions = [action_remove_invoice_from_batch, link_invoice_to_invoice_batch, generate_flat_file,
                find_all_medical_prescriptions_and_merge_them_in_one_file, find_all_invoice_items_with_broken_file,
                export_to_pdf, export_to_pdf_with_medical_prescription_files, pdf_private_invoice_pp,
                pdf_private_invoice, export_to_pdf2, cns_invoice_bis, pdf_private_invoice_pp_bis, set_invoice_as_sent,

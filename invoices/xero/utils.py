@@ -132,3 +132,65 @@ def attach_pdf_to_invoice(access_token, xero_tenant_id, invoice_id, pdf_content,
     response = requests.put(url, headers=headers, data=pdf_content, params={'IncludeOnline': 'true'})
 
     return response
+
+def get_account_transactions_between_dates(access_token, xero_tenant_id, account_code, start_date, end_date):
+    _contact_name = "To S.C.I Lavandier Frères"
+    xero_contact = get_contact_by_name(access_token, xero_tenant_id, _contact_name)
+    if not xero_contact:
+        raise Exception("Contact not found in Xero")
+    # search all bank transactions for this contact
+    url = 'https://api.xero.com/api.xro/2.0/BankTransactions?where=Contact.name=="%s"&page=1' % _contact_name
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Xero-tenant-id': xero_tenant_id,
+        'Accept': 'application/json'
+    }
+    bank_transactions = []
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    bank_transactions += data.get('BankTransactions', [])
+    for bank_transaction in bank_transactions:
+        # replace the
+        # set as reconciled false
+        bank_transaction['IsReconciled'] = False
+        # for  each line_item in bank_transaction['LineItems'] replace the account code 61111000 by 61112000
+        for line_item in bank_transaction['LineItems']:
+            if line_item['AccountCode'] == account_code:
+                line_item['AccountCode'] = "61112000"
+                line_item['TaxType'] = "NONE"
+    # post the updated bank transactions
+    url = 'https://api.xero.com/api.xro/2.0/BankTransactions/SummarizeErrors=false'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Xero-tenant-id': xero_tenant_id,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+    response = requests.post(url, headers=headers, json={'BankTransactions': bank_transactions})
+    if response.status_code == 200:
+        return response.json().get('BankTransactions', [])
+    else:
+        # Handle error (e.g., log the issue or throw an exception)
+        response.raise_for_status()
+
+
+    return bank_transactions
+
+
+
+def get_contact_by_name(access_token, xero_tenant_id, contact_name):
+
+    # search by AccountNumber
+    url = 'https://api.xero.com/api.xro/2.0/Contacts?where=Name=="%s"' % contact_name
+
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Xero-tenant-id': xero_tenant_id,
+        'Accept': 'application/json'
+    }
+
+    response = requests.get(url, headers=headers)
+    data = response.json()
+
+    contacts = data.get('Contacts', [])
+    return contacts[0] if contacts else None
