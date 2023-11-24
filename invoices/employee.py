@@ -51,6 +51,12 @@ class JobPosition(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=100, blank=True,
                                    null=True)
+    # job type is an enum of 3 choices:  soignant , administratif , logistique
+    job_type = models.CharField("Type de poste",
+                                max_length=20,
+                                choices=[('soignant', _('Soignant')), ('administratif', _('Administratif')),
+                                         ('logistique', _('Logistique'))],
+                                default='soignant')
     is_involved_in_health_care = models.BooleanField("Impliqué dans les soins", default=True)
 
     def __str__(self):

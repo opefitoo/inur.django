@@ -51,6 +51,16 @@ class EmployeeSerializer(serializers.ModelSerializer):
                   'virtual_career_anniversary_date')
         depth = 1
 
+class EmployeeContractDetailSerializer(serializers.ModelSerializer):
+    employee_link = EmployeeSerializer()
+    class Meta:
+        model = EmployeeContractDetail
+        fields = ('start_date', 'number_of_hours', 'number_of_days_holidays', 'monthly_wage', 'contract_date',
+                  'contract_signed_date', 'employee_trial_period_text', 'employee_special_conditions_text', 'index',
+                  'career_rank', 'anniversary_career_rank', 'weekly_work_organization', 'employee_link')
+        depth = 1
+
+
 
 class EmployeeContractSerializer(serializers.ModelSerializer):
     class Meta:
@@ -394,8 +404,6 @@ class CarePlanMasterSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarePlanMaster
         fields = ['patient', 'plan_number', 'plan_start_date', 'care_plan_detail_to_master']
-
-
 
 
 #

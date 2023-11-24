@@ -30,7 +30,7 @@ from helpers.employee import get_employee_id_by_abbreviation, \
     get_current_employee_contract_details_by_employee_abbreviation
 from helpers.patient import get_patient_by_id
 from invoices import settings
-from invoices.employee import JobPosition, Employee
+from invoices.employee import JobPosition, Employee, EmployeeContractDetail
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event, create_or_update_google_calendar
@@ -90,6 +90,13 @@ class DependantPatientViewSet(viewsets.ModelViewSet):
     """
     queryset = Patient.objects.filter(is_under_dependence_insurance=True)
     serializer_class = PatientSerializer
+
+class EmployeeContractDetailSerializerViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows EmployeeContractDetail to be viewed.
+    """
+    queryset = EmployeeContractDetail.objects.all()
+    serializer_class = EmployeeContractSerializer
 
 
 class PhysicianViewSet(viewsets.ModelViewSet):
