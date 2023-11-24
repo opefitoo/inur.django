@@ -131,6 +131,7 @@
         </tr>
 
         <tr class="heading">
+            <td>Num ordre</td>
             <td>Date Début</td>
             <td>Date Fin</td>
             <td>Code</td>
@@ -140,6 +141,7 @@
         </tr>
         {% for line in obj.get_invoice_lines %}
             <tr class="item">
+                <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
                 <td>{{ line.start_period }}</td>
                 <td>{{ line.end_period }}</td>
                 <td>{{ line.long_term_care_package.code }}</td>
@@ -150,6 +152,7 @@
         {% endfor %}
         {% for item in obj.get_invoice_items %}
             <tr class="item">
+                <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
                 <td>{{ item.care_date }}</td>
                 <td>-</td>
                 <td>{{ item.long_term_care_package.code }}</td>
