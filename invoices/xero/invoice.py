@@ -4,8 +4,7 @@ from decimal import Decimal
 import requests
 
 from invoices.models import InvoiceItem
-from invoices.xero.utils import get_xero_token, ensure_contact_exists, attach_pdf_to_invoice, \
-    get_account_transactions_between_dates
+from invoices.xero.utils import get_xero_token, ensure_contact_exists, attach_pdf_to_invoice
 
 
 def create_xero_invoice(invoice_item: InvoiceItem, invoice_amount: Decimal, invoice_pdf_file=None):
@@ -22,12 +21,12 @@ def create_xero_invoice(invoice_item: InvoiceItem, invoice_amount: Decimal, invo
     start_date = datetime.datetime(2023, 1, 1).strftime("%Y-%m-%d")
     # end date is today
     end_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    results = get_account_transactions_between_dates(token.access_token,
-                                           invoice_item.invoice_details.xero_tenant_id,
-                                           "61111000",
-                                           start_date, end_date)
+    #results = get_account_transactions_between_dates(token.access_token,
+    #                                      invoice_item.invoice_details.xero_tenant_id,
+    #                                       "61111000",
+    #                                       start_date, end_date)
 
-    print("results: ", results)
+    #print("results: ", results)
 
     if invoice_item.invoice_details.xero_tenant_id is None:
         raise Exception("No xero_tenant_id for invoice_details: ", invoice_item.invoice_details)
