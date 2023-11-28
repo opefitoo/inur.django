@@ -156,10 +156,10 @@ def create_prestations_for_month_v2(patient, year, month):
                                              tzinfo=None)
     prestations = []
     for day in range(1, days_in_month + 1):
-        if patient.date_of_exit and patient.date_of_exit < prestation_date:
+        if patient.date_of_exit and patient.date_of_exit < prestation_date.date():
             print("Patient %s is out on this date %s" % (patient, prestation_date))
             break
-        if patient.date_of_death and patient.date_of_death < prestation_date:
+        if patient.date_of_death and patient.date_of_death < prestation_date.date():
             print("Patient %s is dead on this date %s" % (patient, prestation_date))
             break
         hospitalizations = Hospitalization.objects.filter(
