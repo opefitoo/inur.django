@@ -32,7 +32,7 @@ class CSVToOFXConverter:
 
     def parse_csv(self, csv_content):
         data = []
-        reader = csv.DictReader(io.StringIO(csv_content), delimiter=';')
+        reader = csv.DictReader(io.StringIO(csv_content, newline='\n') , delimiter=';')
 
         for row in reader:
             # Optional: Strip whitespace from keys

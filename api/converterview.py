@@ -1,5 +1,6 @@
 from io import BytesIO
 
+import chardet
 from django.http import FileResponse
 from requests import Response
 from rest_framework import status
@@ -30,8 +31,15 @@ class MT940toOFXConverterView(APIView):
             file_content = uploaded_file.read()
             converter = MT940toOFXConverter(file_content, is_zip=True)
         elif is_csv:
+            # Read a portion of the file to guess the encoding
+            sample = uploaded_file.read(10000)  # Read first 10,000 bytes
+            uploaded_file.seek(0)  # Reset file read position
+
+            # Detect encoding
+            result = chardet.detect(sample)
+            encoding = result['encoding']
             # Handle CSV files as text
-            file_content = uploaded_file.read().decode('iso-8859-1')
+            file_content = uploaded_file.read().decode(encoding)
             converter = CSVToOFXConverter(file_content, is_zip=False)
         else:
             # Try decoding as UTF-8, if that fails, try another encoding
