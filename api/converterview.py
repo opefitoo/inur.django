@@ -1,10 +1,13 @@
 from io import BytesIO
 
 from django.http import FileResponse
+from requests import Response
+from rest_framework import status
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
+from invoices.parsers.csv2ofx import CSVToOFXConverter
 from invoices.parsers.mt940 import MT940toOFXConverter
 
 
@@ -19,11 +22,17 @@ class MT940toOFXConverterView(APIView):
 
         # Check if the uploaded file is a ZIP file
         is_zip = file_name.endswith('.zip')
+        is_csv = file_name.endswith('.csv')
+        converter = None
 
         if is_zip:
             # Handle ZIP files as binary
             file_content = uploaded_file.read()
             converter = MT940toOFXConverter(file_content, is_zip=True)
+        elif is_csv:
+            # Handle CSV files as text
+            file_content = uploaded_file.read().decode('iso-8859-1')
+            converter = CSVToOFXConverter(file_content, is_zip=False)
         else:
             # Try decoding as UTF-8, if that fails, try another encoding
             try:
