@@ -38,6 +38,9 @@ def long_term_care_activity_declaration_file_path(instance, filename):
     # newfilename, file_extension = os.path.splitext(filename)
     return f"long_term_monthly_activity_declaration/{instance.id}/{newfilename}"
 
+def long_term_care_activity_return_declaration_file_path(instance, filename):
+    return f"long_term_monthly_activity_declaration/{instance.id}/{filename}"
+
 
 class LongTermMonthlyActivityFile(models.Model):
     class Meta:
@@ -51,6 +54,8 @@ class LongTermMonthlyActivityFile(models.Model):
     force_creation = models.BooleanField(_('Force Creation'), default=False)
     file = models.FileField(upload_to=long_term_care_activity_declaration_file_path,
                             verbose_name=_("File"), blank=True, null=True)
+    return_file = models.FileField(upload_to=long_term_care_activity_return_declaration_file_path,
+                                   verbose_name=_("Return File"), blank=True, null=True)
     version_number = models.PositiveIntegerField(_('Version Number'))
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
