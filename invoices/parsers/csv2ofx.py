@@ -53,7 +53,8 @@ class CSVToOFXConverter:
         for row in self.data:
             # Parse the date and make it timezone-aware
             dt = datetime.strptime(row['Date transaction'], '%d/%m/%Y').replace(tzinfo=UTC)
-            amount = float(row['Montant en EUR'].replace(',', '.'))
+            # Parse the amount and round it to 2 decimal places
+            amount = round(float(row['Montant en EUR'].replace(',', '.')), 2)
             memo = None
             if row['Communication 1']:
                 memo = row['Communication 1'] + ' ' + row['Communication 2'] + ' ' + row['Communication 3'] + ' ' + row['Communication 4']
