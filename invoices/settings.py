@@ -335,6 +335,7 @@ GOOGLE_CHAT_WEBHOOK_URL = os.environ['GOOGLE_CHAT_WEBHOOK_URL']
 
 GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, '../keys/gdrive_storage_key.json')
 GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2 = os.path.join(BASE_DIR, '../keys/inur-test-environment-71cbf29a05be.json')
+GOOGLE_CHAT_IMG_JSON = os.path.join(BASE_DIR, '../keys/inur-test-environment-6b01407d4afe.json')
 if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE):
     credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE, 'w') as outfile:
@@ -343,6 +344,11 @@ if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ and not os.path.exists(GOOGLE_
 if 'GOOGLE_APPLICATION_CREDENTIALS2' in os.environ and not os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2):
     credentials = os.environ['GOOGLE_APPLICATION_CREDENTIALS2']
     with open(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2, 'w') as outfile:
+        json.dump(json.loads(credentials), outfile)
+
+if 'GOOGLE_CHAT_IMG_JSON' in os.environ and not os.path.exists(GOOGLE_CHAT_IMG_JSON):
+    credentials = os.environ['GOOGLE_CHAT_IMG_JSON']
+    with open(GOOGLE_CHAT_IMG_JSON, 'w') as outfile:
         json.dump(json.loads(credentials), outfile)
 
 import sentry_sdk
@@ -410,4 +416,4 @@ XERO_REDIRECT_URI = config('XERO_REDIRECT_URI', default='NOT_SET')
 XERO_AUTHORIZATION_URL = 'https://login.xero.com/identity/connect/authorize'
 XERO_TOKEN_URL = 'https://identity.xero.com/connect/token'
 XERO_SCOPES = ['openid', 'profile', 'email', 'offline_access', 'accounting.transactions', "accounting.transactions",
-               "accounting.attachments", "accounting.contacts" , "files"] # Adjust the scopes as needed
+               "accounting.attachments", "accounting.contacts" , "files", ] # Adjust the scopes as needed

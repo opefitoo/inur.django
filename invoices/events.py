@@ -23,7 +23,7 @@ from invoices import settings
 from invoices.employee import Employee
 from invoices.enums.event import EventTypeEnum
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
-from invoices.googlemessages import post_webhook, post_webhook_pic_urls
+from invoices.googlemessages import post_webhook, post_webhook_pic_urls, post_webhook_pic_as_image
 from invoices.models import Patient
 
 
@@ -114,12 +114,13 @@ class Event(models.Model):
                                     employees=self.employees, patient=self.patient).exists():
             employee_num_1 = Employee.objects.get(id=1)
             new_event = Event.objects.create(day=next_day, time_start_event=self.time_start_event,
-                                                  time_end_event=self.time_end_event,
-                                                  event_type_enum=self.event_type_enum,
-                                                  state=2, notes=self.notes,
-                                                  employees=employee_num_1,
-                                                  patient=self.patient,
-                                                  event_address=self.event_address, created_by='duplicate_event_for_next_day')
+                                             time_end_event=self.time_end_event,
+                                             event_type_enum=self.event_type_enum,
+                                             state=2, notes=self.notes,
+                                             employees=employee_num_1,
+                                             patient=self.patient,
+                                             event_address=self.event_address,
+                                             created_by='duplicate_event_for_next_day')
             new_event.save()
             return new_event
         else:
@@ -197,7 +198,6 @@ class Event(models.Model):
                                                                              dry_run=dry_run))
         return deleted_evts
 
-
     def display_unconnected_events(self):
         # FIXME not complete one
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
@@ -259,8 +259,8 @@ class Event(models.Model):
         result.update(model.event_is_unique(data))
         result.update(address_mandatory_for_generic_employee(data))
         result.update(event_report_mandatory_validated_events(data))
-        #result.update(if_care_plan_check_date_times(data))
-        #result.update(checks_that_care_plan_is_linked_to_right_patient(data))
+        # result.update(if_care_plan_check_date_times(data))
+        # result.update(checks_that_care_plan_is_linked_to_right_patient(data))
         # result.update(validators.validate_date_range_vs_timesheet(instance_id, data))
         # result.update(create_or_update_google_calendar(model))
         return result
@@ -465,6 +465,17 @@ def send_update_via_chat(sender, instance: ReportPicture, **kwargs):
     if settings.GOOGLE_CHAT_WEBHOOK_URL:
         post_webhook_pic_urls(description=instance.description,
                               event_pictures_url=instance.image.url)
+        email_of_employee = instance.event.employees.user.email
+        if os.environ.get('LOCAL_ENV', None):
+            print("Direct call post_save sneding update via chat %s" % instance)
+            post_webhook_pic_as_image(description=instance.description,
+                                      event_pictures_url=instance.image.url,
+                                      email=email_of_employee)
+        else:
+            print("Call post_save on InvoiceItemBatch %s via redis /rq " % instance)
+            post_webhook_pic_as_image.delay(description=instance.description,
+                                            event_pictures_url=instance.image.url,
+                                            email=email_of_employee)
 
 
 # @receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")

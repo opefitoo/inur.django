@@ -3,9 +3,11 @@ from datetime import datetime, timedelta
 from json import dumps
 
 from constance import config
+from django_rq import job
 from httplib2 import Http
 
 from invoices import settings
+from invoices.actions.imagesongoogle import ImageGoogleChatSending
 
 logger = logging.getLogger('console')
 
@@ -28,6 +30,14 @@ def post_webhook_pic_urls(description=None, event_pictures_url=None):
     )
     print(response)
 
+@job("default", timeout=6000)
+def post_webhook_pic_as_image(description=None, event_pictures_url=None, email=None):
+    url = settings.GOOGLE_CHAT_WEBHOOK_URL
+    message = "\n"
+    if description:
+        message += description + "👇 "
+    # pass None for now
+    ImageGoogleChatSending(email=email).send_image(message, event_pictures_url)
 
 def post_webhook(employees, patient, event_report, state, event_date=None, event_pictures_urls=None, event=None):
     """Hangouts Chat incoming webhook quickstart.
