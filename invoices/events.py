@@ -23,7 +23,7 @@ from invoices import settings
 from invoices.employee import Employee
 from invoices.enums.event import EventTypeEnum
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
-from invoices.googlemessages import post_webhook, post_webhook_pic_urls, post_webhook_pic_as_image
+from invoices.googlemessages import post_webhook, post_webhook_pic_as_image
 from invoices.models import Patient
 
 
@@ -470,8 +470,8 @@ def send_update_via_chat(sender, instance: ReportPicture, **kwargs):
         print("** TEST mode %s" % sender)
         return
     if settings.GOOGLE_CHAT_WEBHOOK_URL:
-        post_webhook_pic_urls(description=instance.description,
-                              event_pictures_url=instance.image.url)
+        #post_webhook_pic_urls(description=instance.description,
+        #                      event_pictures_url=instance.image.url)
         email_of_employee = instance.event.employees.user.email
         if os.environ.get('LOCAL_ENV', None):
             print("Direct call post_save sneding update via chat %s" % instance)
