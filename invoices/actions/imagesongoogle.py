@@ -75,6 +75,7 @@ class ImageGoogleChatSending:
             }
 
         ).execute()
+        print("Message created: %s" % result)
         return result
 
 
