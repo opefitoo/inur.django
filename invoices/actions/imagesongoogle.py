@@ -47,7 +47,7 @@ class ImageGoogleChatSending:
             # Replace SPACE with a space name.
             # Obtain the space name from the spaces resource of Chat API,
             # or from a space's URL.
-            parent='spaces/AAAAggFq5Js',
+            parent=space_id,
 
             # The filename of the attachment, including the file extension.
             body={'filename': 'test_image.png'},
