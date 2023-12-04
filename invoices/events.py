@@ -349,13 +349,20 @@ def update_report_picture_filename(instance, filename):
     else:
         _current_yr_or_prscr_yr = str(instance.event.day.year)
         _current_month_or_prscr_month = str(instance.event.day.month)
-    path = os.path.join("Report Pictures",
-                        instance.event.patient.name + ' ' +
-                        instance.event.patient.first_name + ' ' +
-                        instance.event.patient.code_sn,
-                        _current_yr_or_prscr_yr, _current_month_or_prscr_month)
-    file_prefix = '%s_%s_%s' % (instance.event.patient.name, instance.event.patient.first_name,
-                                str(instance.event.day))
+    if instance.event.patient is None:
+        path = os.path.join("Report Pictures",
+                            "Sans patient",
+                            _current_yr_or_prscr_yr, _current_month_or_prscr_month)
+        file_prefix = 'Sans patient'
+    else:
+        path = os.path.join("Report Pictures",
+                            instance.event.patient.name + ' ' +
+                            instance.event.patient.first_name + ' ' +
+                            instance.event.patient.code_sn,
+                            _current_yr_or_prscr_yr, _current_month_or_prscr_month)
+
+        file_prefix = '%s_%s_%s' % (instance.event.patient.name, instance.event.patient.first_name,
+                                    str(instance.event.day))
     filename = get_next_available_picture_name(path, file_prefix, file_extension)
 
     return os.path.join(path, filename)
