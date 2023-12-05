@@ -45,6 +45,13 @@ class LongTermPackage(models.Model):
             return price.price
         except LongTermPackagePrice.DoesNotExist:
             return None
+    def get_latest_price_and_date(self):
+        try:
+            price = LongTermPackagePrice.objects.filter(package=self).latest('start_date')
+            return price
+        except LongTermPackagePrice.DoesNotExist:
+            return None
+
 
     def price_per_year_month(self, year, month):
         try:
@@ -83,4 +90,4 @@ class LongTermPackagePrice(models.Model):
         ]
 
     def __str__(self):
-        return "{0} / {1}".format(self.package, self.price)
+        return "{0} / {1} - {2}".format(self.start_date, self.package, self.price)

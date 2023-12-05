@@ -135,9 +135,10 @@ class LongTermCareItemAdmin(admin.ModelAdmin):
 
 @admin.register(LongTermPackage)
 class LongTermPackageAdmin(admin.ModelAdmin):
-    list_display = ('code', 'description')
+    list_display = ('code', 'description', 'get_latest_price_and_date')
     inlines = [LongTermPackagePriceInline]
     actions = ['remove_duplicates']
+    readonly_fields = ('get_latest_price_and_date',)
 
     def remove_duplicates(self, request, queryset):
         if not request.user.is_superuser:
