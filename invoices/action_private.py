@@ -72,9 +72,14 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False, on
 
     elements = []
     payment_reference_hash = ""
-    for qs in queryset.order_by("invoice_number"):
-        payment_reference_hash += str(qs.invoice_number)
-    _payment_ref = "PP%s" % str(abs(hash(payment_reference_hash)))[:6]
+    # if only one invoice in the queryset, use the invoice number as reference
+    if len(queryset) == 1:
+        _payment_ref = "PP%s" % queryset[0].invoice_number
+    else:
+        # if multiple invoices in the queryset, use the hash of the invoice numbers as reference
+        for qs in queryset.order_by("invoice_number"):
+            payment_reference_hash += str(qs.invoice_number)
+        _payment_ref = "PP%s" % str(abs(hash(payment_reference_hash)))[:6]
     if attach_to_email:
         io_buffer = BytesIO()
         doc = SimpleDocTemplate(io_buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
