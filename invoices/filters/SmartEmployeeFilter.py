@@ -91,6 +91,29 @@ class SmartPatientFilter(admin.SimpleListFilter):
         except (ValueError, TypeError):
             return queryset  # Return the original queryset if the value is invalid
 
+class DistanceMatrixSmartPatientFilter(admin.SimpleListFilter):
+    title = _('patient')
+    parameter_name = 'patient_origin_id'
+
+    def lookups(self, request, model_admin):
+        # request is manipulated in ModelAdmin.changelist_view
+        if isinstance(request, HttpRequest) and hasattr(request, "dynamic_patient_choices"):
+            return request.dynamic_patient_choices
+        return ()
+
+    def queryset(self, request, queryset):
+        # Handle empty or invalid filter values
+        value = self.value()
+        if value is None:
+            return queryset  # No filtering
+        try:
+            if self.value():
+                return queryset.filter(patient_id=self.value())
+            else:
+                return queryset
+        except (ValueError, TypeError):
+            return queryset  # Return the original queryset if the value is invalid
+
 class SmartMedicalPrescriptionFilter(admin.SimpleListFilter):
     title = _('medical prescription')
     parameter_name = 'medical_prescription_id'

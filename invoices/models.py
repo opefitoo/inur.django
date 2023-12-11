@@ -275,6 +275,10 @@ class Patient(models.Model):
 
     @property
     def full_address(self):
+        # if country is luxembourg then append L- to zip code if not already there
+        if self.country == 'LU' or self.country is None:
+            if self.zipcode[:2] != 'L-':
+                self.zipcode = 'L-' + self.zipcode
         return "%s %s %s, %s" % (self.address, self.zipcode, self.city, self.country)
 
     def get_full_address_date_based(self, current_date=now().date(), current_time=now().time()):

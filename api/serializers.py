@@ -10,6 +10,7 @@ from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivity
 from dependence.careplan import CarePlanMaster, CarePlanDetail
 from dependence.longtermcareitem import LongTermCareItem
 from dependence.models import PatientAnamnesis, AssignedPhysician
+from invoices.distancematrix import DistanceMatrix
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail
 from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
@@ -61,7 +62,10 @@ class EmployeeContractDetailSerializer(serializers.ModelSerializer):
         depth = 1
 
 
-
+class DistanceMatrixSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DistanceMatrix
+        fields = ('patient_origin', 'patient_destination', 'distance_in_km', 'duration_in_mn')
 class EmployeeContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeContractDetail

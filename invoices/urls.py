@@ -9,9 +9,10 @@ from django.views.static import serve
 from rest_framework.authtoken import views as authtoken_views
 
 import api
+from api import views
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
     get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, \
-    FullCalendarEventViewSet, AvailableEmployeeList, AvailablePatientList, build_payroll_sheet
+    FullCalendarEventViewSet, AvailableEmployeeList, AvailablePatientList, build_payroll_sheet, DistanceAPIView
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
 from invoices.views import delete_prestation
@@ -193,6 +194,15 @@ urlpatterns += [
     path('xero/callback/', xero_callback, name='xero-callback'),
     # ... other url patterns ...
 ]
+urlpatterns += [
+    path('calculate_distance_matrix/', views.calculate_distance_matrix,
+         name='calculate-distance-matrix'),
+]
+
+urlpatterns += [
+    path('api/v1/distance_duration/<str:origin>/<str:destination>/', DistanceAPIView.as_view(), name='distance_api'),
+]
+
 
     # if settings.DEBUG:
 #     import debug_toolbar

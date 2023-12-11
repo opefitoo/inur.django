@@ -35,13 +35,15 @@ from invoices.actions.certificates import generate_pdf
 from invoices.actions.invoices import generer_forfait_aev_september
 # from invoices.actions.maps import calculate_distance_matrix
 from invoices.actions.print_pdf import do_it, PdfActionType
+from invoices.distancematrix import DistanceMatrix
 from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile, EmployeeProxy
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event, AssignedAdditionalEmployee, ReportPicture, \
     create_or_update_google_calendar, EventList
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
-from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, SmartPatientFilter, SmartMedicalPrescriptionFilter
+from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, SmartPatientFilter, \
+    SmartMedicalPrescriptionFilter, DistanceMatrixSmartPatientFilter
 from invoices.filters.SmartPatientFilter import UnderAssuranceDependanceFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, \
@@ -1623,4 +1625,34 @@ class EmployeeProxyAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         # Optionally, restrict the ability to change records
         return request.user.is_superuser or (obj is not None and obj.user == request.user)
+
+@admin.register(DistanceMatrix)
+class DistanceMatrixAdmin(admin.ModelAdmin):
+    list_display = ['patient_origin', 'patient_destination', 'distance_in_km', 'duration_in_mn', 'created_at', 'updated_at']
+    list_filter = (DistanceMatrixSmartPatientFilter, )
+    search_fields = ('origin', 'destination')
+    readonly_fields = ('created_at', 'updated_at')
+
+    def changelist_view(self, request, extra_context=None):
+        changelist = ChangeList(request,
+                                self.model,
+                                list(self.get_list_display(request)),
+                                self.get_list_display_links(request, self.get_list_display(request)),
+                                self.get_list_filter(request),
+                                self.date_hierarchy,
+                                self.get_search_fields(request),
+                                self.list_select_related,
+                                self.list_per_page,
+                                self.list_max_show_all,
+                                self.list_editable,
+                                self,
+                                self.sortable_by,
+                                self.get_search_results)
+
+        # Get a distinct list of patients for the filtered queryset
+        patients = list(set(changelist.get_queryset(request).values_list('patient_origin__id', 'patient_origin__name')))
+        # Attach it to request
+        request.dynamic_patient_choices = [(str(patient_id), patient_name) for patient_id, patient_name in patients]
+
+        return super().changelist_view(request, extra_context)
 

@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.maps import create_distance_matrix
 from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer, PatientSerializer, \
     PrestationSerializer, \
     InvoiceItemSerializer, JobPositionSerializer, TimesheetSerializer, \
@@ -20,7 +21,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
     FullCalendarEmployeeSerializer, FullCalendarPatientSerializer, \
-    LongTermMonthlyActivitySerializer
+    LongTermMonthlyActivitySerializer, DistanceMatrixSerializer
 from api.utils import get_settings
 from dependence.activity import LongTermMonthlyActivity
 from dependence.careplan import CarePlanDetail, CarePlanMaster
@@ -30,6 +31,7 @@ from helpers.employee import get_employee_id_by_abbreviation, \
     get_current_employee_contract_details_by_employee_abbreviation
 from helpers.patient import get_patient_by_id
 from invoices import settings
+from invoices.distancematrix import DistanceMatrix
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
@@ -90,6 +92,30 @@ class DependantPatientViewSet(viewsets.ModelViewSet):
     """
     queryset = Patient.objects.filter(is_under_dependence_insurance=True)
     serializer_class = PatientSerializer
+
+
+class DistanceMatrixSerializerViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows DistanceMatrix to be viewed.
+    """
+    queryset = DistanceMatrix.objects.all()
+    serializer_class = DistanceMatrixSerializer
+
+
+class DistanceAPIView(APIView):
+    def get(self, request, origin, destination):
+        # Assuming patient1 and patient2 are the addresses or identifiers
+        # You need to retrieve these addresses from your patients database
+
+        try:
+            if origin == destination:
+                return Response({'text': 'Distance to the same location is zero', 'distance': 0, 'duration': 0})
+            distance_record = DistanceMatrix.objects.get(patient_origin_id=origin, patient_destination_id=destination)
+            return Response({'text': str(distance_record), 'distance': distance_record.distance_in_km,
+                             'duration': distance_record.duration_in_mn})
+        except DistanceMatrix.DoesNotExist:
+            return Response({'error': 'Distance not found'}, status=404)
+
 
 class EmployeeContractDetailSerializerViewSet(viewsets.ModelViewSet):
     """
@@ -282,7 +308,7 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         json_data = json.dumps(serializer.data)
-        #print(json_data)
+        # print(json_data)
         return HttpResponse(json_data, content_type='application/json')
 
     def get_queryset(self, *args, **kwargs):
@@ -397,9 +423,9 @@ class EventList(generics.ListCreateAPIView):
             instance = Event.objects.get(pk=result.data.get('id'))
             if employee_bis:
                 instance.notes = request.data['notes'] + "\n En collaboration avec %s %s - Tél %s" % (
-                employee_bis.user.last_name,
-                employee_bis.user.first_name,
-                employee_bis.phone_number)
+                    employee_bis.user.last_name,
+                    employee_bis.user.first_name,
+                    employee_bis.phone_number)
             assert isinstance(instance, Event)
             # if instance.event_type_enum == EventTypeEnum.BIRTHDAY:
             #     return "Birthday created"
@@ -423,6 +449,21 @@ def cleanup_event(request):
                                                      int(float(request.data.get('month'))))
     event_serializer = EventSerializer(deleted_events, many=True)
     return Response(event_serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def calculate_distance_matrix(request):
+    if 'POST' != request.method:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    active_patients = Patient.objects.filter(is_under_dependence_insurance=True).filter(
+        date_of_death__isnull=True).filter(date_of_exit__isnull=True)
+    # build a dict with patient as key and address as value
+    patient_address_dict = {}
+    for active_patient in active_patients:
+        patient_address_dict[active_patient] = active_patient.full_address
+        # print("%s : %s" % (active_patient, active_patient.full_address))
+    create_distance_matrix(patient_address_dict, config.DISTANCE_MATRIX_API_KEY)
+    return Response(status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -515,7 +556,7 @@ def build_payroll_sheet(request):
                                                       minute=dtl.end_date.minute)
                     str_delta = ':'.join(str(dtl.time_delta()).split(':')[:2])
                     string_to_return += "De %s à %s (%s heures) " % (
-                    start_time.strftime("%H:%M"), end_time.strftime("%H:%M"), str_delta)
+                        start_time.strftime("%H:%M"), end_time.strftime("%H:%M"), str_delta)
                     return Response(string_to_return, status=status.HTTP_200_OK)
                 # start_time = timezone.now().replace(hour=stdtl.get().start_date.astimezone(ZoneInfo("Europe/Luxembourg")).hour,
                 #                                     minute=stdtl.get().start_date.minute)

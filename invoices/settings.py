@@ -238,6 +238,7 @@ CONSTANCE_CONFIG = {
     'OPENROUTE_SERVICE_API_KEY': ('NOT_SET', 'Open Route API KEY', str),
     'ROOT_URL': ('NOT_SET', 'Root URL Main url', str),
     'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL': ('NOT_SET', 'Webhook for notification of job completion', str),
+    'DISTANCE_MATRIX_API_KEY': ('NOT_SET', 'Distance Matrix API KEY', str),
     'FTP_HOST': ('NOT_SET', 'FTP host', str),
     'FTP_USER': ('NOT_SET', 'FTP user', str),
     'FTP_PASSWORD': ('NOT_SET', 'FTP password', str),
@@ -248,7 +249,7 @@ CONSTANCE_CONFIG = {
 
 CONSTANCE_CONFIG_FIELDSETS = {
     'Options Générales': (
-    'USE_GDRIVE', 'AT_HOME_CARE_CODE', 'AEV_VM_MIN', 'ROOT_URL', 'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL'),
+    'USE_GDRIVE', 'AT_HOME_CARE_CODE', 'AEV_VM_MIN', 'ROOT_URL', 'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL', 'DISTANCE_MATRIX_API_KEY'),
     'Options de Facturation': (
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
         'CODE_PRESTATAIRE',
