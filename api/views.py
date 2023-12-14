@@ -1,11 +1,11 @@
 import json
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from constance import config
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
-from django.utils.datetime_safe import datetime
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
@@ -455,6 +455,20 @@ def cleanup_event(request):
 def calculate_distance_matrix(request):
     if 'POST' != request.method:
         return Response(status=status.HTTP_400_BAD_REQUEST)
+    if request.data.get('patient_ids'):
+        patient_ids = request.data.get('patient_ids')
+        active_patients = Patient.objects.filter(is_under_dependence_insurance=True).filter(
+            date_of_death__isnull=True).filter(date_of_exit__isnull=True)
+        # create a list that is intersection of active patients and patient_ids
+        patient_ids = list(set(patient_ids).intersection(set(active_patients.values_list('id', flat=True))))
+        # build a dict with patient as key and address as value
+        patient_address_dict = {}
+        for patient_id in patient_ids:
+            patient = Patient.objects.get(pk=patient_id)
+            patient_address_dict[patient] = patient.full_address
+            # print("%s : %s" % (patient, patient.full_address))
+        create_distance_matrix(patient_address_dict, config.DISTANCE_MATRIX_API_KEY)
+        return Response(status=status.HTTP_200_OK)
     active_patients = Patient.objects.filter(is_under_dependence_insurance=True).filter(
         date_of_death__isnull=True).filter(date_of_exit__isnull=True)
     # build a dict with patient as key and address as value
