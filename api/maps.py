@@ -18,6 +18,10 @@ def create_distance_matrix(location_dict, api_key):
                 distance_matrix[o] = {}
                 distance_matrix[o][d] = 0
             else:
+                if DistanceMatrix.objects.filter(patient_origin=o, patient_destination=d).exists():
+                    # If a distance matrix already exists, either for the same origin and destination or the reverse
+                    # then take the next one
+                    continue
                 params = {
                     'origins': addresses_dict[o],
                     'destinations': addresses_dict[d],
