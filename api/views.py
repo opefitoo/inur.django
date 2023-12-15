@@ -460,7 +460,7 @@ def calculate_distance_matrix(request):
         active_patients = Patient.objects.filter(is_under_dependence_insurance=True).filter(
             date_of_death__isnull=True).filter(date_of_exit__isnull=True)
         # create a list that is intersection of active patients and patient_ids
-        patient_ids = list(set(patient_ids).intersection(set(active_patients.values_list('id', flat=True))))
+        patient_ids = list(set(patient_ids).union(set(active_patients.values_list('id', flat=True))))
         # build a dict with patient as key and address as value
         patient_address_dict = {}
         for patient_id in patient_ids:
