@@ -230,6 +230,33 @@ class Physician(models.Model):
     def __str__(self):  # Python 3: def __str__(self):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
+class SubContractor(models.Model):
+    # SubContractor fields (like name, address, etc.)
+    name = models.CharField(max_length=255)
+    address = models.TextField(max_length=255)
+    zipcode = models.CharField(max_length=10)
+    city = models.CharField(max_length=30)
+    country = CountryField(blank_label='...', blank=True, null=True)
+    phone_number = models.CharField(max_length=30)
+    fax_number = models.CharField(max_length=30, blank=True, null=True)
+    email_address = models.EmailField(default=None, blank=True, null=True)
+    provider_code = models.CharField("Code Prestataire", max_length=30, blank=True, null=True)
+    billing_retrocession = models.DecimalField("Rétrocession facturation",
+                                               max_digits=10,
+                                               decimal_places=2, default=15)
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+
+class SubContractorAdminFile(models.Model):
+    subcontractor = models.ForeignKey(SubContractor, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='subcontractor_files/')
+    description = models.TextField()
+
+    def __str__(self):
+        return f"{self.subcontractor.name} - {self.description}"
+
 
 # TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
@@ -389,6 +416,18 @@ class Patient(models.Model):
             return FallDeclaration.objects.filter(patient_id=self.id).count()
         return 0
 
+class PatientSubContractorRelationship(models.Model):
+    RELATIONSHIP_TYPE_CHOICES = [
+        ('contractor', 'We are Sub-Contractor'),
+        ('main_company', 'Wee are Main Company'),
+    ]
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    subcontractor = models.ForeignKey(SubContractor, on_delete=models.CASCADE)
+    relationship_type = models.CharField(max_length=50, choices=RELATIONSHIP_TYPE_CHOICES)
+
+    def __str__(self):
+        return f"{self.patient.name} - {self.subcontractor.name} ({self.get_relationship_type_display()})"
 
 class Bedsore(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
@@ -1428,11 +1467,9 @@ def delete_contact_in_employees_google_contacts(sender, instance, **kwargs):
 from constance import config
 from django.contrib.auth.models import User
 from django.db import models
-from django.utils.datetime_safe import datetime
 from django.utils.translation import gettext_lazy as _
 
 from invoices.enums.alertlevels import AlertLevels
-from invoices.notifications import notify_user_that_new_alert_is_created
 
 
 class Alert(models.Model):
@@ -1466,12 +1503,12 @@ class Alert(models.Model):
         ordering = ['-date_alert']
 
 
-@receiver(post_save, sender=Alert, dispatch_uid="post_save_alert_receiver")
-def post_save_alert_receiver(sender, instance, created, *args, **kwargs):
-    if created:
-        if instance.pk is not None and not instance.is_read and instance.is_active:
-            url = "%s%s " % (config.ROOT_URL, instance.get_admin_url())
-            notify_user_that_new_alert_is_created(instance, url, instance.user.email)
-        # if is_read is true set date_read to now
-        if instance.is_read:
-            instance.date_read = datetime.now()
+# @receiver(post_save, sender=Alert, dispatch_uid="post_save_alert_receiver")
+# def post_save_alert_receiver(sender, instance, created, *args, **kwargs):
+#     if created:
+#         if instance.pk is not None and not instance.is_read and instance.is_active:
+#             url = "%s%s " % (config.ROOT_URL, instance.get_admin_url())
+#             notify_user_that_new_alert_is_created(instance, url, instance.user.email)
+#         # if is_read is true set date_read to now
+#         if instance.is_read:
+#             instance.date_read = datetime.now()

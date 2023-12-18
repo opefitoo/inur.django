@@ -53,7 +53,8 @@ from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList, \
-    AlternateAddress, Alert, Bedsore, BedsoreEvaluation, BedsoreRiskAssessment
+    AlternateAddress, Alert, Bedsore, BedsoreEvaluation, BedsoreRiskAssessment, SubContractor, SubContractorAdminFile, \
+    PatientSubContractorRelationship
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
@@ -316,6 +317,19 @@ class BedsoreRiskAssessment(admin.TabularInline):
     model = BedsoreRiskAssessment
     extra = 0
 
+class SubContractorAdminFileInline(admin.TabularInline):
+    model = SubContractorAdminFile
+    extra = 1
+@admin.register(SubContractor)
+class SubContractor(admin.ModelAdmin):
+    list_display = ('name', 'phone_number', 'provider_code')
+    search_fields = ['name', 'provider_code', 'phone_number']
+    inlines = [SubContractorAdminFileInline]
+
+class SubContractorInline(admin.TabularInline):
+    model = PatientSubContractorRelationship
+    extra = 1
+
 @admin.register(Patient)
 class PatientAdmin(CSVExportAdmin):
     list_filter = ('is_under_dependence_insurance',)
@@ -328,7 +342,7 @@ class PatientAdmin(CSVExportAdmin):
     form = PatientForm
     actions = [generer_forfait_aev_octobre]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, AlternateAddressInline,
-               BedsoreRiskAssessment]
+               BedsoreRiskAssessment, SubContractorInline]
 
     def link_to_invoices(self, instance):
         url = f'{reverse("admin:invoices_invoiceitem_changelist")}?patient__id={instance.id}'
