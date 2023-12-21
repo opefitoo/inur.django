@@ -173,8 +173,6 @@ class Event(models.Model):
             raise ValidationError(messages)
         if self.at_office:
             self.event_address = "%s %s" % (config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY)
-        if self.event_type_enum != EventTypeEnum.BIRTHDAY:
-            return
         cal = create_or_update_google_calendar(self)
         self.calendar_id = cal.get('id')
         self.calendar_url = cal.get('htmlLink')

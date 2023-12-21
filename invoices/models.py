@@ -550,14 +550,14 @@ class AlternateAddress(models.Model):
             print("Found %d events : %s" % (events.count(), events))
         else:
             events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date).filter(
-                day__lte=self.end_date).filter(time_end_event__lte=self.end_time if self.end_time else '23:59:59')
+                day__lte=self.end_date)
             print("Found %d events : %s" % (events.count(), events))
-        if len(events) > 5:
+        if len(events) > 5 and not os.environ.get('LOCAL_ENV', None):
             # call async task
             update_events_address.delay(events, self.full_address)
         else:
             for event in events:
-                event.address = self.full_address
+                event.event_address = self.full_address
                 event.clean()
                 event.save()
 
