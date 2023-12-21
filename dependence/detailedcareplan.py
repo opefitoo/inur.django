@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from dependence.cnscommunications import InformalCaregiverUnavailability
+from dependence.enums.longtermcare_enums import UnavailabilityTypeChoices
 from dependence.longtermcareitem import LongTermCareItem
 from invoices.models import Patient
 
@@ -168,6 +170,7 @@ class MedicalSummaryData:
     start_date: date
     end_date: date
     medicalSummaryPerPatient: MedicalCareSummaryPerPatient
+    packageLevel: int = 0
 
 
 def get_summaries_between_two_dates(patient, start_date, end_date):
@@ -190,6 +193,14 @@ def get_summaries_between_two_dates(patient, start_date, end_date):
                     "date_of_decision")
 
     summary_data = []
+    # check if there InformalCaregiverUnavailability linked to this patient for the period
+    unavailability_start = InformalCaregiverUnavailability.objects.filter(patient=patient,
+                                                                unavailability_date__gte=start_date,
+                                                                unavailability_date__lte=end_date,
+                                                                unavailability_type=UnavailabilityTypeChoices.DEBUT).first()
+    unavailability_end = InformalCaregiverUnavailability.objects.filter(patient=patient,
+                                                              unavailability_date__lte=start_date,
+                                                              unavailability_type=UnavailabilityTypeChoices.RETOUR).first()
     for summary in summaries:
         medical_start_date = None
         medical_end_date = end_date
@@ -208,8 +219,29 @@ def get_summaries_between_two_dates(patient, start_date, end_date):
             medical_end_date = summary.date_of_change_to_new_plan
         else:
             medical_end_date = end_date
+        if unavailability_start and not unavailability_end:
+            package_level =  summary.level_of_needs
+            summary_data.append(MedicalSummaryData(medicalSummaryPerPatient=summary,
+                                                   start_date=unavailability_start.unavailability_date,
+                                                   end_date=medical_end_date,
+                                                   packageLevel=package_level))
+        elif unavailability_start and unavailability_end:
+            package_level = summary.level_of_needs
+            summary_data.append(MedicalSummaryData(medicalSummaryPerPatient=summary,
+                                                   start_date=unavailability_start.unavailability_date,
+                                                   end_date=unavailability_end.unavailability_date,
+                                                   packageLevel=package_level))
+        elif not unavailability_start and unavailability_end:
+            package_level = summary.level_of_needs
+            summary_data.append(MedicalSummaryData(medicalSummaryPerPatient=summary,
+                                                   start_date=medical_start_date,
+                                                   end_date=unavailability_end.unavailability_date,
+                                                   packageLevel=package_level))
+        else:
+            package_level = summary.nature_package
+            summary_data.append(MedicalSummaryData(medicalSummaryPerPatient=summary,
+                                                   start_date=medical_start_date,
+                                                   end_date=medical_end_date,
+                                                   packageLevel=package_level))
 
-        summary_data.append(MedicalSummaryData(medicalSummaryPerPatient=summary,
-                                               start_date=medical_start_date,
-                                               end_date=medical_end_date))
     return summary_data

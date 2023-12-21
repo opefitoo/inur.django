@@ -557,7 +557,6 @@ def detect_anomalies(instance):
                     error_messages.append(
                         f"reference prestation : {reference_prestation} - Code : {code_acte_paye} - Type: {anomalie_type} - Code: {anomalie_code} - Motif: {anomalie_motif}")
 
-
                 # generate a hash for all error_messages
                 error_messages_hash = hashlib.sha256(str(error_messages).encode('utf-8')).hexdigest()
                 # check if error message already exists
@@ -633,6 +632,7 @@ class LongTermCareInvoiceFile(models.Model):
             raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
         if self.link_to_monthly_statement.year != self.invoice_end_period.year:
             raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
+
     def calculate_price(self):
         lines = LongTermCareInvoiceLine.objects.filter(invoice=self)
         total = 0
@@ -802,10 +802,11 @@ class LongTermCareInvoiceItem(models.Model):
     def validate_lines_are_made_by_correct_sub_contractor(self):
         if self.subcontractor:
             if not PatientSubContractorRelationship.objects.filter(patient=self.invoice.patient,
-                                                           subcontractor=self.subcontractor).exists():
+                                                                   subcontractor=self.subcontractor).exists():
                 # list of all sub contractors for this patient
                 sub_contractors = PatientSubContractorRelationship.objects.filter(patient=self.invoice.patient)
-                raise ValidationError("Le sous-traitant de la ligne doit être le même que celui du patient (%s)" % sub_contractors)
+                raise ValidationError(
+                    "Le sous-traitant de la ligne doit être le même que celui du patient (%s)" % sub_contractors)
 
 
 @dataclass
@@ -813,6 +814,7 @@ class LongTermCareInvoiceLinePerDay:
     care_reference: str
     care_date: date
     care_package: LongTermPackage
+
 
 class LongTermCareInvoiceLine(models.Model):
     invoice = models.ForeignKey(LongTermCareInvoiceFile, on_delete=models.CASCADE, related_name='invoice_line')
@@ -889,20 +891,19 @@ class LongTermCareInvoiceLine(models.Model):
             raise ValidationError("La ligne doit être dans le même mois que la facture sur la ligne %s" % self)
         if self.end_period.month != long_term_invoice.invoice_end_period.month or self.end_period.year != long_term_invoice.invoice_end_period.year:
             raise ValidationError("La ligne doit être dans le même mois que la facture sur la ligne %s" % self)
+
     def validate_lines_are_made_by_correct_sub_contractor(self):
         if self.subcontractor:
             if not PatientSubContractorRelationship.objects.filter(patient=self.invoice.patient,
-                                                           subcontractor=self.subcontractor).exists():
+                                                                   subcontractor=self.subcontractor).exists():
                 # list of all sub contractors for this patient
                 sub_contractors = PatientSubContractorRelationship.objects.filter(patient=self.invoice.patient)
-                raise ValidationError("Le sous-traitant de la ligne doit être le même que celui du patient (%s)" % sub_contractors)
+                raise ValidationError(
+                    "Le sous-traitant de la ligne doit être le même que celui du patient (%s)" % sub_contractors)
 
     def validate_line_are_coherent_with_medical_care_summary_per_patient(self):
         plan_for_period = get_summaries_between_two_dates(self.invoice.patient, self.start_period, self.end_period)
-        if len(plan_for_period) == 0:
-            raise ValidationError("Aucune synthèse trouvée pour ce patient")
-        plan_for_period = get_summaries_between_two_dates(self.invoice.patient, self.start_period, self.end_period)
-        if not plan_for_period:
+        if not plan_for_period or len(plan_for_period) == 0:
             raise ValidationError("Aucune synthèse trouvée pour cette période")
         if len(plan_for_period) > 1:
             raise ValidationError("Trop de synthèses %s" % len(plan_for_period))
@@ -912,9 +913,8 @@ class LongTermCareInvoiceLine(models.Model):
         if "FAMDM" == self.long_term_care_package.code and famdm_count == 0:
             raise ValidationError("Le forfait FAMDM n'a pas été encodé dans la synthèse")
         elif "FAMDM" != self.long_term_care_package.code:
-            if plan_for_period[0].medicalSummaryPerPatient.nature_package \
-                    and plan_for_period[
-                0].medicalSummaryPerPatient.nature_package != self.long_term_care_package.dependence_level:
+            if plan_for_period[0].packageLevel and plan_for_period[
+                0].packageLevel != self.long_term_care_package.dependence_level:
                 raise ValidationError(
                     "Le forfait dépendance {0} - {1} encodé ne correspond pas à la synthèse {2}".format(
                         self.long_term_care_package,

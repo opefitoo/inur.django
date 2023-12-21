@@ -218,6 +218,11 @@ class ChangeDeclarationFile(models.Model):
             # create sub element ReferenceIndisponibilite
             ReferenceIndisponibilite = ElementTree.SubElement(IndisponibilitesAidant, "ReferenceIndisponibilite")
             ReferenceIndisponibilite.text = unavailability.unavailability_reference
+            if unavailability.change_organism_identifier:
+                # create sub element IdentifiantChangementOrganisme
+                IdentifiantIndisponibiliteOrganis = ElementTree.SubElement(IndisponibilitesAidant,
+                                                                        "IdentifiantIndisponibiliteOrganis")
+                IdentifiantIndisponibiliteOrganis.text = unavailability.change_organism_identifier
             # create sub element PersonneProtegee
             PersonneProtegee = ElementTree.SubElement(IndisponibilitesAidant, "PersonneProtegee")
             PersonneProtegee.text = unavailability.patient.code_sn
@@ -360,6 +365,12 @@ class InformalCaregiverUnavailability(models.Model):
     unavailability_reference = models.CharField(_("Unavailable reference"), max_length=50,
                                                 help_text=_(
                                                     "Le prestataire est libre de choisir son système de référencement des déclarations"))
+    unavailability_organism_identifier = models.CharField(_("Unavailable organism identifier"), max_length=50,
+                                                            blank=True, null=True,
+                                                            help_text=_("Correspond à la référence donnée à la déclaration par "
+                                                                        "l’organisme gestionnaire. Celui-ci sera renseigné dans le"
+                                                                        " fichier retour. Ce champ doit obligatoirement être "
+                                                                        "renseigné lors d’une déclaration de correction."))
     cns_code_of_the_informal_caregiver = models.CharField(_("CNS code of the informal caregiver"), max_length=50,
                                                           help_text=_(
                                                               "Code CNS de l’aidant. Ce champ est obligatoire."))
