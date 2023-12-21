@@ -248,6 +248,9 @@ class SubContractor(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    def __str__(self):
+        return self.name
+
 
 class SubContractorAdminFile(models.Model):
     subcontractor = models.ForeignKey(SubContractor, on_delete=models.CASCADE)
@@ -419,7 +422,7 @@ class Patient(models.Model):
 class PatientSubContractorRelationship(models.Model):
     RELATIONSHIP_TYPE_CHOICES = [
         ('contractor', 'We are Sub-Contractor'),
-        ('main_company', 'Wee are Main Company'),
+        ('main_company', 'We are Main Company'),
     ]
 
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
@@ -544,16 +547,18 @@ class AlternateAddress(models.Model):
         if self.end_date is None:
             events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date,
                                                                        time_start_event__gte=self.start_time if self.start_time else '00:00:00')
-
+            print("Found %d events : %s" % (events.count(), events))
         else:
             events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date).filter(
                 day__lte=self.end_date).filter(time_end_event__lte=self.end_time if self.end_time else '23:59:59')
+            print("Found %d events : %s" % (events.count(), events))
         if len(events) > 5:
             # call async task
             update_events_address.delay(events, self.full_address)
         else:
             for event in events:
                 event.address = self.full_address
+                event.clean()
                 event.save()
 
 
@@ -1447,7 +1452,8 @@ def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
             print("** TEST mode")
         else:
             if os.environ.get('LOCAL_ENV', None):
-                google_contact.create_or_update_new_patient(instance)
+                print("** LOCAL_ENV mode - no call")
+                # google_contact.create_or_update_new_patient(instance)
             else:
                 async_create_or_update_new_patient.delay(google_contacts_instance=google_contact, patient=instance)
 

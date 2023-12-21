@@ -127,6 +127,7 @@ def update_events_address(events, address):
     start = datetime.now()
     for event in events:
         event.event_address = address
+        event.clean()
         event.save()
     end = datetime.now()
     notify_system_via_google_webhook(
