@@ -25,7 +25,7 @@ from django.utils.translation import gettext_lazy as _
 from dependence.detailedcareplan import get_summaries_between_two_dates, MedicalCareSummaryPerPatientDetail
 from dependence.longtermcareitem import LongTermCareItem, LongTermPackage
 from invoices.employee import Employee
-from invoices.models import Patient, Hospitalization
+from invoices.models import Patient, Hospitalization, SubContractor, PatientSubContractorRelationship
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_system_via_google_webhook
 
@@ -536,6 +536,7 @@ def detect_anomalies(instance):
                 # Find all 'prestation' elements with 'anomaliePrestation' child within the current 'facture'
                 prestations_with_anomalies = facture.findall('.//prestation[anomaliePrestation]')
                 error_messages.append(f"Facture {reference_facture} has anomaly {code} - {motif}")
+                invoice_in_error = items.filter(invoice_reference_filter=reference_facture).get()
                 for prestation in prestations_with_anomalies:
                     reference_prestation = prestation.find('referencePrestation').text
                     code_acte_paye = prestation.find('codeActePaye').text
@@ -543,6 +544,10 @@ def detect_anomalies(instance):
                     anomalie_type = anomalie.find('type').text
                     anomalie_code = anomalie.find('code').text
                     anomalie_motif = anomalie.find('motif').text
+                    # prestation reference looks like "%s%s%s" % (self.invoice.id, self.long_term_care_package.id, date_of_line_str) extract long_term_care_package.id knowing that invoice.id is invoice_in_error.id
+                    long_term_care_package_id = reference_prestation[len(str(invoice_in_error.id)):-10]
+                    print(long_term_care_package_id)
+                    long_term_care_package = LongTermPackage.objects.get(id=long_term_care_package_id)
 
                     # Display the extracted information
                     print(f"  - Prestation Reference: {reference_prestation}")
@@ -552,7 +557,7 @@ def detect_anomalies(instance):
                     error_messages.append(
                         f"reference prestation : {reference_prestation} - Code : {code_acte_paye} - Type: {anomalie_type} - Code: {anomalie_code} - Motif: {anomalie_motif}")
 
-                invoice_in_error = items.filter(invoice_reference_filter=reference_facture).get()
+
                 # generate a hash for all error_messages
                 error_messages_hash = hashlib.sha256(str(error_messages).encode('utf-8')).hexdigest()
                 # check if error message already exists
@@ -628,8 +633,6 @@ class LongTermCareInvoiceFile(models.Model):
             raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
         if self.link_to_monthly_statement.year != self.invoice_end_period.year:
             raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
-
-
     def calculate_price(self):
         lines = LongTermCareInvoiceLine.objects.filter(invoice=self)
         total = 0
@@ -751,6 +754,13 @@ class LongTermCareInvoiceItem(models.Model):
                                                related_name='from_item_to_long_term_care_package')
     quantity = models.IntegerField(_('Quantité'), default=1)
     paid = models.BooleanField(_('Paid'), default=False)
+    subcontractor = models.ForeignKey(
+        SubContractor,
+        on_delete=models.SET_NULL,
+        related_name='long_term_invoice_items',
+        null=True,
+        blank=True
+    )
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
@@ -783,10 +793,19 @@ class LongTermCareInvoiceItem(models.Model):
 
     def clean(self):
         self.validate_item_dates_are_in_same_month_year_as_invoice()
+        self.validate_lines_are_made_by_correct_sub_contractor()
 
     def validate_item_dates_are_in_same_month_year_as_invoice(self):
         if self.invoice.invoice_start_period.year != self.care_date.year or self.invoice.invoice_start_period.month != self.care_date.month:
             raise ValidationError("La date de l'item doit être dans le même mois et année que la facture")
+
+    def validate_lines_are_made_by_correct_sub_contractor(self):
+        if self.subcontractor:
+            if not PatientSubContractorRelationship.objects.filter(patient=self.invoice.patient,
+                                                           subcontractor=self.subcontractor).exists():
+                # list of all sub contractors for this patient
+                sub_contractors = PatientSubContractorRelationship.objects.filter(patient=self.invoice.patient)
+                raise ValidationError("Le sous-traitant de la ligne doit être le même que celui du patient (%s)" % sub_contractors)
 
 
 @dataclass
@@ -794,7 +813,6 @@ class LongTermCareInvoiceLinePerDay:
     care_reference: str
     care_date: date
     care_package: LongTermPackage
-
 
 class LongTermCareInvoiceLine(models.Model):
     invoice = models.ForeignKey(LongTermCareInvoiceFile, on_delete=models.CASCADE, related_name='invoice_line')
@@ -804,6 +822,13 @@ class LongTermCareInvoiceLine(models.Model):
                                                null=True, blank=True,
                                                related_name='long_term_care_package')
     paid = models.BooleanField(_('Paid'), default=False)
+    subcontractor = models.ForeignKey(
+        SubContractor,
+        on_delete=models.SET_NULL,
+        related_name='long_term_invoice_lines',
+        null=True,
+        blank=True
+    )
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
@@ -864,6 +889,13 @@ class LongTermCareInvoiceLine(models.Model):
             raise ValidationError("La ligne doit être dans le même mois que la facture sur la ligne %s" % self)
         if self.end_period.month != long_term_invoice.invoice_end_period.month or self.end_period.year != long_term_invoice.invoice_end_period.year:
             raise ValidationError("La ligne doit être dans le même mois que la facture sur la ligne %s" % self)
+    def validate_lines_are_made_by_correct_sub_contractor(self):
+        if self.subcontractor:
+            if not PatientSubContractorRelationship.objects.filter(patient=self.invoice.patient,
+                                                           subcontractor=self.subcontractor).exists():
+                # list of all sub contractors for this patient
+                sub_contractors = PatientSubContractorRelationship.objects.filter(patient=self.invoice.patient)
+                raise ValidationError("Le sous-traitant de la ligne doit être le même que celui du patient (%s)" % sub_contractors)
 
     def validate_line_are_coherent_with_medical_care_summary_per_patient(self):
         plan_for_period = get_summaries_between_two_dates(self.invoice.patient, self.start_period, self.end_period)

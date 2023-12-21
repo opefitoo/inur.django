@@ -13,7 +13,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from dependence.enums.longtermcare_enums import ChangeTypeChoices
+from dependence.enums.longtermcare_enums import ChangeTypeChoices, UnavailabilityTypeChoices
 from invoices.models import Patient
 from invoices.notifications import notify_system_via_google_webhook
 
@@ -70,10 +70,36 @@ def generate_xml_using_xmlschema_using_instance(instance):
         # create sub element Information
         Information = ElementTree.SubElement(Changements, "Information")
         Information.text = change.information
+    for unavailable in instance.informalcaregiverunavailability_to_chg_dec_file.all():
+        # create sub element IndisponibiliteAidant
+        IndisponibilitesAidant = ElementTree.SubElement(root, "IndisponibilitesAidant")
+        # create sub element TypeIndisponibilite
+        TypeIndisponibilite = ElementTree.SubElement(IndisponibilitesAidant, "TypeIndisponibilite")
+        if unavailable.unavailability_type == UnavailabilityTypeChoices.DEBUT:
+            TypeIndisponibilite.text = "DEBUT"
+        elif unavailable.unavailability_type == UnavailabilityTypeChoices.RETOUR:
+            TypeIndisponibilite.text = "RETOUR"
+        elif unavailable.unavailability_type == UnavailabilityTypeChoices.CORRECTION:
+            TypeIndisponibilite.text = "CORRECTION"
+        elif unavailable.unavailability_type == UnavailabilityTypeChoices.DEFINITIVE:
+            TypeIndisponibilite.text = "DEFINITIVE"
+        # create sub element ReferenceIndisponibilite
+        ReferenceIndisponibilite = ElementTree.SubElement(IndisponibilitesAidant, "ReferenceIndisponibilite")
+        ReferenceIndisponibilite.text = unavailable.unavailability_reference
+        # Patient
+        PersonneProtegee = ElementTree.SubElement(IndisponibilitesAidant, "PersonneProtegee")
+        PersonneProtegee.text = unavailable.patient.code_sn
+        # create sub element CodeCNSAidant
+        Aidant = ElementTree.SubElement(IndisponibilitesAidant, "Aidant")
+        Aidant.text = unavailable.cns_code_of_the_informal_caregiver
+        # create sub element DateDebutIndisponibilite
+        DateIndisponibilite = ElementTree.SubElement(IndisponibilitesAidant, "DateIndisponibilite")
+        DateIndisponibilite.text = unavailable.unavailability_date.strftime("%Y-%m-%d")
     # create a new XML file with the results
     mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8')
-    if xsd_schema.is_valid(mydata):
+    if not xsd_schema.is_valid(mydata):
         print("The XML instance is valid!")
+        raise ValidationError({'generated_xml': [_("The XML file is not valid")]})
     else:
         xsd_schema.validate(mydata)
     return mydata
@@ -178,33 +204,32 @@ class ChangeDeclarationFile(models.Model):
         # create sub element Prestataire
         Prestataire = ElementTree.SubElement(root, "Prestataire")
         Prestataire.text = config.CODE_PRESTATAIRE
-        for change in self.link_to_chg_dec_file.all():
+        for unavailability in self.link_to_chg_dec_file.all():
             # create sub element Changement
-            Changements = ElementTree.SubElement(root, "Changements")
+            IndisponibilitesAidant = ElementTree.SubElement(root, "IndisponibilitesAidant")
             # create sub element TypeChangement
-            TypeChangement = ElementTree.SubElement(Changements, "TypeChangement")
-            if change.change_type == ChangeTypeChoices.ENTRY:
-                TypeChangement.text = "ENTREE"
-            elif change.change_type == ChangeTypeChoices.EXIT:
-                TypeChangement.text = "SORTIE"
-            elif change.change_type == ChangeTypeChoices.CORRECTION:
-                TypeChangement.text = "CORRECTION"
-            # create sub element Reference
-            ReferenceChangement = ElementTree.SubElement(Changements, "ReferenceChangement")
-            ReferenceChangement.text = change['change_reference']
-            # create sub element IdentifiantChangementOrganisme
-            if change['change_organism_identifier']:
-                IdentifiantChangementOrganisme = ElementTree.SubElement(Changements, "IdentifiantChangementOrganisme")
-                IdentifiantChangementOrganisme.text = change.change_organism_identifier
-            # create sub element DateChangement
-            PersonneProtegee = ElementTree.SubElement(Changements, "PersonneProtegee")
-            PersonneProtegee.text = change.patient.code_sn
-            DateChangement = ElementTree.SubElement(Changements, "DateChangement")
+            TypeIndisponibilite = ElementTree.SubElement(IndisponibilitesAidant, "TypeIndisponibilite")
+            if unavailability.change_type == ChangeTypeChoices.ENTRY:
+                TypeIndisponibilite.text = "ENTREE"
+            elif unavailability.change_type == ChangeTypeChoices.EXIT:
+                TypeIndisponibilite.text = "SORTIE"
+            elif unavailability.change_type == ChangeTypeChoices.CORRECTION:
+                TypeIndisponibilite.text = "CORRECTION"
+            # create sub element ReferenceIndisponibilite
+            ReferenceIndisponibilite = ElementTree.SubElement(IndisponibilitesAidant, "ReferenceIndisponibilite")
+            ReferenceIndisponibilite.text = unavailability.unavailability_reference
+            # create sub element PersonneProtegee
+            PersonneProtegee = ElementTree.SubElement(IndisponibilitesAidant, "PersonneProtegee")
+            PersonneProtegee.text = unavailability.patient.code_sn
+            # create sub element Aidant
+            Aidant = ElementTree.SubElement(IndisponibilitesAidant, "Aidant")
+            Aidant.text = unavailability.patient.informal_caregiver.code_sn
+            # create sub element DateIndisponibilite
+            DateIndisponibilite = ElementTree.SubElement(IndisponibilitesAidant, "DateIndisponibilite")
             # format date to string 'YYYY-MM-DD'
-            DateChangement.text = change.change_date.strftime("%Y-%m-%d")
-            # create sub element Information
-            Information = ElementTree.SubElement(Changements, "Information")
-            Information.text = change.information
+            DateIndisponibilite.text = unavailability.unavailability_date.strftime("%Y-%m-%d")
+
+
         # create a new XML file with the results
         mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8')
         if xsd_schema.is_valid(mydata):
@@ -311,6 +336,44 @@ class DeclarationDetail(models.Model):
                         'previous_change_file_id': previous_change.link_to_chg_dec_file},
             )
 
+
+# class that represents the unavailability of the informal caregiver
+class InformalCaregiverUnavailability(models.Model):
+    class Meta:
+        verbose_name = _("Indisponibilité aidant")
+        verbose_name_plural = _("Indisponibilités aidant")
+
+    patient = models.ForeignKey(
+        Patient,
+        help_text=_(
+            "Only looks for patients covered by long-term care insurance, check that the checkbox is validated if you cannot find your patient"),
+        related_name="informalcaregiverunavailability_to_patient",
+        on_delete=models.CASCADE,
+        limit_choices_to={"is_under_dependence_insurance": True},
+    )
+
+    # Date début indisponibilité
+    unavailability_date = models.DateField(_("Unavailable date"), default=timezone.now)
+    # unavailability_type can be "DEBUT" or "FIN"
+    unavailability_type = models.CharField(_("Unavailable type"), max_length=10,
+                                           choices=UnavailabilityTypeChoices.choices)
+    unavailability_reference = models.CharField(_("Unavailable reference"), max_length=50,
+                                                help_text=_(
+                                                    "Le prestataire est libre de choisir son système de référencement des déclarations"))
+    cns_code_of_the_informal_caregiver = models.CharField(_("CNS code of the informal caregiver"), max_length=50,
+                                                          help_text=_(
+                                                              "Code CNS de l’aidant. Ce champ est obligatoire."))
+
+    # Lien avec la déclaration de changement
+    link_unav_to_chg_dec_file = models.ForeignKey(
+        ChangeDeclarationFile,
+        help_text=_("Link to the file containing the declaration of change"),
+        related_name="informalcaregiverunavailability_to_chg_dec_file",
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return f"Indisponibilité aidant du {self.unavailability_date} type {self.unavailability_type} ref {self.unavailability_reference}"
 def treat_xml_return_check(instance):
     if instance.generated_return_xml:
         xsd_schema = xmlschema.XMLSchema('dependence/xsd/ad-declaration-14.xsd')

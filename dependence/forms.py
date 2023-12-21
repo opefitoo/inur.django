@@ -152,3 +152,4 @@ class LongTermCareInvoiceLineInlineFormset(forms.BaseInlineFormSet):
                 instance = form.instance
                 instance.validate_line_are_coherent_with_medical_care_summary_per_patient()
                 instance.validate_lines_are_same_period()
+                instance.validate_lines_are_made_by_correct_sub_contractor()

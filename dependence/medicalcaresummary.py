@@ -1,9 +1,10 @@
+from datetime import datetime
+
 import xmlschema
 from django.db import models, IntegrityError
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django.utils.datetime_safe import datetime
 from django.utils.translation import gettext_lazy as _
 
 from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCareSummaryPerPatientDetail, \

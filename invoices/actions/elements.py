@@ -1,19 +1,18 @@
 import decimal
 from abc import ABC
 from collections import OrderedDict
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from django.utils.datetime_safe import datetime
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import Table, TableStyle, Spacer, Paragraph
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 
 from invoices.actions import helpers
 from invoices.enums.pdf import PdfActionType
 from invoices.modelspackage import InvoicingDetails
-
 
 
 class AbstractDetails(ABC):

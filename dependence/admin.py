@@ -24,7 +24,7 @@ from dependence.actions.monthly import create_assurance_dependance_invoices_july
 from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivityDetail, LongTermMonthlyActivityFile
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
-from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetail
+from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetail, InformalCaregiverUnavailability
 from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCareSummaryPerPatientDetail, \
     SharedMedicalCareSummaryPerPatientDetail
 from dependence.falldeclaration import FallDeclaration, FallDeclarationReportPicture
@@ -256,10 +256,14 @@ class DeclarationDetailInline(admin.StackedInline):
     extra = 0
     readonly_fields = ('change_anomaly',)
 
+class InformalCaregiverUnavailabilityInline(admin.StackedInline):
+    model = InformalCaregiverUnavailability
+    extra = 0
+
 
 @admin.register(ChangeDeclarationFile)
 class ChangeDeclarationFileAdmin(admin.ModelAdmin):
-    inlines = [DeclarationDetailInline]
+    inlines = [DeclarationDetailInline, InformalCaregiverUnavailabilityInline]
     list_display = (
         'provider_date_of_sending', 'internal_reference', 'generated_xml', 'generated_return_xml', 'created_on',
         'updated_on')

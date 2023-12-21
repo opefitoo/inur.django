@@ -8,8 +8,7 @@ __author__ = 'mehdi'
 # from contextlib import contextmanager
 
 from calendar import HTMLCalendar
-
-from django.utils.datetime_safe import date
+from datetime import date
 
 from invoices.events import Event
 
