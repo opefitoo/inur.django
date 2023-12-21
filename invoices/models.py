@@ -547,10 +547,14 @@ class AlternateAddress(models.Model):
         if self.end_date is None:
             events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date,
                                                                        time_start_event__gte=self.start_time if self.start_time else '00:00:00')
+            events = events.filter(state__in=[1, 2])
             print("Found %d events : %s" % (events.count(), events))
         else:
             events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date).filter(
                 day__lte=self.end_date)
+            # filter events that are in state (1, _('Waiting for validation')),
+            #         (2, _('Valid')),
+            events = events.filter(state__in=[1, 2])
             print("Found %d events : %s" % (events.count(), events))
         if len(events) > 5 and not os.environ.get('LOCAL_ENV', None):
             # call async task
