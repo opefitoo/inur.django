@@ -754,6 +754,8 @@ class LongTermCareInvoiceItem(models.Model):
                                                related_name='from_item_to_long_term_care_package')
     quantity = models.IntegerField(_('Quantité'), default=1)
     paid = models.BooleanField(_('Paid'), default=False)
+    refused_by_insurance = models.BooleanField(_('Refused by insurance'), default=False)
+    comment = models.CharField(_('Comment'), max_length=255, blank=True, null=True)
     subcontractor = models.ForeignKey(
         SubContractor,
         on_delete=models.SET_NULL,
@@ -774,7 +776,7 @@ class LongTermCareInvoiceItem(models.Model):
         verbose_name_plural = _("Item de facture assurance dépendance")
 
     def calculate_price(self):
-        if self.paid:
+        if self.paid or self.refused_by_insurance:
             return 0
         if self.long_term_care_package.package:
             raise ValidationError("Item seulement pour un non forfait (package doit etre false)")
