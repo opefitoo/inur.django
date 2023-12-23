@@ -195,12 +195,13 @@ def get_summaries_between_two_dates(patient, start_date, end_date):
     summary_data = []
     # check if there InformalCaregiverUnavailability linked to this patient for the period
     unavailability_start = InformalCaregiverUnavailability.objects.filter(patient=patient,
-                                                                unavailability_date__gte=start_date,
-                                                                unavailability_date__lte=end_date,
-                                                                unavailability_type=UnavailabilityTypeChoices.DEBUT).first()
+                                                                          unavailability_date__gte=start_date,
+                                                                          unavailability_date__lte=end_date,
+                                                                          unavailability_type=UnavailabilityTypeChoices.DEBUT).first()
     unavailability_end = InformalCaregiverUnavailability.objects.filter(patient=patient,
-                                                              unavailability_date__lte=start_date,
-                                                              unavailability_type=UnavailabilityTypeChoices.RETOUR).first()
+                                                                        unavailability_date__gte=end_date,
+                                                                        unavailability_date__gt=start_date,
+                                                                        unavailability_type=UnavailabilityTypeChoices.RETOUR).first()
     for summary in summaries:
         medical_start_date = None
         medical_end_date = end_date
@@ -220,7 +221,7 @@ def get_summaries_between_two_dates(patient, start_date, end_date):
         else:
             medical_end_date = end_date
         if unavailability_start and not unavailability_end:
-            package_level =  summary.level_of_needs
+            package_level = summary.level_of_needs
             summary_data.append(MedicalSummaryData(medicalSummaryPerPatient=summary,
                                                    start_date=unavailability_start.unavailability_date,
                                                    end_date=medical_end_date,
