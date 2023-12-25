@@ -43,7 +43,6 @@ def validate_avatar(file):
     if file_size > limit_kb * 1024 * 1024:
         raise ValidationError(_("Maximum file size is %s MB" % limit_kb))
 
-
 class JobPosition(models.Model):
     class Meta:
         ordering = ['-id']
@@ -107,6 +106,7 @@ class Employee(models.Model):
     color_cell = ColorField(default='#FF0000')
     color_text = ColorField(default='#FF0000')
     birth_date = models.DateField(u'birth date', blank=True, null=True)
+    by_pass_shifts = models.BooleanField("Bypass shifts", default=False)
 
     birth_place = models.CharField(u'Birth Place',
                                    help_text=u'Enter the City / Country of Birth',
@@ -215,6 +215,25 @@ class Employee(models.Model):
     def __str__(self):
         # return '%s (%s)' % (self.user.username.strip().capitalize(), self.abbreviation)
         return ' - '.join([self.user.username.strip().capitalize(), self.abbreviation])
+
+
+class Shift(models.Model):
+    name = models.CharField(max_length=100, unique=True)  # e.g., 'Morning', 'Night'
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    # name should be unique.
+
+
+
+    def __str__(self):
+        return self.name
+class EmployeeShift(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    shift = models.ForeignKey(Shift, on_delete=models.CASCADE)
+    date = models.DateField()
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.shift.name} on {self.date}"
 
 
 def contract_storage_location(instance, filename):

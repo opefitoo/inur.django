@@ -21,7 +21,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
     FullCalendarEmployeeSerializer, FullCalendarPatientSerializer, \
-    LongTermMonthlyActivitySerializer, DistanceMatrixSerializer
+    LongTermMonthlyActivitySerializer, DistanceMatrixSerializer, ShiftSerializer, EmployeeShiftSerializer
 from api.utils import get_settings
 from dependence.activity import LongTermMonthlyActivity
 from dependence.careplan import CarePlanDetail, CarePlanMaster
@@ -32,7 +32,7 @@ from helpers.employee import get_employee_id_by_abbreviation, \
 from helpers.patient import get_patient_by_id
 from invoices import settings
 from invoices.distancematrix import DistanceMatrix
-from invoices.employee import JobPosition, Employee, EmployeeContractDetail
+from invoices.employee import JobPosition, Employee, EmployeeContractDetail, Shift, EmployeeShift
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event, create_or_update_google_calendar
@@ -367,7 +367,8 @@ class AvailableEmployeeList(generics.ListCreateAPIView):
     # holiday HolidayRequestWorkflowStatus must be VALIDATED
     def get(self, request, *args, **kwargs):
         start = datetime.strptime(self.request.query_params['start'], '%Y-%m-%dT%H:%M:%S')
-        if self.request.query_params['end']:
+        # check if end is provided otherwise set it to start
+        if self.request.query_params.get('end', None):
             end = datetime.strptime(self.request.query_params['end'], '%Y-%m-%dT%H:%M:%S')
         else:
             end = start
@@ -385,7 +386,7 @@ class AvailableEmployeeList(generics.ListCreateAPIView):
             id=self.request.query_params['id']).exclude(employees=None)
         # get the list of employees not on holiday and not assigned to an event at the same time
         # take only employees who still have a contract
-        queryset = Employee.objects.exclude(id__in=holiday_list.values_list('employee', flat=True)).exclude(
+        queryset = Employee.objects.exclude(user_id__in=holiday_list.values_list('employee', flat=True)).exclude(
             id__in=event_list.values_list('employees', flat=True)).exclude(end_contract__lt=day)
         serializer = self.get_serializer(queryset, many=True)
         json_data = json.dumps(serializer.data)
@@ -478,6 +479,14 @@ def calculate_distance_matrix(request):
         # print("%s : %s" % (active_patient, active_patient.full_address))
     create_distance_matrix(patient_address_dict, config.DISTANCE_MATRIX_API_KEY)
     return Response(status=status.HTTP_200_OK)
+
+class ShiftViewSet(viewsets.ModelViewSet):
+    queryset = Shift.objects.all()
+    serializer_class = ShiftSerializer
+
+class EmployeeShiftViewSet(viewsets.ModelViewSet):
+    queryset = EmployeeShift.objects.all()
+    serializer_class = EmployeeShiftSerializer
 
 
 @api_view(['POST'])

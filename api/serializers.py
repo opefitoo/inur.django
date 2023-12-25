@@ -11,7 +11,7 @@ from dependence.careplan import CarePlanMaster, CarePlanDetail
 from dependence.longtermcareitem import LongTermCareItem
 from dependence.models import PatientAnamnesis, AssignedPhysician
 from invoices.distancematrix import DistanceMatrix
-from invoices.employee import JobPosition, Employee, EmployeeContractDetail
+from invoices.employee import JobPosition, Employee, EmployeeContractDetail, Shift, EmployeeShift
 from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch, extract_birth_date_iso
@@ -41,6 +41,23 @@ class FullCalendarEmployeeSerializer(serializers.ModelSerializer):
         model = Employee
         fields = ('id', 'abbreviation', 'user')
         depth = 1
+
+class ShiftSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Shift
+        fields = ['id', 'name', 'start_time', 'end_time']
+
+class EmployeeAbbreviationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee
+        fields = ['abbreviation']
+class EmployeeShiftSerializer(serializers.ModelSerializer):
+    employee = EmployeeAbbreviationSerializer(read_only=True)
+    class Meta:
+        model = EmployeeShift
+        fields = ['id', 'employee', 'shift', 'date']
+
+
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
