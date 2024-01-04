@@ -71,7 +71,7 @@ def process_post_save(instance):
         if os.environ.get('LOCAL_ENV', None):
             print("Batch {0} processed in {1} seconds".format(instance, (end - start).seconds))
         else:
-            url = config.ROOT_URL + 'admin/invoices/invoiceitembatch/?id=' + '{0}'.format(instance.id)
+            url = config.ROOT_URL + '/admin/invoices/invoiceitembatch/?id=' + '{0}'.format(instance.id)
             notify_system_via_google_webhook(
                 "Batch {0} processed in {1} seconds click on link to check {2}".format(instance, (end - start).seconds,
                                                                                    url))
