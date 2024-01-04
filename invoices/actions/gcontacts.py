@@ -369,7 +369,6 @@ class GoogleContacts:
                 }
             ]
         }
-        from invoices.notifications import notify_system_via_google_webhook
         if patient.birth_date:
             new_contact["birthdays"] = [
                 {
@@ -381,12 +380,14 @@ class GoogleContacts:
                     'metadata': {'primary': True}
                 }]
         else:
+            from invoices.notifications import notify_system_via_google_webhook
             notify_system_via_google_webhook(
                 "*WARNING* While creating patient on Google contacts, we noticed that Patient %s has no birth date" % patient)
         print("Creating new Client: %s" % new_contact)
         response = self.add_or_update_contact(new_contact)
         # Get the resource name (id) of the contact that was just added
         if response:
+            from invoices.notifications import notify_system_via_google_webhook
             contact_id = response['resourceName']
             # Get the id of the "Clients" group, or create it if it doesn't exist
             group_id = self.get_or_create_contact_group("Clients")
