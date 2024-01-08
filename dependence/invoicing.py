@@ -6,6 +6,7 @@ import traceback
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import timedelta, date
+from decimal import Decimal
 from xml.etree import ElementTree
 
 import xmlschema
@@ -752,7 +753,7 @@ class LongTermCareInvoiceItem(models.Model):
     care_date = models.DateField(_('Date Début période'), )
     long_term_care_package = models.ForeignKey(LongTermPackage, on_delete=models.CASCADE,
                                                related_name='from_item_to_long_term_care_package')
-    quantity = models.IntegerField(_('Quantité'), default=1)
+    quantity = models.FloatField(_('Quantité'), default=1)
     paid = models.BooleanField(_('Paid'), default=False)
     refused_by_insurance = models.BooleanField(_('Refused by insurance'), default=False)
     comment = models.CharField(_('Comment'), max_length=255, blank=True, null=True)
@@ -779,7 +780,7 @@ class LongTermCareInvoiceItem(models.Model):
         if self.subcontractor:
             # - billing_retrocession % of price
             return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
-                                                                    month=self.care_date.month) * self.quantity * (
+                                                                    month=self.care_date.month) * Decimal(str(self.quantity)) * (
                             1 - self.subcontractor.billing_retrocession / 100)
         if self.paid or self.refused_by_insurance:
             return 0
@@ -788,7 +789,7 @@ class LongTermCareInvoiceItem(models.Model):
         else:
             # price for specific care_date
             return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
-                                                                    month=self.care_date.month) * self.quantity
+                                                                    month=self.care_date.month) * Decimal(str(self.quantity))
 
     def calculate_unit_price(self):
         if self.long_term_care_package.package:
