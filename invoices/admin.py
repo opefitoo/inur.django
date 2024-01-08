@@ -1402,14 +1402,15 @@ class EventListAdmin(admin.ModelAdmin):
         long_term_invoice = LongTermCareInvoiceFile.objects.create(invoice_start_period=invoice_start_period,
                                                                    invoice_end_period=invoice_end_period,
                                                                    patient=queryset[0].patient)
-
+        # FIXME: hardcoded values
         long_term_care_package_amd_gi = LongTermPackage.objects.get(code="AMDGI")
         subcontractor = SubContractor.objects.get(name="APEMH home-service")
         for event in queryset:
-            LongTermCareInvoiceItem.objects.create(invoice=long_term_invoice, care_date=event.day,
-                                                   long_term_care_package=long_term_care_package_amd_gi,
-                                                   quantity= event.duration_in_hours() * 2,
-                                                   subcontractor=subcontractor)
+            if event.state == 3:
+                LongTermCareInvoiceItem.objects.create(invoice=long_term_invoice, care_date=event.day,
+                                                       long_term_care_package=long_term_care_package_amd_gi,
+                                                       quantity= event.duration_in_hours() * 2,
+                                                       subcontractor=subcontractor)
 
             # long_term_invoice.add_event(event)
         long_term_invoice.save()
