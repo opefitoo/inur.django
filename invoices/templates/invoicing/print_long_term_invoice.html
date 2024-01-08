@@ -112,14 +112,15 @@
                         <td class="title">
                             <img src="{% static 'images/Logo_SUR_quadri_transparent_pour_copas.png' %}"
                                  style="width: 100%; max-width: 50px"/>
-                            <div class="information">Total : {{ obj.calculate_price  }} <br />
-                            {{ obj.header_details.2 }} - {{ obj.header_details.3 }} <br />
-                            {{ obj.header_details.4 }}</div>
+                            <div class="information"> <br/>
+                                Détail Prestations Assurance Dépendance <br/>
+                                Total : {{ obj.calculate_price }} € <br/>
+                            </div>
                         </td>
                         <td>
 
                             {% if obj.patient.gender == 'MAL' %} Monsieur {% elif obj.patient.gender == 'FEM' %}
-                                Madame {% else %} {% endif %} {{ obj.patient }} <br/>
+                            Madame {% else %} {% endif %} {{ obj.patient }} <br/>
                             {{ obj.patient.code_sn }} <br/>
                             {{ obj.patient.address }} <br/>
                             {{ obj.patient.zipcode }} {{ obj.patient.city }} <br/>
@@ -140,56 +141,63 @@
             <td>Total</td>
         </tr>
         {% for line in obj.get_invoice_lines %}
-            <tr class="item">
-                <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
-                <td>{{ line.start_period }}</td>
-                <td>{{ line.end_period }}</td>
-                <td>{{ line.long_term_care_package.code }}</td>
-                <td>{{ line.calculate_price_per_day }}</td>
-                <td>1</td>
-                <td>{{ line.calculate_price }}</td>
-            </tr>
+        <tr class="item">
+            <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
+            <td>{{ line.start_period }}</td>
+            <td>{{ line.end_period }}</td>
+            <td>{{ line.long_term_care_package.code }}</td>
+            <td>{{ line.calculate_price_per_day }}</td>
+            <td>1</td>
+            <td>{{ line.calculate_price }}</td>
+        </tr>
         {% endfor %}
         {% for item in obj.get_invoice_items %}
-            <tr class="item">
-                <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
-                <td>{{ item.care_date }}</td>
-                <td>-</td>
-                <td>{{ item.long_term_care_package.code }}</td>
-                <td>{{ item.calculate_unit_price }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>{{ item.calculate_price }}</td>
-            </tr>
+        <tr class="item">
+            <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
+            <td>{{ item.care_date }}</td>
+            <td>-</td>
+            <td>{{ item.long_term_care_package.code }}</td>
+            <td>{{ item.calculate_unit_price }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.calculate_price }}</td>
+        </tr>
         {% endfor %}
+
+        {% if obj.get_patient_hospitalizations %}
 
         <tr class="total">
             <td colspan="2"></td>
-            <td>Hospitalisations</td>
+            <td>Hospitalisations / Absences</td>
         </tr>
 
         <tr class="heading">
-            <td>Date Début Hospi.</td>
-            <td>Date Fin Hospi.</td>
+            <td>Date Début</td>
+            <td>Date Fin</td>
             <td>Description</td>
         </tr>
         {% for hospitalization in obj.get_patient_hospitalizations %}
-            <tr class="item">
-                <td>{{ hospitalization.start_date }}</td>
-                <td>{{ hospitalization.end_date }}</td>
-                <td>{{ hospitalization.description }}</td>
-            </tr>
+        <tr class="item">
+            <td>{{ hospitalization.start_date }}</td>
+            <td>{{ hospitalization.end_date }}</td>
+            <td>{{ hospitalization.description }}</td>
+        </tr>
         {% endfor %}
+        {% endif %}
+
+        <!-- Only if obj.get_errors is not empty -->
+        {% if obj.get_errors %}
 
         <tr class="total">
             <td colspan="1"></td>
             <td>Erreurs De Facturation</td>
         </tr>
         {% for error in obj.get_errors %}
-            <tr class="item">
-                <td>{{ error.statement_sending }}</td>
-                <td>{{ error.error_message }}</td>
-            </tr>
+        <tr class="item">
+            <td>{{ error.statement_sending }}</td>
+            <td>{{ error.error_message }}</td>
+        </tr>
         {% endfor %}
+        {% endif %}
 
     </table>
 </div>

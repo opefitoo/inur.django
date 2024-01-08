@@ -779,9 +779,9 @@ class LongTermCareInvoiceItem(models.Model):
     def calculate_price(self):
         if self.subcontractor:
             # - billing_retrocession % of price
-            return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
+            return round(self.long_term_care_package.price_per_year_month(year=self.care_date.year,
                                                                     month=self.care_date.month) * Decimal(str(self.quantity)) * (
-                            1 - self.subcontractor.billing_retrocession / 100)
+                            1 - self.subcontractor.billing_retrocession / 100), 2)
         if self.paid or self.refused_by_insurance:
             return 0
         if self.long_term_care_package.package:
@@ -792,6 +792,11 @@ class LongTermCareInvoiceItem(models.Model):
                                                                     month=self.care_date.month) * Decimal(str(self.quantity))
 
     def calculate_unit_price(self):
+        if self.subcontractor:
+            # - billing_retrocession % of price
+            return round(self.long_term_care_package.price_per_year_month(year=self.care_date.year,
+                                                                    month=self.care_date.month) * (
+                            1 - self.subcontractor.billing_retrocession / 100), 2)
         if self.long_term_care_package.package:
             raise ValidationError("Item seulement pour un non forfait (package doit etre false)")
         else:
