@@ -111,11 +111,11 @@
                     <tr>
                         <td class="title">
                             <img src="{% static 'images/Logo_SUR_quadri_transparent_pour_copas.png' %}"
-                                 style="width: 100%; max-width: 50px"/>
+                                 style="width: 200%; max-width: 100px"/>
                             <div class="information"> <br/>
                                 Détail Prestations Assurance Dépendance <br/>
-                                Total : {{ obj.calculate_price }} € <br/>
                                 Pour la période du: {{ obj.invoice_start_period }} au {{ obj.invoice_end_period }} <br/>
+                                Total : {{ obj.calculate_price }} € <br/>
                             </div>
                         </td>
                         <td>
