@@ -1,6 +1,7 @@
 import calendar
 import csv
 import datetime
+from datetime import datetime as dt
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -1492,7 +1493,7 @@ class EventListAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super(EventListAdmin, self).get_queryset(request)
-        today = datetime.now()
+        today = dt.now()
         if request.user.is_superuser:
             return Event.objects.all()
         else:
