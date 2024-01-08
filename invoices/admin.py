@@ -1,6 +1,7 @@
 import calendar
 import csv
 import datetime
+from datetime import datetime
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -14,6 +15,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -23,6 +25,8 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_csv_exports.admin import CSVExportAdmin
 
+from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceItem
+from dependence.longtermcareitem import LongTermPackage
 from helpers.timesheet import build_use_case_objects
 from invoices.action import export_to_pdf, set_invoice_as_sent, set_invoice_as_paid, set_invoice_as_not_paid, \
     set_invoice_as_not_sent, find_all_invoice_items_with_broken_file, \
@@ -106,7 +110,7 @@ class CareCodeAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'reimbursed')
     search_fields = ['code', 'name']
     inlines = [ValidityDateInline]
-    actions = [update_prices_for_september_2023 ]
+    actions = [update_prices_for_september_2023]
     # actions = [update_prices_for_april_2022]
 
 
@@ -205,9 +209,9 @@ class EmployeeAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename="etp_stats.csv"'
         writer = csv.writer(response)
         _stats_date = datetime.date(2023, 4, 30)
-        #_stats_date = datetime.date(2023, 7, 21)
-        writer.writerow(['Identifiant anonyme', 'Année de naissance', 'Pays de résidence','Date début du contrat',
-                         'Date fin du contrat (si connue)', 'CCT', 'Carrière','Echelon',
+        # _stats_date = datetime.date(2023, 7, 21)
+        writer.writerow(['Identifiant anonyme', 'Année de naissance', 'Pays de résidence', 'Date début du contrat',
+                         'Date fin du contrat (si connue)', 'CCT', 'Carrière', 'Echelon',
                          'Points au %s' % _stats_date.strftime("%d/%m/%Y"), 'Durée de travail hebdomadaire (en heures)',
                          "Structure d'affectation", 'Fonction'])
         for emp in queryset:
@@ -231,7 +235,7 @@ class EmployeeAdmin(admin.ModelAdmin):
             # _emp_start in french format date
             _emp_start = _employee_contract.start_date.strftime("%d/%m/%Y")
             _emp_end = _employee_contract.end_date.strftime("%d/%m/%Y") if _employee_contract.end_date else "-"
-            writer.writerow([emp.id, emp.birth_date.year, emp.address, _emp_start , _emp_end, cct,
+            writer.writerow([emp.id, emp.birth_date.year, emp.address, _emp_start, _emp_end, cct,
                              _echelon_rank[0], _echelon_rank[1], "", _employee_contract.number_of_hours,
                              "UNIQUE", emp.get_occupation()])
         return response
@@ -255,6 +259,7 @@ class ExpenseCardDetailInline(TabularInline):
     extra = 0
     model = ExpenseCard
 
+
 class MaintenanceFileInline(TabularInline):
     extra = 0
     model = MaintenanceFile
@@ -263,11 +268,13 @@ class MaintenanceFileInline(TabularInline):
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
     inlines = [ExpenseCardDetailInline, MaintenanceFileInline]
-    list_display = ('name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'battery_or_fuel_level', 'car_movement')
+    list_display = (
+    'name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'battery_or_fuel_level', 'car_movement')
 
     def geo_localisation_of_car_url(self, obj):
         _geo_localisation_of_car = obj.geo_localisation_of_car
-        if type(_geo_localisation_of_car) is not tuple and _geo_localisation_of_car.startswith('n/a') or 'Error' in _geo_localisation_of_car:
+        if type(_geo_localisation_of_car) is not tuple and _geo_localisation_of_car.startswith(
+                'n/a') or 'Error' in _geo_localisation_of_car:
             return _geo_localisation_of_car
         else:
 
@@ -296,10 +303,13 @@ class PatientAdminFileInline(admin.TabularInline):
         qs = super().get_queryset(request)
         return qs.order_by('-file_date')
 
+
 class AlternateAddressInline(admin.TabularInline):
     model = AlternateAddress
     extra = 0
     formset = AlternateAddressFormSet
+
+
 class MedicalPrescriptionInlineAdmin(admin.TabularInline):
     extra = 0
     model = MedicalPrescription
@@ -313,22 +323,28 @@ class MedicalPrescriptionInlineAdmin(admin.TabularInline):
 
     scan_preview.allow_tags = True
 
+
 class BedsoreRiskAssessment(admin.TabularInline):
     model = BedsoreRiskAssessment
     extra = 0
 
+
 class SubContractorAdminFileInline(admin.TabularInline):
     model = SubContractorAdminFile
     extra = 1
+
+
 @admin.register(SubContractor)
-class SubContractor(admin.ModelAdmin):
+class SubContractorAdmin(admin.ModelAdmin):
     list_display = ('name', 'phone_number', 'provider_code')
     search_fields = ['name', 'provider_code', 'phone_number']
     inlines = [SubContractorAdminFileInline]
 
+
 class SubContractorInline(admin.TabularInline):
     model = PatientSubContractorRelationship
     extra = 1
+
 
 @admin.register(Patient)
 class PatientAdmin(CSVExportAdmin):
@@ -370,15 +386,16 @@ class PatientAdmin(CSVExportAdmin):
         if request.user.is_superuser:
             return True
 
+
 class BedsoreEvaluationInline(admin.TabularInline):
     model = BedsoreEvaluation
     extra = 1
+
 
 @admin.register(Bedsore)
 class BedsoreAdmin(admin.ModelAdmin):
     inlines = [BedsoreEvaluationInline]
     autocomplete_fields = ['patient']
-
 
 
 # @admin.register(Prestation)
@@ -667,7 +684,8 @@ class InvoiceItemAdmin(admin.ModelAdmin):
                                   level=messages.ERROR)
             return HttpResponseRedirect(request.path)
         elif "_email_private_invoice_xero" in request.POST:
-            if pdf_private_invoice(self, request, queryset, attach_to_email=True, only_to_xero_or_any_accounting_system=True):
+            if pdf_private_invoice(self, request, queryset, attach_to_email=True,
+                                   only_to_xero_or_any_accounting_system=True):
                 self.message_user(request, "La facture a bien été envoyée à Xero.",
                                   level=messages.INFO)
             else:
@@ -675,7 +693,8 @@ class InvoiceItemAdmin(admin.ModelAdmin):
                                   level=messages.ERROR)
             return HttpResponseRedirect(request.path)
         elif "_email_personal_participation_xero" in request.POST:
-            if pdf_private_invoice_pp(self, request, queryset, attach_to_email=True, only_to_xero_or_any_accounting_system=True):
+            if pdf_private_invoice_pp(self, request, queryset, attach_to_email=True,
+                                      only_to_xero_or_any_accounting_system=True):
                 self.message_user(request, "La facture a bien été à Xero.",
                                   level=messages.INFO)
             else:
@@ -701,7 +720,8 @@ class InvoiceItemBatchAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     inlines = [InvoiceItemInlineAdmin]
     readonly_fields = ('count_invoices', 'created_date', 'modified_date')
     list_filter = ('start_date', 'end_date', 'batch_type', 'batch_description')
-    list_display = ('start_date', 'end_date', 'send_date', 'count_invoices', 'batch_type', 'batch_description', 'display_object_actions_list')
+    list_display = ('start_date', 'end_date', 'send_date', 'count_invoices', 'batch_type', 'batch_description',
+                    'display_object_actions_list')
     actions = [generate_flat_file_for_control, 'merge_invoices']
 
     object_actions = [
@@ -747,7 +767,6 @@ class InvoiceItemBatchAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
             # batch.delete()
         self.message_user(request, "Les lots de factures sélectionnés ont été fusionnés.",
                           level=messages.INFO)
-
 
     def print_events_associated_with_invoices(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
@@ -1003,8 +1022,8 @@ class SimplifiedTimesheetDetailInline(admin.TabularInline):
     extra = 1
     model = SimplifiedTimesheetDetail
     # fields = ('start_date', 'end_date', 'time_delta')
-    readonly_fields = ('time_delta', )
-                       #'coordinates_at_start_date', 'coordinates_at_end_date')
+    readonly_fields = ('time_delta',)
+    # 'coordinates_at_start_date', 'coordinates_at_end_date')
     ordering = ['start_date']
     formset = SimplifiedTimesheetDetailForm
     # template = 'admin/invoices/simplifiedtimesheetdetail/tabular.html'
@@ -1310,7 +1329,8 @@ class EventListAdmin(admin.ModelAdmin):
     list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees',
                     'created_on']
     change_list_template = 'admin/change_list.html'
-    list_filter = ('employees', 'event_type_enum', 'state', SmartPatientFilter, 'created_by', UnderAssuranceDependanceFilter)
+    list_filter = (
+    'employees', 'event_type_enum', 'state', SmartPatientFilter, 'created_by', UnderAssuranceDependanceFilter)
     date_hierarchy = 'day'
     date_hierarchy_format = '%Y-%m-%d'
     exclude = ('event_type',)
@@ -1318,7 +1338,7 @@ class EventListAdmin(admin.ModelAdmin):
     actions = ['safe_delete', 'duplicate_event_for_next_day', 'duplicate_event_for_next_week',
                'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
-               'send_webhook_message']
+               'send_webhook_message', 'create_assurance_dependance_invoice_out_of_events']
     inlines = (ReportPictureInLine,)
     search_fields = ['patient__first_name', 'patient__name', 'patient__phone_number', 'patient__email_address',
                      'notes', 'event_report']
@@ -1368,6 +1388,32 @@ class EventListAdmin(admin.ModelAdmin):
             self.message_user(request,
                               "Il y a %s événements à dupliquer pour j + 7, cela peut prendre quelques minutes, vous allez recevoir une notification par google chat à la fin de la création" % len(
                                   queryset))
+
+    @transaction.atomic
+    def create_assurance_dependance_invoice_out_of_events(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "You cannot do that")
+            return
+        # check event start is the first day of the month
+        invoice_start_period = queryset[0].day.replace(day=1)
+        # invoice end date should be the last day of the month
+        invoice_end_period = queryset[0].day.replace(day=calendar.monthrange(queryset[0].day.year, queryset[0].day.month)[1])
+
+        long_term_invoice = LongTermCareInvoiceFile.objects.create(invoice_start_period=invoice_start_period,
+                                                                   invoice_end_period=invoice_end_period,
+                                                                   patient=queryset[0].patient)
+
+        long_term_care_package_amd_gi = LongTermPackage.objects.get(code="AMDGI")
+        subcontractor = SubContractor.objects.get(name="APEMH home-service")
+        for event in queryset:
+            LongTermCareInvoiceItem.objects.create(invoice=long_term_invoice, care_date=event.day,
+                                                   long_term_care_package=long_term_care_package_amd_gi,
+                                                   quantity= event.duration_in_hours() * 2,
+                                                   subcontractor=subcontractor)
+
+            # long_term_invoice.add_event(event)
+        long_term_invoice.save()
+        self.message_user(request, "Invoice created for %s" % long_term_invoice)
 
     def duplicate_event_for_next_day(self, request, queryset):
         if not request.user.is_superuser:
@@ -1446,12 +1492,13 @@ class EventListAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super(EventListAdmin, self).get_queryset(request)
-        today = datetime.datetime.now()
+        today = datetime.now()
         if request.user.is_superuser:
             return Event.objects.all()
         else:
             # Display only today's and yesterday's events for non admin users
-            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).exclude(state=5).exclude(state=6).filter(
+            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).exclude(state=5).exclude(
+                state=6).filter(
                 day__year=today.year).filter(day__month=today.month).filter(day__day__gte=today.day - 1).order_by(
                 "-day")
 
@@ -1505,7 +1552,6 @@ class EventListAdmin(admin.ModelAdmin):
         request.dynamic_patient_choices = [(str(patient_id), patient_name) for patient_id, patient_name in patients]
 
         return super().changelist_view(request, extra_context)
-
 
 
 class EventWeekList(Event):
@@ -1590,16 +1636,19 @@ class EventWeekListAdmin(admin.ModelAdmin):
 
 @admin.register(Alert)
 class AlertAdmin(admin.ModelAdmin):
-    list_display = ('text_alert', 'alert_level', 'date_alert', 'is_read', 'date_read', 'is_active', 'link_to_object', 'user')
+    list_display = (
+    'text_alert', 'alert_level', 'date_alert', 'is_read', 'date_read', 'is_active', 'link_to_object', 'user')
     list_filter = ('alert_level', 'is_read', 'is_active', 'user')
     search_fields = ('text_alert', 'user__username')
     readonly_fields = ('date_alert', 'date_read', 'alert_created_by')
+
     # if not superuser show only alerts assigned by user
     def get_queryset(self, request):
         qs = super(AlertAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
         return qs.filter(user=request.user, is_active=True)
+
     # non superuser can only modify alerts assigned to him and only field is_read
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser:
@@ -1609,14 +1658,16 @@ class AlertAdmin(admin.ModelAdmin):
 
 @admin.register(XeroToken)
 class XeroTokenAdmin(admin.ModelAdmin):
-    list_filter = ('access_token', 'expires_at', )
+    list_filter = ('access_token', 'expires_at',)
+
+
 @admin.register(ConvadisOAuth2Token)
 class ConvadisOAuth2TokenAdmin(admin.ModelAdmin):
     pass
 
+
 @admin.register(EmployeeProxy)
 class EmployeeProxyAdmin(admin.ModelAdmin):
-
     list_display = ['user']
     # all fields are read-only
     readonly_fields = [f.name for f in Employee._meta.fields]
@@ -1640,10 +1691,12 @@ class EmployeeProxyAdmin(admin.ModelAdmin):
         # Optionally, restrict the ability to change records
         return request.user.is_superuser or (obj is not None and obj.user == request.user)
 
+
 @admin.register(DistanceMatrix)
 class DistanceMatrixAdmin(admin.ModelAdmin):
-    list_display = ['patient_origin', 'patient_destination', 'distance_in_km', 'duration_in_mn', 'created_at', 'updated_at']
-    list_filter = (DistanceMatrixSmartPatientFilter, )
+    list_display = ['patient_origin', 'patient_destination', 'distance_in_km', 'duration_in_mn', 'created_at',
+                    'updated_at']
+    list_filter = (DistanceMatrixSmartPatientFilter,)
     search_fields = ('origin', 'destination')
     readonly_fields = ('created_at', 'updated_at')
 
@@ -1669,4 +1722,3 @@ class DistanceMatrixAdmin(admin.ModelAdmin):
         request.dynamic_patient_choices = [(str(patient_id), patient_name) for patient_id, patient_name in patients]
 
         return super().changelist_view(request, extra_context)
-

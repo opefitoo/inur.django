@@ -178,6 +178,34 @@ def create_monthly_invoice_line_v2(patient, statement, month, year):
     return invoice
 
 
+def create_invoice_items(patient, statement, month, year, quantity, long_term_package, date_of_care):
+    start_period = date(year, month, 1)
+    # end period is last day of the month
+    last_day = calendar.monthrange(year, month)[1]
+    end_period = date(year, month, last_day)
+    invoice, created = LongTermCareInvoiceFile.objects.get_or_create(link_to_monthly_statement=statement,
+                                                                     patient=patient,
+                                                                     invoice_start_period=start_period,
+                                                                     invoice_end_period=end_period)
+    if LongTermMonthlyActivity.objects.filter(patient=patient, year=start_period.year,
+                                              month=start_period.month).count() == 0:
+        return invoice
+    long_term_monthly_activity = LongTermMonthlyActivity.objects.filter(patient=patient, year=start_period.year,
+                                                                        month=start_period.month).get()
+    dtls = LongTermMonthlyActivityDetail.objects.filter(long_term_monthly_activity=long_term_monthly_activity).order_by(
+        'activity_date')
+    for dtl in dtls:
+        if dtl.activity.code == invoice_item.code:
+            print(dtl.activity.code + " " + str(dtl.activity_date) + " " + str(dtl.quantity))
+            # create as many invoice items as quantity
+            invoice_item = LongTermCareInvoiceItem.objects.create(invoice=invoice,
+                                                                      care_date=dtl.activity_date,
+                                                                      long_term_care_package=LongTermPackage.objects.filter(
+                                                                          code=invoice_item.code).get(),
+                                                                      quantity=dtl.quantity * quantity)
+    return invoice
+
+
 def create_monthly_invoice_items(patient, statement, month, year):
     start_period = date(year, month, 1)
     # end period is last day of the month

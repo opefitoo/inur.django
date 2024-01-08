@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import datetime
 import os
+from datetime import datetime as dt
 from zoneinfo import ZoneInfo
 
 import pytz
@@ -282,6 +283,19 @@ class Event(models.Model):
         if self.notes:
             return self.notes.replace('\r\n', '<br />').replace('\n', '<br />').replace('\r', '<br />')
         return ""
+
+    def duration_in_hours(self):
+        # Assuming both times are on the same day
+        start_datetime = dt.combine(dt.today(), self.time_start_event)
+        end_datetime = dt.combine(dt.today(), self.time_end_event)
+
+        # Calculate duration
+        duration_timedelta = end_datetime - start_datetime
+        if duration_timedelta < datetime.timedelta(0):  # this checks if end is on the next day
+            duration_timedelta += datetime.timedelta(days=1)
+
+        # Convert to hours and return
+        return duration_timedelta.seconds / 3600
 
     def __str__(self):  # Python 3: def __str__(self):,
         cached_patient = None

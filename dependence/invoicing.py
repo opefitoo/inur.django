@@ -776,6 +776,11 @@ class LongTermCareInvoiceItem(models.Model):
         verbose_name_plural = _("Item de facture assurance dépendance")
 
     def calculate_price(self):
+        if self.subcontractor:
+            # - billing_retrocession % of price
+            return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
+                                                                    month=self.care_date.month) * self.quantity * (
+                            1 - self.subcontractor.billing_retrocession / 100)
         if self.paid or self.refused_by_insurance:
             return 0
         if self.long_term_care_package.package:
