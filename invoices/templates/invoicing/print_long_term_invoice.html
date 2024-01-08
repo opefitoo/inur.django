@@ -1,7 +1,7 @@
 {% load static %}
 <head xmlns="http://www.w3.org/1999/html">
     <meta charset="utf-8"/>
-    <title>Print All Parameters</title>
+    <title>LongTerm Invoice</title>
 
     <style>
         .invoice-box {
@@ -110,7 +110,7 @@
                 <table>
                     <tr>
                         <td class="title">
-                            <img src="{% static 'patientanamnesis/images/xyz.png' %}"
+                            <img src="{% static 'images/Logo_SUR_quadri_transparent_pour_copas.png' %}"
                                  style="width: 100%; max-width: 50px"/>
                             <div class="information">Total : {{ obj.calculate_price  }} <br />
                             {{ obj.header_details.2 }} - {{ obj.header_details.3 }} <br />
