@@ -339,7 +339,7 @@ class SubContractorAdmin(admin.ModelAdmin):
     list_display = ('name', 'phone_number', 'provider_code')
     search_fields = ['name', 'provider_code', 'phone_number']
     inlines = [SubContractorAdminFileInline]
-    actions = ['create_contact_in_xero']
+    actions = ['create_subcontractor_in_xero']
 
     def create_subcontractor_in_xero(self, request, queryset):
         if not request.user.is_superuser:
