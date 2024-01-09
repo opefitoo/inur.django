@@ -634,6 +634,16 @@ class LongTermCareInvoiceFile(models.Model):
         if self.link_to_monthly_statement.year != self.invoice_end_period.year:
             raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
 
+    def export_to_xero(self):
+        # send invoice to xero
+        # get xero tenant_id
+        xero_tenant_id = get_xero_tenant_id()
+        # get xero contact_id
+        xero_contact_id = get_xero_contact_id(self.patient)
+        # get xero account code
+        xero_account_code = get_xero_account_code(self.patient)
+        # get xero tracking category id
+
     def calculate_price(self):
         lines = LongTermCareInvoiceLine.objects.filter(invoice=self)
         total = 0

@@ -86,7 +86,50 @@ def ensure_contact_exists(access_token, xero_tenant_id, patient):
 
     return existing_contact
 
+def ensure_sub_contractor_contact_exists(access_token, xero_tenant_id, sub_contractor):
+    _contact_name = sub_contractor.name.upper()
+    # xero unique AccountNumber is 4011 + sub_contractor.id + sub_contractor.name.2first_letters
+    _xero_account_number = "4011" + str(sub_contractor.id) + sub_contractor.name[0].upper() + sub_contractor.name[1].upper()
+    existing_contact = get_contact_by_identifier(access_token, xero_tenant_id, _xero_account_number)
 
+    if not existing_contact:
+        # Define the new contact details
+        new_contact_details = {
+            'Name': _contact_name,
+            'AccountNumber':_xero_account_number,
+            # Add other contact details as necessary
+            'FirstName': sub_contractor.name.capitalize(),
+            'LastName': sub_contractor.name.upper(),
+            'EmailAddress': sub_contractor.email_address,
+            'Addresses': [
+                {
+                    'AddressType': 'STREET',
+                    'AddressLine1': sub_contractor.address,
+                    'City': sub_contractor.city,
+                    'PostalCode': sub_contractor.zipcode,
+                    'Country': sub_contractor.country.code
+                }
+            ],
+            'Phones': [
+                {
+                    'PhoneType': 'DEFAULT',
+                    'PhoneNumber': sub_contractor.phone_number
+                }
+            ]
+
+        }
+        existing_contact = create_contact(access_token, xero_tenant_id, new_contact_details)
+    else:
+        # update contact details
+        existing_contact['EmailAddress'] = sub_contractor.email_address
+        existing_contact['Phones'][0]['PhoneNumber'] = sub_contractor.phone_number
+        existing_contact['Addresses'][0]['AddressLine1'] = sub_contractor.address
+        existing_contact['Addresses'][0]['City'] = sub_contractor.city
+        existing_contact['Addresses'][0]['PostalCode'] = sub_contractor.zipcode
+        existing_contact['Addresses'][0]['Country'] = sub_contractor.country.code
+
+        existing_contact = update_contact(access_token, xero_tenant_id, existing_contact)
+    return existing_contact
 def create_contact(access_token, xero_tenant_id, contact_details):
     url = 'https://api.xero.com/api.xro/2.0/Contacts'
     headers = {

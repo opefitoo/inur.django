@@ -36,6 +36,7 @@ from invoices.enums.medical import BedsoreEvolutionStatus
 from invoices.modelspackage import InvoicingDetails
 from invoices.processors.tasks import process_post_save, update_events_address
 from invoices.validators.validators import MyRegexValidator
+from invoices.xero.utils import get_xero_token, ensure_sub_contractor_contact_exists
 
 # else:
 #    gd_storage = FileSystemStorage()
@@ -247,6 +248,28 @@ class SubContractor(models.Model):
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+    def create_subcontractor_in_xero(self):
+        token = get_xero_token()
+
+        headers = {
+            'Authorization': f'Bearer {token.access_token}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.get('https://api.xero.com/connections', headers=headers)
+        tenants = response.json()
+        print("tenants: ", tenants)
+
+        invoicing_details = InvoicingDetails.objects.get(default_invoicing=True)
+
+        if invoicing_details.xero_tenant_id is None:
+            raise Exception("No xero_tenant_id for invoice_details: ", invoicing_details)
+
+        contact = ensure_sub_contractor_contact_exists(token.access_token,
+                                        invoicing_details.xero_tenant_id,
+                                        self)
+        return contact
+
 
     def __str__(self):
         return self.name

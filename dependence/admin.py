@@ -62,6 +62,7 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
     date_hierarchy = 'invoice_start_period'
     readonly_fields = ('has_errors_col', 'display_errors_as_html',
                        'invoice_reference', 'created_on', 'updated_on')
+    actions = ['create_pdf_version', 'export_to_xero']
 
     object_actions = [
         {
@@ -72,6 +73,14 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
         },
 
     ]
+
+    def export_to_xero(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Only superuser can export to Xero", level=messages.ERROR)
+            return
+        for obj in queryset:
+            obj.export_to_xero()
+        
 
     def has_errors_col(self, obj):
         return not obj.has_errors

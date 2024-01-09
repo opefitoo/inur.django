@@ -269,7 +269,7 @@ class MaintenanceFileInline(TabularInline):
 class CarAdmin(admin.ModelAdmin):
     inlines = [ExpenseCardDetailInline, MaintenanceFileInline]
     list_display = (
-    'name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'battery_or_fuel_level', 'car_movement')
+        'name', 'licence_plate', 'pin_codes', 'geo_localisation_of_car_url', 'battery_or_fuel_level', 'car_movement')
 
     def geo_localisation_of_car_url(self, obj):
         _geo_localisation_of_car = obj.geo_localisation_of_car
@@ -339,6 +339,18 @@ class SubContractorAdmin(admin.ModelAdmin):
     list_display = ('name', 'phone_number', 'provider_code')
     search_fields = ['name', 'provider_code', 'phone_number']
     inlines = [SubContractorAdminFileInline]
+    actions = ['create_contact_in_xero']
+
+    def create_subcontractor_in_xero(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
+                              level=messages.ERROR)
+            return
+        contractors_created = []
+        for sub in queryset:
+            contractors_created.append(sub.create_subcontractor_in_xero())
+        self.message_user(request, "Contact(s) créé(s) dans Xero. %s" % contractors_created,
+                          level=messages.INFO)
 
 
 class SubContractorInline(admin.TabularInline):
@@ -1330,7 +1342,7 @@ class EventListAdmin(admin.ModelAdmin):
                     'created_on']
     change_list_template = 'admin/change_list.html'
     list_filter = (
-    'employees', 'event_type_enum', 'state', SmartPatientFilter, 'created_by', UnderAssuranceDependanceFilter)
+        'employees', 'event_type_enum', 'state', SmartPatientFilter, 'created_by', UnderAssuranceDependanceFilter)
     date_hierarchy = 'day'
     date_hierarchy_format = '%Y-%m-%d'
     exclude = ('event_type',)
@@ -1397,7 +1409,8 @@ class EventListAdmin(admin.ModelAdmin):
         # check event start is the first day of the month
         invoice_start_period = queryset[0].day.replace(day=1)
         # invoice end date should be the last day of the month
-        invoice_end_period = queryset[0].day.replace(day=calendar.monthrange(queryset[0].day.year, queryset[0].day.month)[1])
+        invoice_end_period = queryset[0].day.replace(
+            day=calendar.monthrange(queryset[0].day.year, queryset[0].day.month)[1])
 
         long_term_invoice = LongTermCareInvoiceFile.objects.create(invoice_start_period=invoice_start_period,
                                                                    invoice_end_period=invoice_end_period,
@@ -1409,7 +1422,7 @@ class EventListAdmin(admin.ModelAdmin):
             if event.state == 3:
                 LongTermCareInvoiceItem.objects.create(invoice=long_term_invoice, care_date=event.day,
                                                        long_term_care_package=long_term_care_package_amd_gi,
-                                                       quantity= event.duration_in_hours() * 2,
+                                                       quantity=event.duration_in_hours() * 2,
                                                        subcontractor=subcontractor)
 
             # long_term_invoice.add_event(event)
@@ -1638,7 +1651,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
 @admin.register(Alert)
 class AlertAdmin(admin.ModelAdmin):
     list_display = (
-    'text_alert', 'alert_level', 'date_alert', 'is_read', 'date_read', 'is_active', 'link_to_object', 'user')
+        'text_alert', 'alert_level', 'date_alert', 'is_read', 'date_read', 'is_active', 'link_to_object', 'user')
     list_filter = ('alert_level', 'is_read', 'is_active', 'user')
     search_fields = ('text_alert', 'user__username')
     readonly_fields = ('date_alert', 'date_read', 'alert_created_by')
