@@ -107,10 +107,11 @@ class ValidityDateInline(admin.TabularInline):
 
 @admin.register(CareCode)
 class CareCodeAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'reimbursed')
+    list_display = ('code', 'name', 'reimbursed', 'latest_price')
     search_fields = ['code', 'name']
     inlines = [ValidityDateInline]
     actions = [update_prices_for_september_2023]
+    readonly_fields = ('latest_price',)
     # actions = [update_prices_for_april_2022]
 
 

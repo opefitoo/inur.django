@@ -102,6 +102,9 @@ class CareCode(models.Model):
             return 0
         # round to only two decimals
         return round(((self.gross_amount(date) * 12) / 100), 2)
+    @property
+    def latest_price(self):
+        return self.validity_dates.latest('start_date')
 
     def __str__(self):
         return '%s:%s' % (self.code, self.name)
@@ -151,7 +154,9 @@ class ValidityDate(models.Model):
                                   , on_delete=models.CASCADE)
 
     def __str__(self):
-        return 'from %s to %s' % (self.start_date, self.end_date)
+        if self.end_date is None:
+            return 'from %s : %s EUR' % (self.start_date, round(self.gross_amount, 2))
+        return 'from %s to %s : %s EUR' % (self.start_date, self.end_date, round(self.gross_amount, 2))
 
     def clean(self, *args, **kwargs):
         exclude = []
