@@ -9,6 +9,28 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
+
+        /* Custom styles for modal */
+        .modal-header {
+            background-color: #007bff; /* Bootstrap primary color */
+            color: white;
+        }
+
+        .modal-footer {
+            background-color: #f8f9fa; /* Slightly grey footer for contrast */
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .alert {
+            margin-bottom: 20px;
+        }
+
+        .btn-close {
+            color: white;
+        }
     </style>
     <meta charset='utf-8'/>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
@@ -179,6 +201,7 @@
                         $('#start').val(event.startStr);
                         $('#end').val(event.endStr);
                         // select the employee
+                        $('#eventNotes').val(event.extendedProps.notes);
                         $('#employee-id').val(event.resourceId);
                         // ...
                     },
@@ -231,7 +254,6 @@
                 const employee_id = $("#employee-id").val();
                 const start = $("#start").val();
                 const end = $("#end").val();
-                alert(employee_id);
                 $.ajax({
                     url: '/api/v1/fullcalendar-events/',
                     type: 'PATCH',
@@ -241,7 +263,8 @@
                         title: employee_id,
                         start: start,
                         end: end,
-                        employee_id: employee_id
+                        employee_id: employee_id,
+                        notes: $("#eventNotes").val()
                     }),
                     beforeSend: function (xhr) {
                         xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
@@ -312,7 +335,7 @@
             <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
         </symbol>
     </svg>
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Event</h5>
@@ -352,6 +375,11 @@
                     <input type="text" class="form-control" id="eventTitle" name="eventTitle" readonly="true">
                     <input type="datetime-local" class="form-control" id="start" name="start" readonly="true">
                     <input type="datetime-local" class="form-control" id="end" name="end" readonly="true">
+                    <!-- Notes field -->
+                    <div class="form-group">
+                        <label for="eventNotes">Notes</label>
+                        <textarea class="form-control" id="eventNotes" name="eventNotes" rows="3"></textarea>
+                    </div>
                     <label for="employee-id">Assigned Employee</label>
                     <select class="form-control" id="employee-id">
                         <option>...</option>

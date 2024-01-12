@@ -333,11 +333,12 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
     description = serializers.SerializerMethodField()
     resourceId = serializers.SerializerMethodField()
     patient = serializers.SerializerMethodField()
+    notes = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
         fields = ['id', 'title', 'start', 'end', 'color', 'textcolor', 'description', 'resourceId', 'patient',
-                  'event_type_enum']
+                  'event_type_enum', 'notes']
 
     def get_patient(self, obj):
         if obj.patient is not None:
@@ -397,6 +398,11 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
         if obj.employees is None:
             return None
         return obj.employees.id
+
+    def get_notes(self, obj):
+        if obj.notes is None or obj.notes == "":
+            return ""
+        return obj.notes
 
 
 class BirthdayEventSerializer(serializers.ModelSerializer):
