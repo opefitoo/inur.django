@@ -1,4 +1,5 @@
 <!-- home/templates/home.html -->
+{% load static %}
 
 <!DOCTYPE html>
 <html>
@@ -8,7 +9,7 @@
 <body>
     <div style="text-align:center;">
         <!-- Replace 'logo.png' with the path to your logo file -->
-        <img src="images/logo-opefitoo.png" alt="opefitoo" style="max-width: 300px;">
+        <img src={% static 'images/logo-opefitoo.png' %} alt="opefitoo" style="max-width: 300px;">
         <br>
         <a href="/admin">Admin Panel</a>
     </div>
