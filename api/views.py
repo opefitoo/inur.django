@@ -338,6 +338,17 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         event.save()
         return HttpResponse("OK")
 
+    def delete(self, request, *args, **kwargs):
+        try:
+            event_id = request.data.get('id')  # Get the event ID from the URL
+            event = Event.objects.get(pk=event_id)
+            event.delete()
+            return JsonResponse({'status': 'success'}, status=status.HTTP_204_NO_CONTENT)
+        except Event.DoesNotExist:
+            return JsonResponse({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class AvailablePatientList(generics.ListCreateAPIView):
     queryset = Patient.objects.all()
@@ -480,9 +491,11 @@ def calculate_distance_matrix(request):
     create_distance_matrix(patient_address_dict, config.DISTANCE_MATRIX_API_KEY)
     return Response(status=status.HTTP_200_OK)
 
+
 class ShiftViewSet(viewsets.ModelViewSet):
     queryset = Shift.objects.all()
     serializer_class = ShiftSerializer
+
 
 class EmployeeShiftViewSet(viewsets.ModelViewSet):
     queryset = EmployeeShift.objects.all()
