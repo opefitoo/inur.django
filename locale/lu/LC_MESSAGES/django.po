@@ -430,3 +430,6 @@ msgstr "Frau"
 
 msgid "Print"
 msgstr "Drécken"
+
+msgid "The date %s of item %s is not in between the prescription dates : %s - %s"
+msgstr ""

@@ -3,6 +3,7 @@ from datetime import datetime
 from django import forms
 from django.forms import BaseInlineFormSet, ValidationError, ModelForm
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from django_select2.forms import ModelSelect2Widget
 
 from invoices.events import Event
@@ -75,7 +76,7 @@ class PrestationInlineFormSet(BaseInlineFormSet):
     def validate_only_one_prescription_per_invoice(medical_prescriptions):
         if len(medical_prescriptions) > 1:
             raise ValidationError(
-                "There should be only one prescription per invoice, please create another invoice for %s" % medical_prescriptions[1].medical_prescription)
+                _("There should be only one prescription per invoice, please create another invoice for %s" % medical_prescriptions[1].medical_prescription))
 
 
     @staticmethod
@@ -134,7 +135,7 @@ class PrestationInlineFormSet(BaseInlineFormSet):
                     pass
             if not check_success:
                 raise ValidationError(
-                    "The date %s of item %s is not in between the prescription dates" % (date, item))
+                    _("The date %s of item %s is not in between the prescription dates : %s - %s" % (date, item, mls.medical_prescription.date, mls.medical_prescription.end_date )))
 
 
     @staticmethod
