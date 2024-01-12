@@ -1,6 +1,7 @@
 # from dal import autocomplete
 from django.db.models import Q
 from django.http import Http404, JsonResponse
+from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
 from invoices.models import Prestation, MedicalPrescription, InvoiceItem
@@ -13,6 +14,10 @@ def get_queryset_filter(query_str, fields):
         filter_qs = filter_qs | query
 
     return filter_qs
+
+
+def home_view(request):
+    return render(request, 'home.html')
 
 
 # class CareCodeAutocomplete(autocomplete.Select2QuerySetView):
@@ -92,7 +97,6 @@ def delete_prestation(request):
     prestation.delete()
 
     return JsonResponse({'status': 'Success'})
-
 
 
 def optgroups(self, name, value, attr=None):

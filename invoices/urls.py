@@ -15,7 +15,7 @@ from api.views import EventProcessorView, cleanup_event, whois_off, whois_availa
     FullCalendarEventViewSet, AvailableEmployeeList, AvailablePatientList, build_payroll_sheet, DistanceAPIView
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
-from invoices.views import delete_prestation
+from invoices.views import delete_prestation, home_view
 from invoices.xero.views import xero_auth, xero_callback
 
 admin.autodiscover()
@@ -203,7 +203,10 @@ urlpatterns += [
     path('api/v1/distance_duration/<str:origin>/<str:destination>/', DistanceAPIView.as_view(), name='distance_api'),
 ]
 
-
+urlpatterns += [
+    path('home/', home_view, name='home'),  # set as the home page
+    path('', home_view, name='root'),
+]
     # if settings.DEBUG:
 #     import debug_toolbar
 #
