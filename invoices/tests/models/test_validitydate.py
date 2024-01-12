@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from django.test import TestCase
 
 from invoices.models import CareCode, ValidityDate
@@ -17,9 +18,8 @@ class ValidityDateTestCase(TestCase):
                                      gross_amount=10.5,
                                      care_code=self.care_code)
 
-        self.assertEqual(str(validity_date), 'from %s to %s : %s EUR' % (validity_date.start_date,
-                                                                         validity_date.end_date,
-                                                                         validity_date.gross_amount))
+        self.assertEqual(str(validity_date), 'from %s : %s EUR' % (validity_date.start_date,
+                                                                   validity_date.gross_amount))
 
     def test_dates_validation(self):
         error_message = {'end_date': 'End date must be bigger than Start date'}
