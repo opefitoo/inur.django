@@ -326,8 +326,8 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
             event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
             event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
         else:
-            event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M').date()
-            event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M').time()
+            event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S').date()
+            event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S').time()
         if request.data.get('employee_id', None):
             employee = Employee.objects.get(id=request.data['employee_id'])
             event.employees = employee
