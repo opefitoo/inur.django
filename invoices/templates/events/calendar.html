@@ -45,6 +45,21 @@
     <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css' rel='stylesheet'>
     <script>
 
+        function formatDateToISO(date) {
+            function pad(number, length = 2) {
+                return number.toString().padStart(length, '0');
+            }
+
+            var year = date.getFullYear(),
+                month = pad(date.getMonth() + 1), // Months are zero-based
+                day = pad(date.getDate()),
+                hour = pad(date.getHours()),
+                minute = pad(date.getMinutes()),
+                second = pad(date.getSeconds());
+
+            return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+        }
+
         function getCookie(name) {
             const value = "; " + document.cookie;
             const parts = value.split("; " + name + "=");
@@ -262,8 +277,8 @@
                     data: JSON.stringify({
                         id: event_id,
                         title: employee_id,
-                        start: start,
-                        end: end,
+                        start: formatDateToISO(new Date(start)),
+                        end: formatDateToISO(new Date(end)),
                         employee_id: employee_id,
                         notes: $("#eventNotes").val()
                     }),
