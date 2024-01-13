@@ -119,6 +119,7 @@
                     themeSystem: 'bootstrap5',
                     initialView: 'timeGridWeek',
                     editable: true,
+                    timeZone: 'local',
                     eventResizableFromStart: false,
                     locale: 'fr',
                     headerToolbar: {
@@ -140,8 +141,8 @@
                     snapDuration: moment.duration(15, 'minutes'),
                     nowIndicator: true,
                     now: new Date(),
-                    slotMinTime: '6:00:00',
-                    slotMaxTime: '22:30:00',
+                    slotMinTime: '6:00:00Z',
+                    slotMaxTime: '22:30:00Z',
                     slotDuration: '00:05:00',
                     timeZone: 'Europe/Paris',
                     businessHours: {
