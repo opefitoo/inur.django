@@ -156,6 +156,8 @@
                         });
                     },
                     eventClick: function (info) {
+                        // Get the selected event information
+                        console.log("State:" + info.event.extendedProps.state);
 
                         var selectEl = $("#employee-id");
 
@@ -203,6 +205,7 @@
                         // select the employee
                         $('#eventNotes').val(event.extendedProps.notes);
                         $('#employee-id').val(event.resourceId);
+                        $('#eventState').val(event.extendedProps.state);
                         // ...
                     },
                     eventSources:
@@ -224,8 +227,6 @@
                                     success: function (events) {
                                         $('.loading-spinner').hide();
                                         for (let i = 0; i < events.length; i++) {
-                                            console.log(events[i].backgroundColor);
-                                            console.log(events[i].title);
                                             events[i].color = events[i].color;
                                             events[i].textColor = events[i].textcolor;
                                         }
@@ -273,7 +274,10 @@
                     },
                     success: function (result) {
                         showModalAlert('Event updated successfully.', 'success');
-                        $('#editEventModal').modal('hide');
+                        // Hide the modal after 2 seconds
+                        setTimeout(() => {
+                            $('#editEventModal').modal('hide');
+                        }, 2000);
                         // Refresh the calendar with the updated event
                         calendar.refetchEvents();
                     },
@@ -307,6 +311,8 @@
                             calendar.refetchEvents(); // Refresh the calendar to show changes
                         },
                         error: function (xhr, status, error) {
+                            const message = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : "An unknown error occurred";
+                            showModalAlert(message, 'danger');
                             console.error("Failed to delete event:", error);
                             // Handle error
                         }

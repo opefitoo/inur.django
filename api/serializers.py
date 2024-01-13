@@ -2,6 +2,8 @@ import datetime
 
 from django.contrib.auth.models import User, Group
 from django.utils import timezone
+from django.utils.encoding import force_str
+from django.utils.functional import Promise
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
@@ -334,11 +336,19 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
     resourceId = serializers.SerializerMethodField()
     patient = serializers.SerializerMethodField()
     notes = serializers.SerializerMethodField()
+    state = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
-        fields = ['id', 'title', 'start', 'end', 'color', 'textcolor', 'description', 'resourceId', 'patient',
-                  'event_type_enum', 'notes']
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Convert all __proxy__ objects to strings
+        for field in data:
+            if isinstance(data[field], Promise):  # Check if the field is a lazy translation object
+                data[field] = force_str(data[field])  # Convert to string
+        return data
 
     def get_patient(self, obj):
         if obj.patient is not None:
@@ -386,7 +396,7 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
         if obj.patient is not None:
             description += "    " + obj.patient.name + " " + obj.patient.first_name
         if obj.state is not None and obj.state != "":
-            if 0 <= obj.state < len(Event.STATES):
+            if 0 <= obj.state <= len(Event.STATES):
                 description += "    " + Event.STATES[obj.state - 1][1]
             else:
                 description += "    " + str(obj.state)
@@ -403,6 +413,13 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
         if obj.notes is None or obj.notes == "":
             return ""
         return obj.notes
+
+    def get_state(self, obj):
+        # return state based on STATES
+        if obj.state is None or obj.state == "":
+            return ""
+        if 0 <= obj.state <= len(Event.STATES):
+            return Event.STATES[obj.state - 1][1]
 
 
 class BirthdayEventSerializer(serializers.ModelSerializer):

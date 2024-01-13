@@ -297,6 +297,10 @@ class Event(models.Model):
         # Convert to hours and return
         return duration_timedelta.seconds / 3600
 
+    @property
+    def fullname_state(self):
+        return self.STATES[self.state - 1][1]
+
     def __str__(self):  # Python 3: def __str__(self):,
         cached_patient = None
         if self.patient:

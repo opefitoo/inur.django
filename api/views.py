@@ -343,6 +343,14 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         try:
             event_id = request.data.get('id')  # Get the event ID from the URL
             event = Event.objects.get(pk=event_id)
+            # if event is not in the past but is already validated, you cannot delete it
+            if event.state == 3 or event.event_report != "":
+                return JsonResponse(
+                    {'error': 'Cannot delete validated event, event has report: %s' % event.event_report},
+                    status=status.HTTP_400_BAD_REQUEST)
+            # if event is the past you cannot delete it
+            if event.day < datetime.today().date() and event.state not in (1,2):
+                return JsonResponse({'error': 'Cannot delete past event'}, status=status.HTTP_400_BAD_REQUEST)
             event.delete()
             return JsonResponse({'status': 'success'}, status=status.HTTP_204_NO_CONTENT)
         except Event.DoesNotExist:

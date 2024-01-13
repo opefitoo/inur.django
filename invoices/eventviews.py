@@ -24,8 +24,16 @@ class Calendar1View(View):
 
     def get(self, request, *args, **kwargs):
         object_list = Event.objects.filter(day__month=datetime.today().month)
+        event_states = Event.STATES  # Assuming Event.STATES contains your states
 
-        self.context = {'object_list': object_list, 'root_url': config.ROOT_URL, 'form': self.form}
+        # Assuming you have an event_id to edit
+        event_id = request.GET.get('event_id')
+        current_event = None
+        if event_id:
+            current_event = get_object_or_404(Event, pk=event_id)
+
+        self.context = {'object_list': object_list, 'root_url': config.ROOT_URL, 'form': self.form
+            , 'event_states': event_states, 'current_event': current_event}
 
         return render(request, self.template, self.context)
 
