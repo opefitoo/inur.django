@@ -335,7 +335,8 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
             event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
         else:
             event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M:%S').time()
-        event.notes = request.data['notes']
+        if request.data.get('notes', None):
+            event.notes = request.data['notes']
         event.save()
         return HttpResponse("OK")
 
