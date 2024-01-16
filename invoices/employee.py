@@ -138,6 +138,11 @@ class Employee(models.Model):
         else:
             return None
 
+    def get_employee_by_abbreviation(self, abbreviation):
+        if self.abbreviation == abbreviation:
+            return self
+        return Employee.objects.get(abbreviation=abbreviation)
+
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
         is_has_gdrive_access_valid, message = self.is_has_gdrive_access_valid(self.has_gdrive_access, self.user)
