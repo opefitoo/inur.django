@@ -133,7 +133,6 @@ urlpatterns += [
     ),
 ]
 
-
 urlpatterns += [
     re_path('fullcalendar-events/', FullCalendarEventViewSet.as_view(), name='fullcalendar-events-list'),
 ]
@@ -142,9 +141,12 @@ urlpatterns += [
     re_path('fullcalendar-patients/', AvailablePatientList.as_view(), name='fullcalendar-events-list'),
 ]
 
-
 urlpatterns += [
     re_path('available-employees/', AvailableEmployeeList.as_view(), name='available-employees'),
+]
+
+urlpatterns += [
+    re_path('api/v1/my-events/', api.views.NunoEventsService.as_view(), name='my-events'),
 ]
 
 urlpatterns += [
@@ -175,9 +177,9 @@ urlpatterns += [
     re_path('ajax/load-careplans/', api.views.load_care_plans, name='ajax_load_care_plans'),
 ]
 
-
 urlpatterns += [
-    re_path(r'^api/v1/dependant-patients/(?P<patient_id>\d+)/careplan/$', api.views.PatientCarePlanView.as_view(), name='patient-careplan'),
+    re_path(r'^api/v1/dependant-patients/(?P<patient_id>\d+)/careplan/$', api.views.PatientCarePlanView.as_view(),
+            name='patient-careplan'),
 ]
 
 urlpatterns += [
@@ -185,7 +187,7 @@ urlpatterns += [
     re_path(r'^django-rq/', include('django_rq.urls')),
 ]
 urlpatterns += [
-# Serve the Angular app's index.html from /mt940-ofx
+    # Serve the Angular app's index.html from /mt940-ofx
     path('mt940-ofx/', TemplateView.as_view(template_name='mt940-ofx/index.html')),
 ]
 
@@ -207,7 +209,7 @@ urlpatterns += [
     path('home/', home_view, name='home'),  # set as the home page
     path('', home_view, name='root'),
 ]
-    # if settings.DEBUG:
+# if settings.DEBUG:
 #     import debug_toolbar
 #
 #     urlpatterns += [

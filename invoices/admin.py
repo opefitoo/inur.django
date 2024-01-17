@@ -472,9 +472,8 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date', 'prescriptor', 'patient')
     # list_display = ('date', 'prescriptor', 'patient', 'link_to_invoices', 'image_preview')
     list_display = ('date', 'prescriptor', 'patient', 'link_to_invoices')
-    fields = ('prescriptor', 'patient', 'date', 'end_date', 'notes', 'file_upload', 'thumbnail_img')
+    fields = ('prescriptor', 'patient', 'date', 'end_date', 'notes', 'link_to_invoice_items', 'file_upload', 'thumbnail_img', )
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
-    readonly_fields = ('link_to_invoices',)
     autocomplete_fields = ['prescriptor', 'patient']
     exclude = ('file',)
     form = MedicalPrescriptionForm

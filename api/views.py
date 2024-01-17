@@ -33,6 +33,7 @@ from helpers.patient import get_patient_by_id
 from invoices import settings
 from invoices.distancematrix import DistanceMatrix
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail, Shift, EmployeeShift
+from invoices.employee import get_employee_by_abbreviation
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event, create_or_update_google_calendar
@@ -298,6 +299,42 @@ class GenericEmployeeEventList(generics.ListCreateAPIView):
         if year is not None:
             self.queryset = self.queryset.filter(day__year=year)
         return self.list(request, *args, **kwargs)
+
+
+class NunoEventsService(generics.ListCreateAPIView):
+    queryset = Event.objects.all()
+    serializer_class = FullCalendarEventSerializer
+
+    def get(self, request, *args, **kwargs):
+        # only today events for a specific employee, only abbreviation is provided
+        abbreviation = request.query_params.get('abbreviation', None)
+        if abbreviation is not None:
+            employee = get_employee_by_abbreviation(abbreviation=abbreviation)
+            self.queryset = self.queryset.filter(day=datetime.today().date(), employees=employee)
+        return self.list(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        # (1, _('Waiting for validation')),
+        # (2, _('Valid')),
+        # (3, _('Done')),
+        # (4, _('Ignored')),
+        # (5, _('Not Done')),
+        # (6, _('Cancelled')),
+        # handler cancel event
+        event = Event.objects.get(pk=request.data['id'])
+        try:
+            state_parameter = request.data['state']
+            if state_parameter == 'cancel':
+                event.state = 6
+            elif state_parameter == 'done':
+                event.state = 3
+            elif state_parameter == 'not_done':
+                event.state = 5
+            event.event_report = request.data['event_report']
+            event.save()
+            return HttpResponse("OK")
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class FullCalendarEventViewSet(generics.ListCreateAPIView):

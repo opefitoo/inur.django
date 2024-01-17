@@ -17,6 +17,9 @@ from invoices.enums.generic import GenderType
 from invoices.enums.holidays import ContractType
 
 
+def get_employee_by_abbreviation(abbreviation):
+    return Employee.objects.get(abbreviation=abbreviation)
+
 def avatar_storage_location(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
     if instance.start_contract is None:
@@ -138,10 +141,7 @@ class Employee(models.Model):
         else:
             return None
 
-    def get_employee_by_abbreviation(self, abbreviation):
-        if self.abbreviation == abbreviation:
-            return self
-        return Employee.objects.get(abbreviation=abbreviation)
+
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
