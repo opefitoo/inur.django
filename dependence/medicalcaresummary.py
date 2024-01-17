@@ -41,7 +41,12 @@ class MedicalCareSummary(models.Model):
     def __str__(self):
         return "Synthèse de prise en charge du {0}".format(self.date_of_submission)
 
-
+def get_description_by_code_acte(data, code_acte):
+    # Loop through each item in the 'Descriptions' list
+    for item in data.get('PriseEnCharge', [])[0].get('Descriptions'):
+        if item.get('CodeActe') == code_acte:
+            return item.get('Description')
+    return None
 def parse_xml_using_xmlschema(instance):
     # Load the XSD schema file
     xsd_schema = xmlschema.XMLSchema('dependence/xsd/ad-synthesepriseencharge-20.xsd')
@@ -162,6 +167,7 @@ def parse_xml_using_xmlschema(instance):
             MedicalCareSummaryPerPatientDetail.objects.create(
                 item=LongTermCareItem.objects.get(code__exact=prestations['CodeActe']),
                 medical_care_summary_per_patient=plan_par_patient,
+                custom_description=get_description_by_code_acte(xml_data, prestations['CodeActe']),
                 number_of_care=prestations['Frequence']['Nombre'],
                 # if periodicity is 'SEMAINE' then it is WEEKLY elif 'ANNEE' then it is YEARLY else throw an error
                 periodicity=periodicity,
@@ -180,6 +186,7 @@ def parse_xml_using_xmlschema(instance):
             MedicalCareSummaryPerPatientDetail.objects.create(
                 item=LongTermCareItem.objects.get(code__exact=prestations['CodeActe']),
                 medical_care_summary_per_patient=plan_par_patient,
+                custom_description=get_description_by_code_acte(xml_data, prestations['CodeActe']),
                 number_of_care=prestations['Frequence']['Nombre'],
                 # if periodicity is 'SEMAINE' then it is WEEKLY elif 'ANNEE' then it is YEARLY else throw an error
                 periodicity=periodicity,
@@ -198,6 +205,7 @@ def parse_xml_using_xmlschema(instance):
                     raise Exception("Periodicity is not valid %s" % prestations['Frequence']['Periodicite'])
                 SharedMedicalCareSummaryPerPatientDetail.objects.create(
                     item=LongTermCareItem.objects.get(code__exact=prestations['CodeActe']),
+                    custom_description=get_description_by_code_acte(xml_data, prestations['CodeActe']),
                     medical_care_summary_per_patient=plan_par_patient,
                     number_of_care=prestations['Frequence']['Nombre'],
                     periodicity=periodicity_partage,

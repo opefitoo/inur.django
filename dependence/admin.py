@@ -170,14 +170,15 @@ class SharedMedicalCareSummaryPerPatientDetailInline(admin.TabularInline):
     model = SharedMedicalCareSummaryPerPatientDetail
     extra = 0
     can_delete = False
-    readonly_fields = ('item', 'medical_care_summary_per_patient', 'number_of_care', 'periodicity')
+    readonly_fields = ('item', 'medical_care_summary_per_patient', 'custom_description', 'number_of_care', 'periodicity')
 
 
 class MedicalCareSummaryPerPatientDetailInline(admin.TabularInline):
     model = MedicalCareSummaryPerPatientDetail
     extra = 0
     can_delete = False
-    readonly_fields = ('item', 'medical_care_summary_per_patient', 'number_of_care', 'periodicity')
+    readonly_fields = ('item', 'medical_care_summary_per_patient', 'custom_description',
+                       'number_of_care', 'periodicity')
 
 
 class FilteringPatientsForMedicalCareSummaryPerPatient(SimpleListFilter):

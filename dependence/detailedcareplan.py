@@ -123,6 +123,7 @@ class MedicalCareSummaryPerPatientDetail(models.Model):
     # one to one relation to LongTermCareItem
     item = models.ForeignKey(LongTermCareItem, on_delete=models.CASCADE,
                              related_name='medical_care_summary_per_patient_detail_item')
+    custom_description = models.TextField(max_length=500, blank=True, null=True)
     # many to one relation to MedicalCareSummaryPerPatient
     medical_care_summary_per_patient = models.ForeignKey(MedicalCareSummaryPerPatient, on_delete=models.CASCADE,
                                                          related_name='medical_care_summary_per_patient_detail')
@@ -147,6 +148,7 @@ class SharedMedicalCareSummaryPerPatientDetail(models.Model):
 
     item = models.ForeignKey(LongTermCareItem, on_delete=models.CASCADE,
                              related_name='shared_medical_care_summary_per_patient_detail_item')
+    custom_description = models.TextField(max_length=500, blank=True, null=True)
     # many to one relation to MedicalCareSummaryPerPatient
     medical_care_summary_per_patient = models.ForeignKey(MedicalCareSummaryPerPatient, on_delete=models.CASCADE,
                                                          related_name='shared_medical_care_summary_per_patient_detail')

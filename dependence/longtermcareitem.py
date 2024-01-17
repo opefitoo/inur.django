@@ -20,13 +20,14 @@ class LongTermCareItem(models.Model):
         verbose_name_plural = "Relevés type des aides et soins"
 
     def __str__(self):
+        return self.code
         # if short_description is not empty
-        if self.short_description:
-            # code de l'acte / description de l'acte (seuelement les 10 premiers caractères)
-            return "{0} / {1}".format(self.code, self.short_description)
-        else:
-            # code de l'acte / description de l'acte (seuelement les 10 premiers caractères)
-            return "{0} / {1}".format(self.code, self.description[:10])
+        # if self.short_description:
+        #     # code de l'acte / description de l'acte (seuelement les 10 premiers caractères)
+        #     return "{0} / {1}".format(self.code, self.short_description)
+        # else:
+        #     # code de l'acte / description de l'acte (seuelement les 10 premiers caractères)
+        #     return "{0} / {1}".format(self.code, self.description[:10])
 
 
 # class that represents a code and a dependency insurance package
