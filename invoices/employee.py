@@ -15,6 +15,7 @@ from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 from rest_framework.authtoken.models import Token
 
+from invoices import settings
 from invoices.actions.gcontacts import GoogleContacts
 from invoices.enums.generic import GenderType
 from invoices.enums.holidays import ContractType
@@ -333,6 +334,10 @@ class EmployeeProxy(Employee):
 
 @receiver(post_save, sender=Employee, dispatch_uid='create_auth_token')
 def create_auth_token(sender, instance=None, created=False, **kwargs):
+    # if in test mode, do not create token
+    if settings.TESTING:
+        print("** TEST mode")
+        return
     if instance.end_contract:
         instance.user.is_active = False
         instance.user.save()
