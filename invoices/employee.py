@@ -7,10 +7,13 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
+from rest_framework.authtoken.models import Token
 
 from invoices.actions.gcontacts import GoogleContacts
 from invoices.enums.generic import GenderType
@@ -326,3 +329,17 @@ class EmployeeProxy(Employee):
         proxy = True
         #verbose_name = "XXX"
         #verbose_name_plural = "XXXs"
+
+
+@receiver(post_save, sender=Employee, dispatch_uid='create_auth_token')
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if instance.end_contract:
+        instance.user.is_active = False
+        instance.user.save()
+        # delete token if exists
+        if Token.objects.filter(user=instance.user).exists():
+            Token.objects.filter(user=instance.user).delete()
+    elif created or (not Token.objects.filter(user=instance.user).exists() and instance.end_contract is None):
+        instance.user.is_active = True
+        instance.user.save()
+        Token.objects.create(user=instance.user)

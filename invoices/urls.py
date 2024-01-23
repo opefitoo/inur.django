@@ -12,7 +12,8 @@ import api
 from api import views
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
     get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, \
-    FullCalendarEventViewSet, AvailableEmployeeList, AvailablePatientList, build_payroll_sheet, DistanceAPIView
+    FullCalendarEventViewSet, AvailableEmployeeList, AvailablePatientList, build_payroll_sheet, DistanceAPIView, \
+    NunoEventsService
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
 from invoices.views import delete_prestation, home_view
@@ -138,6 +139,10 @@ urlpatterns += [
 ]
 
 urlpatterns += [
+    re_path('my-events/', NunoEventsService.as_view(), name='my-events-events-list'),
+]
+
+urlpatterns += [
     re_path('fullcalendar-patients/', AvailablePatientList.as_view(), name='fullcalendar-events-list'),
 ]
 
@@ -147,6 +152,10 @@ urlpatterns += [
 
 urlpatterns += [
     re_path('api/v1/my-events/', api.views.NunoEventsService.as_view(), name='my-events'),
+]
+
+urlpatterns += [
+    re_path('api/v1/login/', api.views.LoginView.as_view(), name='login'),
 ]
 
 urlpatterns += [

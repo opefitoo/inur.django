@@ -3,12 +3,14 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from constance import config
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from rest_framework import viewsets, filters, status, generics
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -308,10 +310,17 @@ class NunoEventsService(generics.ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         # only today events for a specific employee, only abbreviation is provided
         abbreviation = request.query_params.get('abbreviation', None)
+        username = request.query_params.get('username', None)
         if abbreviation is not None:
             employee = get_employee_by_abbreviation(abbreviation=abbreviation)
             self.queryset = self.queryset.filter(day=datetime.today().date(), employees=employee)
-        return self.list(request, *args, **kwargs)
+            return self.list(request, *args, **kwargs)
+        if username is not None:
+            employee = Employee.objects.get(user__username=username)
+            self.queryset = self.queryset.filter(day=datetime.today().date(), employees=employee)
+            return self.list(request, *args, **kwargs)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, *args, **kwargs):
         # (1, _('Waiting for validation')),
@@ -321,8 +330,8 @@ class NunoEventsService(generics.ListCreateAPIView):
         # (5, _('Not Done')),
         # (6, _('Cancelled')),
         # handler cancel event
-        event = Event.objects.get(pk=request.data['id'])
         try:
+            event = Event.objects.get(pk=request.data['id'])
             state_parameter = request.data['state']
             if state_parameter == 'cancel':
                 event.state = 6
@@ -350,9 +359,11 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
 
     def get_queryset(self, *args, **kwargs):
         # parameters look like 'start': ['2023-02-05T00:00:00'], 'end': ['2023-02-12T00:00:00']
+        start_param = self.request.query_params.get('start', datetime.today().date())
+        end_param = self.request.query_params.get('end', datetime.today().date())
         # we need to convert them to python date
-        start = datetime.strptime(self.request.query_params['start'], '%Y-%m-%dT%H:%M:%S').date()
-        end = datetime.strptime(self.request.query_params['end'], '%Y-%m-%dT%H:%M:%S').date()
+        start = datetime.strptime(start_param, '%Y-%m-%dT%H:%M:%S').date()
+        end = datetime.strptime(end_param, '%Y-%m-%dT%H:%M:%S').date()
         queryset = Event.objects.filter(day__gte=start, day__lte=end)
         return queryset
 
@@ -741,3 +752,17 @@ class SettingViewSet(viewsets.ViewSet):
         """
         allow_settings = [key for key, options in getattr(settings, 'CONSTANCE_CONFIG', {}).items()]
         return self.setting(request, allow_settings)
+
+
+class LoginView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({'token': token.key, 'success': user.id})
+        return Response({'error': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
