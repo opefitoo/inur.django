@@ -16,6 +16,7 @@ from django.core.cache import cache
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -341,6 +342,7 @@ class SubContractorAdmin(admin.ModelAdmin):
     search_fields = ['name', 'provider_code', 'phone_number']
     inlines = [SubContractorAdminFileInline]
     actions = ['create_subcontractor_in_xero']
+    readonly_fields = ('created_by',)
 
     def create_subcontractor_in_xero(self, request, queryset):
         if not request.user.is_superuser:
@@ -352,6 +354,22 @@ class SubContractorAdmin(admin.ModelAdmin):
             contractors_created.append(sub.create_subcontractor_in_xero())
         self.message_user(request, "Contact(s) créé(s) dans Xero. %s" % contractors_created,
                           level=messages.INFO)
+
+    # can only view the subcontractors that were created by user, or is part of the same admin group
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+            # Get the groups of the request user
+        user_groups = request.user.groups.all()
+
+        # Filter the queryset to include SubContractors created by the request user
+        # or by users who are in the same group as the request user
+        return qs.filter(Q(created_by=request.user) | Q(created_by__groups__in=user_groups))
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:  # if object is being created, automatically set created_by
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 class SubContractorInline(admin.TabularInline):

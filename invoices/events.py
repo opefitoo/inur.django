@@ -100,6 +100,9 @@ class Event(models.Model):
     calendar_url = models.URLField(blank=True, null=True, default='http://a.sur.lu')
     calendar_id = models.CharField(blank=True, null=True, default='0', max_length=100)
 
+    def add_report_picture(self, description, image):
+        ReportPicture.objects.create(description=description, event=self, image=image)
+
     def get_admin_url(self):
         content_type = ContentType.objects.get_for_model(self.__class__)
         return reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model), args=(self.id,))

@@ -317,29 +317,36 @@ class NunoEventsService(generics.ListCreateAPIView):
             return self.list(request, *args, **kwargs)
         if username is not None:
             employee = Employee.objects.get(user__username=username)
-            self.queryset = self.queryset.filter(day=datetime.today().date(), employees=employee)
+            #self.queryset = self.queryset.filter(day=datetime.today().date(), employees=employee)
+            #
+            self.queryset = self.queryset.filter(employees=employee)
             return self.list(request, *args, **kwargs)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, *args, **kwargs):
-        # (1, _('Waiting for validation')),
-        # (2, _('Valid')),
-        # (3, _('Done')),
-        # (4, _('Ignored')),
-        # (5, _('Not Done')),
-        # (6, _('Cancelled')),
-        # handler cancel event
         try:
-            event = Event.objects.get(pk=request.data['id'])
-            state_parameter = request.data['state']
+            event_data = json.loads(request.data.get('event'))
+            event_id = event_data.get('id')
+            if event_id is None:
+                return JsonResponse({'error': 'No id provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+            event = Event.objects.get(pk=event_id)
+            state_parameter = event_data['state']
             if state_parameter == 'cancel':
                 event.state = 6
             elif state_parameter == 'done':
                 event.state = 3
             elif state_parameter == 'not_done':
                 event.state = 5
-            event.event_report = request.data['event_report']
+            event.event_report = event_data['event_report']
+
+            # Check if there are files attached
+            if 'files' in request.data:
+                uploaded_files = request.data.getlist('files')
+                for file in uploaded_files:
+                    event.add_report_picture(file.name, file)
+
             event.save()
             return HttpResponse("OK")
         except Exception as e:

@@ -445,3 +445,6 @@ msgstr "Frau"
 
 msgid "Print"
 msgstr "Drucken"
+
+msgid "Sous-traitant"
+msgstr "Unterauftragnehmer"

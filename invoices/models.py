@@ -23,6 +23,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from pdf2image import convert_from_bytes
 from phonenumber_field.modelfields import PhoneNumberField
@@ -237,22 +238,31 @@ class Physician(models.Model):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
 class SubContractor(models.Model):
+    class Meta:
+        ordering = ['-id']
+        verbose_name = _("Sous-traitant")
+        verbose_name_plural = _("Sous-traitants")
+
     # SubContractor fields (like name, address, etc.)
     name = models.CharField(max_length=255)
     address = models.TextField(max_length=255)
     zipcode = models.CharField(max_length=10)
     city = models.CharField(max_length=30)
     country = CountryField(blank_label='...', blank=True, null=True)
-    phone_number = models.CharField(max_length=30)
+    phone_number = PhoneNumberField("Numéro de tél.")
+    mobile_number = PhoneNumberField("Numéro de tél. mobile", blank=True, null=True)
     fax_number = models.CharField(max_length=30, blank=True, null=True)
     email_address = models.EmailField(default=None, blank=True, null=True)
     provider_code = models.CharField("Code Prestataire", max_length=30, blank=True, null=True)
     billing_retrocession = models.DecimalField("Rétrocession facturation",
                                                max_digits=10,
                                                decimal_places=2, default=15)
+    start_collaboration_date = models.DateField("Date début de collaboration", default=None, blank=True, null=True)
+    end_collaboration_date = models.DateField("Date fin de collaboration", default=None, blank=True, null=True)
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subcontractor_created_by')
 
     def create_subcontractor_in_xero(self):
         token = get_xero_token()
@@ -1505,7 +1515,6 @@ def delete_contact_in_employees_google_contacts(sender, instance, **kwargs):
 from constance import config
 from django.contrib.auth.models import User
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 from invoices.enums.alertlevels import AlertLevels
 
