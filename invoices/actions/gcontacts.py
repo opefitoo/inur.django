@@ -14,6 +14,8 @@ class GoogleContacts:
 
     def __init__(self, json_keyfile_path=None, email=None):
         self.credential_file = json_keyfile_path or settings.GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2
+        if not self.credential_file:
+            raise Exception("Google Drive Storage JSON Key File not found")
         self.email = email
         self.creds = None
         self.load_credentials()

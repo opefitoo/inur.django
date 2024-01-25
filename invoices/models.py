@@ -299,7 +299,6 @@ class SubContractorAdminFile(models.Model):
         return f"{self.subcontractor.name} - {self.description}"
 
 
-# TODO: synchronize patient details with Google contacts
 class Patient(models.Model):
     class Meta:
         ordering = ['-id']
@@ -1489,15 +1488,20 @@ def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
     all_active_employees = Employee.objects.filter(end_contract__isnull=True)
     # is it a new patient or an update
     for employee in all_active_employees:
-        google_contact = GoogleContacts(email=employee.user.email)
-        if settings.TESTING:
-            print("** TEST mode")
-        else:
-            if os.environ.get('LOCAL_ENV', None):
-                print("** LOCAL_ENV mode - no call")
-                # google_contact.create_or_update_new_patient(instance)
+        try:
+            google_contact_class = GoogleContacts(email=employee.user.email)
+            if settings.TESTING:
+                print("** TEST mode")
             else:
-                async_create_or_update_new_patient.delay(google_contacts_instance=google_contact, patient=instance)
+                if os.environ.get('LOCAL_ENV', None):
+                    print("** LOCAL_ENV mode - no call")
+                    # google_contact.create_or_update_new_patient(instance)
+                else:
+                    async_create_or_update_new_patient.delay(google_contacts_instance=google_contact_class,
+                                                             patient=instance)
+        except Exception as e:
+            print(e)
+            continue
 
 
 @receiver(post_delete, sender=Patient, dispatch_uid="delete_contact_in_employees_google_contacts")
