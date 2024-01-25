@@ -516,7 +516,7 @@ class PrestationInline(TabularInline):
     max_num = InvoiceItem.PRESTATION_LIMIT_MAX
     model = Prestation
     formset = PrestationInlineFormSet
-    fields = ('carecode', 'date', 'quantity', 'at_home', 'employee', 'copy', 'delete')
+    fields = ('carecode', 'date', 'quantity', 'employee', 'copy', 'delete')
     autocomplete_fields = ['carecode']
     readonly_fields = ('copy', 'delete',)
     search_fields = ['carecode', 'date', 'employee']
