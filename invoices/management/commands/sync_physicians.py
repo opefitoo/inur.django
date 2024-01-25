@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from invoices.actions.physicians import sync_physicians_from_tsv
+from invoices.actions.physicians import open_file_and_sync_physicians_from_tsv
 
 
 class Command(BaseCommand):
@@ -11,5 +11,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         file_path = options['file_path']
-        sync_physicians_from_tsv(file_path)
+        open_file_and_sync_physicians_from_tsv(file_path)
         self.stdout.write(self.style.SUCCESS('Successfully synchronized physicians'))

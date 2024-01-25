@@ -5,10 +5,16 @@ from django.db import transaction
 from invoices.models import Physician
 
 
+def open_file_and_sync_physicians_from_tsv(file_name):
+    with open(file_name) as file:
+        sync_physicians_from_tsv(file)
+
 def sync_physicians_from_tsv(file):
     with transaction.atomic():  # Use a transaction to ensure data integrity
         for line in file:
+            print("line: %s" % line)
             provider_code = line[:8]  # First 8 characters are the provider code
+            print("provider_code: %s" % provider_code)
             full_name_from_cns = line[8:48].strip()  # The rest is the full name, strip leading/trailing spaces
             address = line[48:88].strip()  # The address is in the next 40 characters
             zipcode = line[88:97].strip()  # The zipcode is in the next 9 characters
@@ -42,4 +48,9 @@ def sync_physicians_from_tsv(file):
                 physician.cns_speciality_code = cns_speciality_code
                 physician.practice_start_date = datetime.strptime(practice_start_date_str, '%Y%m%d').date()
                 physician.practice_end_date = datetime.strptime(practice_end_date_str, '%Y%m%d').date()
+                # zipcode and city are updated only if they are different
+                if physician.zipcode != zipcode:
+                    physician.zipcode = zipcode
+                if physician.city != city:
+                    physician.city = city
                 physician.save()

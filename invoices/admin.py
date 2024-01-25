@@ -464,8 +464,19 @@ class BedsoreAdmin(admin.ModelAdmin):
 @admin.register(Physician)
 class PhysicianAdmin(admin.ModelAdmin):
     list_filter = ('city',)
-    list_display = ('name', 'first_name', 'phone_number', 'provider_code')
+    list_display = ('full_name_from_cns', 'name', 'phone_number', 'provider_code')
     search_fields = ['name', 'first_name', 'provider_code', 'phone_number', 'city', 'zipcode', 'full_name_from_cns']
+    actions = ['cleanup_provider_codes']
+
+    def cleanup_provider_codes(self, request, queryset):
+        number_of_physicians = queryset.count()
+        for physician in queryset:
+            dirty_provider_code = physician.provider_code.strip()
+            # remove anything that is not a digit
+            physician.provider_code = ''.join(filter(str.isdigit, dirty_provider_code))
+            physician.save()
+        self.message_user(request, "%s codes nettoyés." % number_of_physicians,
+                            level=messages.INFO)
 
 
 # def migrate_from_g_to_cl(modeladmin, request, queryset):
