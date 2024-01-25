@@ -27,6 +27,10 @@ def sync_physicians_from_tsv(file):
             # practice_end_date is extracted from the next 8 characters YYYYMMDD
             practice_end_date_str = line[139:147].strip()
             practice_end_date = datetime.strptime(practice_end_date_str, '%Y%m%d').date()
+            # if more than one physician has the same provider_code, we delete the one that has full_name_from_cns != ""
+            # and we keep the one that has full_name_from_cns == ""
+            if Physician.objects.filter(provider_code=provider_code).count() > 1:
+                Physician.objects.filter(provider_code=provider_code).exclude(full_name_from_cns="").delete()
             physician, created = Physician.objects.get_or_create(
                 provider_code=provider_code,
                 defaults={
