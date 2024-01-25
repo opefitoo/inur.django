@@ -217,11 +217,15 @@ def calculate_age(care_date, code_sn):
 class Physician(models.Model):
     class Meta:
         ordering = ['-id']
+        verbose_name = _("Médecin")
+        verbose_name_plural = _("Médecins")
 
     provider_code = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
+    full_name_from_cns = models.CharField(max_length=60, blank=True, null=True)
     physician_speciality = models.CharField(max_length=30, blank=True, null=True, default=None)
+    cns_speciality_code = models.CharField(max_length=5, blank=True, null=True, default=None)
     address = models.TextField(max_length=30)
     zipcode = models.CharField(max_length=10)
     city = models.CharField(max_length=30)
@@ -229,7 +233,12 @@ class Physician(models.Model):
     phone_number = models.CharField(max_length=30)
     fax_number = models.CharField(max_length=30, blank=True, null=True)
     email_address = models.EmailField(default=None, blank=True, null=True)
-
+    practice_start_date = models.DateField(default=None, blank=True, null=True)
+    practice_end_date = models.DateField(default=None, blank=True, null=True)
+    is_foreign_physician = models.BooleanField(default=False)
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
     @staticmethod
     def autocomplete_search_fields():
         return 'name', 'first_name'
