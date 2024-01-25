@@ -465,7 +465,7 @@ class BedsoreAdmin(admin.ModelAdmin):
 class PhysicianAdmin(admin.ModelAdmin):
     list_filter = ('city',)
     list_display = ('name', 'first_name', 'phone_number', 'provider_code')
-    search_fields = ['name', 'first_name', 'provider_code']
+    search_fields = ['name', 'first_name', 'provider_code', 'phone_number', 'city', 'zipcode', 'full_name_from_cns']
 
 
 # def migrate_from_g_to_cl(modeladmin, request, queryset):
