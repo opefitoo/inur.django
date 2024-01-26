@@ -103,6 +103,7 @@ class CareCode(models.Model):
             return 0
         # round to only two decimals
         return round(((self.gross_amount(date) * 12) / 100), 2)
+
     @property
     def latest_price(self):
         return self.validity_dates.latest('start_date')
@@ -235,16 +236,37 @@ class Physician(models.Model):
     email_address = models.EmailField(default=None, blank=True, null=True)
     practice_start_date = models.DateField(default=None, blank=True, null=True)
     practice_end_date = models.DateField(default=None, blank=True, null=True)
-    is_foreign_physician = models.BooleanField(default=False)
+    is_foreign_physician = models.BooleanField("Médecin étranger", default=False)
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
     @staticmethod
     def autocomplete_search_fields():
         return 'name', 'first_name'
 
+    # do some validations
+    def clean(self, *args, **kwargs):
+        super(Physician, self).clean_fields()
+        messages = self.validate_provider_code_is_digit_only(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    def validate_provider_code_is_digit_only(self, instance_id, data):
+        messages = {}
+        if 'provider_code' in data and data['provider_code'] is not None:
+            if not data['provider_code'].isdigit() and not data['is_foreign_physician']:
+                messages = {
+                    'provider_code': 'Le code prestataire doit être un nombre, sauf si le médecin est étranger.',
+                    'is_foreign_physician': 'Le code prestataire doit être un nombre, sauf si le médecin est étranger.'}
+        return messages
+
+    def __str__(self):
+        return '%s %s' % (self.name.strip(), self.first_name.strip())
+
     def __str__(self):  # Python 3: def __str__(self):
         return '%s %s' % (self.name.strip(), self.first_name.strip())
+
 
 class SubContractor(models.Model):
     class Meta:
@@ -290,10 +312,9 @@ class SubContractor(models.Model):
             raise Exception("No xero_tenant_id for invoice_details: ", invoicing_details)
 
         contact = ensure_sub_contractor_contact_exists(token.access_token,
-                                        invoicing_details.xero_tenant_id,
-                                        self)
+                                                       invoicing_details.xero_tenant_id,
+                                                       self)
         return contact
-
 
     def __str__(self):
         return self.name
@@ -418,7 +439,9 @@ class Patient(models.Model):
                 messages = {'date_of_death': 'Prestation for a later date exists'}
 
             if Hospitalization.objects.filter(end_date__gt=data['date_of_death'], patient_id=instance_id).count():
-                messages = {'date_of_death': 'Hospitalization that ends later exists like for example %s' % Hospitalization.objects.filter(end_date__gte=data['date_of_death'], patient_id=instance_id).first()}
+                messages = {
+                    'date_of_death': 'Hospitalization that ends later exists like for example %s' % Hospitalization.objects.filter(
+                        end_date__gte=data['date_of_death'], patient_id=instance_id).first()}
 
         return messages
 
@@ -465,6 +488,7 @@ class Patient(models.Model):
             return FallDeclaration.objects.filter(patient_id=self.id).count()
         return 0
 
+
 class PatientSubContractorRelationship(models.Model):
     RELATIONSHIP_TYPE_CHOICES = [
         ('contractor', 'We are Sub-Contractor'),
@@ -477,6 +501,7 @@ class PatientSubContractorRelationship(models.Model):
 
     def __str__(self):
         return f"{self.patient.name} - {self.subcontractor.name} ({self.get_relationship_type_display()})"
+
 
 class Bedsore(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
@@ -1026,7 +1051,8 @@ class InvoiceItemBatch(models.Model):
         from invoices.events import Event
         from invoices.enums.event import EventTypeEnum
         events = Event.objects.filter(day__range=(self.start_date, self.end_date)).exclude(patient__isnull=True).filter(
-            patient__is_under_dependence_insurance=False).exclude(event_type_enum=EventTypeEnum.BIRTHDAY).order_by("patient__name", "day")
+            patient__is_under_dependence_insurance=False).exclude(event_type_enum=EventTypeEnum.BIRTHDAY).order_by(
+            "patient__name", "day")
         # grouped_events = events.values('patient__name').annotate(event_count=Count('id'))
         dirty_events = []
         for evt in events:
@@ -1561,7 +1587,6 @@ class Alert(models.Model):
         verbose_name = _("Alert")
         verbose_name_plural = _("Alerts")
         ordering = ['-date_alert']
-
 
 # @receiver(post_save, sender=Alert, dispatch_uid="post_save_alert_receiver")
 # def post_save_alert_receiver(sender, instance, created, *args, **kwargs):
