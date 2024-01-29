@@ -324,7 +324,7 @@ class Event(models.Model):
                 ",".join(a.assigned_additional_employee.abbreviation for a in self.event_assigned.all()),
                 cached_patient.name)
         if cached_patient:
-            return '%s - %s (%s)' % (cached_employees.abbreviation, cached_patient.name, self.event_type_enum)
+            return '%s - %s (%s)' % (cached_employees.abbreviation, str(cached_patient), self.event_type_enum)
         return '%s (%s)' % (cached_employees.abbreviation, self.event_type_enum)
 
 

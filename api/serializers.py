@@ -16,7 +16,7 @@ from invoices.distancematrix import DistanceMatrix
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail, Shift, EmployeeShift
 from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch, extract_birth_date_iso
+    ValidityDate, InvoiceItemBatch, extract_birth_date_iso, SubContractor
 from invoices.modelspackage import InvoicingDetails
 from invoices.timesheet import Timesheet, TimesheetTask
 
@@ -326,6 +326,11 @@ class FullCalendarPatientSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'first_name']
 
 
+class SubContractorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubContractor
+        fields = ['id', 'name', 'address']
+
 class FullCalendarEventSerializer(serializers.ModelSerializer):
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
@@ -392,15 +397,20 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
     def get_description(self, obj):
         description = obj.notes
         if obj.event_report is not None:
+            #  line break
+            description += "\n"
             description += "    " + obj.event_report
         if obj.patient is not None:
+            description += "\n"
             description += "    " + obj.patient.name + " " + obj.patient.first_name
         if obj.state is not None and obj.state != "":
             if 0 <= obj.state <= len(Event.STATES):
+                description += "\n"
                 description += "    " + Event.STATES[obj.state - 1][1]
             else:
+                description += "\n"
                 description += "    " + str(obj.state)
-                print("state not in STATES dictionary: %s and id: %s" % (obj.state, obj.id))
+                # print("state not in STATES dictionary: %s and id: %s" % (obj.state, obj.id))
         return description + "(%s)" % obj.id
 
     # resource id is the id of the employee
