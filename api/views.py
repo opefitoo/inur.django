@@ -23,7 +23,8 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     PatientAnamnesisSerializer, CarePlanMasterSerializer, BirthdayEventSerializer, GenericEmployeeEventSerializer, \
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
     FullCalendarEmployeeSerializer, FullCalendarPatientSerializer, \
-    LongTermMonthlyActivitySerializer, DistanceMatrixSerializer, ShiftSerializer, EmployeeShiftSerializer
+    LongTermMonthlyActivitySerializer, DistanceMatrixSerializer, ShiftSerializer, EmployeeShiftSerializer, \
+    SubContractorSerializer
 from api.utils import get_settings
 from dependence.activity import LongTermMonthlyActivity
 from dependence.careplan import CarePlanDetail, CarePlanMaster
@@ -41,7 +42,7 @@ from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event, create_or_update_google_calendar
 from invoices.holidays import HolidayRequest
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
-    ValidityDate, InvoiceItemBatch
+    ValidityDate, InvoiceItemBatch, SubContractor
 from invoices.processors.birthdays import process_and_generate
 from invoices.processors.events import delete_events_created_by_script
 from invoices.timesheet import Timesheet, TimesheetTask, SimplifiedTimesheetDetail
@@ -351,8 +352,13 @@ class NunoEventsService(generics.ListCreateAPIView):
             return HttpResponse("OK")
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+class SubContractorViewSet(viewsets.ModelViewSet):
+    queryset = SubContractor.objects.all()
+    serializer_class = SubContractorSerializer
 
-
+    def get(self, request, *args, **kwargs):
+        self.queryset = self.queryset.filter(occupation__is_subcontractor=True)
+        return self.list(request, *args, **kwargs)
 class FullCalendarEventViewSet(generics.ListCreateAPIView):
     queryset = Event.objects.all()
     serializer_class = FullCalendarEventSerializer

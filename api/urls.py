@@ -31,6 +31,7 @@ router.register(r'employee-contract-detail', views.EmployeeContractDetailSeriali
 router.register(r'distance-matrix', views.DistanceMatrixSerializerViewSet)
 router.register(r'shifts', views.ShiftViewSet)
 router.register(r'employee_shifts', views.EmployeeShiftViewSet)
+router.register(r'sub-contractors', views.SubContractorViewSet)
 
 
 # router.register(r'events', views.EventViewSet)

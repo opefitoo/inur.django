@@ -329,7 +329,7 @@ class FullCalendarPatientSerializer(serializers.ModelSerializer):
 class SubContractorSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubContractor
-        fields = ['id', 'name', 'address']
+        fields = ['id', 'name', 'get_full_address', 'contractor_profession']
 
 class FullCalendarEventSerializer(serializers.ModelSerializer):
     start = serializers.SerializerMethodField()

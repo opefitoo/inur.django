@@ -285,6 +285,7 @@ class SubContractor(models.Model):
     fax_number = models.CharField(max_length=30, blank=True, null=True)
     email_address = models.EmailField(default=None, blank=True, null=True)
     provider_code = models.CharField("Code Prestataire", max_length=30, blank=True, null=True)
+    contractor_profession = models.CharField("Profession", max_length=30, blank=True, null=True)
     billing_retrocession = models.DecimalField("Rétrocession facturation",
                                                max_digits=10,
                                                decimal_places=2, default=15)
@@ -294,6 +295,13 @@ class SubContractor(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subcontractor_created_by')
+    @property
+    def get_full_address(self):
+        # if country is luxembourg then append L- to zip code if not already there
+        if self.country == 'LU' or self.country is None:
+            if self.zipcode[:2] != 'L-':
+                self.zipcode = 'L-' + self.zipcode
+        return "%s %s %s, %s" % (self.address, self.zipcode, self.city, self.country)
 
     def create_subcontractor_in_xero(self):
         token = get_xero_token()
