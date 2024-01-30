@@ -1389,7 +1389,7 @@ class EventListAdmin(admin.ModelAdmin):
                'send_webhook_message', 'create_assurance_dependance_invoice_out_of_events']
     inlines = (ReportPictureInLine,)
     search_fields = ['patient__first_name', 'patient__name', 'patient__phone_number', 'patient__email_address',
-                     'notes', 'event_report']
+                     'notes', 'event_report', 'calendar_id']
     autocomplete_fields = ['patient']
 
     form = EventForm
