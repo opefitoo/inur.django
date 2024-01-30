@@ -135,6 +135,16 @@ class Employee(models.Model):
     def get_current_contract(self):
         return EmployeeContractDetail.objects.filter(employee_link=self, end_date__isnull=True).get()
 
+    @property
+    def employee_fte(self):
+        if self.end_contract:
+            return 0
+        else:
+            return self.get_current_contract().number_of_hours / 40
+    @property
+    def is_involved_in_health_care(self):
+        return self.occupation.is_involved_in_health_care
+
     def get_contrat_at_date(self, date):
         print("get_current_contract for %s and ID: %s" % (self.user, self.id))
         # start_date__lte=date and end_date__gte date or end_date__isnull = True use | Q(end_date__isnull=True)

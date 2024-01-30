@@ -129,3 +129,21 @@ class SmartMedicalPrescriptionFilter(admin.SimpleListFilter):
             return queryset.filter(prescriptions__medical_prescription__id=self.value())
         else:
             return queryset
+
+class IsInvolvedInHealthCareFilter(admin.SimpleListFilter):
+    title = _('is involved in health care')  # a label for our filter
+    parameter_name = 'is_involved_in_health_care'  # you can put anything here
+
+    def lookups(self, request, model_admin):
+        # This is where you create filter options; we have two options here
+        return [
+            ('yes', _('Yes')),
+            ('no', _('No')),
+        ]
+
+    def queryset(self, request, queryset):
+        # This is where you process parameters selected by use via filter options
+        if self.value() == 'yes':
+            return queryset.filter(occupation__is_involved_in_health_care=True).filter(end_contract__isnull=True)
+        if self.value() == 'no':
+            return queryset.filter(occupation__is_involved_in_health_care=False).filter(end_contract__isnull=True)

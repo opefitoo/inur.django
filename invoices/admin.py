@@ -48,7 +48,7 @@ from invoices.events import EventType, Event, AssignedAdditionalEmployee, Report
     create_or_update_google_calendar, EventList
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, SmartPatientFilter, \
-    SmartMedicalPrescriptionFilter, DistanceMatrixSmartPatientFilter
+    SmartMedicalPrescriptionFilter, DistanceMatrixSmartPatientFilter, IsInvolvedInHealthCareFilter
 from invoices.filters.SmartPatientFilter import UnderAssuranceDependanceFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, \
@@ -129,8 +129,13 @@ class EmployeeAdminFileInline(TabularInline):
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     inlines = [EmployeeContractDetailInline, EmployeeAdminFileInline]
-    list_display = ('user', 'start_contract', 'end_contract', 'occupation', 'abbreviation')
+    list_display = ('user', 'start_contract', 'end_contract', 'occupation', 'abbreviation', 'employee_fte', 'is_involved_in_health_care')
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
+    list_filter = [IsInvolvedInHealthCareFilter]
+
+    # property that display full-time equivalent of employee
+    def display_fte(self, obj):
+        return obj.calculate_fte()
 
     def entry_declaration(self, request, queryset):
         counter = 1
