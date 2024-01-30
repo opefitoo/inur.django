@@ -129,7 +129,8 @@ class EmployeeAdminFileInline(TabularInline):
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     inlines = [EmployeeContractDetailInline, EmployeeAdminFileInline]
-    list_display = ('user', 'start_contract', 'end_contract', 'occupation', 'abbreviation', 'employee_fte', 'is_involved_in_health_care')
+    list_display = ('user', 'phone_number', 'start_contract', 'end_contract', 'occupation', 'abbreviation',
+                    'employee_fte',)
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
     list_filter = [IsInvolvedInHealthCareFilter]
 
@@ -371,6 +372,7 @@ class SubContractorAdmin(admin.ModelAdmin):
         # Filter the queryset to include SubContractors created by the request user
         # or by users who are in the same group as the request user
         return qs.filter(Q(created_by=request.user) | Q(created_by__groups__in=user_groups))
+
     def save_model(self, request, obj, form, change):
         if not obj.pk:  # if object is being created, automatically set created_by
             obj.created_by = request.user
@@ -481,7 +483,7 @@ class PhysicianAdmin(admin.ModelAdmin):
             physician.provider_code = ''.join(filter(str.isdigit, dirty_provider_code))
             physician.save()
         self.message_user(request, "%s codes nettoyés." % number_of_physicians,
-                            level=messages.INFO)
+                          level=messages.INFO)
 
 
 # def migrate_from_g_to_cl(modeladmin, request, queryset):
@@ -506,7 +508,7 @@ class MedicalPrescriptionAdmin(admin.ModelAdmin):
     list_filter = ('date', 'prescriptor', 'patient')
     # list_display = ('date', 'prescriptor', 'patient', 'link_to_invoices', 'image_preview')
     list_display = ('date', 'prescriptor', 'patient', 'link_to_invoices')
-    fields = ('prescriptor', 'patient', 'date', 'end_date', 'notes', 'file_upload', 'thumbnail_img', )
+    fields = ('prescriptor', 'patient', 'date', 'end_date', 'notes', 'file_upload', 'thumbnail_img',)
     search_fields = ['date', 'prescriptor__name', 'prescriptor__first_name', 'patient__name', 'patient__first_name']
     autocomplete_fields = ['prescriptor', 'patient']
     exclude = ('file',)
