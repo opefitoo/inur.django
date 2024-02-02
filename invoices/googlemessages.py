@@ -39,7 +39,8 @@ def post_webhook_pic_as_image(description=None, event_pictures_url=None, email=N
     # pass None for now
     ImageGoogleChatSending(email=email).send_image(message, event_pictures_url)
 
-def post_webhook(employees, patient, event_report, state, event_date=None, event_pictures_urls=None, event=None):
+def post_webhook(employees, patient, event_report, state, event_date=None, event_pictures_urls=None, event=None,
+                 sub_contractor=None):
     """Hangouts Chat incoming webhook quickstart.
     @param event:
     @param event_pictures_urls:
@@ -66,10 +67,12 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
         else:
             string_event_date = "programmé à  %s" % event_date.time().strftime("%Hh%M")
     if 3 == state and patient:
-        if employees.google_user_id:
+        if employees and employees.google_user_id:
             made_by = "<users/%s>" % employees.google_user_id
-        else:
+        elif employees and employees.user:
             made_by = "*%s*" % employees.user.first_name
+        elif sub_contractor:
+            made_by = "*%s*" % sub_contractor.name
         message = '<%s%s|Passage> %s FAIT par %s chez *%s* : %s  ' % (config.ROOT_URL, event.get_admin_url(),
                                                                         string_event_date,
                                                                         made_by,
@@ -77,10 +80,12 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
                                                                         event_report
                                                                         )
     elif 3 == state and patient is None:
-        if employees.google_user_id:
+        if employees and employees.google_user_id:
             made_by = "<users/%s>" % employees.google_user_id
-        else:
+        elif employees and employees.user:
             made_by = "*%s*" % employees.user.first_name
+        elif sub_contractor:
+            made_by = "*%s*" % sub_contractor.name
         message = '<%s%s|Passage> %s FAIT par %s : %s  ' % (config.ROOT_URL, event.get_admin_url(),
                                                                         string_event_date,
                                                                         made_by,

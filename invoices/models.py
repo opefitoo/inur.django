@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 
 import requests
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
@@ -957,6 +957,13 @@ def medical_prescription_clean_gdrive_pre_save(sender, instance, **kwargs):
 #     thumbnail_images = convert_from_bytes(pdf.raw.read(), dpi=200, size=(400, None))
 #     instance.thumbnail_img = thumbnail_images[0]
 #     instance.save()
+
+@receiver(post_save, sender=SubContractor, dispatch_uid="subcontractor_post_save")
+def subcontractor_post_save(sender, instance, **kwargs):
+    # create a group that has the same name as the subcontractor
+    group, created = Group.objects.get_or_create(name=instance.name)
+    if created:
+        group.save()
 
 
 @receiver(post_delete, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_delete")

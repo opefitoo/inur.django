@@ -45,14 +45,15 @@ from invoices.employee import Employee, EmployeeContractDetail, JobPosition, Emp
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event, AssignedAdditionalEmployee, ReportPicture, \
-    create_or_update_google_calendar, EventList
+    create_or_update_google_calendar, EventList, EventGenericLink, EventLinkToMedicalCareSummaryPerPatientDetail, \
+    EventLinkToCareCode, GenericTaskDescription
 from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMonths
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, SmartPatientFilter, \
     SmartMedicalPrescriptionFilter, DistanceMatrixSmartPatientFilter, IsInvolvedInHealthCareFilter
 from invoices.filters.SmartPatientFilter import UnderAssuranceDependanceFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, \
-    InvoiceItemForm, MedicalPrescriptionForm, AlternateAddressFormSet
+    InvoiceItemForm, MedicalPrescriptionForm, AlternateAddressFormSet, EventLinkToMedicalCareSummaryPerPatientDetailForm
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook
 from invoices.holidays import HolidayRequest, AbsenceRequestFile
@@ -91,6 +92,22 @@ class EmployeeInline(admin.StackedInline):
 # Define a new User admin
 class UserAdmin(BaseUserAdmin):
     inlines = (EmployeeInline,)
+    actions = ['deactivate_user']
+
+    def deactivate_user(self, request, queryset):
+        # only super-users can do this
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
+                              level=messages.ERROR)
+            return
+        users_deactivated = []
+        for user in queryset:
+            user.is_active = False
+            user.is_staff = False
+            user.save()
+            users_deactivated.append(user.username)
+        self.message_user(request, "Utilisateurs désactivés: %s" % users_deactivated,
+                          level=messages.INFO)
 
 
 # Re-register UserAdmin
@@ -339,7 +356,13 @@ class BedsoreRiskAssessment(admin.TabularInline):
 
 class SubContractorAdminFileInline(admin.TabularInline):
     model = SubContractorAdminFile
-    extra = 1
+    extra = 0
+
+    # all the fields should be readonly if not superuser
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            return []
+        return [field.name for field in self.model._meta.fields]
 
 
 @admin.register(SubContractor)
@@ -361,6 +384,12 @@ class SubContractorAdmin(admin.ModelAdmin):
         self.message_user(request, "Contact(s) créé(s) dans Xero. %s" % contractors_created,
                           level=messages.INFO)
 
+    # all the fields should be readonly if not superuser
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            return []
+        return [field.name for field in self.model._meta.fields]
+
     # can only view the subcontractors that were created by user, or is part of the same admin group
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -368,10 +397,12 @@ class SubContractorAdmin(admin.ModelAdmin):
             return qs
             # Get the groups of the request user
         user_groups = request.user.groups.all()
+        user_group_names = [group.name for group in user_groups]
 
         # Filter the queryset to include SubContractors created by the request user
         # or by users who are in the same group as the request user
-        return qs.filter(Q(created_by=request.user) | Q(created_by__groups__in=user_groups))
+        return qs.filter(
+            Q(created_by=request.user) | Q(created_by__groups__in=user_groups) | Q(name__in=user_group_names))
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:  # if object is being created, automatically set created_by
@@ -1283,6 +1314,45 @@ class ReportPictureInLine(admin.StackedInline):
         return True
 
 
+class GenericTaskDescriptionInline(admin.TabularInline):
+    extra = 0
+    model = GenericTaskDescription
+
+
+class EventLinkToCareCodeInline(admin.TabularInline):
+    extra = 0
+    model = EventLinkToCareCode
+
+
+class EventLinkToMedicalCareSummaclryPerPatientDetailInline(admin.TabularInline):
+    extra = 0
+    model = EventLinkToMedicalCareSummaryPerPatientDetail
+    formset = EventLinkToMedicalCareSummaryPerPatientDetailForm
+
+    def get_queryset(self, request):
+
+        qs = super().get_queryset(request)
+        if 'object_id' in request.resolver_match.kwargs:
+            event_instance = self.parent_model.objects.get(id=request.resolver_match.kwargs['object_id'])
+            linked_patient = event_instance.patient
+            print(f'Event patient: {linked_patient}')
+            for instance in qs:
+                print(
+                    f'MedicalCareSummaryPerPatientDetail patient: {instance.medical_care_summary_per_patient_detail.medical_care_summary_per_patient.patient}')
+
+            # from dependence.detailedcareplan import MedicalCareSummaryPerPatientDetail
+            # return MedicalCareSummaryPerPatientDetail.objects.filter(medical_care_summary_per_patient__patient=linked_patient)
+            return qs.filter(
+                medical_care_summary_per_patient_detail__medical_care_summary_per_patient__patient=linked_patient)
+        else:
+            return qs.none()  # Return an empty queryset
+
+
+class EventGenericLinkInline(admin.TabularInline):
+    model = EventGenericLink
+    extra = 0  # Number of extra forms to display
+
+
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     class Media:
@@ -1296,14 +1366,17 @@ class EventAdmin(admin.ModelAdmin):
 
     form = EventForm
 
-    list_display = ['day', 'state', 'event_type_enum', 'notes', 'patient']
+    list_display = ['day', 'state', 'patient', 'event_type_enum', 'notes', ]
     readonly_fields = ['created_by', 'created_on', 'calendar_url', 'calendar_id']
     exclude = ('event_type',)
     autocomplete_fields = ['patient']
     change_list_template = 'events/change_list.html'
     change_form_template = 'admin/invoices/event_change_form.html'
     list_filter = (SmartEmployeeFilter,)
-    inlines = (AssignedAdditionalEmployeeInLine, ReportPictureInLine)
+    inlines = (ReportPictureInLine, EventLinkToCareCodeInline,
+               EventLinkToMedicalCareSummaclryPerPatientDetailInline,
+               EventGenericLinkInline,
+               GenericTaskDescriptionInline)
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -1374,8 +1447,7 @@ class EventAdmin(admin.ModelAdmin):
 
 @admin.register(EventList)
 class EventListAdmin(admin.ModelAdmin):
-    list_display = ['day', 'time_start_event', 'time_end_event', 'state', 'event_type_enum', 'patient', 'employees',
-                    'created_on']
+    list_display = ['day', 'time_start_event', 'time_end_event', 'patient', 'employees', 'state']
     change_list_template = 'admin/change_list.html'
     list_filter = (
         'employees', 'event_type_enum', 'state', SmartPatientFilter, 'created_by', UnderAssuranceDependanceFilter)
@@ -1387,7 +1459,10 @@ class EventListAdmin(admin.ModelAdmin):
                'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
                'send_webhook_message', 'create_assurance_dependance_invoice_out_of_events']
-    inlines = (ReportPictureInLine,)
+    inlines = (ReportPictureInLine, EventLinkToCareCodeInline,
+               EventLinkToMedicalCareSummaclryPerPatientDetailInline,
+               EventGenericLinkInline,
+               GenericTaskDescriptionInline)
     search_fields = ['patient__first_name', 'patient__name', 'patient__phone_number', 'patient__email_address',
                      'notes', 'event_report', 'calendar_id']
     autocomplete_fields = ['patient']
@@ -1396,6 +1471,8 @@ class EventListAdmin(admin.ModelAdmin):
 
     def safe_delete(self, request, queryset):
         if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de supprimer des %s." % self.verbose_name_plural,
+                                level=messages.WARNING)
             return
         for e in queryset:
             e.delete()
@@ -1410,12 +1487,17 @@ class EventListAdmin(admin.ModelAdmin):
 
     def list_orphan_events(self, request, queryset):
         if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de lister les %s orphelins." % self.verbose_name_plural,
+                                level=messages.WARNING)
             return
         for e in queryset:
             e.display_unconnected_events()
 
     def duplicate_event_for_next_week(self, request, queryset):
         if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.verbose_name_plural,
+                                level=messages.WARNING)
+
             return
         # only one event at a time
         events_duplicated = []
@@ -1440,7 +1522,8 @@ class EventListAdmin(admin.ModelAdmin):
     @transaction.atomic
     def create_assurance_dependance_invoice_out_of_events(self, request, queryset):
         if not request.user.is_superuser:
-            self.message_user(request, "You cannot do that")
+            self.message_user(request, "Vous n'avez pas le droit de créer des factures d'assurance dépendance.",
+                              level=messages.WARNING)
             return
         # check event start is the first day of the month
         invoice_start_period = queryset[0].day.replace(day=1)
@@ -1467,6 +1550,8 @@ class EventListAdmin(admin.ModelAdmin):
 
     def duplicate_event_for_next_day(self, request, queryset):
         if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.verbose_name_plural,
+                                level=messages.WARNING)
             return
         # only one event at a time
         events_duplicated = []
@@ -1499,6 +1584,7 @@ class EventListAdmin(admin.ModelAdmin):
 
     def force_gcalendar_sync(self, request, queryset):
         if not request.user.is_superuser:
+            self.message_user(request, "Must be super user", level=messages.ERROR)
             return
         evts_synced = []
         for e in queryset:
@@ -1512,6 +1598,7 @@ class EventListAdmin(admin.ModelAdmin):
 
     def print_unsynced_events(self, request, queryset):
         if not request.user.is_superuser:
+            self.message_user(request, "Must be super user", level=messages.ERROR)
             return
         evts_not_synced = []
         for e in queryset:
@@ -1526,6 +1613,7 @@ class EventListAdmin(admin.ModelAdmin):
 
     def cleanup_events_event_types(self, request, queryset):
         if not request.user.is_superuser:
+            self.message_user(request, "Must be super user", level=messages.ERROR)
             return
         evts_cleaned = []
         for e in Event.objects.filter(event_type=EventType.objects.get(id=1)):
@@ -1546,11 +1634,19 @@ class EventListAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return Event.objects.all()
         else:
-            # Display only today's and yesterday's events for non admin users
-            return queryset.filter(employees__user_id=request.user.id).exclude(state=3).exclude(state=5).exclude(
-                state=6).filter(
-                day__year=today.year).filter(day__month=today.month).filter(day__day__gte=today.day - 1).order_by(
-                "-day")
+            user_group_names = [group.name for group in request.user.groups.all()]
+            from django.db.models import Q
+
+            filtered_my_own_events = Q(employees__user_id=request.user.id) & ~Q(state__in=[3, 5, 6]) & Q(
+                day__year=today.year) & Q(day__month=today.month) & Q(day__day__gte=today.day - 1)
+            filtered_events_of_my_group_subcontractors = Q(sub_contractor__name__in=user_group_names) & ~Q(
+                state__in=[3, 5, 6]) & Q(day__year=today.year) & Q(day__month=today.month) & Q(
+                day__day__gte=today.day - 1)
+
+            combined_queryset = queryset.filter(
+                filtered_my_own_events | filtered_events_of_my_group_subcontractors).distinct().order_by("-day")
+
+            return combined_queryset
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -1558,6 +1654,12 @@ class EventListAdmin(admin.ModelAdmin):
             if len(form.base_fields) > 0:
                 form.base_fields["event_report"].required = True
                 form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done')), (6, _('Cancelled'))
+                form.base_fields.pop("calendar_url", None)
+                form.base_fields.pop("calendar_id", None)
+                form.base_fields.pop("created_by", None)
+                form.base_fields.pop("created_on", None)
+                form.base_fields.pop("event_type", None)
+        return form
 
         class ModelFormWithRequest(form):
             def __new__(cls, *args, **kwargs):
@@ -1569,15 +1671,18 @@ class EventListAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
             if not request.user.is_superuser:
-                fs = [field.name for field in Event._meta.fields if field.name != "id"]
-                if obj.employees.user.id == request.user.id:
-                    return [f for f in fs if f not in ['event_report', 'state', '']]
+                fs = [field.name for field in Event._meta.fields if field.name not in ("id")]
+                if obj.employees and obj.employees.user.id == request.user.id:
+                    return [f for f in fs if f not in ['event_report', 'state', 'calendar_id', "calendar_url",
+                                                       "created_by",
+                                                       "created_on", "event_type"]]
+                elif obj.sub_contractor and obj.sub_contractor.name in [group.name for group in
+                                                                        request.user.groups.all()]:
+                    return [f for f in fs if f not in ['event_report', 'state', 'calendar_id', "calendar_url",
+                                                       "created_by", "created_on", "event_type"]]
                 else:
                     return fs
         return self.readonly_fields
-
-    def get_inlines(self, request, obj):
-        return [ReportPictureInLine]
 
     def changelist_view(self, request, extra_context=None):
         changelist = ChangeList(request,

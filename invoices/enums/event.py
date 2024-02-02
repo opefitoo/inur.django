@@ -8,4 +8,5 @@ class EventTypeEnum(models.TextChoices):
     ASS_DEP = 'ASS_DEP', _('Soin Assurance dépendance')
     GENERIC = 'GENERIC', _('Général pour Patient (non soin)')
     GNRC_EMPL = 'GNRC_EMPL', _('Général pour Employé')
+    SUB_CARE = 'SUB_CARE', _('Soin(s) en sous-traitance')
 

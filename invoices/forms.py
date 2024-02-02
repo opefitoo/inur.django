@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_select2.forms import ModelSelect2Widget
 
+from dependence.detailedcareplan import MedicalCareSummaryPerPatientDetail, MedicalCareSummaryPerPatient
 from invoices.events import Event
 from invoices.models import InvoiceItem, MedicalPrescription
 from invoices.timesheet import SimplifiedTimesheet, SimplifiedTimesheetDetail
@@ -72,12 +73,13 @@ class PrestationInlineFormSet(BaseInlineFormSet):
             self.validate_palliative_care_only(self.cleaned_data)
             self.validate_no_duplicate_carecode_perday(self.cleaned_data)
             self.validate_prestations_inbetween_prescription_dates(self.cleaned_data, medical_prescription_list)
+
     @staticmethod
     def validate_only_one_prescription_per_invoice(medical_prescriptions):
         if len(medical_prescriptions) > 1:
             raise ValidationError(
-                _("There should be only one prescription per invoice, please create another invoice for %s" % medical_prescriptions[1].medical_prescription))
-
+                _("There should be only one prescription per invoice, please create another invoice for %s" %
+                  medical_prescriptions[1].medical_prescription))
 
     @staticmethod
     def validate_no_duplicate_carecode_perday(cleaned_data):
@@ -113,6 +115,7 @@ class PrestationInlineFormSet(BaseInlineFormSet):
         if palliative_care and non_palliative_care:
             raise ValidationError(
                 "Prestations should be either only Palliative Care or only Non Palliative Care in the same InvoiceItem, please create another invoice for %s" % non_palliative_care_code)
+
     @staticmethod
     def validate_prestations_inbetween_prescription_dates(cleaned_data, medical_prescription_list):
         # if the same carecode is used more than once in the same day, raise an error
@@ -135,8 +138,8 @@ class PrestationInlineFormSet(BaseInlineFormSet):
                     pass
             if not check_success:
                 raise ValidationError(
-                    _("The date %s of item %s is not in between the prescription dates : %s - %s" % (date, item, mls.medical_prescription.date, mls.medical_prescription.end_date )))
-
+                    _("The date %s of item %s is not in between the prescription dates : %s - %s" % (
+                        date, item, mls.medical_prescription.date, mls.medical_prescription.end_date)))
 
     @staticmethod
     def validate_max_limit(cleaned_data):
@@ -214,12 +217,38 @@ class InvoiceItemForm(forms.ModelForm):
     )
 
 
+class EventLinkToMedicalCareSummaryPerPatientDetailForm(BaseInlineFormSet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        linked_patient = self.instance.patient  # Assuming the EventLinkToMedicalCareSummaryPerPatientDetail model has a foreign key to the Event model
+        if linked_patient and MedicalCareSummaryPerPatient.objects.filter(patient=linked_patient).exists():
+            latest_medical_care_summary_per_patient = MedicalCareSummaryPerPatient.objects.filter(
+                patient=linked_patient).latest('date_of_notification_to_provider')
+            self.form.base_fields.get(
+                'medical_care_summary_per_patient_detail').queryset = MedicalCareSummaryPerPatientDetail.objects.filter(
+                medical_care_summary_per_patient=latest_medical_care_summary_per_patient
+            )
+        else:
+            self.form.base_fields.get(
+                'medical_care_summary_per_patient_detail').queryset = MedicalCareSummaryPerPatientDetail.objects.none()
+    # validate that the event date is in between the medical care summary per patient detail date
+    def clean(self):
+        super(EventLinkToMedicalCareSummaryPerPatientDetailForm, self).clean()
+        validate_that_if_is_done_not_checked_then_description_is_mandatory(self.cleaned_data)
+
+def validate_that_if_is_done_not_checked_then_description_is_mandatory(cleaned_data):
+    for row_data in cleaned_data:
+        if not row_data['is_done'] and not row_data['not_done_reason']:
+            raise ValidationError("If the event is not checked, then the reason is mandatory")
+
 
 class AlternateAddressFormSet(BaseInlineFormSet):
     def clean(self):
         super(AlternateAddressFormSet, self).clean()
         if hasattr(self, 'cleaned_data'):
             check_for_periods_intersection(self.cleaned_data)
+
+
 class HospitalizationFormSet(BaseInlineFormSet):
     def clean(self):
         super(HospitalizationFormSet, self).clean()
@@ -252,8 +281,8 @@ class EmployeeSelect(forms.Select):
         return option
 
 
-def cannot_validate_in_future(instance, user):
-    if user.is_superuser:
+def cannot_validate_in_future(instance, user=None):
+    if user and user.is_superuser:
         return
     datetime_event_end = timezone.now().replace(year=instance.day.year,
                                                 month=instance.day.month,
@@ -282,7 +311,10 @@ class EventForm(ModelForm):
 
     def clean(self):
         super().clean()
-        cannot_validate_in_future(self.instance, self.request.user)
+        if self.request:
+            cannot_validate_in_future(self.instance, self.request.user)
+        else:
+            cannot_validate_in_future(self.instance)
 
 
 class MedicalPrescriptionForm(ModelForm):
