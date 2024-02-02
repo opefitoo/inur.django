@@ -290,7 +290,7 @@ def cannot_validate_in_future(instance, user=None):
                                                 # FIXME: do not hard code
                                                 hour=instance.time_end_event.hour - 2,
                                                 minute=instance.time_end_event.minute)
-    if timezone.now() < datetime_event_end:
+    if timezone.now() < datetime_event_end and instance.is_in_validated_state():
         raise ValidationError(
             "Vous ne voupez pas valider un soin dans le futur "
         )

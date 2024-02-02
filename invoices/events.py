@@ -114,6 +114,9 @@ class Event(models.Model):
         content_type = ContentType.objects.get_for_model(self.__class__)
         return reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model), args=(self.id,))
 
+    def is_in_validated_state(self):
+        return self.state in [Event.STATES[2][0], Event.STATES[3][0], Event.STATES[4][0]]
+
     def duplicate_event_for_next_day(self, number_of_days=1):
         # duplicate event for next day
         # check if event already exists for next day
@@ -132,6 +135,18 @@ class Event(models.Model):
                                              patient=self.patient,
                                              event_address=self.event_address,
                                              created_by='duplicate_event_for_next_day')
+            # duplicate GenericTaskDescription
+            for generic_task in self.generictaskdescription_set.all():
+                new_generic_task = GenericTaskDescription.objects.create(event=new_event, name=generic_task.name)
+                new_generic_task.save()
+            # duplicate EventLinkToCareCode
+            for care_code in self.eventlinktocarecode_set.all():
+                new_event_link_to_care_code = EventLinkToCareCode.objects.create(event=new_event, care_code=care_code.care_code)
+                new_event_link_to_care_code.save()
+            # duplicate EventLinkToMedicalCareSummaryPerPatientDetail
+            for medical_care_summary in self.eventlinktomedicalcaresummaryperpatientdetail_set.all():
+                new_event_link_to_medical_care_summary = EventLinkToMedicalCareSummaryPerPatientDetail.objects.create(event=new_event, medical_care_summary_per_patient_detail=medical_care_summary.medical_care_summary_per_patient_detail)
+                new_event_link_to_medical_care_summary.save()
             new_event.save()
             return new_event
         else:

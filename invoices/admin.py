@@ -1335,11 +1335,9 @@ class EventLinkToMedicalCareSummaclryPerPatientDetailInline(admin.TabularInline)
         if 'object_id' in request.resolver_match.kwargs:
             event_instance = self.parent_model.objects.get(id=request.resolver_match.kwargs['object_id'])
             linked_patient = event_instance.patient
-            print(f'Event patient: {linked_patient}')
             for instance in qs:
                 print(
                     f'MedicalCareSummaryPerPatientDetail patient: {instance.medical_care_summary_per_patient_detail.medical_care_summary_per_patient.patient}')
-
             # from dependence.detailedcareplan import MedicalCareSummaryPerPatientDetail
             # return MedicalCareSummaryPerPatientDetail.objects.filter(medical_care_summary_per_patient__patient=linked_patient)
             return qs.filter(
