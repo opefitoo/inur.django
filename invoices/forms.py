@@ -234,7 +234,9 @@ class EventLinkToMedicalCareSummaryPerPatientDetailForm(BaseInlineFormSet):
     # validate that the event date is in between the medical care summary per patient detail date
     def clean(self):
         super(EventLinkToMedicalCareSummaryPerPatientDetailForm, self).clean()
-        validate_that_if_is_done_not_checked_then_description_is_mandatory(self.cleaned_data)
+        if hasattr(self, 'cleaned_data'):
+            if self.instance and self.instance.is_in_validated_state():
+                validate_that_if_is_done_not_checked_then_description_is_mandatory(self.cleaned_data)
 
 def validate_that_if_is_done_not_checked_then_description_is_mandatory(cleaned_data):
     for row_data in cleaned_data:
@@ -284,17 +286,18 @@ class EmployeeSelect(forms.Select):
 def cannot_validate_in_future(instance, user=None):
     if user and user.is_superuser:
         return
-    datetime_event_end = timezone.now().replace(year=instance.day.year,
-                                                month=instance.day.month,
-                                                day=instance.day.day,
-                                                # FIXME: do not hard code
-                                                hour=instance.time_end_event.hour - 2,
-                                                minute=instance.time_end_event.minute)
-    if timezone.now() < datetime_event_end and instance.is_in_validated_state():
-        raise ValidationError(
-            "Vous ne voupez pas valider un soin dans le futur "
-        )
-    return
+    if instance.day:
+        datetime_event_end = timezone.now().replace(year=instance.day.year,
+                                                    month=instance.day.month,
+                                                    day=instance.day.day,
+                                                    # FIXME: do not hard code
+                                                    hour=instance.time_end_event.hour - 2,
+                                                    minute=instance.time_end_event.minute)
+        if timezone.now() < datetime_event_end and instance.is_in_validated_state():
+            raise ValidationError(
+                "Vous ne voupez pas valider un soin dans le futur "
+            )
+        return
 
 
 class EventForm(ModelForm):

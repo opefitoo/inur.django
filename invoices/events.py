@@ -73,7 +73,7 @@ class Event(models.Model):
     time_start_event = models.TimeField(_('Event start time'), blank=True, null=True,
                                         help_text=_('Event start time'))
     time_end_event = models.TimeField(_('Event end time'), blank=True, null=True, help_text=_('Event end time'))
-    state = models.PositiveSmallIntegerField(_('State'), choices=STATES)
+    state = models.PositiveSmallIntegerField(_('State'), choices=STATES, default=2)
     event_type = models.ForeignKey(EventType, help_text=_('Event type'),
                                    on_delete=models.CASCADE,
                                    verbose_name=_('Event type'), blank=True, null=True)
@@ -141,11 +141,14 @@ class Event(models.Model):
                 new_generic_task.save()
             # duplicate EventLinkToCareCode
             for care_code in self.eventlinktocarecode_set.all():
-                new_event_link_to_care_code = EventLinkToCareCode.objects.create(event=new_event, care_code=care_code.care_code)
+                new_event_link_to_care_code = EventLinkToCareCode.objects.create(event=new_event,
+                                                                                 care_code=care_code.care_code)
                 new_event_link_to_care_code.save()
             # duplicate EventLinkToMedicalCareSummaryPerPatientDetail
             for medical_care_summary in self.eventlinktomedicalcaresummaryperpatientdetail_set.all():
-                new_event_link_to_medical_care_summary = EventLinkToMedicalCareSummaryPerPatientDetail.objects.create(event=new_event, medical_care_summary_per_patient_detail=medical_care_summary.medical_care_summary_per_patient_detail)
+                new_event_link_to_medical_care_summary = EventLinkToMedicalCareSummaryPerPatientDetail.objects.create(
+                    event=new_event,
+                    medical_care_summary_per_patient_detail=medical_care_summary.medical_care_summary_per_patient_detail)
                 new_event_link_to_medical_care_summary.save()
             new_event.save()
             return new_event
@@ -199,32 +202,10 @@ class Event(models.Model):
             raise ValidationError(messages)
         if self.at_office:
             self.event_address = "%s %s" % (config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY)
-        if self.event_type_enum == EventTypeEnum.SUB_CARE and self.sub_contractor and self.state == 2:
-            # check if instance is new
-            url = "%s%s " % (config.ROOT_URL, self.get_admin_url())
-            # send notification by email to sub-contractor
-            if self.sub_contractor.email_address:
-                send_email_notification(
-                    subject='Nouveau soin en sous-traitance pour usager %s en date du %s ' % (self.patient, self.day),
-                    message='Bonjour, \n\n'
-                            'Un nouveau soin en sous-traitance a été créé pour vous.\n\n'
-                            'Vous pouvez le consulter ici : %s\n\n' % url +
-                            'Cordialement,\n\n'
-                            'Sur.lu',
-                    to_emails=[self.sub_contractor.email_address],
-                )
-
         else:
             cal = create_or_update_google_calendar(self)
             self.calendar_id = cal.get('id')
             self.calendar_url = cal.get('htmlLink')
-
-    # def delete(self, using=None, keep_parents=False):
-    #     if EventTypeEnum.BIRTHDAY != self.event_type_enum:
-    #         calendar_gcalendar = PrestationGoogleCalendarSurLu()
-    #         # calendar_gcalendar.q_delete_event(self)
-    #         calendar_gcalendar.delete_event(self)
-    #     super(Event, self).delete(using=None, keep_parents=False)
 
     # FIXME pass date as parameter
     def cleanup_all_events_on_google(self, dry_run):
@@ -411,6 +392,7 @@ class EventLinkToMedicalCareSummaryPerPatientDetail(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     medical_care_summary_per_patient_detail = models.ForeignKey(MedicalCareSummaryPerPatientDetail,
                                                                 on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(_('Quantity'), default=1)
     # Additional fields for status and reason
     is_done = models.BooleanField(default=False, verbose_name=_("Is Done"))
     not_done_reason = models.TextField(blank=True, null=True, verbose_name=_("Reason if not done"))
@@ -572,6 +554,20 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
                      event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
                          ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls, event=instance,
                      sub_contractor=instance.sub_contractor)
+    if instance.event_type_enum == EventTypeEnum.SUB_CARE and instance.sub_contractor and instance.state == 2:
+        # check if instance is new
+        url = "%s%s " % (config.ROOT_URL, instance.get_admin_url())
+        # send notification by email to sub-contractor
+        if instance.sub_contractor.email_address:
+            send_email_notification(
+                subject='Nouveau soin en sous-traitance pour usager %s en date du %s ' % (instance.patient, instance.day),
+                message='Bonjour, \n\n'
+                        'Un nouveau soin en sous-traitance a été créé pour vous.\n\n'
+                        'Vous pouvez le consulter ici : %s\n\n' % url +
+                        'Cordialement,\n\n'
+                        'Sur.lu',
+                to_emails=[instance.sub_contractor.email_address],
+            )
 
 
 @receiver(post_save, sender=EventList, dispatch_uid="send_update_via_chat_1413")
@@ -672,6 +668,10 @@ def event_sub_contractor_mandatory_if_event_type_is_sub_care(data):
     if data['event_type_enum'] == EventTypeEnum.SUB_CARE and data['sub_contractor_id'] is not None:
         if data['employees_id'] is not None:
             messages = {'employees': _("champ Employé non autorisé car de type %s") % _(data['event_type_enum'])}
+    if data['sub_contractor_id'] is not None and (
+            data['event_type_enum'] is None or data['event_type_enum'] != EventTypeEnum.SUB_CARE):
+        messages = {'event_type_enum': _("champ Type non autorisé car de type %s doit être de type %s") % (_(
+            data['event_type_enum']), _(EventTypeEnum.SUB_CARE))}
     return messages
 
 

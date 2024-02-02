@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 
 import requests
 from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
@@ -962,8 +962,26 @@ def medical_prescription_clean_gdrive_pre_save(sender, instance, **kwargs):
 def subcontractor_post_save(sender, instance, **kwargs):
     # create a group that has the same name as the subcontractor
     group, created = Group.objects.get_or_create(name=instance.name)
-    if created:
-        group.save()
+    from invoices.events import EventLinkToMedicalCareSummaryPerPatientDetail, EventGenericLink, EventLinkToCareCode, \
+        GenericTaskDescription
+    # add permissions to view and change some content types
+    models_permissions = [
+        (Patient, ['view']),
+        #('EventList', ['view', 'change']),
+        (SubContractor, ['view']),
+        (EventLinkToMedicalCareSummaryPerPatientDetail, ['view', 'change']),
+        (EventGenericLink, ['view', 'change']),
+        (EventLinkToCareCode, ['view', 'change']),
+        (GenericTaskDescription, ['view', 'change'])
+    ]
+    for model_name, permissions in models_permissions:
+        print("model_name: %s" % model_name)
+        content_type = ContentType.objects.get_for_model(model_name)
+        for permission in permissions:
+            perm = Permission.objects.get(codename=f'{permission}_{content_type.model}',
+                                          content_type=content_type)
+            group.permissions.add(perm)
+    group.save()
 
 
 @receiver(post_delete, sender=MedicalPrescription, dispatch_uid="medical_prescription_clean_gdrive_post_delete")

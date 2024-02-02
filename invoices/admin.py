@@ -1345,6 +1345,12 @@ class EventLinkToMedicalCareSummaclryPerPatientDetailInline(admin.TabularInline)
         else:
             return qs.none()  # Return an empty queryset
 
+    # hide field quantity to non superuser
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_superuser:
+            return ['medical_care_summary_per_patient_detail', 'quantity']
+        return self.readonly_fields
+
 
 class EventGenericLinkInline(admin.TabularInline):
     model = EventGenericLink
