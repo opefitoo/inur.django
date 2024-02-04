@@ -151,6 +151,13 @@ class EmployeeAdmin(admin.ModelAdmin):
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
     list_filter = [IsInvolvedInHealthCareFilter]
 
+    # if not super user display only active employees
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(end_contract__isnull=True)
+
     # property that display full-time equivalent of employee
     def display_fte(self, obj):
         return obj.calculate_fte()
