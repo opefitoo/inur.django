@@ -3,6 +3,7 @@ from threading import local
 from asgiref.local import Local
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.shortcuts import redirect
 from django.utils.deprecation import MiddlewareMixin
 
 USER_ATTR_NAME = getattr(settings, 'LOCAL_USER_ATTR_NAME', '_current_user')
@@ -64,3 +65,16 @@ def get_current_authenticated_user():
     if current_user:
         return current_user.id
     return None
+
+class FirstLoginMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        from decouple import config
+        INITIAL_EMAIL = config('INITIAL_EMAIL', None)
+        if request.user and request.user.is_authenticated and INITIAL_EMAIL and INITIAL_EMAIL == request.user.email:
+            if request.path not in ['/password_change/', '/logout/']:
+                return redirect('password_change')
+        response = self.get_response(request)
+        return response

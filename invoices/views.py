@@ -1,12 +1,27 @@
 # from dal import autocomplete
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.db.models import Q
 from django.http import Http404, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 
 from invoices.models import Prestation, MedicalPrescription, InvoiceItem
 
 
+def password_change(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            if user.email is not None:
+                user.email = "None"
+                user.save()
+            update_session_auth_hash(request, user)
+            return redirect('home')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'password_change.html', {'form': form})
 def get_queryset_filter(query_str, fields):
     filter_qs = Q()
     for search_field in fields:

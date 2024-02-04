@@ -16,7 +16,7 @@ from api.views import EventProcessorView, cleanup_event, whois_off, whois_availa
     NunoEventsService
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
-from invoices.views import delete_prestation, home_view
+from invoices.views import delete_prestation, home_view, password_change
 from invoices.xero.views import xero_auth, xero_callback
 
 admin.autodiscover()
@@ -134,6 +134,9 @@ urlpatterns += [
     ),
 ]
 
+urlpatterns += [
+    re_path('password_change/', password_change, name='password_change'),
+]
 urlpatterns += [
     re_path('fullcalendar-events/', FullCalendarEventViewSet.as_view(), name='fullcalendar-events-list'),
 ]

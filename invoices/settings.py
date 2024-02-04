@@ -77,6 +77,7 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
+    'invoices.middleware.FirstLoginMiddleware',
     'invoices.middleware.ThreadLocalUserMiddleware',
 )
 

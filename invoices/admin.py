@@ -87,9 +87,9 @@ class EmployeeInline(admin.StackedInline):
     model = Employee
     can_delete = False
     verbose_name_plural = 'employee'
+    extra = 0
 
 
-# Define a new User admin
 class UserAdmin(BaseUserAdmin):
     inlines = (EmployeeInline,)
     actions = ['deactivate_user']
