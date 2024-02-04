@@ -4,7 +4,7 @@ from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.forms import ModelMultipleChoiceField
 from django.http import HttpResponse
 from django.urls import reverse
@@ -39,7 +39,7 @@ from dependence.models import AssignedPhysician, ContactPerson, DependenceInsura
 from dependence.pdf.basedata import basedata_view
 from dependence.print_fall_declaration import generate_pdf_fall_declaration
 from invoices.filters.anamnesis import DeceasedFilter, ClientLeftFilter
-from invoices.models import Patient, MedicalPrescription, Bedsore
+from invoices.models import Patient, MedicalPrescription, Bedsore, ClientPatientRelationship
 
 
 class LongTermCareInvoiceLineInline(admin.TabularInline):
@@ -337,6 +337,8 @@ class FilteringPatientsLinkedToParameters(SimpleListFilter):
     parameter_name = 'patient'
 
     def lookups(self, request, model_admin):
+        if request.user.groups.filter(name='clients').exists():
+            return None
         years = MonthlyParameters.objects.values('patient').annotate(dcount=Count('patient')).order_by()
         years_tuple = []
         for year in years:
@@ -428,6 +430,13 @@ class TensionAndTemperatureParametersInLine(admin.TabularInline):
               , "updated_on")
     readonly_fields = ('user', 'created_on', 'updated_on')
 
+def check_access(user, patient):
+    if not user.groups.filter(name='clients').exists():
+        return False
+    if not ClientPatientRelationship.objects.filter(user=user, patient=patient).exists():
+        return False
+    return True
+
 
 @admin.register(MonthlyParameters)
 class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
@@ -462,6 +471,17 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'monthlyparameters/print_glucose_params.html', {'obj': obj})
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser or not request.user.groups.filter(name='clients').exists():
+            return qs.select_related('patient')
+        elif request.user.groups.filter(name='clients').exists():
+            patient_ids = [obj.patient.id for obj in qs.select_related('patient') if
+                           check_access(request.user, obj.patient)]
+            return qs.filter(Q(patient_id__in=patient_ids))
+        else:
+            return qs.none()
 
 
 @admin.register(PatientAnamnesis)

@@ -804,6 +804,10 @@ def validate_image(image):
         raise ValidationError("Taille maximale du fichier est %s KO" % limit_kb)
 
 
+class ClientPatientRelationship(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+
 class MedicalPrescription(models.Model):
     class Meta:
         ordering = ['-id']

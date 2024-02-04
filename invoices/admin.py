@@ -60,7 +60,7 @@ from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList, \
     AlternateAddress, Alert, Bedsore, BedsoreEvaluation, BedsoreRiskAssessment, SubContractor, SubContractorAdminFile, \
-    PatientSubContractorRelationship
+    PatientSubContractorRelationship, ClientPatientRelationship
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
@@ -141,7 +141,10 @@ class EmployeeContractDetailInline(TabularInline):
 class EmployeeAdminFileInline(TabularInline):
     extra = 0
     model = EmployeeAdminFile
-
+@admin.register(ClientPatientRelationship)
+class  ClientPatientRelationshipAdmin(admin.ModelAdmin):
+    list_display = ('user', 'patient')
+    autocomplete_fields = ['user', 'patient']
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
