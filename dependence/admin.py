@@ -449,15 +449,17 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     object_actions = [
         {
             'slug': 'print_all_params',
-            'verbose_name': 'Print ALL',
+            'verbose_name': 'Imprimer',
             'form_method': 'GET',
             'view': 'print_all_params',
+            'permission': 'view',
         },
         {
             'slug': 'print_glucose_params',
             'verbose_name': 'F. Glycémie',
             'form_method': 'GET',
             'view': 'print_glucose_params',
+            'permission': 'view',
         },
 
     ]
