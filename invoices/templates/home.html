@@ -1,17 +1,111 @@
 <!-- home/templates/home.html -->
 {% load static %}
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Welcome on Nuno</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Landing Page</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-top: 60px; /* Adjusted to push content down under the fixed navbar */
+            height: calc(100% - 60px); /* Adjusting height to take the navbar into account */
+            text-align: center;
+            position: relative;
+        }
+
+        .main-heading {
+            font-size: 3em;
+            font-weight: bold;
+            color: #333;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3; /* Higher than the circle and image */
+        }
+
+        /* ... other styles ... */
+
+        .login-button {
+            position: absolute;
+            top: calc(35% - 100px); /* Update this value to place the button above the circle */
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #007bff; /* Example color - use what fits your design */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            z-index: 3; /* To ensure it's above the circle and image */
+            text-decoration: none; /* Removes the underline from links */
+            display: inline-block; /* Allows padding and width/height to be set */
+        }
+
+
+        /* ... other styles ... */
+
+
+        .subtext {
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .circle {
+            width: 300px;
+            height: 300px;
+            background-color: #ffd700;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+
+        .profile-pic {
+            width: 280px; /* Slightly smaller than the circle to fit inside */
+            height: 280px;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            object-fit: cover;
+        }
+
+
+    </style>
 </head>
 <body>
-    <div style="text-align:center;">
-        <!-- Replace 'logo.png' with the path to your logo file -->
-        <img src={% static 'images/logo-opefitoo.png' %} alt="opefitoo" style="max-width: 300px;">
-        <br>
-        <a href="/admin">Admin Panel</a>
-    </div>
+
+<header style="background-color: #fff; padding: 1em 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <img src="{% static 'images/nuno-logos_transparent.png' %}" alt="NUNO" style="height: 100px;">
+    <img src="{% static 'images/logo-opefitoo.png' %}" alt="opefitoo" style="height: 100px;">
+</header>
+
+<div class="container">
+    <div class="circle"></div>
+    <h1 class="main-heading">...</h1>
+    <a class="login-button" href="/admin">Se connecter</a>
+    <img src="{% static 'images/mehditerraneen_african_young_nurse_smiling_to_an_old_caucasian__3aa8d8ea-e057-43b2-ab81-4f224e93fe83.png' %}"
+         alt="Profile Picture" class="profile-pic">
+    <!-- Social icons here -->
+</div>
+
 </body>
 </html>
