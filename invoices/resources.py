@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 from datetime import datetime
 from typing import List
 
@@ -59,7 +60,7 @@ class ConvadisOAuth2Token(models.Model):
 
 def find_vehicle_position(convadis_identifier, vehicles_last_position):
     print("*** convadis_identifier: {} and vehicles last position in cache is {}".format(convadis_identifier,
-                                                                                     vehicles_last_position))
+                                                                                         vehicles_last_position))
     for vehicle_last_position in vehicles_last_position:
         try:
             vehicle_id = vehicle_last_position.get('vehicleId')
@@ -70,10 +71,13 @@ def find_vehicle_position(convadis_identifier, vehicles_last_position):
                     vehicle_last_position.get('lon', 'n/a')
                 )
         except ValueError:
-            raise ValueError("error: vehicleId is not an integer %s - %s" %  (vehicle_last_position, vehicles_last_position))
+            raise ValueError(
+                "error: vehicleId is not an integer %s - %s" % (vehicle_last_position, vehicles_last_position))
         except AttributeError:
-            raise AttributeError("error: vehicleId is not an integer %s - %s" % (vehicle_last_position, vehicles_last_position))
+            raise AttributeError(
+                "error: vehicleId is not an integer %s - %s" % (vehicle_last_position, vehicles_last_position))
     return "n/a"
+
 
 def vehicle_speed(convadis_identifier, speed):
     if 'code' in speed:
@@ -101,8 +105,15 @@ def registration_card_storage_location(instance, filename):
 def maintenance_file_storage_location(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
     path = os.path.join("Doc. Resources", "%s" % instance.car_link.licence_plate)
-    filename = '%s_%s_%s_%s%s' % (
-        instance.car_link.licence_plate, timezone.now().date().strftime('%Y'), timezone.now().date().strftime('%b'),
+    # add a short uuid to the filename to avoir confilct with same name files, should be unique
+    short_uuid = uuid.uuid4().hex[:6]
+    short_description = instance.description[:10]
+    filename = '%s_%s_%s_%s_%s_%s%s' % (
+        instance.car_link.licence_plate,
+        short_description,
+        timezone.now().date().strftime('%Y'),
+        timezone.now().date().strftime('%b'),
+        short_uuid,
         "maintenance", file_extension)
     return os.path.join(path, filename)
 
@@ -168,7 +179,7 @@ class Car(models.Model):
                 except Exception as e:
                     return "Error: %s" % e
             else:
-                client  = get_oauth2_convadis_rest_client_v2(refresh_token=True)
+                client = get_oauth2_convadis_rest_client_v2(refresh_token=True)
             if client:
                 r_post = client.post(
                     'https://iccom.convadis.ch/api/v1/organizations/%s/vehicles/%s/commands/request-last-position' % (
