@@ -221,7 +221,7 @@ class EmployeeAdmin(admin.ModelAdmin):
                 continue
             if emp.start_contract.year > 2020:
                 continue
-            if emp.end_contract.year < 2020:
+            if emp.end_contract.year and emp.end_contract.year < 2020:
                 continue
             who_was_working_in_2020.append(emp)
         # return a csv file with the results
