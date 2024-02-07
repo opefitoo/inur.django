@@ -171,12 +171,33 @@ class Employee(models.Model):
         total_hours = 0
         total_weeks = 0
 
+        # Sort contracts by start_date
+        contracts = sorted(contracts, key=lambda x: x.start_date)
+
+        # Initialize the previous contract end date as the start_date
+        prev_contract_end = start_date
+
         for contract in contracts:
+            # If there's a gap between the previous contract end date and the current contract start date,
+            # consider the number of hours for that period as 0
+            if contract.start_date > prev_contract_end:
+                gap_weeks = (contract.start_date - prev_contract_end).days / 7
+                total_weeks += gap_weeks
+
             contract_start = max(contract.start_date, start_date)
             contract_end = min(contract.end_date or end_date, end_date)
             weeks = (contract_end - contract_start).days / 7
             total_hours += contract.number_of_hours * weeks
             total_weeks += weeks
+
+            # Update the previous contract end date
+            prev_contract_end = contract.end_date or end_date
+
+        # If there's a gap between the last contract end date and the end_date,
+        # consider the number of hours for that period as 0
+        if end_date > prev_contract_end:
+            gap_weeks = (end_date - prev_contract_end).days / 7
+            total_weeks += gap_weeks
 
         if total_weeks == 0:
             return 0
