@@ -211,6 +211,31 @@ class EmployeeAdmin(admin.ModelAdmin):
             self.message_user(request, ve.message,
                               level=messages.ERROR)
 
+    def calculate_etp_for_all_employees_for_the_year_2020(self, request, queryset):
+        # get all the employees
+        employees = Employee.objects.all()
+        # loop through all the employees that are not terminated in 2020 and calculate their ETP
+        who_was_working_in_2020 = []
+        for emp in employees:
+            if emp.end_contract and emp.end_contract.year == 2020:
+                continue
+            if emp.start_contract.year > 2020:
+                continue
+            who_was_working_in_2020.append(emp)
+        # return a csv file with the results
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="etp_stats.csv"'
+        writer = csv.writer(response)
+        # I need employee name, occupation, start date, end date, number of hours in contract
+        writer.writerow(['Nom employe', 'Occupation', 'Date debut', 'Date fin', 'Nombre d\'heures'])
+        for emp in who_was_working_in_2020:
+            if emp.employeecontractdetail_set.filter(end_date__isnull=True).first() is not None:
+                writer.writerow([emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract,
+                             emp.employeecontractdetail_set.filter(end_date__isnull=True).first().number_of_hours])
+            else:
+                writer.writerow([emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract, "NA"])
+        return response
+
     def contracts_situation_certificate(self, request, queryset):
         counter = 1
         file_data = ""
@@ -277,7 +302,8 @@ class EmployeeAdmin(admin.ModelAdmin):
 
     # actions = [work_certificate, 'delete_in_google_calendar']
     actions = [work_certificate, contracts_situation_certificate, entry_declaration, export_employees_data_to_csv,
-               create_google_contact, cleanup_contacts, cleanup_some_contacts]
+               create_google_contact, cleanup_contacts, cleanup_some_contacts,
+               calculate_etp_for_all_employees_for_the_year_2020]
 
     def delete_in_google_calendar(self, request, queryset):
         if not request.user.is_superuser:
