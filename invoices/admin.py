@@ -221,19 +221,21 @@ class EmployeeAdmin(admin.ModelAdmin):
                 continue
             if emp.start_contract.year > 2020:
                 continue
+            if emp.end_contract.year < 2020:
+                continue
             who_was_working_in_2020.append(emp)
         # return a csv file with the results
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="etp_stats.csv"'
         writer = csv.writer(response)
         # I need employee name, occupation, start date, end date, number of hours in contract
-        writer.writerow(['Nom employe', 'Occupation', 'Date debut', 'Date fin', 'Nombre d\'heures'])
+        writer.writerow(['ID','Nom employe', 'Occupation', 'Date debut', 'Date fin', 'Nombre d\'heures'])
         for emp in who_was_working_in_2020:
             if emp.employeecontractdetail_set.filter(end_date__isnull=True).first() is not None:
-                writer.writerow([emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract,
+                writer.writerow([emp.id, emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract,
                              emp.employeecontractdetail_set.filter(end_date__isnull=True).first().number_of_hours])
             else:
-                writer.writerow([emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract, "NA"])
+                writer.writerow([emp.id, emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract, "NA"])
         return response
 
     def contracts_situation_certificate(self, request, queryset):
