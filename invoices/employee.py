@@ -24,6 +24,7 @@ from invoices.enums.holidays import ContractType
 def get_employee_by_abbreviation(abbreviation):
     return Employee.objects.get(abbreviation=abbreviation)
 
+
 def avatar_storage_location(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
     if instance.start_contract is None:
@@ -49,6 +50,7 @@ def validate_avatar(file):
     limit_kb = 10
     if file_size > limit_kb * 1024 * 1024:
         raise ValidationError(_("Maximum file size is %s MB" % limit_kb))
+
 
 class JobPosition(models.Model):
     class Meta:
@@ -141,6 +143,7 @@ class Employee(models.Model):
             return 0
         else:
             return self.get_current_contract().number_of_hours / 40
+
     @property
     def is_involved_in_health_care(self):
         return self.occupation.is_involved_in_health_care
@@ -155,7 +158,30 @@ class Employee(models.Model):
         else:
             return None
 
+    def get_contracts_between_dates(self, start_date, end_date):
+        return self.employeecontractdetail_set.filter(
+            Q(start_date__lte=end_date, end_date__gte=start_date) |
+            Q(start_date__lte=end_date, end_date__isnull=True)
+        ).exclude(start_date__gt=end_date, end_date__lt=start_date)
 
+        # other fields...
+
+    def get_average_hours_per_week(self, start_date, end_date):
+        contracts = self.get_contracts_between_dates(start_date, end_date)
+        total_hours = 0
+        total_weeks = 0
+
+        for contract in contracts:
+            contract_start = max(contract.start_date, start_date)
+            contract_end = min(contract.end_date or end_date, end_date)
+            weeks = (contract_end - contract_start).days / 7
+            total_hours += contract.number_of_hours * weeks
+            total_weeks += weeks
+
+        if total_weeks == 0:
+            return 0
+
+        return total_hours / total_weeks
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
@@ -240,12 +266,13 @@ class Shift(models.Model):
     name = models.CharField(max_length=100, unique=True)  # e.g., 'Morning', 'Night'
     start_time = models.TimeField()
     end_time = models.TimeField()
+
     # name should be unique.
-
-
 
     def __str__(self):
         return self.name
+
+
 class EmployeeShift(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     shift = models.ForeignKey(Shift, on_delete=models.CASCADE)
@@ -338,8 +365,8 @@ class EmployeeAdminFile(models.Model):
 class EmployeeProxy(Employee):
     class Meta:
         proxy = True
-        #verbose_name = "XXX"
-        #verbose_name_plural = "XXXs"
+        # verbose_name = "XXX"
+        # verbose_name_plural = "XXXs"
 
 
 @receiver(post_save, sender=Employee, dispatch_uid='create_auth_token')

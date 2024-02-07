@@ -231,11 +231,14 @@ class EmployeeAdmin(admin.ModelAdmin):
         # I need employee name, occupation, start date, end date, number of hours in contract
         writer.writerow(['ID','Nom employe', 'Occupation', 'Date debut', 'Date fin', 'Nombre d\'heures'])
         for emp in who_was_working_in_2020:
+            average_hours_per_week = emp.get_average_hours_per_week(
+                datetime.date(2020, 1, 1), datetime.date(2020, 12, 31))
             if emp.employeecontractdetail_set.filter(end_date__isnull=True).first() is not None:
                 writer.writerow([emp.id, emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract,
-                             emp.employeecontractdetail_set.filter(end_date__isnull=True).first().number_of_hours])
+                             average_hours_per_week])
             else:
-                writer.writerow([emp.id, emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract, "NA"])
+                writer.writerow([emp.id, emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract,
+                                 average_hours_per_week])
         return response
 
     def contracts_situation_certificate(self, request, queryset):
