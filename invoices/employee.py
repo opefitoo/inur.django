@@ -202,7 +202,7 @@ class Employee(models.Model):
         if total_weeks == 0:
             return 0
 
-        return total_hours / total_weeks
+        return round(total_hours / total_weeks, 2)
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()

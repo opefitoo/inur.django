@@ -81,9 +81,15 @@ class EmployeeModelTest(TestCase):
         # Calculate the expected average hours per week
         weeks_contract1 = (self.contract1.end_date - self.contract1.start_date).days / 7
         weeks_contract2 = (end_date - self.contract2.start_date).days / 7
-        total_weeks = weeks_contract1 + weeks_contract2
-        total_hours = self.contract1.number_of_hours * weeks_contract1 + self.contract2.number_of_hours * weeks_contract2
-        expected_average_hours_per_week = total_hours / total_weeks
-        print('Expected average hours per week:', expected_average_hours_per_week)
 
-        self.assertEqual(average_hours_per_week, expected_average_hours_per_week)
+        # If there's a gap between the end of the first contract and the start of the second contract,
+        # consider the number of hours for that period as 0
+        gap_weeks = 0
+        if self.contract2.start_date > self.contract1.end_date:
+            gap_weeks = (self.contract2.start_date - self.contract1.end_date).days / 7
+
+        total_weeks = weeks_contract1 + weeks_contract2 + gap_weeks
+        total_hours = self.contract1.number_of_hours * weeks_contract1 + self.contract2.number_of_hours * weeks_contract2
+        expected_average_hours_per_week = total_hours / total_weeks if total_weeks > 0 else 0
+
+        self.assertEqual(average_hours_per_week, round(expected_average_hours_per_week, 2))
