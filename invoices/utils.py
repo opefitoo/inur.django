@@ -1,5 +1,5 @@
 __author__ = 'mehdi'
-import subprocess
+
 from calendar import HTMLCalendar
 from datetime import date
 
@@ -28,7 +28,8 @@ from invoices.events import Event
 
 def get_git_hash():
     try:
-        git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('utf-8')[:7]
+        with open('git_hash.txt', 'r') as f:
+            git_hash = f.read().strip()[:7]
     except Exception as e:
         git_hash = "N/A"
     return git_hash
