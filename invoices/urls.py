@@ -227,6 +227,6 @@ urlpatterns += [
 #     urlpatterns += [
 #         path('__debug__/', include(debug_toolbar.urls)),
 #     ]
-admin.site.site_header = "Invoice for Nurses Admin (inur)"
-admin.site.site_title = "INUR Admin Portal"
-admin.site.index_title = "Welcome to INUR Portal"
+admin.site.site_header = "Nurse Notes (nuno)"
+admin.site.site_title = "nuno Admin Portal"
+admin.site.index_title = "nuno"
