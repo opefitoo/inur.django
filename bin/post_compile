@@ -1,1 +1,8 @@
+#!/bin/bash
+# bin/post_compile
+
+# Compile Django messages
 django-admin compilemessages
+
+# Write the git hash to a file
+git rev-parse HEAD > git_hash.txt
