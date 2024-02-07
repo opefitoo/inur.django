@@ -229,7 +229,7 @@ class EmployeeAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename="etp_stats.csv"'
         writer = csv.writer(response)
         # I need employee name, occupation, start date, end date, number of hours in contract
-        writer.writerow(['ID','Nom employe', 'Occupation', 'Date debut', 'Date fin', 'Nombre d\'heures'])
+        writer.writerow(['ID','Nom employe', 'Occupation', 'Date debut', 'Date fin', 'Moy. Nombre d\'heures par semaine en 2020'])
         for emp in who_was_working_in_2020:
             average_hours_per_week = emp.get_average_hours_per_week(
                 datetime.date(2020, 1, 1), datetime.date(2020, 12, 31))
