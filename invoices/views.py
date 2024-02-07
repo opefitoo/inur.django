@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 
 from invoices.models import Prestation, MedicalPrescription, InvoiceItem
+from invoices.utils import get_git_hash
 
 
 def password_change(request):
@@ -32,7 +33,10 @@ def get_queryset_filter(query_str, fields):
 
 
 def home_view(request):
-    return render(request, 'home.html')
+    context = {
+        'git_hash': get_git_hash(),
+    }
+    return render(request, 'home.html', context)
 
 
 # class CareCodeAutocomplete(autocomplete.Select2QuerySetView):

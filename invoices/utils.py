@@ -1,16 +1,16 @@
 __author__ = 'mehdi'
-
-# credit goes to: http://stackoverflow.com/questions/18593661/how-do-i-strftime-a-date-object-in-a-different-locale
-
-# import locale
-# import threading
-#
-# from contextlib import contextmanager
-
+import subprocess
 from calendar import HTMLCalendar
 from datetime import date
 
 from invoices.events import Event
+
+
+# credit goes to: http://stackoverflow.com/questions/18593661/how-do-i-strftime-a-date-object-in-a-different-locale
+# import locale
+# import threading
+#
+# from contextlib import contextmanager
 
 
 # LOCALE_LOCK = threading.Lock()
@@ -25,6 +25,13 @@ from invoices.events import Event
 #         finally:
 #             locale.setlocale(locale.LC_ALL, saved)
 
+
+def get_git_hash():
+    try:
+        git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('utf-8')[:7]
+    except Exception as e:
+        git_hash = "N/A"
+    return git_hash
 
 class EventCalendar(HTMLCalendar):
     def __init__(self, events=None) -> HTMLCalendar:
