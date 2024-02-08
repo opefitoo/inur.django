@@ -548,7 +548,7 @@ def detect_anomalies(instance):
                     # prestation reference looks like "%s%s%s" % (self.invoice.id, self.long_term_care_package.id, date_of_line_str) extract long_term_care_package.id knowing that invoice.id is invoice_in_error.id
                     long_term_care_package_id = reference_prestation[len(str(invoice_in_error.id)):-10]
                     print(long_term_care_package_id)
-                    long_term_care_package = LongTermPackage.objects.get(id=long_term_care_package_id)
+                    long_term_care_package = LongTermPackage.objects.get(code=code_acte_paye)
 
                     # Display the extracted information
                     print(f"  - Prestation Reference: {reference_prestation}")
