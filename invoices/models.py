@@ -404,6 +404,38 @@ class Patient(models.Model):
     def age(self):
         return self.calculate_age(None)
 
+    @property
+    def age_group(self):
+        age = self.calculate_age(None)
+        if age is None:
+            return "N/A"
+        # per age group 0-10, 11-20, 21-30, 31-40, 41-50, 51-60, 61-70, 71-80, 81-90, 91-100, 101-110, 111-120
+        if age < 11:
+            return "0-10"
+        if age < 21:
+            return "11-20"
+        if age < 31:
+            return "21-30"
+        if age < 41:
+            return "31-40"
+        if age < 51:
+            return "41-50"
+        if age < 61:
+            return "51-60"
+        if age < 71:
+            return "61-70"
+        if age < 81:
+            return "71-80"
+        if age < 91:
+            return "81-90"
+        if age < 101:
+            return "91-100"
+        if age < 111:
+            return "101-110"
+        if age < 121:
+            return "111-120"
+        return "121+"
+
     @staticmethod
     def autocomplete_search_fields():
         return 'name', 'first_name'

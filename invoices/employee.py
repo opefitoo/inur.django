@@ -145,6 +145,35 @@ class Employee(models.Model):
             return self.get_current_contract().number_of_hours / 40
 
     @property
+    def calculate_age(self):
+        if self.birth_date:
+            return now().year - self.birth_date.year
+        else:
+            return None
+
+    @property
+    def age_group(self):
+        age = self.calculate_age
+        if age is None:
+            return "N/A"
+        # per age group 0-10, 11-20, 21-30, 31-40, 41-50, 51-60, 61-70, 71+
+        if age < 11:
+            return "0-10"
+        if age < 21:
+            return "11-20"
+        if age < 31:
+            return "21-30"
+        if age < 41:
+            return "31-40"
+        if age < 51:
+            return "41-50"
+        if age < 61:
+            return "51-60"
+        if age < 71:
+            return "61-70"
+        return "71+"
+
+    @property
     def is_involved_in_health_care(self):
         return self.occupation.is_involved_in_health_care
 

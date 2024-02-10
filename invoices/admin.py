@@ -16,7 +16,7 @@ from django.core.cache import cache
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -141,10 +141,13 @@ class EmployeeContractDetailInline(TabularInline):
 class EmployeeAdminFileInline(TabularInline):
     extra = 0
     model = EmployeeAdminFile
+
+
 @admin.register(ClientPatientRelationship)
-class  ClientPatientRelationshipAdmin(admin.ModelAdmin):
+class ClientPatientRelationshipAdmin(admin.ModelAdmin):
     list_display = ('user', 'patient')
     autocomplete_fields = ['user', 'patient']
+
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
@@ -153,6 +156,47 @@ class EmployeeAdmin(admin.ModelAdmin):
                     'employee_fte',)
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
     list_filter = [IsInvolvedInHealthCareFilter]
+
+    def generate_annual_report_for_2023(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
+                              level=messages.ERROR)
+            return
+        unique_employees = []
+        # group by nationality and count
+        nationality_counts = queryset.values('citizenship').annotate(count=Count('citizenship')).order_by('count')
+        # generate a csv file with number of employees for year 2023
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="employees_2023.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Nationalité', 'Nombre d\'employés'])
+        for nc in nationality_counts:
+            writer.writerow([nc['citizenship'], nc['count']])
+        city_counts = queryset.values('address').annotate(count=Count('address')).order_by('count')
+        writer.writerow(['Ville', 'Nombre d\'employés'])
+        for cc in city_counts:
+            writer.writerow([cc['address'], cc['count']])
+        age_group_dict = {}
+        for e in queryset:
+            age_group = e.age_group
+            if age_group in age_group_dict:
+                age_group_dict[age_group] += 1
+            else:
+                age_group_dict[age_group] = 1
+        writer.writerow(['Groupe d\'age', 'Nombre d\'employés'])
+        for key, value in age_group_dict.items():
+            writer.writerow([key, value])
+
+        all_events = Event.objects.filter(day__year=2023).filter(patient__is_under_dependence_insurance=True).exclude(
+            patient__id=751).exclude(event_type_enum=EventTypeEnum.BIRTHDAY).exclude(
+            event_type_enum=EventTypeEnum.GENERIC).exclude(event_type_enum=EventTypeEnum.BIRTHDAY)
+        keep_only_events_after_1_mars_2023 = []
+        for event in all_events:
+            if event.day > datetime.date(2023, 3, 1):
+                keep_only_events_after_1_mars_2023.append(event)
+        writer.writerow(["Nombre d'événements pour les patients sous assurance dépendance", len(keep_only_events_after_1_mars_2023)])
+        
+        return response
 
     # if not super user display only active employees
     def get_queryset(self, request):
@@ -229,13 +273,14 @@ class EmployeeAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename="etp_stats.csv"'
         writer = csv.writer(response)
         # I need employee name, occupation, start date, end date, number of hours in contract
-        writer.writerow(['ID','Nom employe', 'Occupation', 'Date debut', 'Date fin', 'Moy. Nombre d\'heures par semaine en 2020'])
+        writer.writerow(
+            ['ID', 'Nom employe', 'Occupation', 'Date debut', 'Date fin', 'Moy. Nombre d\'heures par semaine en 2020'])
         for emp in who_was_working_in_2020:
             average_hours_per_week = emp.get_average_hours_per_week(
                 datetime.date(2020, 1, 1), datetime.date(2020, 12, 31))
             if emp.employeecontractdetail_set.filter(end_date__isnull=True).first() is not None:
                 writer.writerow([emp.id, emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract,
-                             average_hours_per_week])
+                                 average_hours_per_week])
             else:
                 writer.writerow([emp.id, emp.user.last_name, emp.occupation, emp.start_contract, emp.end_contract,
                                  average_hours_per_week])
@@ -308,7 +353,7 @@ class EmployeeAdmin(admin.ModelAdmin):
     # actions = [work_certificate, 'delete_in_google_calendar']
     actions = [work_certificate, contracts_situation_certificate, entry_declaration, export_employees_data_to_csv,
                create_google_contact, cleanup_contacts, cleanup_some_contacts,
-               calculate_etp_for_all_employees_for_the_year_2020]
+               'generate_annual_report_for_2023']
 
     def delete_in_google_calendar(self, request, queryset):
         if not request.user.is_superuser:
@@ -466,9 +511,75 @@ class PatientAdmin(CSVExportAdmin):
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode', 'city', 'phone_number', 'email_address']
     # actions = [calculate_distance_matrix]
     form = PatientForm
-    actions = [generer_forfait_aev_janvier]
+    actions = [generer_forfait_aev_janvier, "generate_annual_report_for_2023"]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, AlternateAddressInline,
                BedsoreRiskAssessment, SubContractorInline]
+
+    def generate_annual_report_for_2023(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
+                              level=messages.ERROR)
+            return
+        unique_patients = []
+        unique_patients_under_assurance_dependance = []
+        # generate a csv file with number of patients for year 2023
+        for invoice_item in InvoiceItem.objects.filter(invoice_date__year=2023):
+            if invoice_item.patient not in unique_patients:
+                unique_patients.append(invoice_item.patient)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="patients_2023.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Nom', 'Prénom', 'Date de naissance', 'Adresse', 'Code postal', 'Ville', 'Pays', 'Téléphone',
+                         'Email', 'Under assurance dependance'])
+        for patient in unique_patients:
+            writer.writerow([patient.name, patient.first_name, patient.birth_date, patient.address, patient.zipcode,
+                             patient.city, patient.country, patient.phone_number, patient.email_address])
+        for event in Event.objects.filter(day__year=2023):
+            if event.patient and event.patient not in unique_patients and not event.patient.is_under_dependence_insurance:
+                unique_patients.append(event.patient)
+                if event.patient:
+                    writer.writerow(
+                        [event.patient.name, event.patient.first_name, event.patient.birth_date, event.patient.address,
+                         event.patient.zipcode, event.patient.city, event.patient.country, event.patient.phone_number,
+                         event.patient.email_address, "False"])
+                elif event.event_type_enum == EventTypeEnum.BIRTHDAY:
+                    print("Event %s has no patient" % event)
+                else:
+                    print("Event %s has no patient" % event)
+            elif event.patient and event.patient not in unique_patients_under_assurance_dependance and event.patient.is_under_dependence_insurance:
+                unique_patients_under_assurance_dependance.append(event.patient)
+                if event.patient:
+                    writer.writerow(
+                        [event.patient.name, event.patient.first_name, event.patient.birth_date, event.patient.address,
+                         event.patient.zipcode, event.patient.city, event.patient.country, event.patient.phone_number,
+                         event.patient.email_address, "True"])
+                elif event.event_type_enum == EventTypeEnum.BIRTHDAY:
+                    print("Event %s has no patient" % event)
+                else:
+                    print("Event %s has no patient" % event)
+        print("Number of unique patients %s" % len(unique_patients))
+        print(
+            "Number of unique patients under assurance dependance %s" % len(unique_patients_under_assurance_dependance))
+        # write a second row containing the number of unique patients
+        writer.writerow(["Nombre de patients", len(unique_patients)])
+        writer.writerow(
+            ["Nombre de patients sous assurance dépendance", len(unique_patients_under_assurance_dependance)])
+        # now calculate the number of employees that were working in 2022
+        employees = Employee.objects.all()
+        who_was_working_in_2022 = []
+        for emp in employees:
+            if emp.end_contract and emp.end_contract.year < 2023:
+                continue
+            # check if not already in the list
+            if emp not in who_was_working_in_2022:
+                who_was_working_in_2022.append(emp)
+        # append all employees that were working in 2022 with the name
+        for emp in who_was_working_in_2022:
+            writer.writerow(
+                [emp.user.last_name, emp.user.first_name, emp.user.email, emp.start_contract, emp.end_contract])
+        # write a third row containing the number of unique employees
+        writer.writerow(["Nombre d'employés", len(who_was_working_in_2022)])
+        return response
 
     def link_to_invoices(self, instance):
         url = f'{reverse("admin:invoices_invoiceitem_changelist")}?patient__id={instance.id}'
@@ -1514,10 +1625,25 @@ class EventListAdmin(admin.ModelAdmin):
 
     form = EventForm
 
+    # create an action that will filter events that have no prestation associated to them on date
+    def filter_events_with_no_invoiced_prestation_on_date(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request,
+                              "Vous n'avez pas le droit de lister les %s orphelins." % self.verbose_name_plural,
+                              level=messages.WARNING)
+            return
+
+        events = Event.objects.filter(day__range=(self.start_date, self.end_date)).exclude(patient__isnull=True).filter(
+            patient__is_under_dependence_insurance=False).exclude(event_type_enum=EventTypeEnum.BIRTHDAY).order_by(
+            "patient__name", "day")
+        # grouped_events = events.values('patient__name').annotate(event_count=Count('id'))
+        for e in queryset:
+            e.display_unconnected_events()
+
     def safe_delete(self, request, queryset):
         if not request.user.is_superuser:
             self.message_user(request, "Vous n'avez pas le droit de supprimer des %s." % self.verbose_name_plural,
-                                level=messages.WARNING)
+                              level=messages.WARNING)
             return
         for e in queryset:
             e.delete()
@@ -1532,8 +1658,9 @@ class EventListAdmin(admin.ModelAdmin):
 
     def list_orphan_events(self, request, queryset):
         if not request.user.is_superuser:
-            self.message_user(request, "Vous n'avez pas le droit de lister les %s orphelins." % self.verbose_name_plural,
-                                level=messages.WARNING)
+            self.message_user(request,
+                              "Vous n'avez pas le droit de lister les %s orphelins." % self.verbose_name_plural,
+                              level=messages.WARNING)
             return
         for e in queryset:
             e.display_unconnected_events()
@@ -1541,7 +1668,7 @@ class EventListAdmin(admin.ModelAdmin):
     def duplicate_event_for_next_week(self, request, queryset):
         if not request.user.is_superuser:
             self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.verbose_name_plural,
-                                level=messages.WARNING)
+                              level=messages.WARNING)
 
             return
         # only one event at a time
@@ -1596,7 +1723,7 @@ class EventListAdmin(admin.ModelAdmin):
     def duplicate_event_for_next_day(self, request, queryset):
         if not request.user.is_superuser:
             self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.verbose_name_plural,
-                                level=messages.WARNING)
+                              level=messages.WARNING)
             return
         # only one event at a time
         events_duplicated = []

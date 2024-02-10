@@ -1,10 +1,13 @@
+import csv
+
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum, F
+from django.db.models.functions import ExtractMonth
 from django.forms import ModelMultipleChoiceField
 from django.http import HttpResponse
 from django.urls import reverse
@@ -433,9 +436,9 @@ class TensionAndTemperatureParametersInLine(admin.TabularInline):
 def check_access(user, patient):
     if not user.groups.filter(name='clients').exists():
         return False
-    if not ClientPatientRelationship.objects.filter(user=user, patient=patient).exists():
-        return False
-    return True
+    if ClientPatientRelationship.objects.filter(user=user, patient=patient).exists():
+        return True
+    return False
 
 
 @admin.register(MonthlyParameters)
@@ -491,6 +494,86 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
     list_display = ('patient', 'display_object_actions_list', 'bedsore_count', 'fall_count', 'anticipated_directives', 'updated_on')
     list_filter = ('patient', DeceasedFilter, ClientLeftFilter)
     autocomplete_fields = ['patient']
+
+    actions = ["generate_csv_report_2023"]
+
+    def generate_csv_report_2023(self, request, queryset):
+        # only for superuser
+        if not request.user.is_superuser:
+            self.message_user(request, "Only superuser can generate report", level=messages.ERROR)
+            return
+
+        # first get all the patients who has no nationality set
+        patients = PatientAnamnesis.objects.filter(nationality__isnull=True)
+        print("Patients with no nation %s" % patients.count())
+
+        # Get the count of PatientAnamnesis per nationality
+        nationality_counts = queryset.values('nationality').annotate(count=Count('nationality'))
+
+        # Prepare to write to a CSV file
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="report_2023.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Nationality', 'Count'])
+
+        # if nationality is already met, counter is incremented
+        already_met_nationality_dict = {}
+        for nationality_count in nationality_counts:
+            nationality = nationality_count['nationality']
+            count = nationality_count['count']
+
+            if nationality in already_met_nationality_dict:
+                already_met_nationality_dict[nationality] += count
+            else:
+                already_met_nationality_dict[nationality] = count
+
+        for nationality, count in already_met_nationality_dict.items():
+            writer.writerow([nationality, count])
+
+        # now I need to count the number patients per gender
+        gender_counts = queryset.values('patient__gender').annotate(count=Count('patient__gender')).order_by('patient__gender')
+        writer.writerow(['Gender', 'Count'])
+        for gc in gender_counts:
+            writer.writerow([gc['patient__gender'], gc['count']])
+
+        city_count = queryset.values('patient__city').annotate(count=Count('patient__city')).order_by('patient__city')
+        writer.writerow(['City', 'Count'])
+        for cc in city_count:
+            writer.writerow([cc['patient__city'], cc['count']])
+        # now I need count the number of patients per age group
+        writer.writerow(['Age Group', 'Count'])
+        age_group_dict = {}
+        for anamnesis in queryset:
+            age_group = anamnesis.patient.age_group
+            if age_group in age_group_dict:
+                age_group_dict[age_group] += 1
+            else:
+                age_group_dict[age_group] = 1
+        for age_group, count in age_group_dict.items():
+            writer.writerow([age_group, count])
+        # count the total of activities and multiply by quantity
+        writer.writerow(['Activity', 'Count'])
+        total = LongTermMonthlyActivityDetail.objects.aggregate(total=Sum(F('quantity'))).get('total')
+        # Extract the month from the date field and count the number of instances for each month
+        monthly_totals = LongTermMonthlyActivityDetail.objects.annotate(month=ExtractMonth('activity_date')).values('month').annotate(total=Sum(F('quantity'))).order_by('month')
+
+        # Print the total count for each month
+        for total in monthly_totals:
+            print(f"Month: {total['month']}, Total: {total['total']}")
+            writer.writerow([total['month'], total['total']])
+
+        # Group by activity type and count the number of instances for each type
+        activity_totals = LongTermMonthlyActivityDetail.objects.values('activity__code').annotate(total=Sum(F('quantity'))).order_by('activity__code')
+        writer.writerow(['Activity Type', 'Count'])
+
+        # Print the total count for each activity type
+        for total in activity_totals:
+            print(f"Activity Type: {total['activity__code']}, Total: {total['total']}")
+            writer.writerow([total['activity__code'], total['total']])
+
+
+        return response
 
     object_actions = [
         {
