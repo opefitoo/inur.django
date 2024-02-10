@@ -483,6 +483,8 @@ class PatientParameters(ModelAdminObjectActionsMixin, admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
+        if request.user is None:
+            return qs.none()
         if request.user.is_superuser or not request.user.groups.filter(name='clients').exists():
             return qs.select_related('patient')
         elif request.user.groups.filter(name='clients').exists():
