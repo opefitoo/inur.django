@@ -441,7 +441,7 @@ def check_access(user, patient):
         return True
     return False
 def list_patients_related_to_client(user):
-    if not user.groups.filter(name='clients').exists():
+    if not user.groups.filter(name__contains='client').exists():
         return Patient.objects.all()
     return Patient.objects.filter(clientpatientrelationship__user=user)
 
@@ -486,9 +486,9 @@ class PatientParametersAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
         qs = super().get_queryset(request)
         if request.user is None:
             return qs.none()
-        if request.user.is_superuser or not request.user.groups.filter(name='clients').exists():
+        if request.user.is_superuser or not request.user.groups.filter(name__contains='client').exists():
             return qs.select_related('patient')
-        elif request.user.groups.filter(name='clients').exists():
+        elif request.user.groups.filter(name__contains='client').exists():
             patient_ids = list_patients_related_to_client(request.user).values_list('id', flat=True)
             return qs.filter(Q(patient_id__in=patient_ids))
         else:
