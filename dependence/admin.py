@@ -434,10 +434,14 @@ class TensionAndTemperatureParametersInLine(admin.TabularInline):
     readonly_fields = ('user', 'created_on', 'updated_on')
 
 def check_access(user, patient):
+    print("Checking access for user %s and patient %s" % (user, patient))
     if not user.groups.filter(name='clients').exists():
+        print("User is not a client")
         return False
     if ClientPatientRelationship.objects.filter(user=user, patient=patient).exists():
+        print("User has access to patient %s" % patient)
         return True
+    print("User has no access to patient %s" % patient)
     return False
 
 
