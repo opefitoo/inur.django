@@ -840,6 +840,9 @@ class ClientPatientRelationship(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.user} - {self.patient}"
+
 class MedicalPrescription(models.Model):
     class Meta:
         ordering = ['-id']
