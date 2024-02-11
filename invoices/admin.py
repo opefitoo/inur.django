@@ -1830,6 +1830,7 @@ class EventListAdmin(admin.ModelAdmin):
                 form.base_fields.pop("calendar_id", None)
                 form.base_fields.pop("created_by", None)
                 form.base_fields.pop("created_on", None)
+                form.base_fields.pop("updated_on", None)
                 form.base_fields.pop("event_type", None)
         return form
 
@@ -1850,7 +1851,7 @@ class EventListAdmin(admin.ModelAdmin):
                                                        "created_on", "event_type"]]
                 elif obj.sub_contractor and obj.sub_contractor.name in [group.name for group in
                                                                         request.user.groups.all()]:
-                    return [f for f in fs if f not in ['event_report', 'state', 'calendar_id', "calendar_url",
+                    return [f for f in fs if f not in ['event_report', 'state', 'calendar_id', "updated_on", "calendar_url",
                                                        "created_by", "created_on", "event_type"]]
                 else:
                     return fs
@@ -1906,7 +1907,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
     date_hierarchy = 'day'
 
     actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events']
-    readonly_fields = ['created_by', 'created_on', 'calendar_url', 'calendar_id']
+    readonly_fields = ['created_by', 'created_on', 'updated_on', 'calendar_url', 'calendar_id']
 
     context = {}
     form = EventForm

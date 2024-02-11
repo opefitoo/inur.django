@@ -104,6 +104,7 @@ class Event(models.Model):
                                      blank=True, null=True)
     created_by = models.CharField(max_length=30, default="ui")
     created_on = models.DateTimeField(default=timezone.now)
+    updated_on = models.DateTimeField(auto_now=True)
     calendar_url = models.URLField(blank=True, null=True, default='http://a.sur.lu')
     calendar_id = models.CharField(blank=True, null=True, default='0', max_length=100)
 
