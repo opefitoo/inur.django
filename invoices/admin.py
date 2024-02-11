@@ -1804,6 +1804,10 @@ class EventListAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super(EventListAdmin, self).get_queryset(request)
         today = dt.now()
+        # Check if any filters have been applied
+        if request.GET:
+            return queryset
+        
         if request.user.is_superuser:
             return Event.objects.all()
         else:
