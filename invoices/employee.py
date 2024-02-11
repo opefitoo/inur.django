@@ -9,6 +9,8 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
@@ -150,6 +152,14 @@ class Employee(models.Model):
             return now().year - self.birth_date.year
         else:
             return None
+
+    @property
+    def total_number_of_un_validated_events(self):
+        from dependence.stats.employee_stats import get_un_validated_events
+        events = get_un_validated_events(self.id)
+        url = f'{reverse("admin:invoices_eventlist_changelist")}?id__in={",".join([str(event.id) for event in events])}'
+        return mark_safe(
+            '<a href="%s">%s</a>' % (url, "%d" % get_un_validated_events(self.id).count()))
 
     @property
     def age_group(self):

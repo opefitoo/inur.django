@@ -155,6 +155,7 @@ class EmployeeAdmin(admin.ModelAdmin):
     list_display = ('user', 'phone_number', 'start_contract', 'end_contract', 'occupation', 'abbreviation',
                     'employee_fte',)
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
+    readonly_fields = ['total_number_of_un_validated_events']
     list_filter = [IsInvolvedInHealthCareFilter]
 
     def generate_annual_report_for_2023(self, request, queryset):
