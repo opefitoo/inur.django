@@ -159,8 +159,14 @@ class Employee(models.Model):
         unvalidated_events = get_un_validated_events(self.id)
         validated_events = get_validated_events(self.id)
         url = f'{reverse("admin:invoices_eventlist_changelist")}?id__in={",".join([str(event.id) for event in unvalidated_events])}'
+        # calculate ratio = unvalidated_events.count() / validated_events.count() in percentage
+        ratio = 0
+        if validated_events.count() > 0:
+            ratio = unvalidated_events.count() / validated_events.count() * 100
+        else:
+            ratio = 100
         return mark_safe(
-            '<a href="%s">%s </a>' % (url, "%d / %d"  % (unvalidated_events.count(), validated_events.count())))
+            '<a href="%s">%s</a>' % (url, "%d / %d (%d %%)"  % (unvalidated_events.count(), validated_events.count(), ratio)))
 
     @property
     def age_group(self):
