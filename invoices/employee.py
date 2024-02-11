@@ -155,11 +155,12 @@ class Employee(models.Model):
 
     @property
     def total_number_of_un_validated_events(self):
-        from dependence.stats.employee_stats import get_un_validated_events
-        events = get_un_validated_events(self.id)
-        url = f'{reverse("admin:invoices_eventlist_changelist")}?id__in={",".join([str(event.id) for event in events])}'
+        from dependence.stats.employee_stats import get_un_validated_events, get_validated_events
+        unvalidated_events = get_un_validated_events(self.id)
+        validated_events = get_validated_events(self.id)
+        url = f'{reverse("admin:invoices_eventlist_changelist")}?id__in={",".join([str(event.id) for event in unvalidated_events])}'
         return mark_safe(
-            '<a href="%s">%s</a>' % (url, "%d" % get_un_validated_events(self.id).count()))
+            '<a href="%s">%s </a>' % (url, "%d / %d"  % (unvalidated_events.count(), validated_events.count())))
 
     @property
     def age_group(self):
