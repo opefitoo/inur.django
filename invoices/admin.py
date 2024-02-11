@@ -1809,9 +1809,8 @@ class EventListAdmin(admin.ModelAdmin):
         else:
             user_group_names = [group.name for group in request.user.groups.all()]
             from django.db.models import Q
-
-            filtered_my_own_events = Q(employees__user_id=request.user.id) & ~Q(state__in=[3, 5, 6]) & Q(
-                day__year=today.year) & Q(day__month=today.month) & Q(day__day__gte=today.day - 1)
+            # display events of today first and then the rest
+            filtered_my_own_events = Q(employees__user_id=request.user.id) & ~Q(state__in=[3, 5, 6])
             filtered_events_of_my_group_subcontractors = Q(sub_contractor__name__in=user_group_names) & ~Q(
                 state__in=[3, 5, 6]) & Q(day__year=today.year) & Q(day__month=today.month) & Q(
                 day__day__gte=today.day - 1)
