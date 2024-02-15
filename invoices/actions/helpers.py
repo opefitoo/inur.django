@@ -10,8 +10,6 @@ def encode_payment_reference(str_to_encode):
     return int(hashlib.sha1(str_to_encode.encode("utf-8")).hexdigest(), 16) % (10 ** 8)
 
 
-
-
 def decode_payment_reference(hash_to_decode):
     return hashlib.sha1(hash_to_decode.decode("utf-8"))
 
@@ -29,8 +27,10 @@ def invoxia_position_and_battery(invoxia_identifier: str):
     # get position of tracker with id invoxia_identifier
     for tracker in trackers:
         if tracker.id == int(invoxia_identifier):
-            return invoxia_client.get_locations(device=tracker, max_count=1)[0], invoxia_client.get_tracker_status(device=tracker).battery
+            return invoxia_client.get_locations(device=tracker, max_count=1)[0], invoxia_client.get_tracker_status(
+                device=tracker).battery
     return None
+
 
 def invoice_itembatch_prefac_filename(instance, filename):
     # Ainsi le nom des fichiers commence toujours :
@@ -67,6 +67,8 @@ def invoice_itembatch_prefac_filename(instance, filename):
     newfilename = f"F{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_{legal_frame}_PREFAC_001_{reference_interne}"
     # newfilename, file_extension = os.path.splitext(filename)
     return f"inf_invoices/{instance.end_date.year}/{instance.end_date.month}/{newfilename}"
+
+
 def invoice_itembatch_medical_prescription_filename(instance, filename):
     month_of_count = f"{instance.end_date.month:02d}"
     year_of_count = f"{instance.end_date.year:04d}"
@@ -77,6 +79,7 @@ def invoice_itembatch_medical_prescription_filename(instance, filename):
     newfilename = f"F{config.CODE_PRESTATAIRE}{year_of_count}{month_of_count}_FACTURE_{reference_interne}.pdf"
     # newfilename, file_extension = os.path.splitext(filename)
     return f"inf_invoices/{instance.end_date.year}/{instance.end_date.month}/{newfilename}"
+
 
 def invoice_itembatch_ordo_filename(instance, filename):
     month_of_count = f"{instance.end_date.month:02d}"

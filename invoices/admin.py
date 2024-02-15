@@ -195,8 +195,9 @@ class EmployeeAdmin(admin.ModelAdmin):
         for event in all_events:
             if event.day > datetime.date(2023, 3, 1):
                 keep_only_events_after_1_mars_2023.append(event)
-        writer.writerow(["Nombre d'événements pour les patients sous assurance dépendance", len(keep_only_events_after_1_mars_2023)])
-        
+        writer.writerow(["Nombre d'événements pour les patients sous assurance dépendance",
+                         len(keep_only_events_after_1_mars_2023)])
+
         return response
 
     # if not super user display only active employees
@@ -1615,7 +1616,7 @@ class EventListAdmin(admin.ModelAdmin):
     actions = ['safe_delete', 'duplicate_event_for_next_day', 'duplicate_event_for_next_week',
                'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
-               'send_webhook_message', 'create_assurance_dependance_invoice_out_of_events']
+               'send_webhook_message', 'create_invoice_item_out_of_events']
     inlines = (ReportPictureInLine, EventLinkToCareCodeInline,
                EventLinkToMedicalCareSummaclryPerPatientDetailInline,
                EventGenericLinkInline,
@@ -1625,6 +1626,42 @@ class EventListAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
 
     form = EventForm
+    @transaction.atomic
+    def create_invoice_item_out_of_events(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de créer des factures.", level=messages.WARNING)
+            return
+        # All events must be for the same patient
+        if len(set([e.patient for e in queryset])) > 1:
+            self.message_user(request, "Tous les événements doivent être pour le même patient.", level=messages.WARNING)
+            return
+        # get the patient
+        patient = queryset[0].patient
+        prestations = []
+        default_invoicing_dtls = InvoicingDetails.objects.get(default_invoicing=True)
+        date_31_01_2024 = datetime.date(2024, 1, 31)
+        # one invoice can only hold 20 prestation, so we need to  one invoice per 20 event bunch
+        if len(queryset) > 10:
+            invoices_created = []
+            # create a new invoice item for each 20 events
+            for i in range(0, len(queryset), 10):
+                invoice_item = InvoiceItem.objects.create(
+                    invoice_date=date_31_01_2024,
+                    invoice_details=default_invoicing_dtls,
+                    patient=patient)
+                invoices_created.append(invoice_item)
+                for event in queryset[i:i + 10]:
+                    prestations.append(event.create_prestation_out_of_event(invoice_item=invoice_item,))
+            self.message_user(request, "Factures %s créées pour %s" % (invoices_created, patient))
+        else:
+            invoice_item = InvoiceItem.objects.create(
+                invoice_date=date_31_01_2024,
+                invoice_details=default_invoicing_dtls,
+                patient=patient)
+            for event in queryset:
+                event.create_prestation_out_of_event(invoice_item=invoice_item)
+            self.message_user(request, "Facture %s créée pour %s" % (invoice_item, patient))
+
 
     # create an action that will filter events that have no prestation associated to them on date
     def filter_events_with_no_invoiced_prestation_on_date(self, request, queryset):
@@ -1814,7 +1851,8 @@ class EventListAdmin(admin.ModelAdmin):
             user_group_names = [group.name for group in request.user.groups.all()]
             from django.db.models import Q
             # display events of today first and then the rest start from 1st march 2023
-            filtered_my_own_events = Q(employees__user_id=request.user.id) & ~Q(state__in=[3, 5, 6]) & Q(day__gte="2023-03-01")
+            filtered_my_own_events = Q(employees__user_id=request.user.id) & ~Q(state__in=[3, 5, 6]) & Q(
+                day__gte="2023-03-01")
             filtered_events_of_my_group_subcontractors = Q(sub_contractor__name__in=user_group_names) & ~Q(
                 state__in=[3, 5, 6]) & Q(day__year=today.year) & Q(day__month=today.month) & Q(
                 day__day__gte=today.day - 1)
@@ -1855,8 +1893,9 @@ class EventListAdmin(admin.ModelAdmin):
                                                        "created_on", "event_type"]]
                 elif obj.sub_contractor and obj.sub_contractor.name in [group.name for group in
                                                                         request.user.groups.all()]:
-                    return [f for f in fs if f not in ['event_report', 'state', 'calendar_id', "updated_on", "calendar_url",
-                                                       "created_by", "created_on", "event_type"]]
+                    return [f for f in fs if
+                            f not in ['event_report', 'state', 'calendar_id', "updated_on", "calendar_url",
+                                      "created_by", "created_on", "event_type"]]
                 else:
                     return fs
         return self.readonly_fields
@@ -1910,7 +1949,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
     list_filter = ('employees', 'event_type_enum', 'state', 'patient', 'created_by')
     date_hierarchy = 'day'
 
-    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events']
+    actions = ['safe_delete', 'delete_in_google_calendar', 'list_orphan_events', 'create_invoice_item_out_of_events', ]
     readonly_fields = ['created_by', 'created_on', 'updated_on', 'calendar_url', 'calendar_id']
 
     context = {}

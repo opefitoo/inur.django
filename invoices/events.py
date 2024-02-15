@@ -326,6 +326,20 @@ class Event(models.Model):
     def fullname_state(self):
         return self.STATES[self.state - 1][1]
 
+    def create_prestation_out_of_event(self, invoice_item):
+        # create invoice item out of event
+        from invoices.models import Prestation, CareCode
+        prestations = Prestation.objects.filter(date__date=self.day, invoice_item__patient=self.patient,
+                                                carecode=CareCode.objects.get(code='N307'))
+        if prestations.count() > 0:
+            return None
+        # create 2 prestations
+        p1 = Prestation.objects.create(invoice_item=invoice_item, date=self.day, employee=self.employees,
+                                       carecode=CareCode.objects.get(code='NF01'))
+        p2 = Prestation.objects.create(invoice_item=invoice_item, date=self.day, employee=self.employees,
+                                       carecode=CareCode.objects.get(code='N307'))
+        return p1, p2
+
     def __str__(self):  # Python 3: def __str__(self):,
         cached_patient = None
         if self.patient:
@@ -561,7 +575,8 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
         # send notification by email to sub-contractor
         if instance.sub_contractor.email_address:
             send_email_notification(
-                subject='Nouveau soin en sous-traitance pour usager %s en date du %s ' % (instance.patient, instance.day),
+                subject='Nouveau soin en sous-traitance pour usager %s en date du %s ' % (
+                instance.patient, instance.day),
                 message='Bonjour, \n\n'
                         'Un nouveau soin en sous-traitance a été créé pour vous.\n\n'
                         'Vous pouvez le consulter ici : %s\n\n' % url +

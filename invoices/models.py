@@ -1566,6 +1566,8 @@ class Prestation(models.Model):
                 'date': "Max number of Prestations for one InvoiceItem is %s" % (str(InvoiceItem.PRESTATION_LIMIT_MAX))}
 
         return messages
+    def get_patient(self):
+        return self.invoice_item.patient
 
     def __str__(self):  # Python 3: def __str__(self):
         return '%s - %s' % (self.carecode.code, self.carecode.name)
