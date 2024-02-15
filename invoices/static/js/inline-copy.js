@@ -11,26 +11,40 @@ django.jQuery(function () {
         var new_row = inline_group.find('.form-row:not(.empty-form):last');
         var source_row = django.jQuery(this).closest('.form-row');
 
-        var row_id_suffix = '-id';
         var new_row_inputs = new_row.find('input,select');
         django.jQuery.each(source_row.find('input,select'), function (index, source_input) {
             var new_row_input = new_row_inputs[index];
-            if ('undefined' == typeof (new_row_input)) {
+            if (typeof (new_row_input) === 'undefined') {
                 return;
             }
 
             var input_id = django.jQuery(new_row_input).attr('id');
-            if ('undefined' == typeof (input_id)) {
+            if (typeof (input_id) === 'undefined') {
                 input_id = '';
             }
-            if (input_id.indexOf(row_id_suffix, input_id.length - row_id_suffix.length) === -1) {
-                if ('select' == django.jQuery(new_row_input)[0].nodeName.toLowerCase()) {
-                    django.jQuery(new_row_input).html(django.jQuery(source_input).html());
-                }
+
+            // Handle date field
+            if (input_id.includes('-date') && !input_id.includes('-date_1')) {
+                var dateString = django.jQuery(source_input).val();
+                var parts = dateString.split('/');
+                var day = parseInt(parts[0], 10);
+                var month = parseInt(parts[1], 10) - 1; // Month is 0-indexed in JS
+                var year = parseInt(parts[2], 10);
+                var date = new Date(year, month, day);
+                date.setDate(date.getDate() + 1); // Increment the date by 1 day
+
+                var newDateValue = ("0" + date.getDate()).slice(-2) + '/' +
+                                   ("0" + (date.getMonth() + 1)).slice(-2) + '/' +
+                                   date.getFullYear();
+                django.jQuery(new_row_input).val(newDateValue);
+            } else if (input_id.includes('-date_1')) {
+                // Handle time field, copying as-is
                 django.jQuery(new_row_input).val(django.jQuery(source_input).val());
-                django.jQuery(new_row_input).trigger('change');
+            } else {
+                django.jQuery(new_row_input).val(django.jQuery(source_input).val());
             }
+
+            django.jQuery(new_row_input).trigger('change');
         });
     });
 });
-
