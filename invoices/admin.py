@@ -1844,23 +1844,13 @@ class EventListAdmin(admin.ModelAdmin):
         # Check if any filters have been applied
         if request.GET:
             return queryset
-
-        if request.user.is_superuser:
+        if 1 == request.user.id:
             return Event.objects.all()
         else:
-            user_group_names = [group.name for group in request.user.groups.all()]
-            from django.db.models import Q
-            # display events of today first and then the rest start from 1st march 2023
-            filtered_my_own_events = Q(employees__user_id=request.user.id) & ~Q(state__in=[3, 5, 6]) & Q(
-                day__gte="2023-03-01")
-            filtered_events_of_my_group_subcontractors = Q(sub_contractor__name__in=user_group_names) & ~Q(
-                state__in=[3, 5, 6]) & Q(day__year=today.year) & Q(day__month=today.month) & Q(
-                day__day__gte=today.day - 1)
-
-            combined_queryset = queryset.filter(
-                filtered_my_own_events | filtered_events_of_my_group_subcontractors).distinct().order_by("-day")
-
-            return combined_queryset
+            # filter only events assigned to the current user and of today, can be also of yesterday
+            filtered_events = queryset.filter(day=today, employees__user=request.user, state=2) | queryset.filter(
+                day=today - datetime.timedelta(days=1), employees__user=request.user, state=2)
+            return filtered_events
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
