@@ -1844,7 +1844,7 @@ class EventListAdmin(admin.ModelAdmin):
         # Check if any filters have been applied
         if request.GET:
             return queryset
-        if 1 == request.user.id:
+        if request.user.is_superuser:
             return Event.objects.all()
         else:
             # filter only events assigned to the current user and of today, can be also of yesterday
