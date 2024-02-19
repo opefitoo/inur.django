@@ -10,6 +10,7 @@ from django.db.models import Count, Q, Sum, F
 from django.db.models.functions import ExtractMonth
 from django.forms import ModelMultipleChoiceField
 from django.http import HttpResponse
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
@@ -74,6 +75,12 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
             'form_method': 'GET',
             'view': 'print_long_term_invoice',
         },
+        {
+            'slug': 'print_subcontracting_invoice',
+            'verbose_name': 'Subcontracting',
+            'form_method': 'GET',
+            'view': 'print_subcontracting_invoice',
+        },
 
     ]
 
@@ -92,9 +99,12 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
     has_errors_col.boolean = True
 
     def print_long_term_invoice(self, request, object_id, form_url='', extra_context=None, action=None):
-        from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'invoicing/print_long_term_invoice.html', {'obj': obj})
+
+    def print_subcontracting_invoice(self, request, object_id, form_url='', extra_context=None, action=None):
+        obj = self.get_object(request, object_id)
+        return TemplateResponse(request, 'invoicing/print_subcontracting_invoice.html', {'obj': obj})
 
 
 class LongTermCareMonthlyStatementSendingInline(admin.TabularInline):

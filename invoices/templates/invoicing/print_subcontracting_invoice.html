@@ -112,10 +112,10 @@
                         <td class="title">
                             <img src="{% static 'images/Logo_SUR_quadri_transparent_pour_copas.png' %}"
                                  style="width: 200%; max-width: 100px"/>
-                            <div class="information"><br/>
+                            <div class="information"> <br/>
                                 Détail Prestations Assurance Dépendance <br/>
                                 Pour la période du: {{ obj.invoice_start_period }} au {{ obj.invoice_end_period }} <br/>
-                                Total : {{ obj.calculate_price }} € <br/>
+                                Total : {{ obj.get_totals_per_subcontractor }} € <br/>
                             </div>
                         </td>
                         <td>
@@ -131,42 +131,6 @@
                 </table>
             </td>
         </tr>
-
-        <tr class="heading">
-            <td>Num ordre</td>
-            <td>Date Début</td>
-            <td>Date Fin</td>
-            <td>Code</td>
-            <td>Prix unitaire</td>
-            <td>Qté</td>
-            <td>Total</td>
-            <td>Sous-Traitant</td>
-        </tr>
-        {% for line in obj.get_invoice_lines %}
-        <tr class="item">
-            <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
-            <td>{{ line.start_period }}</td>
-            <td>{{ line.end_period }}</td>
-            <td>{{ line.long_term_care_package.code }}</td>
-            <td>{{ line.calculate_price_per_day }}</td>
-            <td>1</td>
-            <td>{{ line.calculate_price }}</td>
-            <!-- if no subcontractor, display '-' -->
-            <td>{{ line.subcontractor|default:"-" }}</td>
-        </tr>
-        {% endfor %}
-        {% for item in obj.get_invoice_items %}
-        <tr class="item">
-            <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
-            <td>{{ item.care_date }}</td>
-            <td>-</td>
-            <td>{{ item.long_term_care_package.code }}</td>
-            <td>{{ item.calculate_unit_price }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>{{ item.calculate_price }}</td>
-            <td>{{ item.subcontractor|default:"-" }}</td>
-        </tr>
-        {% endfor %}
 
         {% if obj.get_patient_hospitalizations %}
 
@@ -204,6 +168,48 @@
         {% endfor %}
         {% endif %}
 
+    </table>
+
+    <br/>
+    <table>
+        <tr class="heading">
+            <td>Num ordre</td>
+            <td>Sous-traitant</td>
+            <td>Date Début</td>
+            <td>Date Fin</td>
+            <td>Code</td>
+            <td>Prix unitaire</td>
+            <td>Qté</td>
+            <td>Total</td>
+        </tr>
+
+        {% for line in obj.get_lines_assigned_to_subcontractor %}
+        <tr class="item">
+            <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
+            <td>{{ line.subcontractor }}</td>
+            <td>{{ line.start_period }}</td>
+            <td>{{ line.end_period }}</td>
+            <td>{{ line.long_term_care_package.code }}</td>
+            <td>{{ line.calculate_price_per_day }}</td>
+            <td>1</td>
+            <td>{{ line.calculate_price }}</td>
+            <!-- if no subcontractor, display '-' -->
+            <td>{{ line.subcontractor|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+
+        {% for item in obj.get_items_assigned_to_subcontractor %}
+        <tr class="item">
+            <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
+            <td>{{ item.subcontractor }}</td>
+            <td>{{ item.care_date }}</td>
+            <td>-</td>
+            <td>{{ item.long_term_care_package.code }}</td>
+            <td>{{ item.calculate_unit_price }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.calculate_price }}</td>
+        </tr>
+        {% endfor %}
     </table>
 </div>
 </body>

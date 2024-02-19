@@ -671,6 +671,30 @@ class LongTermCareInvoiceFile(models.Model):
         return None
 
     @property
+    def get_lines_assigned_to_subcontractor(self):
+        return LongTermCareInvoiceLine.objects.filter(invoice=self).filter(subcontractor__isnull=False).all()
+    @property
+    def get_items_assigned_to_subcontractor(self):
+        return LongTermCareInvoiceItem.objects.filter(invoice=self).filter(subcontractor__isnull=False).all()
+
+    @property
+    def get_totals_per_subcontractor(self):
+        subcontractors = SubContractor.objects.all()
+        totals = {}
+        for subcontractor in subcontractors:
+            for item in LongTermCareInvoiceItem.objects.filter(invoice=self).filter(subcontractor=subcontractor).all():
+                if subcontractor not in totals:
+                    totals[subcontractor] = 0
+                totals[subcontractor] += item.calculate_price()
+            for line in LongTermCareInvoiceLine.objects.filter(invoice=self).filter(subcontractor=subcontractor).all():
+                if subcontractor not in totals:
+                    totals[subcontractor] = 0
+                totals[subcontractor] += line.calculate_price()
+        # return a nice looking string something like For Subcontractor 1 : 1000, For Subcontractor 2 : 2000
+        return ", ".join([f"Pour {subcontractor} : {total}" for subcontractor, total in totals.items()])
+
+
+    @property
     def invoice_reference(self):
         return f"{self.invoice_start_period.year}{self.invoice_start_period.month}{self.id}"
 
