@@ -1,6 +1,7 @@
 import datetime
 
 from django.contrib.auth.models import User, Group
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.encoding import force_str
 from django.utils.functional import Promise
@@ -14,7 +15,9 @@ from dependence.longtermcareitem import LongTermCareItem
 from dependence.models import PatientAnamnesis, AssignedPhysician
 from invoices.distancematrix import DistanceMatrix
 from invoices.employee import JobPosition, Employee, EmployeeContractDetail, Shift, EmployeeShift
+from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event
+from invoices.holidays import HolidayRequest
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch, extract_birth_date_iso, SubContractor
 from invoices.modelspackage import InvoicingDetails
@@ -44,28 +47,49 @@ class FullCalendarEmployeeSerializer(serializers.ModelSerializer):
         fields = ('id', 'abbreviation', 'user')
         depth = 1
 
+
 class ShiftSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shift
         fields = ['id', 'name', 'start_time', 'end_time']
 
+
+class HolidayRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HolidayRequest
+        fields = ['id', 'start_date', 'end_date', 'request_status', 'employee', 'reason', 'hours_taken']
+
+
 class SimplifiedTimesheetSerializer(serializers.ModelSerializer):
+    holiday_requests = serializers.SerializerMethodField()
+
     class Meta:
         model = SimplifiedTimesheet
         fields = ['id', 'employee', 'time_sheet_year', 'total_hours_sundays', 'time_sheet_month',
-                  'hours_should_work', 'total_hours_public_holidays']
+                  'hours_should_work', 'total_hours_public_holidays', 'holiday_requests']
+
+    def get_holiday_requests(self, obj):
+        holiday_requests = HolidayRequest.objects.filter(
+            Q(employee=obj.employee.user),
+            Q(request_status=HolidayRequestWorkflowStatus.ACCEPTED),
+            Q(start_date__year=obj.time_sheet_year, start_date__month=obj.time_sheet_month) |
+            Q(end_date__year=obj.time_sheet_year, end_date__month=obj.time_sheet_month)
+        )
+        return HolidayRequestSerializer(holiday_requests, many=True).data
+
 
 class EmployeeAbbreviationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = ['abbreviation']
+
+
 class EmployeeShiftSerializer(serializers.ModelSerializer):
     employee = EmployeeAbbreviationSerializer(read_only=True)
+
     class Meta:
         model = EmployeeShift
         fields = ['id', 'employee', 'shift', 'date']
-
-
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -77,8 +101,10 @@ class EmployeeSerializer(serializers.ModelSerializer):
                   'virtual_career_anniversary_date')
         depth = 1
 
+
 class EmployeeContractDetailSerializer(serializers.ModelSerializer):
     employee_link = EmployeeSerializer()
+
     class Meta:
         model = EmployeeContractDetail
         fields = ('start_date', 'number_of_hours', 'number_of_days_holidays', 'monthly_wage', 'contract_date',
@@ -91,6 +117,8 @@ class DistanceMatrixSerializer(serializers.ModelSerializer):
     class Meta:
         model = DistanceMatrix
         fields = ('patient_origin', 'patient_destination', 'distance_in_km', 'duration_in_mn')
+
+
 class EmployeeContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeContractDetail
@@ -337,6 +365,7 @@ class SubContractorSerializer(serializers.ModelSerializer):
         model = SubContractor
         fields = ['id', 'name', 'get_full_address', 'contractor_profession', 'created_on', 'updated_on',
                   'billing_retrocession', 'start_collaboration_date']
+
 
 class FullCalendarEventSerializer(serializers.ModelSerializer):
     start = serializers.SerializerMethodField()
