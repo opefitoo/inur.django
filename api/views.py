@@ -24,7 +24,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
     FullCalendarEmployeeSerializer, FullCalendarPatientSerializer, \
     LongTermMonthlyActivitySerializer, DistanceMatrixSerializer, ShiftSerializer, EmployeeShiftSerializer, \
-    SubContractorSerializer
+    SubContractorSerializer, SimplifiedTimesheetSerializer
 from api.utils import get_settings
 from dependence.activity import LongTermMonthlyActivity
 from dependence.careplan import CarePlanDetail, CarePlanMaster
@@ -45,7 +45,7 @@ from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physicia
     ValidityDate, InvoiceItemBatch, SubContractor
 from invoices.processors.birthdays import process_and_generate
 from invoices.processors.events import delete_events_created_by_script
-from invoices.timesheet import Timesheet, TimesheetTask, SimplifiedTimesheetDetail
+from invoices.timesheet import Timesheet, TimesheetTask, SimplifiedTimesheetDetail, SimplifiedTimesheet
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -563,6 +563,12 @@ def calculate_distance_matrix(request):
         # print("%s : %s" % (active_patient, active_patient.full_address))
     create_distance_matrix(patient_address_dict, config.DISTANCE_MATRIX_API_KEY)
     return Response(status=status.HTTP_200_OK)
+
+class SimplifiedTimesheetViewSet(viewsets.ModelViewSet):
+    queryset = SimplifiedTimesheet.objects.all()
+    serializer_class = SimplifiedTimesheetSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['employee__abbreviation', 'time_sheet_year', 'time_sheet_month']
 
 
 class ShiftViewSet(viewsets.ModelViewSet):

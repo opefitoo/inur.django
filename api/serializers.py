@@ -18,7 +18,7 @@ from invoices.events import EventType, Event
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch, extract_birth_date_iso, SubContractor
 from invoices.modelspackage import InvoicingDetails
-from invoices.timesheet import Timesheet, TimesheetTask
+from invoices.timesheet import Timesheet, TimesheetTask, SimplifiedTimesheet
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -48,6 +48,12 @@ class ShiftSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shift
         fields = ['id', 'name', 'start_time', 'end_time']
+
+class SimplifiedTimesheetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SimplifiedTimesheet
+        fields = ['id', 'employee', 'time_sheet_year', 'total_hours_sundays', 'time_sheet_month',
+                  'hours_should_work', 'total_hours_public_holidays']
 
 class EmployeeAbbreviationSerializer(serializers.ModelSerializer):
     class Meta:
