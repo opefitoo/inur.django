@@ -62,11 +62,12 @@ class HolidayRequestSerializer(serializers.ModelSerializer):
 
 class SimplifiedTimesheetSerializer(serializers.ModelSerializer):
     holiday_requests = serializers.SerializerMethodField()
+    employee_abbreviation = serializers.CharField(source='employee.abbreviation', read_only=True)
 
     class Meta:
         model = SimplifiedTimesheet
-        fields = ['id', 'employee', 'time_sheet_year', 'total_hours_sundays', 'time_sheet_month',
-                  'hours_should_work', 'total_hours_public_holidays', 'holiday_requests']
+        fields = ['id', 'employee', 'employee_abbreviation', 'time_sheet_year', 'total_hours_sundays',
+                  'time_sheet_month', 'hours_should_work', 'total_hours_public_holidays', 'holiday_requests']
 
     def get_holiday_requests(self, obj):
         holiday_requests = HolidayRequest.objects.filter(
