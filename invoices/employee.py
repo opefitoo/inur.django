@@ -43,6 +43,22 @@ def avatar_storage_location(instance, filename):
         file_extension)
     return os.path.join(path, filename)
 
+def minified_avatar_storage_location(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.start_contract is None:
+        _current_yr_or_prscr_yr = now().date().strftime('%Y')
+        _current_month_or_prscr_month = now().date().strftime('%M')
+    else:
+        _current_yr_or_prscr_yr = str(instance.start_contract.year)
+        _current_month_or_prscr_month = str(instance.start_contract.month)
+    path = os.path.join("Doc. Admin employes", "%s_%s" % (instance.user.last_name.upper(),
+                                                          instance.user.first_name.capitalize()))
+    filename = '%s_%s_%s_%s%s' % (
+        _current_yr_or_prscr_yr, _current_month_or_prscr_month, instance.abbreviation,
+        "minified_avatar",
+        file_extension)
+    return os.path.join(path, filename)
+
 
 def validate_avatar(file):
     try:
@@ -127,6 +143,10 @@ class Employee(models.Model):
                                validators=[validate_avatar],
                                help_text=_("You can attach the scan of the declaration"),
                                null=True, blank=True)
+    minified_avatar = models.ImageField(upload_to=minified_avatar_storage_location,
+                                        validators=[validate_avatar],
+                                        help_text=_("You can attach the minified version of the avatar"),
+                                        null=True, blank=True)
     bio = models.TextField("Bio", default="Fill in your bio", max_length=200)
     to_be_published_on_www = models.BooleanField("Public Profile",
                                                  help_text="If checked then bio and avatar fields become mandatory",
@@ -252,9 +272,6 @@ class Employee(models.Model):
 
     def clean(self, *args, **kwargs):
         super(Employee, self).clean()
-        is_has_gdrive_access_valid, message = self.is_has_gdrive_access_valid(self.has_gdrive_access, self.user)
-        if not is_has_gdrive_access_valid:
-            raise ValidationError({'has_gdrive_access': message})
         ## if self.address contains line breaks, replace them with spaces
         if self.address:
             self.address = self.address.replace('\n', ' ').replace('\r', '').replace('  ', ' ')

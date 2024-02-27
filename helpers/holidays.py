@@ -1,7 +1,10 @@
+import base64
+import os
 from calendar import monthrange
 from datetime import timedelta, date
 
 import holidays
+import requests
 from django.db.models import Q
 
 from helpers.models import SicknessHolidayDaysCalculations
@@ -184,6 +187,34 @@ def whois_available(working_day):
                                                         start_date__lte=working_day, end_date__gte=working_day)]
     # FIXME not correct way to retrieve active user/employee
     return [x.abbreviation for x in Employee.objects.filter(end_contract__isnull=True) if x not in employees_on_leave]
+
+
+def whois_available_with_avatars_and_ids(working_day):
+    employees_on_leave = [x.employee.employee for x in
+                          HolidayRequest.objects.filter(request_status=HolidayRequestWorkflowStatus.ACCEPTED,
+                                                        start_date__lte=working_day, end_date__gte=working_day)]
+    employees = []
+    for x in Employee.objects.filter(end_contract__isnull=True):
+        if x not in employees_on_leave:
+            avatar_base64 = None
+            if x.minified_avatar:
+                try:
+                    # If avatar is stored locally
+                    if os.environ.get('LOCAL_ENV', None):
+                        with x.minified_avatar.storage.open(x.minified_avatar.name, 'rb') as avatar_file:
+                            avatar_base64 = base64.b64encode(avatar_file.read()).decode('utf-8')
+                    else:
+                        # If avatar is stored in a remote server
+                        response = requests.get(x.minified_avatar.url)
+                        avatar_base64 = base64.b64encode(response.content).decode('utf-8')
+                except Exception as e:
+                    print(f"Error converting avatar to base64: {e}")
+            employees.append({'id': str(x.id), 'abbreviation': str(x.abbreviation),
+                              'name': str(x.user),
+                              'minified_avatar': avatar_base64,
+                              'color_text': str(x.color_text),
+                              'color_cell': str(x.color_cell)})
+    return employees
 
 
 def which_shift(working_day, abbreviation):

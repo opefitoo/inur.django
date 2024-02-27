@@ -1,10 +1,12 @@
 import calendar
 import csv
 import datetime
+import io
 from datetime import datetime as dt
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
+from PIL import Image
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from constance import config
 from django.contrib import admin
@@ -15,6 +17,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q, Count
 from django.http import HttpResponseRedirect, HttpResponse
@@ -155,8 +158,33 @@ class EmployeeAdmin(admin.ModelAdmin):
     list_display = ('user', 'phone_number', 'start_contract', 'end_contract', 'occupation', 'abbreviation',
                     'employee_fte',)
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
-    readonly_fields = ['total_number_of_un_validated_events']
+    readonly_fields = ['total_number_of_un_validated_events', 'minified_avatar']
     list_filter = [IsInvolvedInHealthCareFilter]
+
+    def save_model(self, request, obj, form, change):
+        if 'avatar' in form.changed_data:
+            original_image = form.cleaned_data['avatar']
+
+            # Open the image using Pillow
+            img = Image.open(original_image)
+
+            # Resize/minify the image using LANCZOS resampling filter
+            img.thumbnail((48, 48), Image.Resampling.LANCZOS)
+
+            # Save the minified image to a BytesIO object
+            in_memory_image = io.BytesIO()
+            img_format = 'JPEG' if img.format == 'JPEG' else 'PNG'  # Adjust based on your needs
+            img.save(in_memory_image, format=img_format)
+            in_memory_image.seek(0)
+
+            # Replace the original image with the minified one
+            obj.minified_avatar.save(
+                original_image.name,
+                content=ContentFile(in_memory_image.read()),
+                save=False
+            )
+
+        super().save_model(request, obj, form, change)
 
     def generate_annual_report_for_2023(self, request, queryset):
         if not request.user.is_superuser:

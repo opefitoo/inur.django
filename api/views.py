@@ -9,8 +9,9 @@ from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -318,7 +319,7 @@ class NunoEventsService(generics.ListCreateAPIView):
             return self.list(request, *args, **kwargs)
         if username is not None:
             employee = Employee.objects.get(user__username=username)
-            #self.queryset = self.queryset.filter(day=datetime.today().date(), employees=employee)
+            # self.queryset = self.queryset.filter(day=datetime.today().date(), employees=employee)
             #
             self.queryset = self.queryset.filter(employees=employee)
             return self.list(request, *args, **kwargs)
@@ -352,6 +353,8 @@ class NunoEventsService(generics.ListCreateAPIView):
             return HttpResponse("OK")
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class SubContractorViewSet(viewsets.ModelViewSet):
     queryset = SubContractor.objects.all()
     serializer_class = SubContractorSerializer
@@ -359,6 +362,8 @@ class SubContractorViewSet(viewsets.ModelViewSet):
     def get(self, request, *args, **kwargs):
         self.queryset = self.queryset.filter(occupation__is_subcontractor=True)
         return self.list(request, *args, **kwargs)
+
+
 class FullCalendarEventViewSet(generics.ListCreateAPIView):
     queryset = Event.objects.all()
     serializer_class = FullCalendarEventSerializer
@@ -411,7 +416,7 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
                     {'error': 'Cannot delete validated event, event has report: %s' % event.event_report},
                     status=status.HTTP_400_BAD_REQUEST)
             # if event is the past you cannot delete it
-            if event.day < datetime.today().date() and event.state not in (1,2):
+            if event.day < datetime.today().date() and event.state not in (1, 2):
                 return JsonResponse({'error': 'Cannot delete past event'}, status=status.HTTP_400_BAD_REQUEST)
             event.delete()
             return JsonResponse({'status': 'success'}, status=status.HTTP_204_NO_CONTENT)
@@ -522,7 +527,6 @@ class EventList(generics.ListCreateAPIView):
                     instance.delete()
                     return JsonResponse(result.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
         return result
 
 
@@ -563,6 +567,7 @@ def calculate_distance_matrix(request):
         # print("%s : %s" % (active_patient, active_patient.full_address))
     create_distance_matrix(patient_address_dict, config.DISTANCE_MATRIX_API_KEY)
     return Response(status=status.HTTP_200_OK)
+
 
 class SimplifiedTimesheetViewSet(viewsets.ModelViewSet):
     queryset = SimplifiedTimesheet.objects.all()
@@ -625,6 +630,15 @@ def whois_off(request):
 def whois_available(request):
     if 'POST' == request.method:  # user posting data
         reqs = holidays.whois_available(datetime.strptime(request.data["working_day"], "%Y-%m-%d"))
+        return (Response(reqs, status=status.HTTP_200_OK))
+
+
+@api_view(['POST'])
+@renderer_classes([JSONRenderer])
+def whois_available_with_avatars_and_ids(request):
+    if 'POST' == request.method:  # user posting data
+        data = json.loads(request.body)
+        reqs = holidays.whois_available_with_avatars_and_ids(datetime.strptime(data["working_day"], "%Y-%m-%d"))
         return Response(reqs, status=status.HTTP_200_OK)
 
 
@@ -776,7 +790,6 @@ class SettingViewSet(viewsets.ViewSet):
 
 
 class LoginView(APIView):
-
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
