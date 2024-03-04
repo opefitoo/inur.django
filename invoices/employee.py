@@ -333,7 +333,7 @@ class Employee(models.Model):
 
     def generate_unique_hash(self):
         # Concatenate the name and first_name
-        combined_string = self.user.name + self.user.first_name + self.id
+        combined_string = self.user.last_name + self.user.first_name + self.id
 
         # Create a SHA256 hash
         result = hashlib.sha256(combined_string.encode())
