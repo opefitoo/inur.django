@@ -844,7 +844,8 @@ class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     autocomplete_fields = ['patient']
     readonly_fields = ('user', 'created_on', 'updated_on')
     inlines = [AAITransDetailInLine]
-
+    # filter per patient
+    list_filter = ("patient","aai_year", "aai_month")
     object_actions = [
         {
             'slug': 'print_aai',
