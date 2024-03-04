@@ -1,0 +1,47 @@
+[
+  {
+    "model": "invoices.shift",
+    "pk": 1,
+    "fields": {
+      "name": "Matin de 6h30 à 14h30 (8h)",
+      "start_time": "06:30:00",
+      "end_time": "14:30:00"
+    }
+  },
+  {
+    "model": "invoices.shift",
+    "pk": 2,
+    "fields": {
+      "name": "Matin de 6h30 à 12h30 (6h)",
+      "start_time": "06:30:00",
+      "end_time": "12:30:00"
+    }
+  },
+  {
+    "model": "invoices.shift",
+    "pk": 3,
+    "fields": {
+      "name": "Soir de 14h à 22h",
+      "start_time": "14:00:00",
+      "end_time": "22:00:00"
+    }
+  },
+  {
+    "model": "invoices.shift",
+    "pk": 4,
+    "fields": {
+      "name": "Soir de 13h30 à 21h30",
+      "start_time": "13:30:00",
+      "end_time": "21:30:00"
+    }
+  },
+   {
+    "model": "invoices.shift",
+    "pk": 5,
+    "fields": {
+      "name": "Soir de 16h à 22h",
+      "start_time": "16:00:00",
+      "end_time": "22:00:00"
+    }
+  }
+]
