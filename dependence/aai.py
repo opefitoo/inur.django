@@ -106,7 +106,6 @@ class AAITransDetail(models.Model):
     date_time_means_set = models.DateTimeField("Date/h", null=True, blank=True, default=None)
     means_paraph = models.ForeignKey(Employee, verbose_name="Paraphe",
                                      # limit_choices_to={'abbreviation_is_not_xxx': True},
-                                     limit_choices_to=~models.Q(abbreviation__in=['XXX']),
-                                     related_name='employee_of_means',
+                                     limit_choices_to=models.Q(user__groups__name='ergo-kine'),                                     related_name='employee_of_means',
                                      on_delete=models.PROTECT,
                                      null=True, blank=True, default=None)
