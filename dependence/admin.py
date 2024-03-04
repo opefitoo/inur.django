@@ -840,7 +840,7 @@ class AAITransDetailInLine(admin.TabularInline):
 
 @admin.register(AAITransmission)
 class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
-    list_display = ('patient', 'transmission_number', 'display_object_actions_list',)
+    list_display = ('patient', "aai_year" , "aai_month", 'transmission_number', 'display_object_actions_list',)
     autocomplete_fields = ['patient']
     readonly_fields = ('user', 'created_on', 'updated_on')
     inlines = [AAITransDetailInLine]
