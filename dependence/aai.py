@@ -1,11 +1,12 @@
+from constance import config
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from dependence.models import AssignedPhysician, PatientAnamnesis
+from dependence.models import AssignedPhysician, PatientAnamnesis, current_year, current_month
 from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
+from invoices.enums.generic import MonthsNames
 from invoices.models import Patient
-from constance import config
 
 
 class AAITransmission(models.Model):
@@ -21,6 +22,13 @@ class AAITransmission(models.Model):
                                 on_delete=models.CASCADE,
                                 limit_choices_to={'is_under_dependence_insurance': True})
     transmission_number = models.PositiveSmallIntegerField("Numéro")
+    aai_year = models.PositiveIntegerField(
+        default=current_year())
+
+    aai_month = models.IntegerField(
+        choices=MonthsNames.choices,
+        default=current_month(),
+    )
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
@@ -90,6 +98,11 @@ class AAITransDetail(models.Model):
                                              verbose_name="Détails", on_delete=models.PROTECT)
     objectives = models.TextField("Objectifs", help_text="Prise en charge, lien avec AEV", max_length=100)
     means = models.TextField("Moyens/Actions", max_length=100, null=True, blank=True, default=None)
+    results = models.TextField(u"Résultats", max_length=100,
+                               null=True, blank=True, default=None)
+    session_duration = models.DurationField("Durée",
+                                            help_text="Durée de la séance sous format HH:MM:SS",
+                                            null=True, blank=True, default=None)
     date_time_means_set = models.DateTimeField("Date/h", null=True, blank=True, default=None)
     means_paraph = models.ForeignKey(Employee, verbose_name="Paraphe",
                                      # limit_choices_to={'abbreviation_is_not_xxx': True},
@@ -97,13 +110,3 @@ class AAITransDetail(models.Model):
                                      related_name='employee_of_means',
                                      on_delete=models.PROTECT,
                                      null=True, blank=True, default=None)
-
-    results = models.TextField(u"Résultats", max_length=100,
-                               null=True, blank=True, default=None)
-    date_time_results_set = models.DateTimeField("Date/h", null=True, blank=True, default=None)
-    results_paraph = models.ForeignKey(Employee, verbose_name="Paraphe",
-                                       # limit_choices_to={'abbreviation_is_not_xxx': True},
-                                       limit_choices_to=~models.Q(abbreviation__in=['XXX']),
-                                       related_name='employee_of_results',
-                                       on_delete=models.PROTECT,
-                                       null=True, blank=True, default=None)
