@@ -203,6 +203,9 @@ export_to_pdf_with_medical_prescription_files.short_description = "Facture CNS (
 
 
 def create_google_contact(modeladmin, request, queryset):
+    if not request.user.is_superuser:
+        modeladmin.message_user(request, _("You are not allowed to do this action"))
+        return
     from invoices.processors.tasks import sync_google_contacts
     if os.environ.get('LOCAL_ENV', None):
         sync_google_contacts(queryset)
