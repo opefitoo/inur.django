@@ -37,7 +37,7 @@ django-cors-headers==4.3.1
 #APScheduler==3.6.3″
 google-auth-oauthlib==1.2.0
 google-auth-httplib2==0.2.0
-holidays==0.40
+holidays==0.43
 django-csv-exports==1.0.5
 django-colorfield==0.11.0
 django-fieldsets-with-inlines==0.6
@@ -58,10 +58,10 @@ django-phonenumber-field==7.3.0
 phonenumberslite==8.13.27
 django-select2==8.1.2
 pdf2image==1.16.3
-vininfo==1.7.0
-sentry-sdk==1.39.1
-lxml==5.0.0
-xmlschema==2.5.1
+vininfo==1.8.0
+sentry-sdk==1.40.6
+lxml==5.1.0
+xmlschema==3.0.2
 gps-tracker==0.8.1
 pypdf==3.17.4
 pygad==3.2.0
@@ -73,6 +73,7 @@ ofxtools==0.9.5
 python-decouple==3.8
 #GDAL==3.7.2
 chardet~=5.2.0
-numpy==1.26.3
+numpy==1.26.4
 pytz~=2023.3.post1
 rq~=1.15.1
+honcho==1.1.0
