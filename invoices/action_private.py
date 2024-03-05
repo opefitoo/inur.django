@@ -127,12 +127,12 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False, on
     if invoicing_details is None:
         invoicing_details = InvoicingDetails.objects.get(default_invoicing=True)
     # if both invoicing_details af and aa are empty, do not display them
-    if invoicing_details.af == "" and invoicing_details.aa == "" and invoicing_details.rc == "":
+    if invoicing_details.af == "" and invoicing_details.rc == "":
         legal_mention = f"{invoicing_details.name} {invoicing_details.address} {invoicing_details.zipcode_city} " \
                         f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account}"
     else:
         legal_mention = f"{invoicing_details.name} {invoicing_details.address} {invoicing_details.zipcode_city} " \
-                        f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account} RC:{invoicing_details.rc} Autorisations:{invoicing_details.af}-{invoicing_details.aa}"
+                        f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account} RC:{invoicing_details.rc} Agréments:{invoicing_details.af}"
     footer2 = Footer(legal_mention)
 
     doc.build(elements, onFirstPage=footer2, onLaterPages=footer2)

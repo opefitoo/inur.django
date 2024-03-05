@@ -21,8 +21,10 @@ class InvoicingDetails(models.Model):
     bank_account = models.CharField(max_length=50)
     # registre de commerce
     rc = models.CharField("Registre de commerce", max_length=50, null=True, blank=True)
-    # autorisation ministère de la famille activités soins à domicile
-    af = models.CharField("Autorisation ministère de la famille activités soins à domicile" , max_length=50, null=True, blank=True)
+    # autorisation ministère de la famille activités aides & soins à domicile
+    af = models.CharField("Autorisation ministère de la famille activités aides & soins à domicile" ,
+                          help_text="Autorisation ministère de la famille activités aides & soins à domicile, selon la loi du 23 aout 2023.",
+                          max_length=50, null=True, blank=True)
     # autorisation ministère de la famille activités aides à domicile
     aa = models.CharField("Autorisation ministère de la famille activités aides à domicile", max_length=50, null=True, blank=True)
     default_invoicing = models.BooleanField(default=False)
