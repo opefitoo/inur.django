@@ -132,7 +132,7 @@ def pdf_private_invoice(modeladmin, request, queryset, attach_to_email=False, on
                         f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account}"
     else:
         legal_mention = f"{invoicing_details.name} {invoicing_details.address} {invoicing_details.zipcode_city} " \
-                        f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account} RC:{invoicing_details.rc} Agréments:{invoicing_details.af}"
+                        f"tel:{invoicing_details.phone_number} iban:{invoicing_details.bank_account} RC:{invoicing_details.rc} Agrément:{invoicing_details.af}"
     footer2 = Footer(legal_mention)
 
     doc.build(elements, onFirstPage=footer2, onLaterPages=footer2)
