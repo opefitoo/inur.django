@@ -31,6 +31,32 @@
         .btn-close {
             color: white;
         }
+
+        .fc-event-state {
+            font-size: 1em; /* Smaller font size for the state */
+            margin-top: 5px; /* Space from the title */
+            color: #000; /* Change the text color to black */
+            background-color: #ff0; /* Change the background color to yellow */
+            padding: 2px 4px; /* Padding around the text */
+            border-radius: 4px; /* Rounded corners */
+            display: inline-block; /* Align with the event title */
+        }
+
+        .strikethrough {
+            text-decoration: line-through;
+        }
+
+        .state-valid {
+            background-color: lightgray;
+        }
+
+        .state-done {
+            background-color: lightgreen;
+        }
+
+        .state-cancelled {
+            background-color: red;
+        }
     </style>
     <meta charset='utf-8'/>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
@@ -142,6 +168,19 @@
 
                             // Append the state element to the event's content
                             info.el.querySelector('.fc-event-title').appendChild(stateElement);
+
+                            // Check the event state and apply corresponding CSS class
+                            // log the state to the console
+                            console.log("State:" + info.event.extendedProps.state);
+                            if (info.event.extendedProps.state.toLowerCase() === 'valid') {
+                                stateElement.classList.add('state-valid');
+                            } else if (info.event.extendedProps.state.toLowerCase() === 'done') {
+                                stateElement.classList.add('state-done');
+                            } else {
+                                stateElement.classList.add('state-cancelled');
+                                // and strike through the event title
+                                info.el.querySelector('.fc-event-title').classList.add('strikethrough');
+                            }
                         }
                     },
                     firstDay:
