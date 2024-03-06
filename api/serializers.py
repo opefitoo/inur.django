@@ -44,8 +44,16 @@ class FullCalendarEmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        fields = ('id', 'abbreviation', 'user')
+        fields = ('id', 'abbreviation', 'user', 'color_cell', 'color_text')
         depth = 1
+class ShiftSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Shift
+        fields = ['id', 'name', 'start_time', 'end_time']
+class EmployeeShiftSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmployeeShift
+        fields = ('id', 'employee', 'shift', 'date')
 
 
 class ShiftSerializer(serializers.ModelSerializer):

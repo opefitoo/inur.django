@@ -63,6 +63,12 @@ class EmployeeAvatarSerializerViewSet(viewsets.ModelViewSet):
     """
     queryset = Employee.objects.filter(to_be_published_on_www=True).order_by("start_contract")
     serializer_class = EmployeeAvatarSerializer
+class EmployeeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows employees who want to be published on internet to be viewed.
+    """
+    queryset = Employee.objects.all().order_by("start_contract")
+    serializer_class = FullCalendarEmployeeSerializer
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -137,6 +143,20 @@ class PhysicianViewSet(viewsets.ModelViewSet):
     queryset = Physician.objects.all()
     serializer_class = PhysicianSerializer
 
+
+class ShiftViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows Shifts to be viewed.
+    """
+    queryset = Shift.objects.all()
+    serializer_class = ShiftSerializer
+
+class EmployeeShiftSerializerViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows EmployeeShift to be viewed.
+    """
+    queryset = EmployeeShift.objects.all()
+    serializer_class = EmployeeShiftSerializer
 
 class EmployeeSerializerViewSet(viewsets.ModelViewSet):
     """
@@ -470,7 +490,7 @@ class AvailableEmployeeList(generics.ListCreateAPIView):
         # removed from the list
         event_list = Event.objects.filter(day=day, time_start_event__lte=end_time,
                                           time_end_event__gte=start_time).exclude(
-            id=self.request.query_params['id']).exclude(employees=None)
+            id=self.request.query_params['id']).exclude(employees=None).exclude(state__in=[1,2,3])
         # get the list of employees not on holiday and not assigned to an event at the same time
         # take only employees who still have a contract
         queryset = Employee.objects.exclude(user_id__in=holiday_list.values_list('employee', flat=True)).exclude(
