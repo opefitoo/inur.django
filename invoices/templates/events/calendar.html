@@ -133,35 +133,63 @@
                             container: 'body',
                             delay: {"show": 50, "hide": 50}
                         });
+                        // Check if the state property exists and append it to the event's title
+                        if (info.event.extendedProps.state) {
+                            // Create a new element to display the state
+                            var stateElement = document.createElement('div');
+                            stateElement.classList.add('fc-event-state'); // Add class for potential styling
+                            stateElement.textContent = info.event.extendedProps.state; // Use the state from the event's extended properties
+
+                            // Append the state element to the event's content
+                            info.el.querySelector('.fc-event-title').appendChild(stateElement);
+                        }
                     },
-                    firstDay: 1,
-                    droppable: true,
-                    editable: true,
-                    selectable: true,
-                    snapDuration: moment.duration(15, 'minutes'),
-                    nowIndicator: true,
-                    now: new Date(),
-                    slotMinTime: '6:00:00Z',
-                    slotMaxTime: '22:30:00Z',
-                    slotDuration: '00:05:00',
-                    timeZone: 'Europe/Paris',
-                    businessHours: {
-                        startTime: '06:00',
-                        endTime: '23:00',
-                        dow: [1, 2, 3, 4, 5, 6, 7]
-                    },
+                    firstDay:
+                        1,
+                    droppable:
+                        true,
+                    editable:
+                        true,
+                    selectable:
+                        true,
+                    snapDuration:
+                        moment.duration(15, 'minutes'),
+                    nowIndicator:
+                        true,
+                    now:
+                        new Date(),
+                    slotMinTime:
+                        '6:00:00Z',
+                    slotMaxTime:
+                        '22:30:00Z',
+                    slotDuration:
+                        '00:05:00',
+                    timeZone:
+                        'Europe/Paris',
+                    businessHours:
+                        {
+                            startTime: '06:00',
+                            endTime:
+                                '23:00',
+                            dow:
+                                [1, 2, 3, 4, 5, 6, 7]
+                        }
+                    ,
                     weekends: {
                         // display weekends in a different color
                         color: 'blue'
-                    },
+                    }
+                    ,
                     eventDrop: function (info) {
                         updateEvent(info.event);
                         console.log(info.event.start.toISOString());
-                    },
+                    }
+                    ,
                     eventResize: function (info) {
                         updateEvent(info.event);
                         console.log(info.event.end.toISOString());
-                    },
+                    }
+                    ,
                     select: function (info) {
                         // Creates a new event on a day when it is clicked
                         var title = prompt('Enter Event Title:');
@@ -170,7 +198,8 @@
                             start: info.start,
                             end: info.end,
                         });
-                    },
+                    }
+                    ,
                     eventClick: function (info) {
                         // Get the selected event information
                         console.log("State:" + info.event.extendedProps.state);
@@ -223,7 +252,8 @@
                         $('#employee-id').val(event.resourceId);
                         $('#eventState').val(event.extendedProps.state);
                         // ...
-                    },
+                    }
+                    ,
                     eventSources:
                         [{
                             failure: function () {
@@ -281,7 +311,8 @@
                         start: formatDateToISO(new Date(start)),
                         end: formatDateToISO(new Date(end)),
                         employee_id: employee_id,
-                        notes: $("#eventNotes").val()
+                        notes: $("#eventNotes").val(),
+                        state: event.state // Assuming your event object has a 'state' property
                     }),
                     beforeSend: function (xhr) {
                         xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));

@@ -1,0 +1,9 @@
+.fc-event-state {
+    font-size: 1em; /* Smaller font size for the state */
+    margin-top: 5px; /* Space from the title */
+    color: #000; /* Change the text color to black */
+    background-color: #ff0; /* Change the background color to yellow */
+    padding: 2px 4px; /* Padding around the text */
+    border-radius: 4px; /* Rounded corners */
+    display: inline-block; /* Align with the event title */
+}

@@ -490,7 +490,7 @@ class AvailableEmployeeList(generics.ListCreateAPIView):
         # removed from the list
         event_list = Event.objects.filter(day=day, time_start_event__lte=end_time,
                                           time_end_event__gte=start_time).exclude(
-            id=self.request.query_params['id']).exclude(employees=None).exclude(state__in=[1,2,3])
+            id=self.request.query_params['id']).exclude(employees=None).exclude(state__in=[4,5,6])
         # get the list of employees not on holiday and not assigned to an event at the same time
         # take only employees who still have a contract
         queryset = Employee.objects.exclude(user_id__in=holiday_list.values_list('employee', flat=True)).exclude(

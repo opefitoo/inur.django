@@ -1954,7 +1954,8 @@ class EventWeekList(Event):
 class EventWeekListAdmin(admin.ModelAdmin):
     class Media:
         css = {
-            "all": ("css/main.min.css",)
+            "all": ("css/main.min.css",
+                    "css/fullcalendar-additional.css")
         }
         js = [
             "js/main.min.js",
