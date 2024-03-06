@@ -172,9 +172,9 @@
                             // Check the event state and apply corresponding CSS class
                             // log the state to the console
                             console.log("State:" + info.event.extendedProps.state);
-                            if (info.event.extendedProps.state.toLowerCase() === 'valid') {
+                            if (info.event.extendedProps.state.toLowerCase() === 'valid' || info.event.extendedProps.state.toLowerCase() === 'valide'){
                                 stateElement.classList.add('state-valid');
-                            } else if (info.event.extendedProps.state.toLowerCase() === 'done') {
+                            } else if (info.event.extendedProps.state.toLowerCase() === 'done' || info.event.extendedProps.state.toLowerCase() === 'fait'){
                                 stateElement.classList.add('state-done');
                             } else {
                                 stateElement.classList.add('state-cancelled');
