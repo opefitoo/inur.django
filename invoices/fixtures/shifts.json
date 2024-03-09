@@ -21,7 +21,7 @@
     "model": "invoices.shift",
     "pk": 3,
     "fields": {
-      "name": "Soir de 14h à 22h",
+      "name": "Soir de 14h à 22h (8h)",
       "start_time": "14:00:00",
       "end_time": "22:00:00"
     }
@@ -30,7 +30,7 @@
     "model": "invoices.shift",
     "pk": 4,
     "fields": {
-      "name": "Soir de 13h30 à 21h30",
+      "name": "Soir de 13h30 à 21h30 (8h)",
       "start_time": "13:30:00",
       "end_time": "21:30:00"
     }
@@ -39,9 +39,18 @@
     "model": "invoices.shift",
     "pk": 5,
     "fields": {
-      "name": "Soir de 16h à 22h",
+      "name": "Soir de 16h à 22h (6h)",
       "start_time": "16:00:00",
       "end_time": "22:00:00"
+    }
+  },
+  {
+    "model": "invoices.shift",
+    "pk": 6,
+    "fields": {
+      "name": "Journee de 8h30 à 17h30 (8h)",
+      "start_time": "08:30:00",
+      "end_time": "17:30:00"
     }
   }
 ]
