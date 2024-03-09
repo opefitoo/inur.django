@@ -433,15 +433,15 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
     def get_color(self, obj):
         # background color of the event is the same as the color of the event type employee
         if obj.employees is None:
-            # default color is blue
-            return "#0000FF"
+            # default color is light-green
+            return "#98FB98"
         return obj.employees.color_cell
 
     def get_textcolor(self, obj):
         # color of the event is the same as the color of the event type employee
         if obj.employees is None:
-            # default color is black
-            return "#000000"
+            # default color is gray
+            return "#808080"
         return obj.employees.color_text
 
     # description is the notes of the event + event_report if it exists + patient name + patient first name + event state from STATES

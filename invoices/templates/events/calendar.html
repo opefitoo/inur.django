@@ -215,6 +215,8 @@
                                 [1, 2, 3, 4, 5, 6, 7]
                         }
                     ,
+                    eventColor: '#83f321',
+                    eventTextColor: '#ffffff',
                     weekends: {
                         // display weekends in a different color
                         color: 'blue'
@@ -355,6 +357,10 @@
                                     success: function (events) {
                                         $('.loading-spinner').hide();
                                         for (let i = 0; i < events.length; i++) {
+                                            // if no color is set, use the default color
+                                            if (!events[i].color) {
+                                                events[i].color = '#83f321';
+                                            }
                                             events[i].color = events[i].color;
                                             events[i].textColor = events[i].textcolor;
                                         }
