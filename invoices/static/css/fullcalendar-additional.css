@@ -7,3 +7,6 @@
     border-radius: 4px; /* Rounded corners */
     display: inline-block; /* Align with the event title */
 }
+.strikethrough {
+    text-decoration: line-through;
+}

@@ -387,6 +387,7 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
     patient = serializers.SerializerMethodField()
     notes = serializers.SerializerMethodField()
     state = serializers.SerializerMethodField()
+    event_report = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -399,6 +400,11 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
             if isinstance(data[field], Promise):  # Check if the field is a lazy translation object
                 data[field] = force_str(data[field])  # Convert to string
         return data
+
+    def get_event_report(self, obj):
+        if obj.event_report is None:
+            return ""
+        return obj.event_report
 
     def get_patient(self, obj):
         if obj.patient is not None:
@@ -474,7 +480,10 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
         if obj.state is None or obj.state == "":
             return ""
         if 0 <= obj.state <= len(Event.STATES):
-            return Event.STATES[obj.state - 1][1]
+            # return a json with id and name
+            return {"state_id": obj.state, "state_name": Event.STATES[obj.state - 1][1]}
+        else:
+            return {"state_id": obj.state, "state_name": str(obj.state)}
 
 
 class BirthdayEventSerializer(serializers.ModelSerializer):

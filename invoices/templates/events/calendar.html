@@ -113,8 +113,6 @@
 
 
         function updateEvent(event) {
-            console.log("event =" + event);
-            console.log("event id =" + event.id);
             $.ajax({
                 url: '/api/v1/fullcalendar-events/',
                 type: 'PATCH',
@@ -161,20 +159,23 @@
                         });
                         // Check if the state property exists and append it to the event's title
                         if (info.event.extendedProps.state) {
+                            // Parse the state string into an object
+                            var state = JSON.parse(info.event.extendedProps.state.replace(/'/g, '"'));
+
                             // Create a new element to display the state
                             var stateElement = document.createElement('div');
                             stateElement.classList.add('fc-event-state'); // Add class for potential styling
-                            stateElement.textContent = info.event.extendedProps.state; // Use the state from the event's extended properties
+                            stateElement.textContent = state.state_name; // Use the state name from the parsed state object
 
                             // Append the state element to the event's content
                             info.el.querySelector('.fc-event-title').appendChild(stateElement);
 
                             // Check the event state and apply corresponding CSS class
                             // log the state to the console
-                            console.log("State:" + info.event.extendedProps.state);
-                            if (info.event.extendedProps.state.toLowerCase() === 'valid' || info.event.extendedProps.state.toLowerCase() === 'valide'){
+                            //console.log("State:" + state.state_id + "nm:" + state.state_name +"for event:" + info.event.title );
+                            if (state.state_id === 2) {
                                 stateElement.classList.add('state-valid');
-                            } else if (info.event.extendedProps.state.toLowerCase() === 'done' || info.event.extendedProps.state.toLowerCase() === 'fait'){
+                            } else if (state.state_id === 3) {
                                 stateElement.classList.add('state-done');
                             } else {
                                 stateElement.classList.add('state-cancelled');
@@ -243,7 +244,7 @@
                         // Get the selected event information
                         console.log("State:" + info.event.extendedProps.state);
 
-                        var selectEl = $("#employee-id");
+                        var employeeSelectEl = $("#employee-id");
 
                         $.ajax({
                             url: '/api/v1/available-employees/',
@@ -255,14 +256,17 @@
                             },
                             success: function (eventData) {
                                 // Use the response data to build the select list options
-                                selectEl.empty();
-                                selectEl.append($("<option></option>").attr("value", "").text("..."));
+                                employeeSelectEl.empty();
+                                employeeSelectEl.append($("<option></option>").attr("value", "").text("..."));
                                 let selected = '';
+                                console.log("info.event.extendedProps.resourceId " + info.event.extendedProps.resourceId);
+                                console.log('employeeData', eventData);
                                 eventData.forEach(function (employee) {
-                                    if (employee.id === info.event.extendedProps.resourceId) {
-                                        selectEl.append($("<option></option>").attr("value", employee.id).text(employee.user.first_name).attr("selected", selected));
+                                    if (employee.id == info.event.extendedProps.resourceId) {
+                                        console.log("employee.id " + employee.id);
+                                        employeeSelectEl.append($("<option></option>").attr("value", employee.id).text(employee.user.first_name).attr("selected", selected));
                                     } else {
-                                        selectEl.append($("<option></option>").attr("value", employee.id).text(employee.user.first_name));
+                                        employeeSelectEl.append($("<option></option>").attr("value", employee.id).text(employee.user.first_name));
                                     }
                                 });
                             },
@@ -273,6 +277,44 @@
                                     $('#editEventModal .modal-body .alert').text(message).show();
                                 } else {
                                     console.error("Failed to fetch employee data:", error);
+                                }
+                            }
+                        });
+                        var stateSelectEl = $("#eventState");
+                        $.ajax({
+                            url: '/available-event-states/',
+                            type: 'GET',
+                            success: function (stateData) {
+                                // If stateData is a string, parse it into an object
+                                if (typeof stateData === 'string') {
+                                    stateData = JSON.parse(stateData);
+                                }
+
+                                // If stateData is an object, convert it into an array
+                                if (typeof stateData === 'object' && !Array.isArray(stateData)) {
+                                    stateData = Object.values(stateData);
+                                }
+                                // Use the response data to build the select list options
+                                stateSelectEl.empty();
+                                stateSelectEl.append($("<option></option>").attr("value", "").text("..."));
+                                let selected = '';
+                                stateData.forEach(function (state) {
+                                    assignedState = JSON.parse(info.event.extendedProps.state.replace(/'/g, '"'));
+                                    if (state.state_id === assignedState.state_id) {
+                                        stateSelectEl.append($("<option></option>").attr("value", state.state_id).text(state.state_name).attr("selected", selected));
+                                    } else {
+                                        stateSelectEl.append($("<option></option>").attr("value", state.state_id).text(state.state_name));
+                                    }
+                                });
+                            },
+                            error: function (error) {
+                                console.error("Failed to fetch state data:", error);
+                                if (error.data) {
+                                    var message = error.data.message;
+                                    // Display the error message on the modal form
+                                    $('#editEventModal .modal-body .alert').text(message).show();
+                                } else {
+                                    console.error("Failed to fetch state data:", error);
                                 }
                             }
                         });
@@ -290,6 +332,7 @@
                         $('#eventNotes').val(event.extendedProps.notes);
                         $('#employee-id').val(event.resourceId);
                         $('#eventState').val(event.extendedProps.state);
+                        $('#eventReport').val(event.extendedProps.event_report);
                         // ...
                     }
                     ,
@@ -340,6 +383,9 @@
                 const employee_id = $("#employee-id").val();
                 const start = $("#start").val();
                 const end = $("#end").val();
+                const eventReport = $("#eventReport").val();
+                const eventState = $("#eventState").val();
+
                 $.ajax({
                     url: '/api/v1/fullcalendar-events/',
                     type: 'PATCH',
@@ -351,7 +397,8 @@
                         end: formatDateToISO(new Date(end)),
                         employee_id: employee_id,
                         notes: $("#eventNotes").val(),
-                        state: event.state // Assuming your event object has a 'state' property
+                        state: eventState, // Assuming your event object has a 'state' property
+                        eventReport: eventReport
                     }),
                     beforeSend: function (xhr) {
                         xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
@@ -363,7 +410,7 @@
                         // Hide the modal after 2 seconds
                         setTimeout(() => {
                             $('#editEventModal').modal('hide');
-                        }, 2000);
+                        }, 1000);
                         // Refresh the calendar with the updated event
                         calendar.refetchEvents();
                     },
@@ -376,6 +423,9 @@
                 });
             });
             $("#closeEventChanges").click(function () {
+                $('#editEventModal').modal('hide');
+            });
+            $(".close").click(function () {
                 $('#editEventModal').modal('hide');
             });
             $("#deleteEvent").click(function () {
@@ -474,6 +524,14 @@
                     </div>
                     <label for="employee-id">Assigned Employee</label>
                     <select class="form-control" id="employee-id">
+                        <option>...</option>
+                    </select>
+                    <div class="form-group">
+                        <label for="eventReport">Event Report</label>
+                        <textarea class="form-control" id="eventReport" name="eventReport" rows="3"></textarea>
+                    </div>
+                    <label for="eventState">State</label>
+                    <select class="form-control" id="eventState">
                         <option>...</option>
                     </select>
                 </div>

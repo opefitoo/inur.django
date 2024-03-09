@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, renderer_classes
@@ -63,6 +64,8 @@ class EmployeeAvatarSerializerViewSet(viewsets.ModelViewSet):
     """
     queryset = Employee.objects.filter(to_be_published_on_www=True).order_by("start_contract")
     serializer_class = EmployeeAvatarSerializer
+
+
 class EmployeeViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows employees who want to be published on internet to be viewed.
@@ -151,12 +154,14 @@ class ShiftViewSet(viewsets.ModelViewSet):
     queryset = Shift.objects.all()
     serializer_class = ShiftSerializer
 
+
 class EmployeeShiftSerializerViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows EmployeeShift to be viewed.
     """
     queryset = EmployeeShift.objects.all()
     serializer_class = EmployeeShiftSerializer
+
 
 class EmployeeSerializerViewSet(viewsets.ModelViewSet):
     """
@@ -391,8 +396,9 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-        json_data = json.dumps(serializer.data)
-        # print(json_data)
+        # Convert __proxy__ objects to strings
+        data = [{str(key): str(value) for key, value in item.items()} for item in serializer.data]
+        json_data = json.dumps(data)
         return HttpResponse(json_data, content_type='application/json')
 
     def get_queryset(self, *args, **kwargs):
@@ -406,7 +412,18 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         return queryset
 
     def patch(self, request, *args, **kwargs):
+        # if not superuser, can only validate events assigned to him
+        if not request.user.is_superuser:
+            event = Event.objects.get(pk=request.data['id'])
+            if event.employees.user != request.user:
+                return JsonResponse({'error': _('You are not allowed to validate this event')}, status=status.HTTP_400_BAD_REQUEST)
         event = Event.objects.get(pk=request.data['id'])
+        # if event state has changed but no report is provided, return an error
+        if event.state != request.data['state'] and not request.data.get('eventReport', None):
+            return JsonResponse({'error': _('Event report is required')}, status=status.HTTP_400_BAD_REQUEST)
+        # cannot change state to done if event is in the future
+        if int(request.data['state']) == 3 and event.day > datetime.today().date():
+            return JsonResponse({'error': _('Cannot change state to done for future event')}, status=status.HTTP_400_BAD_REQUEST)
         # if request.data['start'] contains Z, it means it is a json date
         if request.data['start'].endswith('Z'):
             event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
@@ -433,15 +450,15 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
             # if event is not in the past but is already validated, you cannot delete it
             if event.state == 3:
                 return JsonResponse(
-                    {'error': 'Cannot delete validated event, event has report: %s' % event.event_report},
+                    {'error': _('Cannot delete validated event, event has report: %s') % event.event_report},
                     status=status.HTTP_400_BAD_REQUEST)
             # if event is the past you cannot delete it
             if event.day < datetime.today().date() and event.state not in (1, 2):
                 return JsonResponse({'error': 'Cannot delete past event'}, status=status.HTTP_400_BAD_REQUEST)
             event.delete()
-            return JsonResponse({'status': 'success'}, status=status.HTTP_204_NO_CONTENT)
+            return JsonResponse({'status': _('success')}, status=status.HTTP_204_NO_CONTENT)
         except Event.DoesNotExist:
-            return JsonResponse({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'error': _('Event not found')}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -462,6 +479,16 @@ class AvailablePatientList(generics.ListCreateAPIView):
         serializer = self.get_serializer(queryset, many=True)
         json_data = json.dumps(serializer.data)
         return HttpResponse(json_data, content_type='application/json')
+
+class AvailableEventStateList(APIView):
+        """
+        API endpoint that returns available event states.
+        """
+
+        def get(self, request):
+            states = Event.STATES
+            states_list = [{"state_id": state[0], "state_name": state[1]} for state in states]
+            return JsonResponse(states_list, safe=False)
 
 
 class AvailableEmployeeList(generics.ListCreateAPIView):
@@ -490,7 +517,7 @@ class AvailableEmployeeList(generics.ListCreateAPIView):
         # removed from the list
         event_list = Event.objects.filter(day=day, time_start_event__lte=end_time,
                                           time_end_event__gte=start_time).exclude(
-            id=self.request.query_params['id']).exclude(employees=None).exclude(state__in=[4,5,6])
+            id=self.request.query_params['id']).exclude(employees=None).exclude(state__in=[4, 5, 6])
         # get the list of employees not on holiday and not assigned to an event at the same time
         # take only employees who still have a contract
         queryset = Employee.objects.exclude(user_id__in=holiday_list.values_list('employee', flat=True)).exclude(

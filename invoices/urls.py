@@ -13,7 +13,7 @@ from api import views
 from api.views import EventProcessorView, cleanup_event, whois_off, whois_available, get_bank_holidays, \
     get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, \
     FullCalendarEventViewSet, AvailableEmployeeList, AvailablePatientList, build_payroll_sheet, DistanceAPIView, \
-    NunoEventsService, whois_available_with_avatars_and_ids
+    NunoEventsService, whois_available_with_avatars_and_ids, AvailableEventStateList
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
 from invoices.views import delete_prestation, home_view, password_change
@@ -156,6 +156,10 @@ urlpatterns += [
 
 urlpatterns += [
     re_path('available-employees/', AvailableEmployeeList.as_view(), name='available-employees'),
+]
+
+urlpatterns += [
+    re_path('available-event-states/', AvailableEventStateList.as_view(), name='available-event-states'),
 ]
 
 urlpatterns += [
