@@ -155,17 +155,9 @@
                         $(info.el).tooltip({
                             title: info.event.extendedProps.description,
                             container: 'body',
-                            delay: {"show": 50, "hide": 50}
+                            delay: {"show": 50, "hide": 50},
+                            html: true
                         });
-
-                        // Check if the avatar property exists
-                        if (info.event.extendedProps.minified_avatar_svg) {
-                            // Set the SVG as the background image of the event element
-                            info.el.style.backgroundImage = 'url("data:image/svg+xml,' + encodeURIComponent(info.event.extendedProps.minified_avatar_svg) + '")';
-                            info.el.style.backgroundRepeat = 'no-repeat';
-                            info.el.style.backgroundPosition = 'bottom';
-                            info.el.style.backgroundSize = 'contain';
-                        }
 
                         // Check if the state property exists and append it to the event's title
                         if (info.event.extendedProps.state) {

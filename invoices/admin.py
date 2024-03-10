@@ -1,3 +1,4 @@
+import base64
 import calendar
 import csv
 import datetime
@@ -17,7 +18,6 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.checks import messages
 from django.core.exceptions import ValidationError
-from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q, Count
 from django.http import HttpResponseRedirect, HttpResponse
@@ -158,7 +158,7 @@ class EmployeeAdmin(admin.ModelAdmin):
     list_display = ('user', 'phone_number', 'start_contract', 'end_contract', 'occupation', 'abbreviation',
                     'employee_fte',)
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
-    readonly_fields = ['total_number_of_un_validated_events', 'minified_avatar']
+    readonly_fields = ['total_number_of_un_validated_events', 'minified_avatar', 'minified_avatar_base64']
     list_filter = [IsInvolvedInHealthCareFilter]
 
     def save_model(self, request, obj, form, change):
@@ -175,14 +175,15 @@ class EmployeeAdmin(admin.ModelAdmin):
             in_memory_image = io.BytesIO()
             img_format = 'JPEG' if img.format == 'JPEG' else 'PNG'  # Adjust based on your needs
             img.save(in_memory_image, format=img_format)
+
+            # Reset the position to the start of the byte array
             in_memory_image.seek(0)
 
-            # Replace the original image with the minified one
-            obj.minified_avatar.save(
-                original_image.name,
-                content=ContentFile(in_memory_image.read()),
-                save=False
-            )
+            # Encode the byte array in base64
+            encoded_avatar = base64.b64encode(in_memory_image.read()).decode()
+
+            # Save the base64 encoded image to the minified_avatar_svg field
+            obj.minified_avatar_base64 = f"data:image/{img_format.lower()};base64,{encoded_avatar}"
 
         super().save_model(request, obj, form, change)
 

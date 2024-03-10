@@ -30,9 +30,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('first_name', 'last_name')
 
 
-
-
-
 class FullCalendarEmployeeSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
@@ -403,8 +400,8 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
         return data
 
     def get_minified_avatar_svg(self, obj):
-        if obj.employees is not None and obj.employees.minified_avatar_svg is not None:
-            return obj.employees.minified_avatar_svg
+        if obj.employees is not None and obj.employees.minified_avatar_base64 is not None:
+            return obj.employees.minified_avatar_base64
         # return a random svg
         return None
 
@@ -460,24 +457,34 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
 
     # description is the notes of the event + event_report if it exists + patient name + patient first name + event state from STATES
     def get_description(self, obj):
-        description = obj.notes
-        if obj.event_report is not None:
-            #  line break
-            description += "\n"
-            description += "    " + obj.event_report
-        if obj.patient is not None:
-            description += "\n"
-            description += "    " + obj.patient.name + " " + obj.patient.first_name
+        description = '<div id="mypopup">'
+        description += '<h5>' "%s chez %s" % (
+        obj.employees, str(obj.patient)) + '</h5>'  # Use the event title as the popup title
+
+        if obj.notes is not None and obj.notes != "":
+            description += '<p><b>Notes</b>:' + obj.notes + '</p>'
+
+        if obj.event_report is not None and obj.event_report != "":
+            description += '<p><b>Rapport</b>:' + obj.event_report + '</p>'
+
         if obj.state is not None and obj.state != "":
             if 0 <= obj.state <= len(Event.STATES):
-                description += "\n"
-                description += "    " + Event.STATES[obj.state - 1][1]
+                state_name = Event.STATES[obj.state - 1][1]
+                if obj.state == 2:
+                    description += '<p class="state-valid">' + state_name + '</p>'
+                elif obj.state == 3:
+                    description += '<p class="state-done">' + state_name + '</p>'
+                else:
+                    description += '<p class="state-cancelled">' + state_name + '</p>'
             else:
-                description += "\n"
-                description += "    " + str(obj.state)
-                # print("state not in STATES dictionary: %s and id: %s" % (obj.state, obj.id))
-        return description + "(%s)" % obj.id
+                description += '<p>' + str(obj.state) + '</p>'
 
+        if obj.employees and obj.employees.minified_avatar_base64 is not None and obj.employees.minified_avatar_base64 != "":
+            # Encode the ImageFieldFile data in base64
+            description += '<img src="' + obj.employees.minified_avatar_base64 + '">'
+
+        description += '</div>'
+        return description + "(%s)" % obj.id
     # resource id is the id of the employee
     def get_resourceId(self, obj):
         if obj.employees is None:
@@ -499,6 +506,7 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
         else:
             return {"state_id": obj.state, "state_name": str(obj.state)}
 
+
 class EmployeeAvatarSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
@@ -506,6 +514,7 @@ class EmployeeAvatarSerializer(serializers.ModelSerializer):
         model = Employee
         fields = ('user', 'avatar', 'minified_avatar', 'bio', 'occupation')
         depth = 1
+
 
 class BirthdayEventSerializer(serializers.ModelSerializer):
     class Meta:
