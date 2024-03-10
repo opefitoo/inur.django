@@ -422,7 +422,7 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         if request.data.get('state', None) and event.state != int(request.data['state']) and not request.data.get('eventReport', None):
             return JsonResponse({'error': _('Event report is required')}, status=status.HTTP_400_BAD_REQUEST)
         # cannot change state to done if event is in the future
-        if int(request.data['state']) == 3 and event.day > datetime.today().date():
+        if request.data.get('state', None) and int(request.data['state']) == 3 and event.day > datetime.today().date():
             return JsonResponse({'error': _('Cannot change state to done for future event')}, status=status.HTTP_400_BAD_REQUEST)
         # if request.data['start'] contains Z, it means it is a json date
         if request.data['start'].endswith('Z'):
