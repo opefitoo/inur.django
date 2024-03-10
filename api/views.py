@@ -419,7 +419,7 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
                 return JsonResponse({'error': _('You are not allowed to validate this event')}, status=status.HTTP_400_BAD_REQUEST)
         event = Event.objects.get(pk=request.data['id'])
         # if event state has changed but no report is provided, return an error
-        if event.state != request.data['state'] and not request.data.get('eventReport', None):
+        if event.state != int(request.data['state']) and not request.data.get('eventReport', None):
             return JsonResponse({'error': _('Event report is required')}, status=status.HTTP_400_BAD_REQUEST)
         # cannot change state to done if event is in the future
         if int(request.data['state']) == 3 and event.day > datetime.today().date():
