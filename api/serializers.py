@@ -458,8 +458,11 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
     # description is the notes of the event + event_report if it exists + patient name + patient first name + event state from STATES
     def get_description(self, obj):
         description = '<div id="mypopup">'
-        description += '<h5>' "%s chez %s" % (
-        obj.employees, str(obj.patient)) + '</h5>'  # Use the event title as the popup title
+        if obj.employees is not None:
+            description += '<h5>' "%s chez %s" % (
+                obj.employees, str(obj.patient)) + '</h5>'  # Use the event title as the popup title
+        else:
+            description += '<h5>' "%s" % (str(obj.patient)) + '</h5>'
 
         if obj.notes is not None and obj.notes != "":
             description += '<p><b>Notes</b>:' + obj.notes + '</p>'
@@ -485,6 +488,7 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
 
         description += '</div>'
         return description + "(%s)" % obj.id
+
     # resource id is the id of the employee
     def get_resourceId(self, obj):
         if obj.employees is None:
