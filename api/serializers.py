@@ -30,13 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('first_name', 'last_name')
 
 
-class EmployeeAvatarSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
 
-    class Meta:
-        model = Employee
-        fields = ('user', 'avatar', 'bio', 'occupation')
-        depth = 1
 
 
 class FullCalendarEmployeeSerializer(serializers.ModelSerializer):
@@ -46,10 +40,14 @@ class FullCalendarEmployeeSerializer(serializers.ModelSerializer):
         model = Employee
         fields = ('id', 'abbreviation', 'user', 'color_cell', 'color_text')
         depth = 1
+
+
 class ShiftSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shift
         fields = ['id', 'name', 'start_time', 'end_time']
+
+
 class EmployeeShiftSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeShift
@@ -388,6 +386,9 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
     notes = serializers.SerializerMethodField()
     state = serializers.SerializerMethodField()
     event_report = serializers.SerializerMethodField()
+    # mini_avatar is an image stored in s3 bucket
+    minified_avatar = serializers.SerializerMethodField()
+    minified_avatar_svg = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -400,6 +401,19 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
             if isinstance(data[field], Promise):  # Check if the field is a lazy translation object
                 data[field] = force_str(data[field])  # Convert to string
         return data
+
+    def get_minified_avatar_svg(self, obj):
+        if obj.employees is not None and obj.employees.minified_avatar_svg is not None:
+            return obj.employees.minified_avatar_svg
+        # return a random svg
+        return None
+
+    def get_minified_avatar(self, obj):
+        if obj.employees is not None and obj.employees.avatar is not None:
+            # Use the EmployeeAvatarSerializer to get the avatar URL
+            avatar_serializer = EmployeeAvatarSerializer(obj.employees)
+            return avatar_serializer.data['avatar']
+        return None
 
     def get_event_report(self, obj):
         if obj.event_report is None:
@@ -485,6 +499,13 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
         else:
             return {"state_id": obj.state, "state_name": str(obj.state)}
 
+class EmployeeAvatarSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = Employee
+        fields = ('user', 'avatar', 'minified_avatar', 'bio', 'occupation')
+        depth = 1
 
 class BirthdayEventSerializer(serializers.ModelSerializer):
     class Meta:

@@ -147,6 +147,7 @@ class Employee(models.Model):
                                         validators=[validate_avatar],
                                         help_text=_("You can attach the minified version of the avatar"),
                                         null=True, blank=True)
+    minified_avatar_svg = models.TextField("Minified Avatar SVG", blank=True, null=True)
     bio = models.TextField("Bio", default="Fill in your bio", max_length=200)
     to_be_published_on_www = models.BooleanField("Public Profile",
                                                  help_text="If checked then bio and avatar fields become mandatory",
