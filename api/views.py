@@ -62,7 +62,7 @@ class EmployeeAvatarSerializerViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows employees who want to be published on internet to be viewed.
     """
-    queryset = Employee.objects.filter(to_be_published_on_www=True).order_by("start_contract")
+    queryset = Employee.objects.filter(to_be_published_on_www=True).order_by("user__id")
     serializer_class = EmployeeAvatarSerializer
 
 
