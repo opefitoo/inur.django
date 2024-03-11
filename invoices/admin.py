@@ -1947,8 +1947,8 @@ class EventListAdmin(admin.ModelAdmin):
 class EventWeekList(Event):
     class Meta:
         proxy = True
-        verbose_name = "Nouveau Planning (Ne modifiez pas les événements à partir d'ici)"
-        verbose_name_plural = "Nouveaux Plannings (Ne modifiez pas les événements à partir d'ici)"
+        verbose_name = "Nouveau Planning *"
+        verbose_name_plural = "Nouveaux Plannings *"
 
 
 @admin.register(EventWeekList)
