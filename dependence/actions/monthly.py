@@ -70,6 +70,21 @@ def create_assurance_dependance_invoices_octobre_2023(self, request, queryset):
     statement = create_monthly_invoice(patients, 10, 2023)
 
 @transaction.atomic
+def create_assurance_dependance_invoices_novembre_2023(self, request, queryset):
+    """
+    Create AEV invoices for all patients for the month of September 2023
+    """
+    # get all patients
+    # exit date based on timezones
+    start_period = datetime(2023, 11, 1, tzinfo=timezone.utc)
+    # either less or equal to end period or null
+    patients = Patient.objects.filter(is_under_dependence_insurance=True).filter(
+        Q(date_of_exit__gte=start_period) | Q(date_of_exit__isnull=True)).filter(Q(date_of_death__gte=start_period) | Q(date_of_death__isnull=True))
+    # create invoices for each patient
+    statement = create_monthly_invoice(patients, 11, 2023)
+
+
+@transaction.atomic
 def create_assurance_dependance_invoices_august_2023(self, request, queryset):
     """
     Create AEV invoices for all patients for the month of August 2023
