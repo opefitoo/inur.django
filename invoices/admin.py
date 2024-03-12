@@ -160,6 +160,9 @@ class EmployeeAdmin(admin.ModelAdmin):
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
     readonly_fields = ['total_number_of_un_validated_events', 'minified_avatar', 'minified_avatar_base64']
     list_filter = [IsInvolvedInHealthCareFilter]
+    actions = ['work_certificate', 'contracts_situation_certificate', 'entry_declaration', 'export_employees_data_to_csv',
+               create_google_contact, cleanup_contacts, cleanup_some_contacts,
+               'generate_annual_report_for_2023']
 
     def save_model(self, request, obj, form, change):
         if 'avatar' in form.changed_data:
@@ -382,9 +385,24 @@ class EmployeeAdmin(admin.ModelAdmin):
         return response
 
     # actions = [work_certificate, 'delete_in_google_calendar']
-    actions = [work_certificate, contracts_situation_certificate, entry_declaration, export_employees_data_to_csv,
-               create_google_contact, cleanup_contacts, cleanup_some_contacts,
-               'generate_annual_report_for_2023']
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            # If the user is a superuser, no fields are read-only
+            return []
+        else:
+            # If the user is not a superuser, all fields except 'field1' and 'field2' are read-only
+            # user can only edit his own profile
+            if obj is not None and obj.user == request.user:
+                return [field.name for field in obj._meta.fields if field.name not in ['bio', 'to_be_published_on_www']]
+            else:
+                return [field.name for field in obj._meta.fields]
+
+    def get_fieldsets(self, request, obj=None):
+        if request.user.is_superuser or request.user == obj.user:
+            return super().get_fieldsets(request, obj)
+        else:
+            return [
+                (None, {'fields': [field.name for field in obj._meta.fields if field.name != 'bank_account_number']})]
 
     def delete_in_google_calendar(self, request, queryset):
         if not request.user.is_superuser:
