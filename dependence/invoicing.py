@@ -256,7 +256,7 @@ class LongTermCareMonthlyStatement(models.Model):
                 demandePrestation = ElementTree.SubElement(prestation, "demandePrestation")
                 # create sub element nombre
                 nombre = ElementTree.SubElement(demandePrestation, "nombre")
-                nombre.text = str(item.quantity)
+                nombre.text = str(int(item.quantity))
                 # create sub element devise
                 devise = ElementTree.SubElement(demandePrestation, "devise")
                 devise.text = "EUR"
@@ -652,7 +652,8 @@ class LongTermCareInvoiceFile(models.Model):
         items = LongTermCareInvoiceItem.objects.filter(invoice=self)
         for item in items:
             total += item.calculate_price()
-        return total
+        total_price = round(total, 2)
+        return total_price
 
     def total_number_of_lines(self):
         _number_of_lines = 0

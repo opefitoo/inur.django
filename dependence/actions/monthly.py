@@ -80,8 +80,11 @@ def create_assurance_dependance_invoices_novembre_2023(self, request, queryset):
     # either less or equal to end period or null
     patients = Patient.objects.filter(is_under_dependence_insurance=True).filter(
         Q(date_of_exit__gte=start_period) | Q(date_of_exit__isnull=True)).filter(Q(date_of_death__gte=start_period) | Q(date_of_death__isnull=True))
+    # filter patients that had no event in the month of November
+    patients = [patient for patient in patients if LongTermMonthlyActivity.objects.filter(patient=patient, year=2023, month=11).count() > 0]
     # create invoices for each patient
     statement = create_monthly_invoice(patients, 11, 2023)
+    return statement
 
 
 @transaction.atomic
