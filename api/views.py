@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import viewsets, filters, status, generics
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -388,10 +389,15 @@ class SubContractorViewSet(viewsets.ModelViewSet):
         self.queryset = self.queryset.filter(occupation__is_subcontractor=True)
         return self.list(request, *args, **kwargs)
 
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 100
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
 class FullCalendarEventViewSet(generics.ListCreateAPIView):
     queryset = Event.objects.all()
     serializer_class = FullCalendarEventSerializer
+    pagination_class = StandardResultsSetPagination
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -402,15 +408,12 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         return HttpResponse(json_data, content_type='application/json')
 
     def get_queryset(self, *args, **kwargs):
-        # parameters look like 'start': ['2023-02-05T00:00:00'], 'end': ['2023-02-12T00:00:00']
         start_param = self.request.query_params.get('start', datetime.today().date())
         end_param = self.request.query_params.get('end', datetime.today().date())
-        # we need to convert them to python date
         start = datetime.strptime(start_param, '%Y-%m-%dT%H:%M:%S').date()
         end = datetime.strptime(end_param, '%Y-%m-%dT%H:%M:%S').date()
-        queryset = Event.objects.filter(day__gte=start, day__lte=end)
+        queryset = Event.objects.filter(day__range=[start, end])
         return queryset
-
     def patch(self, request, *args, **kwargs):
         # if not superuser, can only validate events assigned to him
         if not request.user.is_superuser:
