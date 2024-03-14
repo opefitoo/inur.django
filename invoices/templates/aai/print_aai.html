@@ -112,14 +112,15 @@
                         <td class="title">
                             <img src="{% static 'patientanamnesis/images/xyz.png' %}"
                                  style="width: 100%; max-width: 50px"/>
-                            <div class="information">{{ obj.header_details.0 }} - {{ obj.header_details.1 }} <br />
-                            {{ obj.header_details.2 }} - {{ obj.header_details.3 }} <br />
-                            {{ obj.header_details.4 }}</div>
+                            <div class="information">{{ obj.header_details.0 }} - {{ obj.header_details.1 }} <br/>
+                                {{ obj.header_details.2 }} - {{ obj.header_details.3 }} <br/>
+                                {{ obj.header_details.4 }}
+                            </div>
                         </td>
                         <td>
 
                             {% if obj.patient.gender == 'MAL' %} Monsieur {% elif obj.patient.gender == 'FEM' %}
-                                Madame {% else %} {% endif %} {{ obj.patient }} <br/>
+                            Madame {% else %} {% endif %} {{ obj.patient }} <br/>
                             {{ obj.patient.code_sn }} <br/>
                             {{ obj.patient.address }} <br/>
                             {{ obj.patient.zipcode }} {{ obj.patient.city }} <br/>
@@ -138,7 +139,7 @@
                             Médecin Traitant:{% with obj.physicians_set|first as first_doc %} <br/>
                             Dr. {{ first_doc.name }} {{ first_doc.first_name }} / Tél.: {{ first_doc.phone_number }}
                             <br/>
-                        {% endwith %}<br/>
+                            {% endwith %}<br/>
                         </td>
 
                         <td>
@@ -159,18 +160,25 @@
             <td>Paraphe</td>
         </tr>
         {% for detail in obj.details_set %}
-            <tr class="item">
-                <td>{{ detail.objectives }}</td>
-                <td>{% if detail.means %} {{ detail.means }} {% else %} - {% endif %}</td>
-                <td>{% if detail.date_time_means_set %} {{ detail.date_time_means_set }} {% else %} - {% endif %}</td>
-                <td>{% if detail.means_paraph  %} {{ detail.means_paraph.abbreviation }} {% else %} - {% endif %}</td>
-                <td>{% if detail.results %} {{ detail.results }} {% else %} - {% endif %}</td>
-                <td>{% if detail.date_time_results_set %} {{ detail.date_time_results_set }} {% else %} - {% endif %}</td>
-                <td>{% if detail.results_paraph %} {{ detail.results_paraph.abbreviation }} {% else %} - {% endif %}</td>
-            </tr>
+        <tr class="item">
+            <td>
+                <ul>
+                    {% for objective in detail.link_to_objectives.all %}
+                    <li>{{ objective }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>{% if detail.means %} {{ detail.means }} {% else %} - {% endif %}</td>
+            <td>{% if detail.date_time_means_set %} {{ detail.date_time_means_set }} {% else %} - {% endif %}</td>
+            <td>{% if detail.means_paraph  %} {{ detail.means_paraph.abbreviation }} {% else %} - {% endif %}</td>
+            <td>{% if detail.results %} {{ detail.results }} {% else %} - {% endif %}</td>
+            <td>{% if detail.date_time_results_set %} {{ detail.date_time_results_set }} {% else %} - {% endif %}</td>
+            <td>{% if detail.results_paraph %} {{ detail.results_paraph.abbreviation }} {% else %} - {% endif %}</td>
+        </tr>
         {% endfor %}
 
-        {% comment %}<tr class="heading">
+        {% comment %}
+        <tr class="heading">
             <td>Item</td>
 
             <td>Price</td>
@@ -198,7 +206,8 @@
             <td></td>
 
             <td>Total: $385.00</td>
-        </tr>{% endcomment %}
+        </tr>
+        {% endcomment %}
     </table>
 </div>
 </body>

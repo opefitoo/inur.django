@@ -20,7 +20,7 @@ from django.utils.translation import gettext as _
 from fieldsets_with_inlines import FieldsetsInlineMixin
 from reportlab.pdfgen import canvas
 
-from dependence.aai import AAITransmission, AAITransDetail
+from dependence.aai import AAITransmission, AAITransDetail, AAIObjective, AAIObjectiveFiles
 from dependence.actions.activity import duplicate_for_next_month, export_selected_to_csv
 from dependence.actions.initial_data import create_or_update_long_term_item_based_on_fixture
 from dependence.actions.monthly import create_assurance_dependance_invoices_novembre_2023
@@ -90,7 +90,6 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
             return
         for obj in queryset:
             obj.export_to_xero()
-        
 
     def has_errors_col(self, obj):
         return not obj.has_errors
@@ -110,6 +109,8 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
 class LongTermCareMonthlyStatementSendingInline(admin.TabularInline):
     model = LongTermCareMonthlyStatementSending
     extra = 0
+
+
 @admin.register(LongTermCareMonthlyStatement)
 class LongTermCareMonthlyStatementAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     list_display = ('year', 'month', 'date_of_submission', 'display_object_actions_list')
@@ -183,7 +184,8 @@ class SharedMedicalCareSummaryPerPatientDetailInline(admin.TabularInline):
     model = SharedMedicalCareSummaryPerPatientDetail
     extra = 0
     can_delete = False
-    readonly_fields = ('item', 'medical_care_summary_per_patient', 'custom_description', 'number_of_care', 'periodicity')
+    readonly_fields = (
+        'item', 'medical_care_summary_per_patient', 'custom_description', 'number_of_care', 'periodicity')
 
 
 class MedicalCareSummaryPerPatientDetailInline(admin.TabularInline):
@@ -277,6 +279,7 @@ class DeclarationDetailInline(admin.StackedInline):
     model = DeclarationDetail
     extra = 0
     readonly_fields = ('change_anomaly',)
+
 
 class InformalCaregiverUnavailabilityInline(admin.StackedInline):
     model = InformalCaregiverUnavailability
@@ -439,9 +442,11 @@ class TensionAndTemperatureParametersInLine(admin.TabularInline):
     model = TensionAndTemperatureParameters
     formset = TensionAndTemperatureParametersFormset
     fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'heart_pulse', 'temperature',
-              'stools_parameter', 'oximeter_saturation', 'vas', 'weight', 'blood_glucose', 'general_remarks', 'user', 'created_on'
+              'stools_parameter', 'oximeter_saturation', 'vas', 'weight', 'blood_glucose', 'general_remarks', 'user',
+              'created_on'
               , "updated_on")
     readonly_fields = ('user', 'created_on', 'updated_on')
+
 
 def check_access(user, patient):
     print("Checking access for user %s and patient %s" % (user, patient))
@@ -450,6 +455,8 @@ def check_access(user, patient):
     if ClientPatientRelationship.objects.filter(user=user, patient=patient).exists():
         return True
     return False
+
+
 def list_patients_related_to_client(user):
     if not user.groups.filter(name__contains='client').exists():
         return Patient.objects.all()
@@ -507,7 +514,8 @@ class PatientParametersAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
 
 @admin.register(PatientAnamnesis)
 class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, admin.ModelAdmin):
-    list_display = ('patient', 'display_object_actions_list', 'bedsore_count', 'fall_count', 'anticipated_directives', 'updated_on')
+    list_display = (
+        'patient', 'display_object_actions_list', 'bedsore_count', 'fall_count', 'anticipated_directives', 'updated_on')
     list_filter = ('patient', DeceasedFilter, ClientLeftFilter)
     autocomplete_fields = ['patient']
 
@@ -548,7 +556,8 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
             writer.writerow([nationality, count])
 
         # now I need to count the number patients per gender
-        gender_counts = queryset.values('patient__gender').annotate(count=Count('patient__gender')).order_by('patient__gender')
+        gender_counts = queryset.values('patient__gender').annotate(count=Count('patient__gender')).order_by(
+            'patient__gender')
         writer.writerow(['Gender', 'Count'])
         for gc in gender_counts:
             writer.writerow([gc['patient__gender'], gc['count']])
@@ -572,7 +581,8 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         writer.writerow(['Activity', 'Count'])
         total = LongTermMonthlyActivityDetail.objects.aggregate(total=Sum(F('quantity'))).get('total')
         # Extract the month from the date field and count the number of instances for each month
-        monthly_totals = LongTermMonthlyActivityDetail.objects.annotate(month=ExtractMonth('activity_date')).values('month').annotate(total=Sum(F('quantity'))).order_by('month')
+        monthly_totals = LongTermMonthlyActivityDetail.objects.annotate(month=ExtractMonth('activity_date')).values(
+            'month').annotate(total=Sum(F('quantity'))).order_by('month')
 
         # Print the total count for each month
         for total in monthly_totals:
@@ -580,14 +590,14 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
             writer.writerow([total['month'], total['total']])
 
         # Group by activity type and count the number of instances for each type
-        activity_totals = LongTermMonthlyActivityDetail.objects.values('activity__code').annotate(total=Sum(F('quantity'))).order_by('activity__code')
+        activity_totals = LongTermMonthlyActivityDetail.objects.values('activity__code').annotate(
+            total=Sum(F('quantity'))).order_by('activity__code')
         writer.writerow(['Activity Type', 'Count'])
 
         # Print the total count for each activity type
         for total in activity_totals:
             print(f"Activity Type: {total['activity__code']}, Total: {total['total']}")
             writer.writerow([total['activity__code'], total['total']])
-
 
         return response
 
@@ -756,8 +766,8 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
             return count
         url = reverse('admin:invoices_bedsore_changelist') + f'?patient__id__exact={obj.patient.id}'
         return format_html('<a href="{}">{}</a>', url, count)
-    bedsore_count.short_description = "Nombre d'escarres"
 
+    bedsore_count.short_description = "Nombre d'escarres"
 
     def fall_count(self, obj):
         # Assuming the related model for falls is named 'FallDeclaration' and has a ForeignKey to 'Patient'
@@ -769,7 +779,6 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
 
     fall_count.short_description = "Nombre de chutes"
 
-
     def print_view(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
@@ -779,6 +788,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'patientanamnesis/print_cover.html', {'obj': obj})
+
     def print_bedsore_report(self, request, object_id, form_url='', extra_context=None, action=None):
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
@@ -804,7 +814,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
                                  url, str(prescription),
                                  prescription.notes)
             details.append(detail)
-        if len(previous_prescriptions)  > 0:
+        if len(previous_prescriptions) > 0:
             # append a straight html line break
             details.append(format_html('<br><b>Anciennes Prescriptions</b>:<br>'))
 
@@ -822,30 +832,56 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
 
         return format_html("<br>".join(details))
 
-
         # separate current and previous prescriptions with a blank line
         prescriptions_formatted += [""] if len(current_prescriptions) > 0 and len(previous_prescriptions) > 0 else []
         prescriptions_formatted += [f"{prescription.date} : {prescription.notes}" for prescription
-                                        in previous_prescriptions]
+                                    in previous_prescriptions]
         return "\n".join(prescriptions_formatted)
 
     # Change the display name of the calculated field in the admin interface
     medical_prescriptions_details.short_description = 'Medical Prescriptions Details'
 
 
+class AAIObjectiveFilesInline(admin.StackedInline):
+    model = AAIObjectiveFiles
+    extra = 0
+
+
+@admin.register(AAIObjective)
+class AAIObjectiveAdmin(admin.ModelAdmin):
+    list_display = (
+        'objective', 'patient', 'evaluation_date', 'objective_reaching_date', 'description', 'status')
+    readonly_fields = ('created_on', 'updated_on')
+    search_fields = ('objective', 'description',)
+    inlines = [AAIObjectiveFilesInline]
+    list_filter = ('patient', 'status')
+
+
 class AAITransDetailInLine(admin.TabularInline):
     extra = 0
     model = AAITransDetail
 
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "link_to_objectives":
+            if self.parent_obj:
+                kwargs["queryset"] = AAIObjective.objects.filter(patient_id=self.parent_obj.patient_id).exclude(status="archived")
+            else:
+                kwargs["queryset"] = AAIObjective.objects.none()
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+    def get_formset(self, request, obj=None, **kwargs):
+        self.parent_obj = obj
+        return super().get_formset(request, obj, **kwargs)
+
 
 @admin.register(AAITransmission)
 class AAITransmissionAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
-    list_display = ('patient', "aai_year" , "aai_month", 'transmission_number', 'display_object_actions_list',)
+    list_display = ('patient', "aai_year", "aai_month", 'transmission_number', 'display_object_actions_list',)
     autocomplete_fields = ['patient']
     readonly_fields = ('user', 'created_on', 'updated_on')
     inlines = [AAITransDetailInLine]
     # filter per patient
-    list_filter = ("patient","aai_year", "aai_month")
+    list_filter = ("patient", "aai_year", "aai_month")
     object_actions = [
         {
             'slug': 'print_aai',
@@ -886,6 +922,7 @@ class LongTermMonthlyActivityFileAdmin(admin.ModelAdmin):
 class FallDeclarationReportPictureInLine(admin.TabularInline):
     extra = 0
     model = FallDeclarationReportPicture
+
 
 @admin.register(FallDeclaration)
 class FallDeclarationAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):

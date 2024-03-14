@@ -1,12 +1,77 @@
+import os
+import uuid
+
 from constance import config
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from dependence.models import AssignedPhysician, PatientAnamnesis, current_year, current_month
 from invoices.db.fields import CurrentUserField
 from invoices.employee import Employee
 from invoices.enums.generic import MonthsNames
 from invoices.models import Patient
+
+
+def aai_objective_files(instance, filename):
+    file_name, file_extension = os.path.splitext(filename)
+    if instance.objective and instance.objective.patient:
+        path = os.path.join("AAI", "%s_%s" % (str(instance.objective.patient), instance.objective.patient.id),
+                            "objectives")
+    else:
+        path = os.path.join("AAI", "objectives")
+    # add a short uuid to the filename to avoir confilct with same name files, should be unique
+    short_uuid = uuid.uuid4().hex[:6]
+    if instance.objective and instance.objective.patient:
+        filename = "%s_%s_%s%s" % (file_name, short_uuid, instance.objective.patient.id, file_extension)
+    else:
+        filename = "%s_%s%s" % (file_name, short_uuid, file_extension)
+    return os.path.join(path, filename)
+
+
+class AAIObjective(models.Model):
+    class Meta:
+        ordering = ['objective']
+        verbose_name = u"Objectif AAI"
+        verbose_name_plural = u"Objectifs AAI"
+
+    objective = models.CharField("Objectif", max_length=100)
+    evaluation_date = models.DateField("Date d'évaluation")
+    objective_reaching_date = models.DateField("Estimation date d'atteinte de l'objectif")
+    description = models.TextField("Description détaillée", max_length=1000)
+    patient = models.ForeignKey(Patient,
+                                related_name='aai_objective_to_patient',
+                                on_delete=models.CASCADE,
+                                limit_choices_to={'is_under_dependence_insurance': True})
+    status = models.CharField(_("statut"), max_length=15, choices=[
+        ('pending', _("En attente")),
+        ('in_progress', _("En cours")),
+        ('completed', _("Complété")),
+        ('archived', _("Archivé"))
+    ], default='pending')
+    # technical fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+    def __str__(self):
+        return self.objective
+
+
+class AAIObjectiveFiles(models.Model):
+    """
+    Files or pictures that are related to an AAI objective
+    """
+
+    class Meta:
+        verbose_name = _("Fichier lié à un objectif AAI")
+        verbose_name_plural = _("Fichiers liés à un objectif AAI")
+
+    objective = models.ForeignKey(AAIObjective, related_name="files", on_delete=models.CASCADE)
+    file = models.FileField(_("Fichier"), upload_to=aai_objective_files)
+    description = models.TextField(_("Description"), blank=True, null=True)
+
+    def __str__(self):
+        return self.file.name
 
 
 class AAITransmission(models.Model):
@@ -96,9 +161,11 @@ class AAITransDetail(models.Model):
     detail_to_aai_master = models.ForeignKey(AAITransmission,
                                              related_name="from_aai_detail_to_master",
                                              verbose_name="Détails", on_delete=models.PROTECT)
-    objectives = models.TextField("Objectifs", help_text="Prise en charge, lien avec AEV", max_length=100)
-    means = models.TextField("Moyens/Actions", max_length=100, null=True, blank=True, default=None)
-    results = models.TextField(u"Résultats", max_length=100,
+    # objectives = models.TextField("Objectifs", help_text="Prise en charge, lien avec AEV", max_length=100)
+    # can link to multiple objectives
+    link_to_objectives = models.ManyToManyField(AAIObjective, verbose_name="Lien avec objectifs")
+    means = models.TextField("Moyens/Actions", max_length=200, null=True, blank=True, default=None)
+    results = models.TextField(u"Résultats", max_length=200,
                                null=True, blank=True, default=None)
     session_duration = models.DurationField("Durée",
                                             help_text="Durée de la séance sous format HH:MM:SS",
@@ -106,6 +173,7 @@ class AAITransDetail(models.Model):
     date_time_means_set = models.DateTimeField("Date/h", null=True, blank=True, default=None)
     means_paraph = models.ForeignKey(Employee, verbose_name="Paraphe",
                                      # limit_choices_to={'abbreviation_is_not_xxx': True},
-                                     limit_choices_to=models.Q(user__groups__name='ergo-kine'),                                     related_name='employee_of_means',
+                                     limit_choices_to=models.Q(user__groups__name='ergo-kine'),
+                                     related_name='employee_of_means',
                                      on_delete=models.PROTECT,
                                      null=True, blank=True, default=None)
