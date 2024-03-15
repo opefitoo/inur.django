@@ -678,10 +678,10 @@ class LongTermCareInvoiceFile(models.Model):
 
     @property
     def get_lines_assigned_to_subcontractor(self):
-        return LongTermCareInvoiceLine.objects.filter(invoice=self).filter(subcontractor__isnull=False).all().order_by("id")
+        return LongTermCareInvoiceLine.objects.filter(invoice=self).filter(subcontractor__isnull=False).all().order_by("care_date")
     @property
     def get_items_assigned_to_subcontractor(self):
-        return LongTermCareInvoiceItem.objects.filter(invoice=self).filter(subcontractor__isnull=False).all().order_by("id")
+        return LongTermCareInvoiceItem.objects.filter(invoice=self).filter(subcontractor__isnull=False).all().order_by("care_date")
 
     @property
     def get_totals_per_subcontractor(self):
