@@ -359,7 +359,7 @@ class LongTermCareMonthlyStatement(models.Model):
 
     @property
     def get_invoices(self):
-        return LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all()
+        return LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all().order_by('id')
 
     @property
     def get_month_in_french(self):
