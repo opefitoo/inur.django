@@ -61,7 +61,7 @@ def notify_user_that_holiday_request_is_created(instance, url, employee_email):
                             to_emails)
     # translate notification message into french
     message = "Votre demande de congé a été créée, veuillez noter que vous devez attendre la validation et si vous avez des questions, veuillez contacter votre manager. " \
-              "En cas de désiderata, veuillez noter qu'il peut être transformé en demande de congé si cela n'est pas possible veuillez vérifier. %s" % url
+              "En cas de désiderata, veuillez noter qu'il peut être transformé AUTOMATIQUEMENT en demande de congé si cela n'est pas possible veuillez vérifier. %s" % url
 
     send_email_notification("Votre demande de congé a été créée", message, to_emails)
 
