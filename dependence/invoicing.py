@@ -501,6 +501,8 @@ def normalize_and_hash_xml(xml_file):
     sha256.update(normalized_xml_str)
     return sha256.hexdigest()
 
+def has_no_anomalie_prestation(element):
+    return not element.find('.//anomaliePrestation') is not None
 
 def detect_anomalies(instance):
     # Parse the XML file
@@ -510,7 +512,6 @@ def detect_anomalies(instance):
     # Navigate to the 'montantNet' element and extract its text content
     montant_net_element = root.find('./entete/paiementGroupeTraitement/montantNet')
     montant_brut_element = root.find('./entete/paiementGroupeTraitement/montantBrut')
-
     if montant_brut_element is None or montant_net_element is None:
         raise ValueError("Could not find montantBrut or montantNet in the XML.")
 
@@ -520,6 +521,11 @@ def detect_anomalies(instance):
     # Compare montantBrut and montantNet
     if montant_brut != montant_net:
         print(f"Warning: montantBrut ({montant_brut}) and montantNet ({montant_net}) are not equal.")
+
+        # parse the xml sent to find the invoice
+        # Parse the XML file
+        invoice_tree = ET.parse(instance.xml_invoice_file)
+        invoice_root = invoice_tree.getroot()
 
         # Extract facture elements with anomalies
         anomalies = []
@@ -536,15 +542,59 @@ def detect_anomalies(instance):
                 )
             )
             if anomalie is not None:
+                # find prestation without anomalies
+                # Manually filter the prestations
+                prestations_without_anomalies = [prestation for prestation in facture.findall('.//prestation') if
+                                                 has_no_anomalie_prestation(prestation)]
+                invoice_in_error = items.filter(invoice_reference_filter=reference_facture).get()
+                for prestation in prestations_without_anomalies:
+                    invoiced_prestation = invoice_root.find('.//facture/prestation/[referencePrestation="{}"]'.format(
+                        prestation.find('referencePrestation').text))
+                    date_prestation_text = invoiced_prestation.find('periodePrestation/dateDebut').text
+                    date_prestation = date.fromisoformat(date_prestation_text)
+                    invoiced_code_acte = invoiced_prestation.find('acte/codeTarif').text
+                    reference_prestation = prestation.find('referencePrestation').text
+                    if len(LongTermCareInvoiceLine.objects.filter(invoice=invoice_in_error).filter(long_term_care_package__code=invoiced_code_acte)) == 1:
+                        LongTermCareInvoiceLine.objects.filter(invoice=invoice_in_error).filter(
+                            long_term_care_package__code=invoiced_code_acte).update(paid=True,
+                                                                                    refused_by_insurance=False,
+                                                                                    comment="")
+                    else:
+                        LongTermCareInvoiceItem.objects.filter(invoice=invoice_in_error).filter(
+                            long_term_care_package__code=invoiced_code_acte).filter(care_date=date_prestation).update(paid=True,
+                                                                                                                      refused_by_insurance=False,
+                                                                                                                      comment="")
                 code = anomalie.find('./code').text if anomalie.find('./code') is not None else "Unknown"
                 motif = anomalie.find('./motif').text if anomalie.find('./motif') is not None else "Unknown"
                 error_messages = []
                 # Find all 'prestation' elements with 'anomaliePrestation' child within the current 'facture'
                 prestations_with_anomalies = facture.findall('.//prestation[anomaliePrestation]')
                 error_messages.append(f"Facture {reference_facture} has anomaly {code} - {motif}")
-                invoice_in_error = items.filter(invoice_reference_filter=reference_facture).get()
                 for prestation in prestations_with_anomalies:
+                    # find the invoiced prestation from the invoice file
+                    invoiced_prestation = invoice_root.find('.//facture/prestation/[referencePrestation="{}"]'.format(
+                        prestation.find('referencePrestation').text))
+                    date_prestation_text = invoiced_prestation.find('periodePrestation/dateDebut').text
+                    date_prestation = date.fromisoformat(date_prestation_text)
+                    invoiced_code_acte = invoiced_prestation.find('acte/codeTarif').text
                     reference_prestation = prestation.find('referencePrestation').text
+                    anomalies = prestation.findall('anomaliePrestation')
+                    anomlies_text = ""
+                    for anomalie in anomalies:
+                        anomalie_type = anomalie.find('type').text
+                        anomalie_code = anomalie.find('code').text
+                        anomalie_motif = anomalie.find('motif').text
+                        anomlies_text += f"Type: {anomalie_type} - Code: {anomalie_code} - Motif: {anomalie_motif}"
+                    if len(LongTermCareInvoiceLine.objects.filter(invoice=invoice_in_error).filter(long_term_care_package__code=invoiced_code_acte)) == 1:
+                        LongTermCareInvoiceLine.objects.filter(invoice=invoice_in_error).filter(
+                            long_term_care_package__code=invoiced_code_acte).update(paid=False,
+                                                                                    refused_by_insurance=True,
+                                                                                    comment=anomlies_text)
+                    else:
+                        LongTermCareInvoiceItem.objects.filter(invoice=invoice_in_error).filter(
+                            long_term_care_package__code=invoiced_code_acte).filter(care_date=date_prestation).update(paid=False,
+                                                                                                                      refused_by_insurance=True,
+                                                                                                                      comment=anomlies_text)
                     code_acte_paye = prestation.find('codeActePaye').text
                     anomalie = prestation.find('anomaliePrestation')
                     anomalie_type = anomalie.find('type').text
@@ -561,7 +611,7 @@ def detect_anomalies(instance):
                     print(f"    Anomalie Code: {anomalie_code}")
                     print(f"    Anomalie Motif: {anomalie_motif}")
                     error_messages.append(
-                        f"reference prestation : {reference_prestation} - Code : {code_acte_paye} - Type: {anomalie_type} - Code: {anomalie_code} - Motif: {anomalie_motif}")
+                        f"reference prestation : {reference_prestation} - Error messages: {anomlies_text}")
 
                 # generate a hash for all error_messages
                 error_messages_hash = hashlib.sha256(str(error_messages).encode('utf-8')).hexdigest()
@@ -678,7 +728,7 @@ class LongTermCareInvoiceFile(models.Model):
 
     @property
     def get_lines_assigned_to_subcontractor(self):
-        return LongTermCareInvoiceLine.objects.filter(invoice=self).filter(subcontractor__isnull=False).all().order_by("care_date")
+        return LongTermCareInvoiceLine.objects.filter(invoice=self).filter(subcontractor__isnull=False).all().order_by("start_period")
     @property
     def get_items_assigned_to_subcontractor(self):
         return LongTermCareInvoiceItem.objects.filter(invoice=self).filter(subcontractor__isnull=False).all().order_by("care_date")
@@ -796,7 +846,8 @@ class LongTermCareInvoiceItem(models.Model):
     quantity = models.FloatField(_('Quantité'), default=1)
     paid = models.BooleanField(_('Paid'), default=False)
     refused_by_insurance = models.BooleanField(_('Refused by insurance'), default=False)
-    comment = models.CharField(_('Comment'), max_length=255, blank=True, null=True)
+    comment = models.CharField(_('Comment'), max_length=500, blank=True, null=True)
+    xml_invoice_reference = models.CharField(_('Référence de facturation'), max_length=255, blank=True, null=True)
     subcontractor = models.ForeignKey(
         SubContractor,
         on_delete=models.SET_NULL,
@@ -877,6 +928,9 @@ class LongTermCareInvoiceLine(models.Model):
                                                null=True, blank=True,
                                                related_name='long_term_care_package')
     paid = models.BooleanField(_('Paid'), default=False)
+    refused_by_insurance = models.BooleanField(_('Refused by insurance'), default=False)
+    comment = models.CharField(_('Comment'), max_length=500, blank=True, null=True)
+    xml_invoice_reference = models.CharField(_('Référence de facturation'), max_length=255, blank=True, null=True)
     subcontractor = models.ForeignKey(
         SubContractor,
         on_delete=models.SET_NULL,
