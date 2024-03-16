@@ -140,6 +140,7 @@
             <td>Prix unitaire</td>
             <td>Qté</td>
             <td>Total</td>
+            <td>Paid</td>
             <td>Sous-Traitant</td>
         </tr>
         {% for line in obj.get_invoice_lines %}
@@ -152,6 +153,12 @@
             <td>1</td>
             <td>{{ line.calculate_price }}</td>
             <!-- if no subcontractor, display '-' -->
+            <!-- display icon if paid -->
+            {% if line.paid %}
+            <td class="field-has_errors_col"><img src="{% static '/css/img/icon-yes.svg' %}" alt="True"></td>
+            {% else %}
+            <td class="field-has_errors_col"><img src="{% static '/css/img/icon-no.svg' %}" alt="False"></td>
+            {% endif %}
             <td>{{ line.subcontractor|default:"-" }}</td>
         </tr>
         {% endfor %}
@@ -164,6 +171,11 @@
             <td>{{ item.calculate_unit_price }}</td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.calculate_price }}</td>
+            {% if item.paid %}
+            <td class="field-has_errors_col"><img src="{% static '/css/img/icon-yes.svg' %}" alt="True"></td>
+            {% else %}
+            <td class="field-has_errors_col"><img src="{% static '/css/img/icon-no.svg' %}" alt="False"></td>
+            {% endif %}
             <td>{{ item.subcontractor|default:"-" }}</td>
         </tr>
         {% endfor %}
