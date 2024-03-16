@@ -617,14 +617,15 @@ def detect_anomalies(instance):
                 error_messages_hash = hashlib.sha256(str(error_messages).encode('utf-8')).hexdigest()
                 # check if error message already exists
                 if not InvoiceError.objects.filter(invoice=invoice_in_error,
-                                                   statement_sending=instance,
-                                                   error_message_hash=error_messages_hash).exists():
+                                                   statement_sending=instance).exists():
                     InvoiceError.objects.create(invoice=invoice_in_error,
                                                 statement_sending=instance,
                                                 error_message=error_messages)
                     print(f"Facture {invoice_in_error} has anomaly {code} - {motif}")
                 else:
-                    print(f"Facture {invoice_in_error} has anomaly {code} - {motif} but already exists in database")
+                    print(f"deleting error message for facture {invoice_in_error} and sending {instance}")
+                    InvoiceError.objects.filter(invoice=invoice_in_error,
+                                                statement_sending=instance).delete()
                 anomalies.append((reference_facture, code, motif))
             else:
                 print(f"Facture {reference_facture} has no anomalies")
