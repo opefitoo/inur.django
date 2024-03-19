@@ -208,10 +208,12 @@ class LongTermCareMonthlyStatement(models.Model):
         montantNet.text = str(self.calculate_total_price())
         # loop through all LongTermCareInvoiceFile
         _counter = 0
+        invoice_count = 0
         for invoice in invoices:
             if invoice.calculate_price() == 0:
                 # skip invoice already paid
                 continue
+            invoice_count += 1
             # create sub element facture
             facture = ElementTree.SubElement(root, "facture")
             print(invoice)
@@ -322,7 +324,7 @@ class LongTermCareMonthlyStatement(models.Model):
             demandeFacture = ElementTree.SubElement(facture, "demandeFacture")
             # create sub element nombre
             nombre = ElementTree.SubElement(demandeFacture, "nombre")
-            nombre.text = str(invoices.count())
+            nombre.text = str(invoice_count)
             # create sub element devise
             devise = ElementTree.SubElement(demandeFacture, "devise")
             devise.text = "EUR"
