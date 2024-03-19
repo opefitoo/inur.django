@@ -1,0 +1,21 @@
+{% load static %}
+{% block content %}
+<table id="carTable">
+    <thead>
+    <tr>
+        <th>Car Name</th>
+        <th>Locked</th>
+        <th>Location</th>
+        <th>Lock</th>
+        <th>Unlock</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Rows will be added dynamically -->
+    </tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/cars.js' %}"> </script>
+
+{% endblock %}
