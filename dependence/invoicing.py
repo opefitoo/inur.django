@@ -948,7 +948,7 @@ class LongTermCareInvoiceLine(models.Model):
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
     def calculate_price(self):
-        if self.paid:
+        if self.paid or self.refused_by_insurance:
             return 0
         number_of_days_inclusive = (self.end_period - self.start_period).days + 1
         if self.long_term_care_package.package:
