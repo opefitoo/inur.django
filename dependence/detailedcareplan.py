@@ -203,6 +203,7 @@ def get_summaries_between_two_dates(patient, start_date, end_date):
     unavailability_end = InformalCaregiverUnavailability.objects.filter(patient=patient,
                                                                         unavailability_date__gte=end_date,
                                                                         unavailability_date__gt=start_date,
+                                                                        unavailability_date__lte=end_date,
                                                                         unavailability_type=UnavailabilityTypeChoices.RETOUR).first()
     for summary in summaries:
         medical_start_date = None
