@@ -268,7 +268,7 @@ class LongTermCareMonthlyStatement(models.Model):
                 montantNet.text = str(item.calculate_price())
                 # create sub element identifiantExecutant
                 identifiantExecutant = ElementTree.SubElement(prestation, "identifiantExecutant")
-                if item.subcontractor:
+                if item.subcontractor and item.long_term_care_package.code == "AMDGG":
                     if item.subcontractor.provider_code is None:
                         raise   Exception(f"Provider code is not set for {item.subcontractor}")
                     identifiantExecutant.text = item.subcontractor.provider_code
