@@ -140,6 +140,7 @@
             <td>Prix unitaire</td>
             <td>Qté</td>
             <td>Total</td>
+            <td>Amount due</td>
             <td>Paid</td>
             <td>Sous-Traitant</td>
         </tr>
@@ -152,6 +153,7 @@
             <td>{{ line.calculate_price_per_day }}</td>
             <td>1</td>
             <td>{{ line.calculate_price }}</td>
+            <td>not yet</td>
             <!-- if no subcontractor, display '-' -->
             <!-- display icon if paid -->
             {% if line.paid %}
@@ -171,6 +173,7 @@
             <td>{{ item.calculate_unit_price }}</td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.calculate_price }}</td>
+            <td>{{ item.amount_due }}</td>
             {% if item.paid %}
             <td class="field-has_errors_col"><img src="{% static '/css/img/icon-yes.svg' %}" alt="True"></td>
             {% else %}

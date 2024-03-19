@@ -868,20 +868,24 @@ class LongTermCareInvoiceItem(models.Model):
         verbose_name = _("Item facture assurance dépendance")
         verbose_name_plural = _("Item de facture assurance dépendance")
 
-    def calculate_price(self):
-        if self.subcontractor:
-            # - billing_retrocession % of price
-            return round(self.long_term_care_package.price_per_year_month(year=self.care_date.year,
-                                                                    month=self.care_date.month) * Decimal(str(self.quantity)) * (
-                            1 - self.subcontractor.billing_retrocession / 100), 2)
-        if self.paid or self.refused_by_insurance:
+    def calculate_price(self, take_paid_or_refused_by_insurance_into_account=True):
+        if take_paid_or_refused_by_insurance_into_account and (self.paid or self.refused_by_insurance):
             return 0
-        if self.long_term_care_package.package:
-            raise ValidationError("Item seulement pour un non forfait (package doit etre false)")
         else:
-            # price for specific care_date
-            return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
-                                                                    month=self.care_date.month) * Decimal(str(self.quantity))
+            if self.subcontractor:
+                # - billing_retrocession % of price
+                return round(self.long_term_care_package.price_per_year_month(year=self.care_date.year,
+                                                                        month=self.care_date.month) * Decimal(str(self.quantity)) * (
+                                1 - self.subcontractor.billing_retrocession / 100), 2)
+
+            if self.long_term_care_package.package:
+                raise ValidationError("Item seulement pour un non forfait (package doit etre false)")
+            else:
+                # price for specific care_date
+                return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
+                                                                        month=self.care_date.month) * Decimal(str(self.quantity))
+    def amount_due(self):
+        return self.calculate_price(take_paid_or_refused_by_insurance_into_account=False)
 
     def calculate_unit_price(self):
         if self.subcontractor:
