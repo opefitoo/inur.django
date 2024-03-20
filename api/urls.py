@@ -5,7 +5,8 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 from api import views, cnsstatsviews
 from api.converterview import MT940toOFXConverterView
-from api.views import LockCarView, UnlockCarView, car_location, is_car_locked
+
+#from api.views import LockCarView, UnlockCarView, car_location, is_car_locked
 
 router = routers.DefaultRouter()
 # router.register(r'users', views.UserViewSet)
