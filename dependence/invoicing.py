@@ -765,7 +765,7 @@ class LongTermCareInvoiceFile(models.Model):
                 continue
             _number_of_lines += len(line.get_line_item_per_each_day_of_period_not_paid())
         return _number_of_lines + LongTermCareInvoiceItem.objects.filter(
-            invoice=self, paid=False).count()
+            invoice=self, paid=False, refused_by_insurance=False).count()
 
     @property
     def get_invoice_items(self):
