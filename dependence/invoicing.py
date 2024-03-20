@@ -761,6 +761,8 @@ class LongTermCareInvoiceFile(models.Model):
         _number_of_lines = 0
         for line in LongTermCareInvoiceLine.objects.filter(
                 invoice=self).all():
+            if line.paid or line.refused_by_insurance:
+                continue
             _number_of_lines += len(line.get_line_item_per_each_day_of_period_not_paid())
         return _number_of_lines + LongTermCareInvoiceItem.objects.filter(
             invoice=self, paid=False).count()
