@@ -5,10 +5,13 @@ from zoneinfo import ZoneInfo
 from constance import config
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
+from django.db.models import Count
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.cache import cache_page
 from rest_framework import viewsets, filters, status, generics
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.pagination import PageNumberPagination
@@ -27,7 +30,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
     FullCalendarEmployeeSerializer, FullCalendarPatientSerializer, \
     LongTermMonthlyActivitySerializer, DistanceMatrixSerializer, ShiftSerializer, EmployeeShiftSerializer, \
-    SubContractorSerializer, SimplifiedTimesheetSerializer
+    SubContractorSerializer, SimplifiedTimesheetSerializer, CarSerializer
 from api.utils import get_settings
 from dependence.activity import LongTermMonthlyActivity
 from dependence.careplan import CarePlanDetail, CarePlanMaster
@@ -48,6 +51,7 @@ from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physicia
     ValidityDate, InvoiceItemBatch, SubContractor
 from invoices.processors.birthdays import process_and_generate
 from invoices.processors.events import delete_events_created_by_script
+from invoices.resources import Car
 from invoices.timesheet import Timesheet, TimesheetTask, SimplifiedTimesheetDetail, SimplifiedTimesheet
 
 
@@ -65,6 +69,18 @@ class EmployeeAvatarSerializerViewSet(viewsets.ModelViewSet):
     """
     queryset = Employee.objects.filter(to_be_published_on_www=True).order_by("user__id")
     serializer_class = EmployeeAvatarSerializer
+
+
+class ShyEmployeesViewSet(viewsets.ViewSet):
+    """
+    API endpoint that allows employees who want to be published on internet to be viewed.
+    """
+
+    def list(self, request):
+        queryset = Employee.objects.exclude(to_be_published_on_www=True).filter(end_contract=None).order_by("user__id")
+        queryset = queryset.values('occupation__name').annotate(total=Count('id')).order_by('occupation')
+        occupation_counts = {item['occupation__name']: item['total'] for item in queryset}
+        return Response(occupation_counts)
 
 
 class EmployeeViewSet(viewsets.ModelViewSet):
@@ -389,10 +405,12 @@ class SubContractorViewSet(viewsets.ModelViewSet):
         self.queryset = self.queryset.filter(occupation__is_subcontractor=True)
         return self.list(request, *args, **kwargs)
 
+
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 100
     page_size_query_param = 'page_size'
     max_page_size = 1000
+
 
 class FullCalendarEventViewSet(generics.ListCreateAPIView):
     queryset = Event.objects.all()
@@ -414,19 +432,23 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
         end = datetime.strptime(end_param, '%Y-%m-%dT%H:%M:%S').date()
         queryset = Event.objects.filter(day__range=[start, end])
         return queryset
+
     def patch(self, request, *args, **kwargs):
         # if not superuser, can only validate events assigned to him
         if not request.user.is_superuser:
             event = Event.objects.get(pk=request.data['id'])
             if event.employees.user != request.user:
-                return JsonResponse({'error': _('You are not allowed to validate this event')}, status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse({'error': _('You are not allowed to validate this event')},
+                                    status=status.HTTP_400_BAD_REQUEST)
         event = Event.objects.get(pk=request.data['id'])
         # if event state has changed but no report is provided, return an error
-        if request.data.get('state', None) and event.state != int(request.data['state']) and not request.data.get('eventReport', None):
+        if request.data.get('state', None) and event.state != int(request.data['state']) and not request.data.get(
+                'eventReport', None):
             return JsonResponse({'error': _('Event report is required')}, status=status.HTTP_400_BAD_REQUEST)
         # cannot change state to done if event is in the future
         if request.data.get('state', None) and int(request.data['state']) == 3 and event.day > datetime.today().date():
-            return JsonResponse({'error': _('Cannot change state to done for future event')}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'error': _('Cannot change state to done for future event')},
+                                status=status.HTTP_400_BAD_REQUEST)
         # if request.data['start'] contains Z, it means it is a json date
         if request.data['start'].endswith('Z'):
             event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
@@ -483,15 +505,16 @@ class AvailablePatientList(generics.ListCreateAPIView):
         json_data = json.dumps(serializer.data)
         return HttpResponse(json_data, content_type='application/json')
 
-class AvailableEventStateList(APIView):
-        """
-        API endpoint that returns available event states.
-        """
 
-        def get(self, request):
-            states = Event.STATES
-            states_list = [{"state_id": state[0], "state_name": state[1]} for state in states]
-            return JsonResponse(states_list, safe=False)
+class AvailableEventStateList(APIView):
+    """
+    API endpoint that returns available event states.
+    """
+
+    def get(self, request):
+        states = Event.STATES
+        states_list = [{"state_id": state[0], "state_name": state[1]} for state in states]
+        return JsonResponse(states_list, safe=False)
 
 
 class AvailableEmployeeList(generics.ListCreateAPIView):
@@ -848,5 +871,66 @@ class LoginView(APIView):
         user = authenticate(username=username, password=password)
         if user:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key, 'success': user.id})
+            response = Response({'token': token.key, 'success': user.id})
+            # Set the token in a cookie
+            response.set_cookie('auth_token', token.key)
+            return response
         return Response({'error': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LockCarView(APIView):
+    authentication_classes = [TokenAuthentication]  # Add this line to enable token authentication
+    permission_classes = [IsAuthenticated]  # Add this line to require authentication
+
+    def post(self, request, *args, **kwargs):
+        car_id = kwargs.get('pk')
+        car = Car.objects.get(pk=car_id)
+        # Code to lock the car goes here
+        car.locked = True  # Assuming 'locked' is a boolean field in Car model
+        car.save()
+        return JsonResponse({'status': 'success', 'message': 'Car locked successfully'})
+
+
+class UnlockCarView(APIView):
+    authentication_classes = [TokenAuthentication]  # Add this line to enable token authentication
+    permission_classes = [IsAuthenticated]  # Add this line to require authentication
+
+    def post(self, request, *args, **kwargs):
+        car_id = kwargs.get('pk')
+        car = Car.objects.get(pk=car_id)
+        # Code to unlock the car goes here
+        car.locked = False  # Assuming 'locked' is a boolean field in Car model
+        car.save()
+        return JsonResponse({'status': 'success', 'message': 'Car unlocked successfully'})
+
+
+class CarListView(APIView):
+    authentication_classes = [TokenAuthentication]  # Add this line to enable token authentication
+    permission_classes = [IsAuthenticated]  # Add this line to require authentication
+
+    def get(self, request):
+        cars = Car.objects.filter(is_connected_to_bluelink=True)
+        serializer = CarSerializer(cars, many=True)
+        return Response(serializer.data)
+
+
+@cache_page(60)
+def car_location(request, car_id):
+    try:
+        car = Car.objects.get(pk=car_id)
+        location = car.bluelink_location  # Assuming 'location' is a field in the Car model
+        if location.get('success', None):
+            return JsonResponse({'location': location})
+        else:
+            return JsonResponse({'error': 'Failed to get location'}, status=500)
+    except Car.DoesNotExist:
+        return JsonResponse({'error': 'Car not found'}, status=404)
+
+
+def is_car_locked(request, car_id):
+    try:
+        car = Car.objects.get(pk=car_id)
+        locked = car.locked  # Assuming 'locked' is a field in the Car model
+        return JsonResponse({'locked': locked})
+    except Car.DoesNotExist:
+        return JsonResponse({'error': 'Car not found'}, status=404)

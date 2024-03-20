@@ -1,13 +1,18 @@
 from django.urls import include, re_path
 from django.urls import path
 from rest_framework import routers
+from rest_framework.authtoken.views import obtain_auth_token
 
 from api import views, cnsstatsviews
 from api.converterview import MT940toOFXConverterView
+from api.views import LockCarView, UnlockCarView, car_location, is_car_locked
 
 router = routers.DefaultRouter()
 # router.register(r'users', views.UserViewSet)
 router.register(r'employees-avatars', views.EmployeeAvatarSerializerViewSet)
+router.register(r'employees', views.EmployeeViewSet)
+router.register(r'shy-employees', views.ShyEmployeesViewSet, basename='shy-employees')
+router.register(r'shifts', views.ShiftViewSet)
 # router.register(r'groups', views.GroupViewSet)
 router.register(r'care-codes', views.CareCodeViewSet)
 router.register(r'patients', views.PatientViewSet)
@@ -48,4 +53,16 @@ urlpatterns += [
 urlpatterns += [
     path('how_many_employees_with_specific_cct_sas_grade/', cnsstatsviews.how_many_employees_with_specific_cct_sas_grade,
          name='how-many-employees-with-specific-cct-sas-grade'),
+]
+
+urlpatterns += [
+    path('v1/lock_car/<int:pk>/', LockCarView.as_view(), name='lock_car'),
+    path('v1/unlock_car/<int:pk>/', UnlockCarView.as_view(), name='unlock_car'),
+    path('v1/cars/', views.CarListView.as_view(), name='car_list'),
+    path('v1/car_location/<int:car_id>/', car_location, name='car_location'),
+    path('v1/is_car_locked/<int:car_id>/', is_car_locked, name='is_car_locked'),
+]
+
+urlpatterns += [
+    path('v1/auth-token/', obtain_auth_token, name='api-token'),
 ]
