@@ -21,6 +21,7 @@ from invoices.holidays import HolidayRequest
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch, extract_birth_date_iso, SubContractor
 from invoices.modelspackage import InvoicingDetails
+from invoices.resources import Car
 from invoices.timesheet import Timesheet, TimesheetTask, SimplifiedTimesheet
 
 
@@ -624,3 +625,8 @@ class LongTermMonthlyActivitySerializer(serializers.ModelSerializer):
                                                              **activity_detail_data)
 
         return instance
+
+class CarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Car
+        fields = ['id', 'name', 'vin_number']
