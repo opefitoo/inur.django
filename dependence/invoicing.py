@@ -1,5 +1,6 @@
 import calendar
 import hashlib
+import io
 import locale
 import os
 import traceback
@@ -9,6 +10,7 @@ from datetime import timedelta, date
 from decimal import Decimal
 from xml.etree import ElementTree
 
+import fitz
 import xmlschema
 from constance import config
 from django.core.exceptions import ValidationError
@@ -137,6 +139,46 @@ class LongTermCareMonthlyStatement(models.Model):
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+    def generate_invoice_pdf_from_template_from_field_forms(self, sending_to_update=None):
+        pdf_path = 'dependence/pdf/ASS_DEP_TEMPL_WIT_FORMS.pdf'
+        doc = fitz.open(pdf_path)
+        # format date sending_to_update.date_of_sending_xml_file to french format
+        locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
+        french_sending_date = sending_to_update.date_of_sending_xml_file.strftime('%d %B %Y')
+        field_values = {
+            'mm_aaaa': '%s / %s' % (self.month, self.year),
+            'month' : '%s' % self.month,
+            'invoice_count' : str(self.get_number_of_invoices),
+            'invoice_lines_count': str(self.total_number_of_lines()),
+            'french_date' : french_sending_date,
+            'total_amount' : self.total_price_formatted()
+        }
+
+        for page in doc:
+            widgets = page.widgets()
+            for widget in widgets:
+                if widget.field_name in field_values:
+                    widget.field_value = field_values[widget.field_name]
+                    # Ensure changes are committed to the widget
+                    widget.update()
+
+        # Format the current time for the filename
+        current_time_str = timezone.now().strftime("%Y%m%d%H%M%S")
+        month_year = f"{self.month}_{self.year}"
+        output_filename = f"dependence/pdf/out/PDF_INVOICE_{month_year}_{current_time_str}.pdf"
+
+        # Save the modified PDF to a BytesIO object
+        pdf_bytes = io.BytesIO()
+        doc.save(pdf_bytes)
+        pdf_bytes.seek(0)
+
+        # Create a Django ContentFile from the BytesIO object
+        pdf_file = ContentFile(pdf_bytes.read(), name=output_filename)
+
+        # Save the file to S3
+        sending_to_update.scan_of_signed_invoice = pdf_file
+        sending_to_update.save()
 
     def generate_xml_using_xmlschema(self, sending_to_update=None):
 
@@ -452,6 +494,8 @@ def create_and_save_invoice_file(sender, instance, **kwargs):
             if sending_to_update.date_of_sending_xml_file is None:
                 sending_to_update.date_of_sending_xml_file = timezone.now()
             xml_str = instance.generate_xml_using_xmlschema(sending_to_update=sending_to_update)
+            # update a pdf file with invoice data
+            instance.generate_invoice_pdf_from_template_from_field_forms(sending_to_update=sending_to_update)
             # save the file
             xml_file = ContentFile(xml_str, name=f"{instance.year}_{instance.month}.xml")
             sending_to_update.xml_invoice_file = xml_file

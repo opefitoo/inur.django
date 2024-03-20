@@ -74,5 +74,5 @@ python-decouple==3.8
 chardet~=5.2.0
 numpy==1.26.4
 pytz~=2023.3.post1
-rq~=1.15.1
-honcho==1.1.0
+rq==1.16.1
+PyMuPDF==1.23.26
