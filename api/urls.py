@@ -56,13 +56,13 @@ urlpatterns += [
          name='how-many-employees-with-specific-cct-sas-grade'),
 ]
 
-urlpatterns += [
-    path('v1/lock_car/<int:pk>/', LockCarView.as_view(), name='lock_car'),
-    path('v1/unlock_car/<int:pk>/', UnlockCarView.as_view(), name='unlock_car'),
-    path('v1/cars/', views.CarListView.as_view(), name='car_list'),
-    path('v1/car_location/<int:car_id>/', car_location, name='car_location'),
-    path('v1/is_car_locked/<int:car_id>/', is_car_locked, name='is_car_locked'),
-]
+# urlpatterns += [
+#     path('v1/lock_car/<int:pk>/', LockCarView.as_view(), name='lock_car'),
+#     path('v1/unlock_car/<int:pk>/', UnlockCarView.as_view(), name='unlock_car'),
+#     path('v1/cars/', views.CarListView.as_view(), name='car_list'),
+#     path('v1/car_location/<int:car_id>/', car_location, name='car_location'),
+#     path('v1/is_car_locked/<int:car_id>/', is_car_locked, name='is_car_locked'),
+# ]
 
 urlpatterns += [
     path('v1/auth-token/', obtain_auth_token, name='api-token'),
