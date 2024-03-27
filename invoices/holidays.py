@@ -36,7 +36,7 @@ class HolidayRequest(models.Model):
         (1, u'Congés'),
         (2, u'Maladie'),
         (3, u'Formation'),
-        (4, u'Desiderata'),
+        #(4, u'Desiderata'),
         (5, u'Exceptionnel')
     ]
 
