@@ -26,15 +26,27 @@ class SimplifiedTimesheetClockInOutSerializer(serializers.ModelSerializer):
                                                        time_sheet_month=time_sheet_month).first()
         if timesheet:
             # check first if there is a detail with the same day
-            SimplifiedTimesheetDetail.objects.filter(timesheet=timesheet, start_date__day=clock_in.day).delete()
+            SimplifiedTimesheetDetail.objects.filter(simplified_timesheet=timesheet,
+                                                     start_date__day=clock_in.day).delete()
             current_employee_contractual_hours = employee.get_current_contract().calculate_current_daily_hours()
-            end_time = (clock_in + timedelta(hours=current_employee_contractual_hours)).time()
+            # timedetla cannot be later than 22:00
+            # timedetla cannot be later than 22:00
+            endtime_delta = timedelta(hours=current_employee_contractual_hours) if (clock_in + timedelta(
+                hours=current_employee_contractual_hours)) < (clock_in.replace(hour=22, minute=0,
+                                                                               second=0)) else timedelta(hours=22)
+            end_time = (clock_in + endtime_delta).time()
             # add a new SimplifiedTimesheetDetail with start time and end time
-            SimplifiedTimesheetDetail.objects.create(simplified_timesheet=timesheet, start_date=clock_in, end_date=end_time)
+            SimplifiedTimesheetDetail.objects.create(simplified_timesheet=timesheet, start_date=clock_in,
+                                                     end_date=end_time)
         else:
             timesheet = SimplifiedTimesheet.objects.create(employee=employee, time_sheet_year=time_sheet_year,
                                                            time_sheet_month=time_sheet_month)
             current_employee_contractual_hours = employee.get_current_contract().calculate_current_daily_hours()
-            end_time = (clock_in + timedelta(hours=current_employee_contractual_hours)).time()
-            SimplifiedTimesheetDetail.objects.create(simplified_timesheet=timesheet, start_date=clock_in, end_date=end_time)
+            # timedetla cannot be later than 22:00
+            endtime_delta = timedelta(hours=current_employee_contractual_hours) if (clock_in + timedelta(
+                hours=current_employee_contractual_hours)) < (clock_in.replace(hour=22, minute=0,
+                                                                               second=0)) else timedelta(hours=22)
+            end_time = (clock_in + endtime_delta).time()
+            SimplifiedTimesheetDetail.objects.create(simplified_timesheet=timesheet, start_date=clock_in,
+                                                     end_date=end_time)
         return timesheet
