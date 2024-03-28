@@ -2,7 +2,9 @@ from datetime import timezone
 
 from django.http import JsonResponse
 from django.utils.translation import gettext as _
+from rest_framework import status
 from rest_framework.decorators import api_view
+
 from api.clockinserializers import SimplifiedTimesheetClockInOutSerializer
 from invoices.timesheet import SimplifiedTimesheetDetail
 
@@ -13,9 +15,12 @@ def simplified_timesheet_clock_in_view(request):
         serializer = SimplifiedTimesheetClockInOutSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse({'status': 'success', 'message': _('Clock in successful')})
-        return JsonResponse({'status': 'error', 'errors': serializer.errors})
-    return JsonResponse({'status': 'error', 'errors': 'Invalid request'})
+            return JsonResponse({'status': 'success', 'message': _('Clock in successful')},
+                                status=status.HTTP_201_CREATED)
+        return JsonResponse({'status': 'error', 'errors': serializer.errors},
+                            status=status.HTTP_400_BAD_REQUEST)
+    return JsonResponse({'status': 'error', 'errors': 'Invalid request'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def simplified_timesheet_clock_out_view(request):

@@ -1,13 +1,16 @@
 from datetime import time
 
 from rest_framework import serializers
+from rest_framework.relations import PrimaryKeyRelatedField
 
+from invoices.employee import Employee
 from invoices.timesheet import SimplifiedTimesheet, SimplifiedTimesheetDetail
 
 
 class SimplifiedTimesheetClockInOutSerializer(serializers.ModelSerializer):
-    clock_in = serializers.DateTimeField(input_formats=['%Y-%m-%dT%H:%M:%S.%fZ'], required=True)
-    clock_out = serializers.DateTimeField(input_formats=['%Y-%m-%dT%H:%M:%S.%fZ'], required=False)
+    employee = PrimaryKeyRelatedField(queryset=Employee.objects.all())
+    clock_in = serializers.DateTimeField(input_formats=['%Y-%m-%dT%H:%M:%SZ'], required=True)
+    clock_out = serializers.DateTimeField(input_formats=['%Y-%m-%dT%H:%M:%SZ'], required=False)
 
     class Meta:
         model = SimplifiedTimesheet
@@ -28,5 +31,11 @@ class SimplifiedTimesheetClockInOutSerializer(serializers.ModelSerializer):
             current_employee_contractual_hours = employee.get_current_contract().calculate_current_daily_hours()
             end_time = time(clock_in.hour + current_employee_contractual_hours, clock_in.minute, clock_in.second)
             # add a new SimplifiedTimesheetDetail with start time and end time
+            SimplifiedTimesheetDetail.objects.create(timesheet=timesheet, start_date=clock_in, end_date=end_time)
+        else:
+            timesheet = SimplifiedTimesheet.objects.create(employee=employee, time_sheet_year=time_sheet_year,
+                                                           time_sheet_month=time_sheet_month)
+            current_employee_contractual_hours = employee.get_current_contract().calculate_current_daily_hours()
+            end_time = time(clock_in.hour + current_employee_contractual_hours, clock_in.minute, clock_in.second)
             SimplifiedTimesheetDetail.objects.create(timesheet=timesheet, start_date=clock_in, end_date=end_time)
         return timesheet
