@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 
 from api.clockinserializers import SimplifiedTimesheetClockInOutSerializer
+from invoices.employee import Employee
 from invoices.timesheet import SimplifiedTimesheetDetail
 
 
@@ -27,7 +28,7 @@ def simplified_timesheet_clock_out_view(request):
     if request.method == 'POST':
         # Find the most recent SimplifiedTimesheetDetail for the current user
         timesheet_detail = SimplifiedTimesheetDetail.objects.filter(
-            timesheet__employee=request.user,
+            simplified_timesheet__employee=Employee.objects.get(user=request.user),
             end_date__isnull=True
         ).order_by('-start_date').first()
 

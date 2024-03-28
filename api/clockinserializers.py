@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import timedelta
 
 from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
@@ -27,15 +27,14 @@ class SimplifiedTimesheetClockInOutSerializer(serializers.ModelSerializer):
         if timesheet:
             # check first if there is a detail with the same day
             SimplifiedTimesheetDetail.objects.filter(timesheet=timesheet, start_date__day=clock_in.day).delete()
-            # end_time will be just time + 1 hour ( I need just the time )
             current_employee_contractual_hours = employee.get_current_contract().calculate_current_daily_hours()
-            end_time = time(clock_in.hour + current_employee_contractual_hours, clock_in.minute, clock_in.second)
+            end_time = (clock_in + timedelta(hours=current_employee_contractual_hours)).time()
             # add a new SimplifiedTimesheetDetail with start time and end time
-            SimplifiedTimesheetDetail.objects.create(timesheet=timesheet, start_date=clock_in, end_date=end_time)
+            SimplifiedTimesheetDetail.objects.create(simplified_timesheet=timesheet, start_date=clock_in, end_date=end_time)
         else:
             timesheet = SimplifiedTimesheet.objects.create(employee=employee, time_sheet_year=time_sheet_year,
                                                            time_sheet_month=time_sheet_month)
             current_employee_contractual_hours = employee.get_current_contract().calculate_current_daily_hours()
-            end_time = time(clock_in.hour + current_employee_contractual_hours, clock_in.minute, clock_in.second)
-            SimplifiedTimesheetDetail.objects.create(timesheet=timesheet, start_date=clock_in, end_date=end_time)
+            end_time = (clock_in + timedelta(hours=current_employee_contractual_hours)).time()
+            SimplifiedTimesheetDetail.objects.create(simplified_timesheet=timesheet, start_date=clock_in, end_date=end_time)
         return timesheet
