@@ -16,7 +16,7 @@ from api.views import EventProcessorView, cleanup_event, whois_off, whois_availa
     NunoEventsService, whois_available_with_avatars_and_ids, AvailableEventStateList
 # get_active_care_plans, how_many_care_given, how_many_patients, how_many_care_hours, YaleEventProcessorView
 from invoices.eventviews import Calendar1View, load_calendar_form, update_calendar_form
-from invoices.views import delete_prestation, home_view, password_change
+from invoices.views import delete_prestation, home_view, password_change, login_view
 from invoices.xero.views import xero_auth, xero_callback
 
 admin.autodiscover()
@@ -229,6 +229,20 @@ urlpatterns += [
 urlpatterns += [
     path('home/', home_view, name='home'),  # set as the home page
     path('', home_view, name='root'),
+]
+urlpatterns += [
+    # ... other URL patterns ...
+    path('api/', include('api.urls')),  # assuming 'api.urls' is the location of your secondary urls.py file
+    # ... other URL patterns ...
+]
+urlpatterns += [
+    path('admin/login/', login_view),
+    #path('myadmin/', admin.site.urls),
+]
+
+urlpatterns += [
+    # Serve the Angular app's index.html from /mt940-ofx
+    path('invoices/newcarlist/', TemplateView.as_view(template_name='angular-car/app-car-list.html')),
 ]
 # if settings.DEBUG:
 #     import debug_toolbar
