@@ -78,3 +78,15 @@ class FirstLoginMiddleware:
                 return redirect('password_change')
         response = self.get_response(request)
         return response
+
+
+class SetTokenCookieMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        auth_token = request.session.get('auth_token')
+        if auth_token:
+            response.set_cookie('auth_token', auth_token)
+        return response

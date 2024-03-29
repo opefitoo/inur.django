@@ -78,6 +78,7 @@ MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'invoices.middleware.FirstLoginMiddleware',
+    'invoices.middleware.SetTokenCookieMiddleware',
     'invoices.middleware.ThreadLocalUserMiddleware',
 )
 

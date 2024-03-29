@@ -1,14 +1,44 @@
 # from dal import autocomplete
+from django.contrib.auth import authenticate, login
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.signals import user_logged_in
 from django.db.models import Q
-from django.http import Http404, JsonResponse
+from django.dispatch import receiver
+from django.http import Http404
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
+from django.views import View
 from django.views.decorators.http import require_POST
+from rest_framework.authtoken.models import Token
 
 from invoices.models import Prestation, MedicalPrescription, InvoiceItem
+from invoices.resources import Car
 from invoices.utils import get_git_hash
 
+
+@receiver(user_logged_in)
+def create_auth_token(sender, user, request, **kwargs):
+    token, created = Token.objects.get_or_create(user=user)
+    request.session['auth_token'] = token.key
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            token, created = Token.objects.get_or_create(user=user)
+            request.session['auth_token'] = token.key
+            response = redirect('admin:index')
+            response.set_cookie('auth_token', token.key)  # Set the token as a cookie
+            return response
+    return render(request, 'admin/login.html')
+class LockCarView(View):
+    def get(self, request, *args, **kwargs):
+        car = Car.objects.get(pk=kwargs['pk'])
+        # Code to lock the car goes here
+        return JsonResponse({'status': 'success'})
 
 def password_change(request):
     if request.method == 'POST':
