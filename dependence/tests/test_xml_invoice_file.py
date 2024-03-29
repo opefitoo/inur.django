@@ -74,8 +74,8 @@ class XMLParsingTestCase(unittest.TestCase):
                 montantBrut = float(prestation.find('.//demandePrestation/montantBrut').text)
                 montantNet = float(prestation.find('.//demandePrestation/montantNet').text)
 
-                print(f"montantBrut for facture {facture.find('.//referenceFacture').text}: {montantBrut}")
-                print(f"montantNet for facture {facture.find('.//referenceFacture').text}: {montantNet}")
+                #print(f"montantBrut for facture {facture.find('.//referenceFacture').text}: {montantBrut}")
+                #print(f"montantNet for facture {facture.find('.//referenceFacture').text}: {montantNet}")
 
                 total_montantBrut += montantBrut
                 total_montantNet += montantNet
