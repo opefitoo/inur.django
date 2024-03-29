@@ -244,10 +244,10 @@ class LongTermCareMonthlyStatement(models.Model):
         devise.text = "EUR"
         # create sub element montantBrut
         montantBrut = ElementTree.SubElement(demandeDecompte, "montantBrut")
-        montantBrut.text = str(self.calculate_total_price())
+        montantBrut.text = str(self.calculate_total_price_to_be_sent_to_CNS())
         # create sub element montantNet
         montantNet = ElementTree.SubElement(demandeDecompte, "montantNet")
-        montantNet.text = str(self.calculate_total_price())
+        montantNet.text = str(self.calculate_total_price_to_be_sent_to_CNS())
         # loop through all LongTermCareInvoiceFile
         _counter = 0
         invoice_count = 0
@@ -306,10 +306,10 @@ class LongTermCareMonthlyStatement(models.Model):
                 devise.text = "EUR"
                 # create sub element montantBrut
                 montantBrut = ElementTree.SubElement(demandePrestation, "montantBrut")
-                montantBrut.text = str(item.calculate_price())
+                montantBrut.text = str(item.calculate_price_to_be_sent_to_CNS())
                 # create sub element montantNet
                 montantNet = ElementTree.SubElement(demandePrestation, "montantNet")
-                montantNet.text = str(item.calculate_price())
+                montantNet.text = str(item.calculate_price_to_be_sent_to_CNS())
                 # create sub element identifiantExecutant
                 identifiantExecutant = ElementTree.SubElement(prestation, "identifiantExecutant")
                 if item.subcontractor and item.long_term_care_package.code == "AMDGG":
@@ -372,10 +372,10 @@ class LongTermCareMonthlyStatement(models.Model):
             devise.text = "EUR"
             # create sub element montantBrut
             montantBrut = ElementTree.SubElement(demandeFacture, "montantBrut")
-            montantBrut.text = str(invoice.calculate_price())
+            montantBrut.text = str(invoice.calculate_price_to_be_sent_to_CNS())
             # create sub element montantNet
             montantNet = ElementTree.SubElement(demandeFacture, "montantNet")
-            montantNet.text = str(invoice.calculate_price())
+            montantNet.text = str(invoice.calculate_price_to_be_sent_to_CNS())
         # create a new XML file with the results
         mydata = ElementTree.tostring(root, xml_declaration=True, encoding='UTF-8')
         if xsd_schema.is_valid(mydata):
@@ -390,10 +390,16 @@ class LongTermCareMonthlyStatement(models.Model):
             total_price += invoice.calculate_price()
         return total_price
 
+    def calculate_total_price_to_be_sent_to_CNS(self):
+        total_price = 0
+        for invoice in LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all():
+            total_price += invoice.calculate_price_to_be_sent_to_CNS()
+        return total_price
+
     def total_price_formatted(self):
         locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')  # Unix/Linux/MacOS
         # locale.setlocale(locale.LC_ALL, 'french')  # Windows
-        return locale.format_string("%.2f", self.calculate_total_price(), grouping=True, monetary=True)
+        return locale.format_string("%.2f", self.calculate_total_price_to_be_sent_to_CNS(), grouping=True, monetary=True)
 
     def total_number_of_lines(self):
         _total_number_of_lines = 0
@@ -757,6 +763,17 @@ class LongTermCareInvoiceFile(models.Model):
         total_price = round(total, 2)
         return total_price
 
+    def calculate_price_to_be_sent_to_CNS(self):
+        lines = LongTermCareInvoiceLine.objects.filter(invoice=self)
+        total = 0
+        for line in lines:
+            total += line.calculate_price()
+        items = LongTermCareInvoiceItem.objects.filter(invoice=self)
+        for item in items:
+            total += item.calculate_price_to_be_sent_to_CNS()
+        total_price = round(total, 2)
+        return total_price
+
     def total_number_of_lines(self):
         _number_of_lines = 0
         for line in LongTermCareInvoiceLine.objects.filter(
@@ -916,11 +933,11 @@ class LongTermCareInvoiceItem(models.Model):
         verbose_name = _("Item facture assurance dépendance")
         verbose_name_plural = _("Item de facture assurance dépendance")
 
-    def calculate_price(self, take_paid_or_refused_by_insurance_into_account=True):
+    def calculate_price(self, take_paid_or_refused_by_insurance_into_account=True, take_subcontractor_into_account=True):
         if take_paid_or_refused_by_insurance_into_account and (self.paid or self.refused_by_insurance):
             return 0
         else:
-            if self.subcontractor:
+            if self.subcontractor and take_subcontractor_into_account:
                 # - billing_retrocession % of price
                 return round(self.long_term_care_package.price_per_year_month(year=self.care_date.year,
                                                                         month=self.care_date.month) * Decimal(str(self.quantity)) * (
@@ -930,8 +947,12 @@ class LongTermCareInvoiceItem(models.Model):
                 raise ValidationError("Item seulement pour un non forfait (package doit etre false)")
             else:
                 # price for specific care_date
-                return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
-                                                                        month=self.care_date.month) * Decimal(str(self.quantity))
+                return round(self.long_term_care_package.price_per_year_month(year=self.care_date.year,
+                                                                        month=self.care_date.month) * Decimal(str(self.quantity)), 2)
+
+    def calculate_price_to_be_sent_to_CNS(self, take_paid_or_refused_by_insurance_into_account=True):
+        return self.calculate_price(take_paid_or_refused_by_insurance_into_account=take_paid_or_refused_by_insurance_into_account,
+                                    take_subcontractor_into_account=False)
     def amount_due(self):
         return self.calculate_price(take_paid_or_refused_by_insurance_into_account=False)
 
