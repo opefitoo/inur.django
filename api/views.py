@@ -6,12 +6,11 @@ from constance import config
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
 from django.db.models import Count
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
 from rest_framework import viewsets, filters, status, generics
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.pagination import PageNumberPagination
@@ -51,7 +50,7 @@ from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physicia
     ValidityDate, InvoiceItemBatch, SubContractor
 from invoices.processors.birthdays import process_and_generate
 from invoices.processors.events import delete_events_created_by_script
-from invoices.resources import Car
+from invoices.resources import Car, CarBooking
 from invoices.timesheet import Timesheet, TimesheetTask, SimplifiedTimesheetDetail, SimplifiedTimesheet
 
 
@@ -878,40 +877,55 @@ class LoginView(APIView):
         return Response({'error': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LockCarView(APIView):
-    authentication_classes = [TokenAuthentication]  # Add this line to enable token authentication
-    permission_classes = [IsAuthenticated]  # Add this line to require authentication
-
-    def post(self, request, *args, **kwargs):
-        car_id = kwargs.get('pk')
-        car = Car.objects.get(pk=car_id)
-        # Code to lock the car goes here
-        car.locked = True  # Assuming 'locked' is a boolean field in Car model
-        car.save()
-        return JsonResponse({'status': 'success', 'message': 'Car locked successfully'})
-
-
 class UnlockCarView(APIView):
-    authentication_classes = [TokenAuthentication]  # Add this line to enable token authentication
-    permission_classes = [IsAuthenticated]  # Add this line to require authentication
-
     def post(self, request, *args, **kwargs):
-        car_id = kwargs.get('pk')
-        car = Car.objects.get(pk=car_id)
-        # Code to unlock the car goes here
-        car.locked = False  # Assuming 'locked' is a boolean field in Car model
-        car.save()
-        return JsonResponse({'status': 'success', 'message': 'Car unlocked successfully'})
+        car = Car.objects.get(pk=kwargs['pk'])
+        # first check if the user has a booking
+        # if not, return a 403
+        can_unlock = car.can_user_unlock(request.user)
+        if not can_unlock:
+            return HttpResponseForbidden({'status': 'error', 'message': 'User cannot unlock this car'})
+        unlock_response = car.call_nodejs_api_to_unlock()
+        if json.loads(unlock_response['message'])['success']:
+            car.get_current_booking(request.user).unlock_car()
+        return JsonResponse(unlock_response)
 
 
-class CarListView(APIView):
-    authentication_classes = [TokenAuthentication]  # Add this line to enable token authentication
-    permission_classes = [IsAuthenticated]  # Add this line to require authentication
+class LockCarView(APIView):
+    def post(self, request, *args, **kwargs):
+        car = Car.objects.get(pk=kwargs['pk'])
+        # first check if the user has a booking
+        # if not, return a 403
+        can_lock = car.can_user_lock(request.user)
+        if not can_lock:
+            # return an error message
+            return HttpResponseForbidden({'status': 'error', 'message': 'User cannot unlock this car'})
+        lock_response = car.call_nodejs_api_to_lock()
+        if json.loads(lock_response['message'])['success']:
+            car.get_current_booking(request.user).lock_car()
+        return JsonResponse(lock_response)
 
+
+class CarBookingListView(APIView):
     def get(self, request):
-        cars = Car.objects.filter(is_connected_to_bluelink=True)
-        serializer = CarSerializer(cars, many=True)
+        car_bookings = CarBooking.objects.all()
+        serialized_data = [booking.to_dict() for booking in car_bookings]
+        return Response(serialized_data)
+
+
+class CarViewSet(viewsets.ModelViewSet):
+    queryset = Car.objects.filter(is_connected_to_bluelink=True)
+    serializer_class = CarSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())  # Get the queryset of cars connected to bluelink
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
 
 @cache_page(60)
@@ -932,5 +946,17 @@ def is_car_locked(request, car_id):
         car = Car.objects.get(pk=car_id)
         locked = car.locked  # Assuming 'locked' is a field in the Car model
         return JsonResponse({'locked': locked})
+    except Car.DoesNotExist:
+        return JsonResponse({'error': 'Car not found'}, status=404)
+
+
+def can_user_lock_car(request, car_id):
+    try:
+        user = User.objects.get(pk=request.user.id)
+        car = Car.objects.get(pk=car_id)
+        # Check if the user is allowed to lock the car
+        return JsonResponse({'can_lock': car.can_user_lock(user=user)})
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
     except Car.DoesNotExist:
         return JsonResponse({'error': 'Car not found'}, status=404)
