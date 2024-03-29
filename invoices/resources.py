@@ -1,9 +1,10 @@
 import json
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
+import jwt
 import pytz
 import requests
 from constance import config
@@ -102,6 +103,22 @@ def registration_card_storage_location(instance, filename):
     return os.path.join(path, filename)
 
 
+def generate_token():
+    # Define the secret key
+    secret_key = 'eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTcxMDYwMzYwMywiaWF0IjoxNzEwNjAzNjAzfQ.2q3oiYi0xw_xY5Nh1na8dbj7wxDxBMh68ueS-KP-_34'
+
+    # Define the payload
+    payload = {
+        'user_id': "1",  # Replace with actual user id
+        'exp': datetime.utcnow() + timedelta(days=1)
+    }
+
+    # Generate the JWT token
+    jwt_token = jwt.encode(payload, secret_key, algorithm='HS256')
+
+    return jwt_token
+
+
 def maintenance_file_storage_location(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
     path = os.path.join("Doc. Resources", "%s" % instance.car_link.licence_plate)
@@ -116,6 +133,45 @@ def maintenance_file_storage_location(instance, filename):
         short_uuid,
         "maintenance", file_extension)
     return os.path.join(path, filename)
+
+
+class CarBooking(models.Model):
+    class Meta:
+        ordering = ['-booking_date']
+
+    booking_date = models.DateTimeField()
+    booking_end_date = models.DateTimeField()
+    car_link = models.ForeignKey('Car', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True)
+    car_unlocked = models.BooleanField(default=False)
+    car_history_during_booking = models.TextField(blank=True, null=True)
+    booking_started_datetime = models.DateTimeField(blank=True, null=True)
+    booking_ended_datetime = models.DateTimeField(blank=True, null=True)
+
+    def unlock_car(self):
+        self.booking_started_datetime = timezone.now()
+        self.car_unlocked = True
+        self.save()
+
+    def lock_car(self):
+        self.booking_ended_datetime = timezone.now()
+        self.car_unlocked = False
+        self.save()
+
+    def to_dict(self):
+        return {
+            'booking_date': self.booking_date.isoformat(),
+            'booking_end_date': self.booking_end_date.isoformat(),
+            'car_link': self.car_link.id,
+            'user': self.user.id,
+            'car_unlocked': self.car_unlocked,
+            'car_history_during_booking': self.car_history_during_booking,
+            'booking_started_datetime': self.booking_started_datetime.isoformat() if self.booking_started_datetime else None,
+            'booking_ended_datetime': self.booking_ended_datetime.isoformat() if self.booking_ended_datetime else None,
+        }
+
+    def __str__(self):
+        return 'Booking: %s - %s' % (self.booking_date, self.car_link)
 
 
 class Car(models.Model):
@@ -133,6 +189,7 @@ class Car(models.Model):
                                          help_text=_("You can attach the scan of the registration card of the car"),
                                          null=True, blank=True)
     vin_number = models.CharField(max_length=20, default=None, blank=True, null=True)
+    is_connected_to_bluelink = models.BooleanField(default=False)
 
     @property
     def battery_or_fuel_level(self):
@@ -142,6 +199,129 @@ class Car(models.Model):
                 return battery_level
             else:
                 return "n/a"
+
+    def can_user_lock(self, user):
+        # if user.is_superuser:
+        #    return True
+        car_user_booking = CarBooking.objects.filter(car_link=self, booking_date__lte=timezone.now(),
+                                                     booking_end_date__gte=timezone.now(),
+                                                     user=user,
+                                                     car_unlocked=True,
+                                                     booking_started_datetime__isnull=False,
+                                                     booking_ended_datetime__isnull=True)
+        if car_user_booking:
+            return True
+        return False
+
+    def can_user_unlock(self, user):
+        # if user.is_superuser:
+        #    return True
+        car_user_booking = CarBooking.objects.filter(car_link=self, booking_date__lte=timezone.now(),
+                                                     booking_end_date__gte=timezone.now(),
+                                                     user=user,
+                                                     car_unlocked=False,
+                                                     booking_started_datetime__isnull=True,
+                                                     booking_ended_datetime__isnull=True)
+        if car_user_booking:
+            return True
+        return False
+
+    def get_current_booking(self, user):
+        car_user_booking = CarBooking.objects.filter(car_link=self, booking_date__lte=timezone.now(),
+                                                     booking_end_date__gte=timezone.now(),
+                                                     user=user)
+        if car_user_booking:
+            return car_user_booking[0]
+        return None
+
+    def call_nodejs_api_to_unlock(self):
+        jwt_token = generate_token()
+
+        headers = {
+            'Authorization': f'Bearer {jwt_token}'
+        }
+        params = {
+            'vin': self.vin_number,
+        }
+
+        response = requests.post('http://localhost:3000/unlock', headers=headers, params=params)
+
+        if response.status_code == 200 and response.json()['status'] == 'success':
+            return {'status': 'success'}
+        else:
+            return {'status': 'error', 'message': response.text}
+
+    def call_nodejs_api_to_lock(self):
+        jwt_token = generate_token()
+
+        headers = {
+            'Authorization': f'Bearer {jwt_token}'
+        }
+        params = {
+            'vin': self.vin_number,
+        }
+
+        response = requests.post('http://localhost:3000/lock', headers=headers, params=params)
+
+        if response.status_code == 200 and response.json()['status'] == 'success':
+            return {'status': 'success'}
+        else:
+            return {'status': 'error', 'message': response.text}
+
+    @property
+    def booked_for(self):
+        # return the user(s) who booked the car today
+        booking = CarBooking.objects.filter(car_link=self,
+                                            booking_date__lte=timezone.now(),
+                                            booking_end_date__gte=timezone.now()).latest('booking_date')
+        return booking if booking else None
+
+    @property
+    def locked(self):
+        if self.vin_number and not self.is_connected_to_bluelink:
+            return "n/a"
+        elif self.vin_number and self.is_connected_to_bluelink:
+            jwt_token = generate_token()
+            vin = self.vin_number
+
+            headers = {
+                'Authorization': f'Bearer {jwt_token}',
+            }
+
+            params = {
+                'vin': vin,
+            }
+
+            response = requests.get('http://localhost:3000/isLocked', headers=headers, params=params)
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return response.text
+        else:
+            return "n/a"
+
+    @property
+    def bluelink_location(self):
+        # Replace with your actual JWT token and VIN
+        if self.vin_number and not self.is_connected_to_bluelink:
+            return "n/a"
+        elif self.vin_number and self.is_connected_to_bluelink:
+            jwt_token = generate_token()
+            vin = self.vin_number
+
+            headers = {
+                'Authorization': f'Bearer {jwt_token}',
+            }
+
+            response = requests.get('http://localhost:3000/location?vin=' + self.vin_number, headers=headers)
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return response.text
+        else:
+            return "n/a"
 
     @property
     def geo_localisation_of_car(self):
