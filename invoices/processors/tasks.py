@@ -172,7 +172,7 @@ def delete_all_contacts(employees):
         notify_system_via_google_webhook(
             "*An error occurred while deleting google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))
 
-
+@job("default", timeout=6000)
 def delete_some_contacts(employees):
     """
     Cleanup the Google contacts for the given employees
