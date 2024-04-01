@@ -480,6 +480,6 @@ def create_or_update_google_contact(sender, instance=None, created=False, **kwar
         print("** TEST mode ** will not sync google contacts")
         return
     if instance and instance.end_contract is None:
-        from invoices.processors.tasks import sync_google_contacts as sync_google_contacts_task
+        from invoices.processors.tasks import sync_google_contacts_for_single_employee as sync_google_contacts_task
         employees = Employee.objects.get(id=instance.id)
         sync_google_contacts_task.delay(employees)

@@ -155,6 +155,25 @@ def sync_google_contacts(employees):
         notify_system_via_google_webhook(
             "*An error occurred while syncing google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))
 
+@job("default", timeout=6000)
+def sync_google_contacts_for_single_employee(employee):
+    """
+    Sync the Google contacts for the given employee
+    @param employees:
+    @return:
+    """
+    start = datetime.now()
+    try:
+        employee.sync_google_contacts()
+        end = datetime.now()
+        notify_system_via_google_webhook(
+            "The google contacts of the following employees were synced: {0} and it took {1} sec to generate".format(
+                ','.join(employee), (end - start).seconds))
+    except Exception as e:
+        error_detail = traceback.format_exc()
+        notify_system_via_google_webhook(
+            "*An error occurred while syncing google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))
+
 
 @job("default", timeout=6000)
 def delete_all_contacts(employees):
