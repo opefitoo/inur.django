@@ -1,12 +1,15 @@
 import os
+import traceback
 from tempfile import NamedTemporaryFile
 
 import requests
+from django_rq import job
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
 from invoices import settings
+from invoices.notifications import notify_system_via_google_webhook
 
 
 class ImageGoogleChatSending:
@@ -22,61 +25,71 @@ class ImageGoogleChatSending:
 
     def _init_service(self):
         credentials = service_account.Credentials.from_service_account_file(
-            self.credential_file, scopes=self.SCOPES)
+            self.credential_file, scopes=self.SCOPES, subject=self.email)
         # if self.email:
         #     delegated_credentials = credentials.with_subject(os.environ.get(self.email, None))
         #
         # else:
-        delegated_credentials = credentials.with_subject(os.environ.get('GOOGLE_EMAIL_CREDENTIALS', None))
+        if self.email:
+            delegated_credentials = credentials.with_subject(self.email)
+        else:
+            delegated_credentials = credentials.with_subject(os.environ.get('GOOGLE_CHAT_EMAIL', None))
         self.creds = delegated_credentials
 
+    @job("default", timeout=6000)
     def send_image(self, message, image_url):
+        try:
 
-        # The space ID, e.g., 'spaces/AAAABpdRn_k'
-        space_id = os.environ.get('GOOGLE_SPACE_NAME', None)
 
-        # Attempt to get details about the space
+            # The space ID, e.g., 'spaces/AAAABpdRn_k'
+            space_id = os.environ.get('GOOGLE_SPACE_NAME', None)
 
-        image_path = download_file(image_url)
-        media = MediaFileUpload(image_path, mimetype='image/png')
+            # Attempt to get details about the space
 
-        attachment_uploaded = self.service.media().upload(
+            image_path = download_file(image_url)
+            media = MediaFileUpload(image_path, mimetype='image/png')
 
-            # The space to upload the attachment in.
-            #
-            # Replace SPACE with a space name.
-            # Obtain the space name from the spaces resource of Chat API,
-            # or from a space's URL.
-            parent=space_id,
+            attachment_uploaded = self.service.media().upload(
 
-            # The filename of the attachment, including the file extension.
-            body={'filename': 'test_image.png'},
+                # The space to upload the attachment in.
+                #
+                # Replace SPACE with a space name.
+                # Obtain the space name from the spaces resource of Chat API,
+                # or from a space's URL.
+                parent=space_id,
 
-            # Media resource of the attachment.
-            media_body=media
+                # The filename of the attachment, including the file extension.
+                body={'filename': 'test_image.png'},
 
-        ).execute()
-        # Create a Chat message with attachment.
-        result = self.service.spaces().messages().create(
+                # Media resource of the attachment.
+                media_body=media
 
-            # The space to create the message in.
-            #
-            # Replace SPACE with a space name.
-            # Obtain the space name from the spaces resource of Chat API,
-            # or from a space's URL.
-            #
-            # Must match the space name that the attachment is uploaded to.
-            parent=space_id,
+            ).execute()
+            # Create a Chat message with attachment.
+            result = self.service.spaces().messages().create(
 
-            # The message to create.
-            body={
-                'text': message,
-                'attachment': [attachment_uploaded]
-            }
+                # The space to create the message in.
+                #
+                # Replace SPACE with a space name.
+                # Obtain the space name from the spaces resource of Chat API,
+                # or from a space's URL.
+                #
+                # Must match the space name that the attachment is uploaded to.
+                parent=space_id,
 
-        ).execute()
-        print("Message created: %s" % result)
-        return result
+                # The message to create.
+                body={
+                    'text': message,
+                    'attachment': [attachment_uploaded]
+                }
+
+            ).execute()
+            print("Message created: %s" % result)
+            return result
+        except Exception as e:
+            error_detail = traceback.format_exc()
+            notify_system_via_google_webhook(
+                "*An error occurred sending an image: {0}*\nDetails:\n{1}".format(e, error_detail))
 
 
 def download_file(url):
