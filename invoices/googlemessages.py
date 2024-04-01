@@ -37,7 +37,7 @@ def post_webhook_pic_as_image(description=None, event_pictures_url=None, email=N
     url = settings.GOOGLE_CHAT_WEBHOOK_URL
     message = "\n"
     if description:
-        message += description + "👇 "
+        message += description + "👇 (from %s)" % report_picture_id
     # pass None for now
     if event_pictures_url and os.environ.get('LOCAL_ENV', None):
         if not google_chat_message_id:
