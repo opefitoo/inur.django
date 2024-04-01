@@ -43,10 +43,11 @@ class SimplifiedTimesheetViewTest(APITestCase):
 
     def test_simplified_timesheet_clock_out_view(self):
         # First, create a SimplifiedTimesheet instance
-        self.client.post(reverse('simplified_timesheet_clock_in'), self.simplified_timesheet_data, format='json')
+        self.client.post(reverse('simplified_timesheet_clock_in'), data=self.simplified_timesheet_data, format='json')
 
         # Then, clock out
-        response = self.client.post(reverse('simplified_timesheet_clock_out'), format='json')
+        response = self.client.post(reverse('simplified_timesheet_clock_out'), data=self.simplified_timesheet_data,
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 class SimplifiedTimesheetClockInOutSerializerTest(TestCase):
@@ -68,7 +69,7 @@ class SimplifiedTimesheetClockInOutSerializerTest(TestCase):
             number_of_hours=32,
             employee_link=self.employee, number_of_days_holidays=26)
         employee_detail.save()
-        
+
         self.simplified_timesheet_data = {
             "employee": self.employee.id,
             "time_sheet_year": 2023,
