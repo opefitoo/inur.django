@@ -61,8 +61,8 @@ class EmployeeModelTest(TestCase):
     def test_get_average_hours_per_week(self):
         # Start date is the first day of the current month
         start_date = timezone.now().date().replace(day=1)
-        # End date is the current date
-        end_date = timezone.now().date()
+        # End date will be the last day of the current month
+        end_date = timezone.now().date().replace(day=1) + relativedelta(months=1) - timedelta(days=1)
 
         average_hours_per_week = self.employee.get_average_hours_per_week(start_date, end_date)
 
