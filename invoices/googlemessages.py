@@ -32,16 +32,25 @@ def post_webhook_pic_urls(description=None, event_pictures_url=None):
     print(response)
 
 @job("default", timeout=6000)
-def post_webhook_pic_as_image(description=None, event_pictures_url=None, email=None):
+def post_webhook_pic_as_image(description=None, event_pictures_url=None, email=None, google_chat_message_id=None,
+                              report_picture_id=None):
     url = settings.GOOGLE_CHAT_WEBHOOK_URL
     message = "\n"
     if description:
         message += description + "👇 "
     # pass None for now
     if event_pictures_url and os.environ.get('LOCAL_ENV', None):
-        ImageGoogleChatSending(email=email).send_image(message, event_pictures_url)
+        if not google_chat_message_id:
+            ImageGoogleChatSending(email=email).send_image(message, event_pictures_url,
+                                                           report_picture_id=report_picture_id)
+        else:
+            ImageGoogleChatSending(email=email).update_image(message, event_pictures_url, google_chat_message_id)
     elif event_pictures_url and not os.environ.get('LOCAL_ENV', None):
-        ImageGoogleChatSending(email=email).send_image.delay(message, event_pictures_url)
+        if not google_chat_message_id:
+            ImageGoogleChatSending(email=email).send_image.delay(message, event_pictures_url,
+                                                                 report_picture_id=report_picture_id)
+        else:
+            ImageGoogleChatSending(email=email).update_image.delay(message, event_pictures_url, google_chat_message_id)
 
 def post_webhook(employees, patient, event_report, state, event_date=None, event_pictures_urls=None, event=None,
                  sub_contractor=None):

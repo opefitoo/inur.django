@@ -37,7 +37,7 @@ class ImageGoogleChatSending:
         self.creds = delegated_credentials
 
     @job("default", timeout=6000)
-    def send_image(self, message, image_url):
+    def send_image(self, message, image_url, report_picture_id=None):
         try:
 
 
@@ -85,12 +85,57 @@ class ImageGoogleChatSending:
 
             ).execute()
             print("Message created: %s" % result)
+            from invoices.events import ReportPicture
+            report_picture = ReportPicture.objects.get(id=report_picture_id)
+            report_picture.google_chat_message_id = result['name']
+            report_picture._update_without_signals = True
+            report_picture.save()
             return result
         except Exception as e:
             error_detail = traceback.format_exc()
             notify_system_via_google_webhook(
                 "*An error occurred sending an image: {0}*\nDetails:\n{1}".format(e, error_detail))
 
+    def update_image(self, message, image_url, google_chat_message_id=None):
+        try:
+            # The space ID, e.g., 'spaces/AAAABpdRn_k'
+            space_id = os.environ.get('GOOGLE_SPACE_NAME', None)
+
+            # Attempt to get details about the space
+
+            image_path = download_file(image_url)
+            media = MediaFileUpload(image_path, mimetype='image/png')
+
+            attachment_uploaded = self.service.media().upload(
+
+                # The space to upload the attachment in.
+                #
+                # Replace SPACE with a space name.
+                # Obtain the space name from the spaces resource of Chat API,
+                # or from a space's URL.
+                parent=space_id,
+
+                # The filename of the attachment, including the file extension.
+                body={'filename': 'test_image.png'},
+
+                # Media resource of the attachment.
+                media_body=media
+
+            ).execute()
+            # Create a Chat message with attachment.
+            result = self.service.spaces().messages().update(
+                name=google_chat_message_id,
+                updateMask='text,attachment',
+                body={
+                    'text': message, 'attachment': [attachment_uploaded]
+                }
+            ).execute()
+            print("Message created: %s" % result)
+            return result
+        except Exception as e:
+            error_detail = traceback.format_exc()
+            notify_system_via_google_webhook(
+                "*An error occurred sending an image: {0}*\nDetails:\n{1}".format(e, error_detail))
 
 def download_file(url):
     response = requests.get(url, stream=True)

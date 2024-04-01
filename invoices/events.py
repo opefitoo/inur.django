@@ -512,6 +512,11 @@ class ReportPicture(models.Model):
                               on_delete=models.CASCADE)
     image = models.ImageField(upload_to=update_report_picture_filename,
                               validators=[validate_image])
+    google_chat_message_id = models.CharField(max_length=100, blank=True, null=True)
+    # technical fields
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
+    _update_without_signals = False
 
 
 @receiver(post_delete, sender=ReportPicture, dispatch_uid="report_picture_clean_s3_post_delete")
@@ -607,20 +612,27 @@ def send_update_via_chat(sender, instance: ReportPicture, **kwargs):
     if settings.TESTING:
         print("** TEST mode %s" % sender)
         return
+    if instance._update_without_signals:
+        print("Update without signals")
+        return
     if settings.GOOGLE_CHAT_WEBHOOK_URL:
         # post_webhook_pic_urls(description=instance.description,
         #                      event_pictures_url=instance.image.url)
         email_of_employee = instance.event.employees.user.email
         if os.environ.get('LOCAL_ENV', None):
-            print("Direct call post_save sneding update via chat %s" % instance)
+            print("Direct call post_save sending update via chat %s" % instance)
             post_webhook_pic_as_image(description=instance.description,
                                       event_pictures_url=instance.image.url,
-                                      email=email_of_employee)
+                                      email=email_of_employee,
+                                      google_chat_message_id=instance.google_chat_message_id,
+                                      report_picture_id=instance.id)
         else:
-            print("Call post_save on InvoiceItemBatch %s via redis /rq " % instance)
+            print("Call post_save on ReportPicture %s via redis /rq " % instance)
             post_webhook_pic_as_image.delay(description=instance.description,
                                             event_pictures_url=instance.image.url,
-                                            email=email_of_employee)
+                                            email=email_of_employee,
+                                            google_chat_message_id=instance.google_chat_message_id,
+                                            report_picture_id=instance.id)
 
 
 # @receiver(post_save, sender=Event, dispatch_uid="event_update_gcalendar_event")
