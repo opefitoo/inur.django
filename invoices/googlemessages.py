@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime, timedelta
 from json import dumps
 
@@ -37,7 +38,10 @@ def post_webhook_pic_as_image(description=None, event_pictures_url=None, email=N
     if description:
         message += description + "👇 "
     # pass None for now
-    ImageGoogleChatSending(email=email).send_image(message, event_pictures_url)
+    if event_pictures_url and os.environ.get('LOCAL_ENV', None):
+        ImageGoogleChatSending(email=email).send_image(message, event_pictures_url)
+    elif event_pictures_url and not os.environ.get('LOCAL_ENV', None):
+        ImageGoogleChatSending(email=email).send_image.delay(message, event_pictures_url)
 
 def post_webhook(employees, patient, event_report, state, event_date=None, event_pictures_urls=None, event=None,
                  sub_contractor=None):
