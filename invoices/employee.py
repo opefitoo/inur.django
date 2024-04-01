@@ -458,7 +458,7 @@ class EmployeeProxy(Employee):
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     # if in test mode, do not create token
     if settings.TESTING:
-        print("** TEST mode")
+        print("** TEST mode ** will not create token")
         return
     if instance.end_contract:
         instance.user.is_active = False
@@ -470,3 +470,14 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         instance.user.is_active = True
         instance.user.save()
         Token.objects.create(user=instance.user)
+
+
+
+@receiver(post_save, sender=Employee, dispatch_uid='create_or_update_google_contact')
+def create_or_update_google_contact(sender, instance=None, created=False, **kwargs):
+    # if in test mode, do not create token
+    if settings.TESTING:
+        print("** TEST mode ** will not sync google contacts")
+        return
+    if instance and instance.end_contract is None:
+        instance.sync_google_contacts.delay(instance)
