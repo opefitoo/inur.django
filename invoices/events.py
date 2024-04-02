@@ -268,7 +268,7 @@ class Event(models.Model):
             if not inur_event:
                 orphan_ids.append(found_event)
 
-            elif day_time_start_event != localized_start or day_time_end_event != localized_end:
+            elif (localized_start and day_time_start_event != localized_start) or (localized_end and day_time_end_event != localized_end):
                 from dateutil.relativedelta import relativedelta
                 offset1 = relativedelta(day_time_start_event, localized_start)
                 offset2 = relativedelta(day_time_end_event, localized_end)
