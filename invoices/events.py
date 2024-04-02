@@ -8,10 +8,11 @@ from zoneinfo import ZoneInfo
 
 import pytz
 from constance import config
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models import Q, QuerySet
@@ -235,7 +236,10 @@ class Event(models.Model):
                                                          event_id=found_event['gId'],
                                                          dry_run=True)
             lu_tz = pytz.timezone(found_event['start']['timeZone'])
-            inur_event = Event.objects.get(pk=found_event['inurId'])
+            try:
+                inur_event = Event.objects.get(pk=found_event['inurId'])
+            except ObjectDoesNotExist:
+                print(f"!! No Event found with id {found_event['inurId']} and google id {found_event['gId']}")
             try:
                 localized_start = lu_tz.localize(
                     datetime.datetime.strptime(found_event['start']['dateTime'], '%Y-%m-%dT%H:%M:%SZ'))
@@ -271,6 +275,9 @@ class Event(models.Model):
                     events_different_times.append(inur_event)
         print(orphan_ids)
         print(events_different_times)
+        send_email_notification("orphans", User.objects.get(id=1).email,
+                                " orphans %s and events_different_times %" % (
+            orphan_ids, events_different_times))
 
     @staticmethod
     def validate(model, instance_id, data):

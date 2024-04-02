@@ -1,9 +1,11 @@
 import datetime
 import logging
 import os
+import re
 import sys
 from zoneinfo import ZoneInfo
 
+import googleapiclient
 from apiclient import discovery
 from constance import config
 from django.conf import settings
@@ -323,16 +325,33 @@ class PrestationGoogleCalendarSurLu:
                                               event_id=evt_instance.calendar_id,
                                               dry_run=False)
 
+    def calendar_exists(self, service, calendar_id):
+        try:
+            service.calendars().get(calendarId=calendar_id).execute()
+            return True
+        except googleapiclient.errors.HttpError as e:
+            if e.resp.status == 404:  # Not Found
+                return False
+            else:
+                raise  # re-raise the exception if it's not a 'Not Found' error
+
     def list_event_with_sur_id(self):
         employees = Employee.objects.filter(end_contract=None).filter(~Q(abbreviation='XXX'))
         inur_event_ids = []
         for emp in employees:
+            if not self.calendar_exists(self._service, emp.user.email):
+                print("Calendar does not exist for %s" % emp.user.email)
+                continue
             g_events = self._service.events().list(calendarId=emp.user.email, q="SUR LU ID",
-                                                   timeMin="2022-07-21T10:00:00-00:00").execute()
+                                                   timeMin="2024-03-29T10:00:00-00:00").execute()
 
             for g_event in g_events['items']:
                 description = g_event['description']
-                _inur_event_id = description.split("Sur LU ID:</b>")[1].split("<br>")[0]
+                match = re.search(r'<b>Sur LU ID:</b> (\d+)<br>', description)
+                if match:
+                    _inur_event_id = match.group(1)
+                    print(_inur_event_id)  # Outputs: 46305
+                #_inur_event_id = description.split("Sur LU ID:</b>")[1].split("<br>")[0]
                 inur_event_ids.append({'email': emp.user.email, 'gId': g_event['id'], 'inurId': _inur_event_id,
                                        'htmlLink': g_event['htmlLink'],
                                        'start': g_event['start'], 'end': g_event['end']})
