@@ -107,6 +107,8 @@ class Event(models.Model):
     updated_on = models.DateTimeField(auto_now=True)
     calendar_url = models.URLField(blank=True, null=True, default='http://a.sur.lu')
     calendar_id = models.CharField(blank=True, null=True, default='0', max_length=100)
+    google_chat_message_id = models.CharField(blank=True, null=True, max_length=100)
+    _update_without_signals = False
 
     def add_report_picture(self, description, image):
         ReportPicture.objects.create(description=description, event=self, image=image)
@@ -561,6 +563,9 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
 def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwargs):
     if settings.TESTING:
         print("** TEST mode")
+        return
+    if instance._update_without_signals:
+        print("Update without signals")
         return
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
     if instance.pk:

@@ -9,6 +9,7 @@ from httplib2 import Http
 
 from invoices import settings
 from invoices.actions.imagesongoogle import ImageGoogleChatSending
+from invoices.actions.messageongoogle import ReportChatSending
 
 logger = logging.getLogger('console')
 
@@ -51,7 +52,6 @@ def post_webhook_pic_as_image(description=None, event_pictures_url=None, email=N
                                                                  report_picture_id=report_picture_id)
         else:
             ImageGoogleChatSending(email=email).update_image.delay(message, event_pictures_url, google_chat_message_id)
-
 def post_webhook(employees, patient, event_report, state, event_date=None, event_pictures_urls=None, event=None,
                  sub_contractor=None):
     """Hangouts Chat incoming webhook quickstart.
@@ -177,15 +177,28 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
             message += "\n cliquez sur la photo %s <%s>" % (counter_pictures, event_pictures_url)
     bot_message = {
         'text': message}
-    message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
-    http_obj = Http()
-    response = http_obj.request(
-        uri=url,
-        method='POST',
-        headers=message_headers,
-        body=dumps(bot_message),
-    )
-    print(response)
+    if not os.environ.get('LOCAL_ENV', None):
+        if not event.google_chat_message_id:
+            ReportChatSending(email=employees.user.email).send_text.delay(message, event=event)
+        else:
+            ReportChatSending(email=employees.user.email).update_text(message,
+                                                                      google_chat_message_id=event.google_chat_message_id)
+    else:
+        if not event.google_chat_message_id or "0" == event.google_chat_message_id:
+            ReportChatSending(email=employees.user.email).send_text(message, event=event)
+        else:
+            ReportChatSending(email=employees.user.email).update_text(message,
+                                                                      google_chat_message_id=event.google_chat_message_id)
+    return bot_message
+    # message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
+    # http_obj = Http()
+    # response = http_obj.request(
+    #     uri=url,
+    #     method='POST',
+    #     headers=message_headers,
+    #     body=dumps(bot_message),
+    # )
+    # print(response)
 
     # response2 = http_obj.request(uri="url",
     #                              method="GET",
