@@ -38,14 +38,11 @@ class ReportChatSending:
     @job("default", timeout=6000)
     def send_text(self, message, event=None):
         try:
-
-
             # The space ID, e.g., 'spaces/AAAABpdRn_k'
             space_id = os.environ.get('GOOGLE_SPACE_NAME', None)
 
             # Create a Chat message with attachment.
             result = self.service.spaces().messages().create(
-
                 # The space to create the message in.
                 #
                 # Replace SPACE with a space name.
