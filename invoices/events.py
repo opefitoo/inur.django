@@ -230,6 +230,8 @@ class Event(models.Model):
         inur_ids = calendar_gcalendar.list_event_with_sur_id()
         orphan_ids = []
         events_different_times = []
+        localized_start = None
+        localized_end = None
         for found_event in inur_ids:
             # '2022-07-22T11:00:00Z'
             calendar_gcalendar.delete_event_by_google_id(calendar_id=found_event['email'],
