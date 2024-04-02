@@ -178,7 +178,7 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
     bot_message = {
         'text': message}
     if not os.environ.get('LOCAL_ENV', None):
-        if not event.google_chat_message_id:
+        if not event.google_chat_message_id or "0" == event.google_chat_message_id:
             ReportChatSending(email=employees.user.email).send_text.delay(message=message,
                                                                           event=event)
         else:
