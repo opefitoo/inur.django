@@ -350,7 +350,6 @@ class PrestationGoogleCalendarSurLu:
                 match = re.search(r'<b>Sur LU ID:</b> (\d+)<br>', description)
                 if match:
                     _inur_event_id = match.group(1)
-                    print(_inur_event_id)  # Outputs: 46305
                 #_inur_event_id = description.split("Sur LU ID:</b>")[1].split("<br>")[0]
                 inur_event_ids.append({'email': emp.user.email, 'gId': g_event['id'], 'inurId': _inur_event_id,
                                        'htmlLink': g_event['htmlLink'],
