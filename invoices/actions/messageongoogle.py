@@ -3,7 +3,6 @@ import traceback
 from tempfile import NamedTemporaryFile
 
 import requests
-from django_rq import job
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
@@ -35,7 +34,6 @@ class ReportChatSending:
             delegated_credentials = credentials.with_subject(os.environ.get('GOOGLE_CHAT_EMAIL', None))
         self.creds = delegated_credentials
 
-    @job("default", timeout=6000)
     def send_text(self, message, event=None):
         try:
             # The space ID, e.g., 'spaces/AAAABpdRn_k'
