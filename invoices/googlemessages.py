@@ -179,15 +179,16 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
         'text': message}
     if not os.environ.get('LOCAL_ENV', None):
         if not event.google_chat_message_id:
-            ReportChatSending(email=employees.user.email).send_text.delay(message, event=event)
+            ReportChatSending(email=employees.user.email).send_text.delay(message=message,
+                                                                          event=event)
         else:
-            ReportChatSending(email=employees.user.email).update_text(message,
+            ReportChatSending(email=employees.user.email).update_text(message=message,
                                                                       google_chat_message_id=event.google_chat_message_id)
     else:
         if not event.google_chat_message_id or "0" == event.google_chat_message_id:
-            ReportChatSending(email=employees.user.email).send_text(message, event=event)
+            ReportChatSending(email=employees.user.email).send_text(message=message, event=event)
         else:
-            ReportChatSending(email=employees.user.email).update_text(message,
+            ReportChatSending(email=employees.user.email).update_text(message=message,
                                                                       google_chat_message_id=event.google_chat_message_id)
     return bot_message
     # message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
