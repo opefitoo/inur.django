@@ -584,7 +584,15 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
         if instance.report_pictures.all():
             event_pictures_urls = ["%s|%s" % (a.image.url, a.description) if a.description else a.image.url
                                    for a in instance.report_pictures.all()]
-        post_webhook(instance.employees, instance.patient, instance.event_report, instance.state,
+        if os.environ.get('LOCAL_ENV', None):
+            print("Direct call post_save sending update via chat %s" % instance)
+            post_webhook(instance.employees, instance.patient, instance.event_report, instance.state,
+                         event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
+                             ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls, event=instance,
+                         sub_contractor=instance.sub_contractor)
+        else:
+            print("Call post_save on Event %s via redis /rq " % instance)
+            post_webhook.delay(instance.employees, instance.patient, instance.event_report, instance.state,
                      event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
                          ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls, event=instance,
                      sub_contractor=instance.sub_contractor)
