@@ -177,18 +177,22 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
             message += "\n cliquez sur la photo %s <%s>" % (counter_pictures, event_pictures_url)
     bot_message = {
         'text': message}
-    if not os.environ.get('LOCAL_ENVXXX', None):
+    if employees and employees.user.email:
+        email_to_impersonate = employees.user.email
+    else:
+        email_to_impersonate = os.environ.get('GOOGLE_EMAIL_CREDENTIALS', None)
+    if not os.environ.get('LOCAL_ENV', None):
         if not event.google_chat_message_id or "0" == event.google_chat_message_id:
-            ReportChatSending(email=employees.user.email).send_text.delay(message=message,
-                                                                          event=event)
+            ReportChatSending(email=email_to_impersonate).send_text.delay(message=message,
+                                                                              event=event)
         else:
             ReportChatSending(email=employees.user.email).update_text(message=message,
                                                                       google_chat_message_id=event.google_chat_message_id)
     else:
         if not event.google_chat_message_id or "0" == event.google_chat_message_id:
-            ReportChatSending(email=employees.user.email).send_text(message=message, event=event)
+            ReportChatSending(email=email_to_impersonate).send_text(message=message, event=event)
         else:
-            ReportChatSending(email=employees.user.email).update_text(message=message,
+            ReportChatSending(email=email_to_impersonate).update_text(message=message,
                                                                       google_chat_message_id=event.google_chat_message_id)
     return bot_message
     # message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
