@@ -79,4 +79,6 @@ urlpatterns += [
 urlpatterns += [
     # memory_profile configuration
     path('v1/memory_profile/', views.memory_profile, name='memory_profile'),
+    # my_memory_debug_view
+    path('v1/my_memory_debug_view/', views.my_memory_debug_view, name='my_memory_debug_view'),
 ]
