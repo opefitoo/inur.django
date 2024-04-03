@@ -1,4 +1,5 @@
 import json
+import os
 import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -7,6 +8,7 @@ from constance import config
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
 from django.db.models import Count
+from django.http import FileResponse
 from django.http import JsonResponse, HttpResponseForbidden
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -667,6 +669,13 @@ def my_memory_debug_view(request):
             random.choice(objects_of_type),
             objgraph.is_proper_module),
         filename='/tmp/chain.png')
+
+    # Open the file in binary mode and return it as a response
+    file_path = '/tmp/chain.png'
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as file:
+            response = FileResponse(file, as_attachment=True, filename='chain.png')
+            return response
 
     return HttpResponse("Chain image created at /tmp/chain.png", content_type="text/plain")
 
