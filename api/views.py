@@ -6,7 +6,7 @@ from constance import config
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
 from django.db.models import Count
-from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
@@ -639,6 +639,22 @@ def calculate_distance_matrix(request):
         # print("%s : %s" % (active_patient, active_patient.full_address))
     create_distance_matrix(patient_address_dict, config.DISTANCE_MATRIX_API_KEY)
     return Response(status=status.HTTP_200_OK)
+
+
+import objgraph
+from django.http import HttpResponse
+
+
+def memory_profile(request):
+    # Capture the 10 most common types in memory
+    top_types = objgraph.most_common_types(limit=10, shortnames=False)
+
+    # Optionally, capture and log a snapshot of the current state for later analysis
+    objgraph.show_growth(limit=10)
+
+    # Convert the data to a string to return as an HTTP response
+    response_content = "\n".join(f"{typ}: {num}" for typ, num in top_types)
+    return HttpResponse(response_content, content_type="text/plain")
 
 
 class SimplifiedTimesheetViewSet(viewsets.ModelViewSet):

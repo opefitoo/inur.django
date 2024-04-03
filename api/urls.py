@@ -75,3 +75,8 @@ urlpatterns += [
     path('v1/simplified_timesheet_clock_in/', simplified_timesheet_clock_in_view, name='simplified_timesheet_clock_in'),
     path('v1/simplified_timesheet_clock_out/', simplified_timesheet_clock_out_view, name='simplified_timesheet_clock_out'),
 ]
+
+urlpatterns += [
+    # memory_profile configuration
+    path('v1/memory_profile/', views.memory_profile, name='memory_profile'),
+]
