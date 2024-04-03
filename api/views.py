@@ -1,4 +1,5 @@
 import json
+import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -655,6 +656,19 @@ def memory_profile(request):
     # Convert the data to a string to return as an HTTP response
     response_content = "\n".join(f"{typ}: {num}" for typ, num in top_types)
     return HttpResponse(response_content, content_type="text/plain")
+
+def my_memory_debug_view(request):
+    objects_of_type = objgraph.by_type('builtins.list')
+    if not objects_of_type:
+        return HttpResponse("No objects of type 'YourSuspiciousType' found.", content_type="text/plain")
+
+    objgraph.show_chain(
+        objgraph.find_backref_chain(
+            random.choice(objects_of_type),
+            objgraph.is_proper_module),
+        filename='/tmp/chain.png')
+
+    return HttpResponse("Chain image created at /tmp/chain.png", content_type="text/plain")
 
 
 class SimplifiedTimesheetViewSet(viewsets.ModelViewSet):

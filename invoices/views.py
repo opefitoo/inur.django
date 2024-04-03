@@ -5,9 +5,10 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.signals import user_logged_in
 from django.db.models import Q
 from django.dispatch import receiver
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+from django.template import loader
 from django.views import View
 from django.views.decorators.http import require_POST
 from rest_framework.authtoken.models import Token
@@ -61,6 +62,10 @@ def get_queryset_filter(query_str, fields):
 
     return filter_qs
 
+
+def robots_view(request):
+    template = loader.get_template('robots.txt')
+    return HttpResponse(template.render(), content_type='text/plain')
 
 def home_view(request):
     context = {
