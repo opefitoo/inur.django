@@ -825,12 +825,14 @@ def how_many_care_given(request):
         reqs = Prestation.objects.all().count() + Event.objects.filter(state=3).count()
         return Response(reqs, status=status.HTTP_200_OK)
 
+@cache_page(60 * 60 * 24)
 @api_view(['GET'])
 def how_many_patients(request):
     if 'GET' == request.method:
         reqs = Patient.objects.all().count()
         return Response(reqs, status=status.HTTP_200_OK)
 
+@cache_page(60 * 60 * 24)
 @api_view(['GET'])
 def how_many_care_hours(request):
     if 'GET' == request.method:
