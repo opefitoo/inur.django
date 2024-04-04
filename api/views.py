@@ -64,7 +64,6 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
 
-@cache_page(60 * 60 * 24)  # Cache page for 24 hours
 class EmployeeAvatarSerializerViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows employees who want to be published on internet to be viewed.
@@ -78,7 +77,6 @@ class ShyEmployeesViewSet(viewsets.ViewSet):
     API endpoint that allows employees who want to be published on internet to be viewed.
     """
 
-    @cache_page(60 * 60 * 24)
     def list(self, request):
         queryset = Employee.objects.exclude(to_be_published_on_www=True).filter(end_contract=None).order_by("user__id")
         queryset = queryset.values('occupation__name').annotate(total=Count('id')).order_by('occupation')
