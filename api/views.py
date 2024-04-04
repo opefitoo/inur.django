@@ -818,7 +818,7 @@ def get_bank_holidays(request):
     if 'GET' == request.method:  # user posting data
         reqs = holidays.get_bank_holidays(request.GET.get("year"), request.GET.get("month"))
         return Response(reqs, status=status.HTTP_200_OK)
-
+@cache_page(60 * 60 * 24)  # Cache page for 24 hours
 @api_view(['GET'])
 def how_many_care_given(request):
     if 'GET' == request.method:
