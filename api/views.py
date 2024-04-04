@@ -78,6 +78,7 @@ class ShyEmployeesViewSet(viewsets.ViewSet):
     API endpoint that allows employees who want to be published on internet to be viewed.
     """
 
+    @cache_page(60 * 60 * 24)
     def list(self, request):
         queryset = Employee.objects.exclude(to_be_published_on_www=True).filter(end_contract=None).order_by("user__id")
         queryset = queryset.values('occupation__name').annotate(total=Count('id')).order_by('occupation')
