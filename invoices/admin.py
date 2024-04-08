@@ -40,7 +40,7 @@ from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.carecodes import update_prices_for_september_2023
 from invoices.actions.certificates import generate_pdf
-from invoices.actions.invoices import generer_forfait_aev_fevrier
+from invoices.actions.invoices import generer_forfait_aev_mars_2024
 # from invoices.actions.maps import calculate_distance_matrix
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.distancematrix import DistanceMatrix
@@ -67,12 +67,16 @@ from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physicia
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
-from invoices.resources import ExpenseCard, Car, MaintenanceFile, ConvadisOAuth2Token
+from invoices.resources import ExpenseCard, Car, MaintenanceFile, ConvadisOAuth2Token, CarBooking
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 from invoices.utils import EventCalendar
 from invoices.xeromodels import XeroToken
 
+
+@admin.register(CarBooking)
+class CarBookingAdmin(admin.ModelAdmin):
+    list_display = ('booking_date', )
 
 @admin.register(JobPosition)
 class JobPositionAdmin(admin.ModelAdmin):
@@ -424,6 +428,25 @@ class MaintenanceFileInline(TabularInline):
     extra = 0
     model = MaintenanceFile
 
+class NewCarList(Car):
+    class Meta:
+        proxy = True
+        verbose_name = "Véhicule *"
+        verbose_name_plural = "Véhicules *"
+
+@admin.register(NewCarList)
+class NewCarListAdmin(admin.ModelAdmin):
+    #change_list_template = 'car/new_car_list_admin.html'
+    change_list_template = 'angular-car/app-car-list.html'
+    # reference the js file call it cars.js
+    class Media:
+        js = ('car/cars.js',)
+
+
+    # display only cars that are is_blue_link_connected True
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(is_connected_to_bluelink=True)
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
@@ -560,9 +583,108 @@ class PatientAdmin(CSVExportAdmin):
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode', 'city', 'phone_number', 'email_address']
     # actions = [calculate_distance_matrix]
     form = PatientForm
-    actions = [generer_forfait_aev_fevrier, "generate_annual_report_for_2023"]
+    actions = [generer_forfait_aev_mars_2024, "generate_annual_report_for_2023",
+               "number_of_hospitalizations_in_2023",
+               "number_of_dead_patients_in_2023", "number_of_patients_in_2023", "filter_without_gender", ]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, AlternateAddressInline,
                BedsoreRiskAssessment, SubContractorInline]
+
+    def age_moyen(self, request, queryset):
+        total_age = 0
+        for patient in queryset:
+            total_age += patient.age
+        print("Age moyen des patients sélectionnés: %s" % (total_age / len(queryset)))
+
+    def minima_age(self, request, queryset):
+        minimum_age = 100
+        patient_ids = []
+        for patient in queryset:
+            patient_ids.append(patient.id)
+            if patient.age < minimum_age:
+                minimum_age = patient.age
+        print("*** Patient ids: %s" % patient_ids)
+        print("*** Age minimum des patients sélectionnés: %s" % minimum_age)
+
+    def maximum_age(self, request, queryset):
+        minimum_age = 0
+        patient_ids = []
+        for patient in queryset:
+            patient_ids.append(patient.id)
+            if patient.age > minimum_age:
+                minimum_age = patient.age
+        print("*** Patient ids: %s" % patient_ids)
+        print("Age minimum des patients sélectionnés: %s" % minimum_age)
+
+    def number_of_hospitalizations_in_2023(self, request, queryset):
+        total_hospitalizations_f = 0
+        total_hospitalizations_h = 0
+        patient_ids = [1356, 1325, 1313, 1309, 1210, 1070, 1034, 945, 864, 749, 482, 480, 331, 198]
+        for patient_id in patient_ids:
+            patient = Patient.objects.get(id=patient_id)
+            if patient.gender == 'FEM':
+                total_hospitalizations_f += Hospitalization.objects.filter(start_date__year=2023, patient=patient).count()
+            elif patient.gender == 'MAL':
+                total_hospitalizations_h += Hospitalization.objects.filter(start_date__year=2023, patient=patient).count()
+            else:
+                print("Patient %s has no gender" % patient)
+        print("Nombre total d'hospitalisations  de femmes en 2023: %s" % total_hospitalizations_f)
+        print("Nombre total d'hospitalisations  d'hommes en 2023: %s" % total_hospitalizations_h)
+
+    def number_of_dead_patients_in_2023(self, request, queryset):
+        patient_ids = [1356, 1325, 1313, 1309, 1210, 1070, 1034, 945, 864, 749, 482, 480, 331, 198]
+        total_dead_patients_f = Patient.objects.filter(date_of_death__year=2023, gender='FEM', id__in=patient_ids).count()
+        total_dead_patients_h = Patient.objects.filter(date_of_death__year=2023, gender='MAL', id__in=patient_ids).count()
+        print("Nombre total de patients f décédés en 2023: %s" % total_dead_patients_f)
+        print("Nombre total de patients h décédés en 2023: %s" % total_dead_patients_h)
+        list_names_patients_alive = []
+        for patient_id in patient_ids:
+            patient = Patient.objects.get(id=patient_id)
+            if not patient.date_of_death:
+                list_names_patients_alive.append(patient.name)
+        print("Patients encore en vie: %s" % list_names_patients_alive)
+
+    def number_of_patients_in_2023(self, request, queryset):
+        # Define the age groups
+        age_groups = [
+            {"name": "<60", "age_from": 0, "age_to": 59},
+            {"name": "60-79", "age_from": 60, "age_to": 79},
+            {"name": "80-99", "age_from": 80, "age_to": 99},
+            {"name": ">=100", "age_from": 100, "age_to": None},
+        ]
+
+        # Initialize a dictionary to store the results
+        results = {}
+
+        events = Event.objects.filter(day__year=2023).filter(patient__is_under_dependence_insurance=True).exclude(
+            patient__id=751).exclude(event_type_enum=EventTypeEnum.BIRTHDAY)
+        # Group by patient and count distinct patients
+        unique_patient_ids = events.values_list('patient', flat=True).distinct()
+        unique_patients_f = Patient.objects.filter(id__in=unique_patient_ids, gender='FEM')
+        unique_patients_h = Patient.objects.filter(id__in=unique_patient_ids, gender='MAL')
+
+        print("Number of unique patients with at least one event in 2023: ", len(unique_patient_ids))
+        print("Number of unique patients f with at least one event in 2023: ", len(unique_patients_f))
+        print("Number of unique patients h with at least one event in 2023: ", len(unique_patients_h))
+
+        # Initialize a dictionary to store the classification results
+        classification = {group["name"]: [] for group in age_groups}
+        for patient in unique_patients_f:
+            age = patient.age
+            # Classify the patient based on their age
+            for group in age_groups:
+                if (group["age_to"] is None and age >= group["age_from"]) or \
+                        (group["age_from"] <= age <= group["age_to"]):
+                    classification[group["name"]].append(patient)
+                    break
+
+        # Print the classification results
+        for group in age_groups:
+            #print(f"Number of patients in the age group {group['name']}: {len(classification[group['name']])}")
+            print(f"Number of patients in the age group {group['name']}: {classification[group['name']]}")
+
+    def filter_without_gender(self, request, queryset):
+        queryset = queryset.filter(gender__isnull=True)
+        self.message_user(request, "Filtered patients without gender set.")
 
     def generate_annual_report_for_2023(self, request, queryset):
         if not request.user.is_superuser:
