@@ -70,6 +70,9 @@ def notify_system_via_google_webhook(message):
     #  check if url looks like a url
     if not url.startswith("https://"):
         url = settings.GOOGLE_CHAT_WEBHOOK_URL
+        if not url.startswith("https://"):
+            print(f"Notifying system via google webhook failed, please check webhook url in settings.py : {message}")
+            return
     bot_message = {
         'text': message}
     message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
