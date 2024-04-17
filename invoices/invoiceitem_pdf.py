@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import decimal
-import os
 from zoneinfo import ZoneInfo
 
 from constance import config
@@ -44,7 +43,8 @@ def get_doc_elements(queryset, med_p=False, with_verification_page=False, batch_
                                       qs.invoice_date,
                                       qs.accident_id,
                                       qs.accident_date,
-                                      qs.invoice_details)
+                                      qs.invoice_details,
+                                      qs.subcontractor)
 
             elements.extend(_result["elements"])
             summary_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_amount"],
@@ -225,7 +225,7 @@ def _build_final_page(total, order_number, invoicing_details, batch_start_date=N
     return elements
 
 
-def _build_invoices(prestations, invoice_number, invoice_date, accident_id, accident_date, invoicing_details):
+def _build_invoices(prestations, invoice_number, invoice_date, accident_id, accident_date, invoicing_details, subcontractor):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
     # import pydevd; pydevd.settrace()
@@ -273,7 +273,9 @@ def _build_invoices(prestations, invoice_number, invoice_date, accident_id, acci
                                                                                    and patient.age > 18), 2),
                          (presta.date.astimezone(ZoneInfo("Europe/Luxembourg"))).strftime('%H:%M'),
                          "",
-                         presta.employee.provider_code))
+                         # if subcontractor is not None, then we display the subcontractor provider code
+                         subcontractor.provider_code if subcontractor is not None and subcontractor.provider_code is not None else presta.employee.provider_code))
+                         #presta.employee.provider_code))
 
     for x in range(len(data), 22):
         data.append((x, '', '', '', '', '', '', '', ''))
@@ -378,27 +380,3 @@ class InvoiceItemBatchPdf:
         prefix = 'InvoiceItemBatch'
 
         return '%s %s.pdf' % (prefix, str(batch))
-
-    @staticmethod
-    def get_path(batch):
-        from invoices.models import gd_storage
-        filename = InvoiceItemBatchPdf.get_filename(batch=batch)
-
-        return os.path.join(gd_storage.INVOICEITEM_BATCH_FOLDER, filename)
-
-    # @staticmethod
-    # def get_inmemory_pdf(batch):
-    #     io_buffer = BytesIO()
-    #     doc = SimpleDocTemplate(io_buffer, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm, bottomMargin=1 * cm)
-    #     elements = get_doc_elements(batch.invoice_items)
-    #     doc.build(elements)
-    #
-    #     f = io_buffer.getvalue()
-    #     in_memory_file = InMemoryUploadedFile(io_buffer,
-    #                                           field_name=None,
-    #                                           name=InvoiceItemBatchPdf.get_filename(batch=batch),
-    #                                           content_type="application/pdf",
-    #                                           size=sys.getsizeof(f),
-    #                                           charset=None)
-    #
-    #     return in_memory_file

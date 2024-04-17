@@ -1204,6 +1204,9 @@ class InvoiceItem(models.Model):
     medical_prescription = models.ForeignKey(MedicalPrescription, related_name='invoice_items', null=True, blank=True,
                                              help_text='Please choose a Medical Prescription',
                                              on_delete=models.SET_NULL)
+    subcontractor = models.ForeignKey(SubContractor, related_name='subcontractor_invoice_items', null=True, blank=True,
+                                        help_text='Please choose a Subcontractor',
+                                        on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.CharField(max_length=50, null=True, blank=True)
