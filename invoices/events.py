@@ -684,6 +684,9 @@ def delete_google_calendar(sender, instance: Event, **kwargs):
         return
     if instance.calendar_id != 0:
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
+        if not calendar_gcalendar.calendar.calendar:
+            print("No calendar_gcalendar")
+            return
         calendar_gcalendar.delete_event(instance)
 
 
