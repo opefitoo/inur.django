@@ -208,8 +208,12 @@ class Event(models.Model):
             self.event_address = "%s %s" % (config.NURSE_ADDRESS, config.NURSE_ZIP_CODE_CITY)
         else:
             cal = create_or_update_google_calendar(self)
-            self.calendar_id = cal.get('id')
-            self.calendar_url = cal.get('htmlLink')
+            if cal:
+                self.calendar_id = cal.get('id')
+                self.calendar_url = cal.get('htmlLink')
+            else:
+                self.calendar_id = None
+                self.calendar_url = None
 
     # FIXME pass date as parameter
     def cleanup_all_events_on_google(self, dry_run):
@@ -545,7 +549,7 @@ class EventList(Event):
 
 def create_or_update_google_calendar(instance):
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
-    if not calendar_gcalendar:
+    if not calendar_gcalendar.calendar:
         print("No calendar_gcalendar")
         return
     if instance.pk:
@@ -561,6 +565,9 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
         print("** TEST mode")
         return
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
+    if calendar_gcalendar.calendar is None:
+        print("No calendar_gcalendar")
+        return
     if instance.pk:
         old_event = Event.objects.get(pk=instance.pk)
         if old_event.employees != instance.employees:
@@ -580,6 +587,9 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
         print("Update without signals")
         return
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
+    if calendar_gcalendar.calendar is None:
+        print("No calendar_gcalendar")
+        return
     if instance.pk:
         print(calendar_gcalendar.update_events_sur_id(instance))
     if settings.GOOGLE_CHAT_WEBHOOK_URL:
