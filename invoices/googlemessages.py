@@ -63,8 +63,16 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
     # FIXME: remove hardcoded value for state
     if patient:
         _patient_name = patient.name.capitalize() + " " + patient.first_name[0].capitalize() + "."
+    # check that state is int and in the list of states if string then try to convert it first
+    if not isinstance(state, int):
+        try:
+            state = int(state)
+        except ValueError:
+            print("state is not an integer")
+            message = "state is not an integer for event %s value is %s" % (event, state)
     if state not in [3, 5, 6]:
-        return
+        print("state is not in the list of states")
+        return "state is not in the list of states for event %s value is %s" % (event, state)
     string_event_date = ""
     # if event date in more than 2 days in the past, we do nothing
     if event_date:
