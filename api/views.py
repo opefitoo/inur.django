@@ -451,6 +451,7 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
             return JsonResponse({'error': _('Cannot change state to done for future event')},
                                 status=status.HTTP_400_BAD_REQUEST)
         # if request.data['start'] contains Z, it means it is a json date
+        event.state = request.data.get('state', event.state)
         if request.data['start'].endswith('Z'):
             event.day = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
             event.time_start_event = datetime.strptime(request.data['start'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
@@ -466,6 +467,8 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
             event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M:%S').time()
         if request.data.get('notes', None):
             event.notes = request.data['notes']
+        if request.data.get('eventReport', None):
+            event.event_report = request.data['eventReport']
         event.save()
         return HttpResponse("OK")
 
