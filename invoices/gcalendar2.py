@@ -43,7 +43,9 @@ class PrestationGoogleCalendarSurLu:
         :raise ValueError:
         """
         self._json_keyfile_path = json_keyfile_path or settings.GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE2
-
+        # if not file is found, just return an empty object
+        if not os.path.exists(self._json_keyfile_path):
+            return
         credentials = self.get_credentials()
         # http = credentials.authorize(httplib2.Http())
         self._service = discovery.build('calendar', 'v3', credentials=credentials)

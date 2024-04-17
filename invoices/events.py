@@ -545,6 +545,9 @@ class EventList(Event):
 
 def create_or_update_google_calendar(instance):
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
+    if not calendar_gcalendar:
+        print("No calendar_gcalendar")
+        return
     if instance.pk:
         old_event = Event.objects.get(pk=instance.pk)
         if old_event.employees != instance.employees:
