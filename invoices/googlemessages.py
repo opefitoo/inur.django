@@ -42,11 +42,25 @@ def post_webhook_pic_as_image(description=None, event_pictures_url=None, email=N
         message += description + "👇 (from %s)" % report_picture_id
     # pass None for now
     if event_pictures_url:
-        if not google_chat_message_id:
-            ImageGoogleChatSending(email=email).send_image(message, event_pictures_url,
-                                                           report_picture_id=report_picture_id)
+        if not config.NOTIFY_VIA_WEBHOOK:
+            if not google_chat_message_id:
+                ImageGoogleChatSending(email=email).send_image(message, event_pictures_url,
+                                                               report_picture_id=report_picture_id)
+            else:
+                ImageGoogleChatSending(email=email).update_image(message, event_pictures_url, google_chat_message_id)
         else:
-            ImageGoogleChatSending(email=email).update_image(message, event_pictures_url, google_chat_message_id)
+            message += "%s" % event_pictures_url
+            bot_message = {
+                'text': message}
+            message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
+            http_obj = Http()
+            response = http_obj.request(
+                uri=url,
+                method='POST',
+                headers=message_headers,
+                body=dumps(bot_message),
+            )
+            print(response)
 
 @job("default", timeout=6000)
 def post_webhook(employees, patient, event_report, state, event_date=None, event_pictures_urls=None, event=None,
