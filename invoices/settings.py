@@ -228,6 +228,7 @@ CONSTANCE_CONFIG = {
     'CODE_PRESTATAIRE': ("", "Code du prestataire de soins sur 8 positions", str),
     'USE_GDRIVE': (False, 'Utilisation de Google Drive et Google Calendar', 'yes_no_null_select'),
     'SKIP_DJANGORQ': (False, 'Any async will skip usage of redis RQ via django library', bool),
+    'NOTIFY_VIA_WEBHOOK': (False, 'Notify system via webhook instead of email impersonation', bool),
     'CC_EMAIL_SENT': ("",
                       "Lors de l'envoi d'un email au client, envoi à cette adresse en CC (pour en mettre plusieurs veuillez les séparer d'une virgule ',')",
                       str),
@@ -253,7 +254,7 @@ CONSTANCE_CONFIG = {
 CONSTANCE_CONFIG_FIELDSETS = {
     'Options Générales': (
     'USE_GDRIVE', 'AT_HOME_CARE_CODE', 'AEV_VM_MIN', 'ROOT_URL', 'GOOGLE_CHAT_WEBHOOK_FOR_SYSTEM_NOTIF_URL',
-    'DISTANCE_MATRIX_API_KEY', 'SKIP_DJANGORQ'),
+    'DISTANCE_MATRIX_API_KEY', 'SKIP_DJANGORQ', 'NOTIFY_VIA_WEBHOOK'),
     'Options de Facturation': (
         'MAIN_NURSE_CODE', 'BIS_NURSE_CODE', 'NURSE_NAME', 'NURSE_ADDRESS', 'NURSE_ZIP_CODE_CITY',
         'CODE_PRESTATAIRE',

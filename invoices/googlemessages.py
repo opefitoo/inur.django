@@ -186,12 +186,31 @@ def post_webhook(employees, patient, event_report, state, event_date=None, event
         email_to_impersonate = employees.user.email
     else:
         email_to_impersonate = os.environ.get('GOOGLE_EMAIL_CREDENTIALS', None)
-    if not event.google_chat_message_id or "0" == event.google_chat_message_id:
-        ReportChatSending(email=email_to_impersonate).send_text(message=message, event=event)
+    if not config.NOTIFY_VIA_WEBHOOK:
+        if not event.google_chat_message_id or "0" == event.google_chat_message_id:
+            ReportChatSending(email=email_to_impersonate).send_text(message=message, event=event)
+        else:
+            ReportChatSending(email=email_to_impersonate).update_text(message=message,
+                                                                      google_chat_message_id=event.google_chat_message_id)
+        return bot_message
     else:
-        ReportChatSending(email=email_to_impersonate).update_text(message=message,
-                                                                  google_chat_message_id=event.google_chat_message_id)
-    return bot_message
+        message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
+        http_obj = Http()
+        # also post message
+        response = http_obj.request(
+            uri=url,
+            method='POST',
+            headers=message_headers,
+            body=dumps(message),
+        )
+        response = http_obj.request(
+            uri=url,
+            method='POST',
+            headers=message_headers,
+            body=dumps(bot_message),
+        )
+        print(response)
+        return response
     # message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
     # http_obj = Http()
     # response = http_obj.request(

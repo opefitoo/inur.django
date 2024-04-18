@@ -587,10 +587,10 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
         print("Update without signals")
         return
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
-    if calendar_gcalendar.calendar is None:
-        print("No calendar_gcalendar")
-        return
-    if instance.pk:
+    #if calendar_gcalendar.calendar is None:
+    #    print("No calendar_gcalendar")
+    #    return
+    if instance.pk and calendar_gcalendar.calendar:
         print(calendar_gcalendar.update_events_sur_id(instance))
     if settings.GOOGLE_CHAT_WEBHOOK_URL:
         event_pictures_urls = None
