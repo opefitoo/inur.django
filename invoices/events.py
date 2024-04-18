@@ -655,7 +655,7 @@ def send_update_via_chat(sender, instance: ReportPicture, **kwargs):
         #                      event_pictures_url=instance.image.url)
         email_of_employee = instance.event.employees.user.email
         if os.environ.get('LOCAL_ENV', None) or config.SKIP_DJANGORQ:
-            print("Direct call post_save sending update via chat %s" % instance)
+            print("Direct call send_update_via_chat sending update via chat %s" % instance)
             post_webhook_pic_as_image(description=instance.description,
                                       event_pictures_url=instance.image.url,
                                       email=email_of_employee,
