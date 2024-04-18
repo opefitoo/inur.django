@@ -597,7 +597,7 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
         if instance.report_pictures.all():
             event_pictures_urls = ["%s|%s" % (a.image.url, a.description) if a.description else a.image.url
                                    for a in instance.report_pictures.all()]
-        if os.environ.get('LOCAL_ENV', None):
+        if os.environ.get('LOCAL_ENV', None) or config.SKIP_DJANGORQ:
             print("Direct call post_save sending update via chat %s" % instance)
             post_webhook(instance.employees, instance.patient, instance.event_report, instance.state,
                          event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
