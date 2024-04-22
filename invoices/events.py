@@ -120,6 +120,52 @@ class Event(models.Model):
 
     def is_in_validated_state(self):
         return self.state in [Event.STATES[2][0], Event.STATES[3][0], Event.STATES[4][0]]
+    def repeat_event_for_all_days_of_week(self, date):
+        """
+        Duplicate event, can be in the past as well, for example if day of week is Sunday, must duplicated for all days of the present week except for Sunday
+        """
+
+        # Repeat event for all days of the week except 'date'
+        # Everytime, before duplication check if event already exists for that day
+        # if not, duplicate event for that day
+        # if yes, do nothing
+        # get the first day of the week for 'date'
+        first_day_of_week = date - datetime.timedelta(days=date.weekday())
+        events_created = []
+        for i in range(7):  # Loop through all days of the week
+            next_day = first_day_of_week + datetime.timedelta(days=i)
+            if next_day.weekday() == date.weekday():  # If the day is the same as 'date', skip
+                continue
+            if not Event.objects.filter(day=next_day, time_start_event=self.time_start_event,
+                                        time_end_event=self.time_end_event, event_type=self.event_type,
+                                        employees=self.employees, patient=self.patient).exists():
+                employee_num_1 = Employee.objects.get(id=1)
+                new_event = Event.objects.create(day=next_day, time_start_event=self.time_start_event,
+                                                 time_end_event=self.time_end_event,
+                                                 event_type_enum=self.event_type_enum,
+                                                 state=2, notes=self.notes,
+                                                 employees=employee_num_1,
+                                                 patient=self.patient,
+                                                 event_address=self.event_address,
+                                                 created_by='rpt_event_fr_all_days_of_wk')
+                # duplicate GenericTaskDescription
+                for generic_task in self.generictaskdescription_set.all():
+                    new_generic_task = GenericTaskDescription.objects.create(event=new_event, name=generic_task.name)
+                    new_generic_task.save()
+                # duplicate EventLinkToCareCode
+                for care_code in self.eventlinktocarecode_set.all():
+                    new_event_link_to_care_code = EventLinkToCareCode.objects.create(event=new_event,
+                                                                                     care_code=care_code.care_code)
+                    new_event_link_to_care_code.save()
+                # duplicate EventLinkToMedicalCareSummaryPerPatientDetail
+                for medical_care_summary in self.eventlinktomedicalcaresummaryperpatientdetail_set.all():
+                    new_event_link_to_medical_care_summary = EventLinkToMedicalCareSummaryPerPatientDetail.objects.create(
+                        event=new_event,
+                        medical_care_summary_per_patient_detail=medical_care_summary.medical_care_summary_per_patient_detail)
+                    new_event_link_to_medical_care_summary.save()
+                new_event.save()
+                events_created.append(new_event)
+        return events_created
 
     def duplicate_event_for_next_day(self, number_of_days=1):
         # duplicate event for next day

@@ -1783,6 +1783,7 @@ class EventListAdmin(admin.ModelAdmin):
     exclude = ('event_type',)
 
     actions = ['safe_delete', 'duplicate_event_for_next_day', 'duplicate_event_for_next_week',
+               "duplicate_event_for_the_hole_week",
                'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
                'send_webhook_message', 'create_invoice_item_out_of_events']
@@ -1926,6 +1927,23 @@ class EventListAdmin(admin.ModelAdmin):
             # long_term_invoice.add_event(event)
         long_term_invoice.save()
         self.message_user(request, "Invoice created for %s" % long_term_invoice)
+
+    @transaction.atomic
+    def duplicate_event_for_the_hole_week(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.verbose_name_plural,
+                              level=messages.WARNING)
+            return
+        events_duplicated = []
+        if len(queryset) < 6:
+            print("duplicating %s events [direct call]" % len(queryset))
+            for e in queryset:
+                events_duplicated = e.repeat_event_for_all_days_of_week(e.day)
+            self.message_user(request, "Duplicated %s events" % len(events_duplicated))
+            # redirect to list filtering on duplicated events
+            return HttpResponseRedirect(
+                reverse('admin:invoices_eventlist_changelist') + '?id__in=' + ','.join(
+                    [str(e.id) for e in events_duplicated]))
 
     def duplicate_event_for_next_day(self, request, queryset):
         if not request.user.is_superuser:
