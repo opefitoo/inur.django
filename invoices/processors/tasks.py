@@ -21,11 +21,15 @@ from invoices.prefac import generate_all_invoice_lines
 @job
 def process_post_save(instance):
     try:
+        notify_system_via_google_webhook(
+            "Processing batch {0}".format(instance))
+        print("Processing batch {0}".format(instance))
         # calculate how much time it takes to process the batch
         start = datetime.now()
         _must_update = False
 
         if instance.force_update:
+            print("Forcing update of the batch {0}".format(instance))
             _must_update = True
             instance.version += 1
             instance.force_update = False
