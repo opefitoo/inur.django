@@ -31,12 +31,7 @@ def process_post_save(instance):
             instance.force_update = False
         if _must_update:
             from invoices.models import InvoiceItem
-            # Now update all InvoiceItems which have an invoice_date within this range
-            # if BatchTypeChoices.CNS_INF == instance.batch_type:
-            # batch_invoices = InvoiceItem.objects.filter(
-            #     Q(invoice_date__gte=instance.start_date) & Q(invoice_date__lte=instance.end_date)).filter(
-            #     invoice_sent=False).filter(batch__isnull=True)
-            # batch_invoices.update(batch=instance)
+            print("* InvoiceItemBatch - process_post_save - Processing batch {0}".format(instance))
             batch_invoices = InvoiceItem.objects.filter(batch=instance).annotate(
                 is_under_dependence_insurance_order=Case(
                     When(patient__is_under_dependence_insurance=False, then=Value(0)),
