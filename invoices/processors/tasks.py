@@ -75,8 +75,9 @@ def process_post_save(instance):
                 url = config.ROOT_URL + '/admin/invoices/invoiceitembatch/?id=' + '{0}'.format(instance.id)
                 notify_system_via_google_webhook(
                     "Batch {0} processed in {1} seconds click on link to check {2}".format(instance, (end - start).seconds,
-                                                                                       url))
+                                                                                             url))
     except Exception as e:
+        print("An error occurred while processing the batch: {0}".format(e))
         error_detail = traceback.format_exc()
         notify_system_via_google_webhook(
             "*An error occurred while processing the batch: {0}*\nDetails:\n{1}".format(e, error_detail))
