@@ -164,11 +164,13 @@ class AAITransDetail(models.Model):
     # objectives = models.TextField("Objectifs", help_text="Prise en charge, lien avec AEV", max_length=100)
     # can link to multiple objectives
     link_to_objectives = models.ManyToManyField(AAIObjective, verbose_name="Lien avec objectifs")
-    means = models.TextField("Moyens/Actions", max_length=200, null=True, blank=True, default=None)
-    results = models.TextField(u"Résultats", max_length=200,
+    means = models.TextField("Moyens/Actions", max_length=500, null=True, blank=True, default=None)
+    results = models.TextField(u"Résultats", max_length=300,
                                null=True, blank=True, default=None)
     session_duration = models.DurationField("Durée",
                                             help_text="Durée de la séance sous format HH:MM:SS",
+                                            null=True, blank=True, default=None)
+    transmission_picture = models.ImageField("Photo", upload_to="AAI/transmission_pictures",
                                             null=True, blank=True, default=None)
     date_time_means_set = models.DateTimeField("Date/h", null=True, blank=True, default=None)
     means_paraph = models.ForeignKey(Employee, verbose_name="Paraphe",
