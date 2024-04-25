@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 import googleapiclient
 from apiclient import discovery
 from constance import config
+from dateutil.parser import parse
 from django.conf import settings
 from django.db.models import Q
 from google.oauth2 import service_account
@@ -24,6 +25,7 @@ logger = logging.getLogger('console')
 class PrestationGoogleCalendarSurLu:
     summary = 'Prestations'
     calendar = None
+    _service = None
 
     def get_credentials(self):
         SCOPES = ['https://www.googleapis.com/auth/sqlservice.admin',
@@ -309,6 +311,7 @@ class PrestationGoogleCalendarSurLu:
             try:
                 gmail_event = self._service.events().delete(calendarId=calendar_id,
                                                         eventId=event_id).execute()
+                print("Event %s deleted" % event_id)
                 return gmail_event
             except HttpError as e:
                 if e.resp.status == 410 and 'Resource has been deleted' in e.content:
@@ -337,15 +340,28 @@ class PrestationGoogleCalendarSurLu:
             else:
                 raise  # re-raise the exception if it's not a 'Not Found' error
 
-    def list_event_with_sur_id(self):
+    def list_event_with_sur_id(self, time_min=None):
         employees = Employee.objects.filter(end_contract=None).filter(~Q(abbreviation='XXX'))
         inur_event_ids = []
         for emp in employees:
             if not self.calendar_exists(self._service, emp.user.email):
                 print("Calendar does not exist for %s" % emp.user.email)
                 continue
-            g_events = self._service.events().list(calendarId=emp.user.email, q="SUR LU ID",
+            if time_min is None:
+                g_events = self._service.events().list(calendarId=emp.user.email, q="SUR LU ID",
                                                    timeMin="2024-03-29T10:00:00-00:00").execute()
+            else:
+                # convert python datetime to google datetime
+                if isinstance(time_min, str):
+                    # Convert the string to a datetime object
+                    time_min_datetime = parse(time_min)
+
+                    # Now you can use astimezone
+                    time_min = time_min_datetime.astimezone(ZoneInfo("Europe/Luxembourg")).isoformat()
+                else:
+                    time_min = time_min.astimezone(ZoneInfo("Europe/Luxembourg")).isoformat()
+                g_events = self._service.events().list(calendarId=emp.user.email, q="SUR LU ID",
+                                                   timeMin=time_min).execute()
 
             for g_event in g_events['items']:
                 description = g_event['description']
@@ -357,6 +373,8 @@ class PrestationGoogleCalendarSurLu:
                                        'htmlLink': g_event['htmlLink'],
                                        'start': g_event['start'], 'end': g_event['end']})
         return inur_event_ids
+
+
 
     def delete_all_events_from_calendar(self, calendar_id):
         # FIXME: hardcoded date to be replaced

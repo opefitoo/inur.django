@@ -3,6 +3,7 @@ import calendar
 import csv
 import datetime
 import io
+import os
 from datetime import datetime as dt
 from decimal import Decimal
 from zoneinfo import ZoneInfo
@@ -1871,7 +1872,14 @@ class EventListAdmin(admin.ModelAdmin):
                               level=messages.WARNING)
             return
         for e in queryset:
-            e.display_unconnected_events()
+            if isinstance(e, EventList):
+                time_min = datetime.datetime.combine(e.day, datetime.time(0, 0, 0)).astimezone(ZoneInfo("Europe"
+                                                                                                         "/Luxembourg"))
+                if os.environ.get('LOCAL_ENV', None):
+                    e.display_unconnected_events(time_min)
+                else:
+                    e.deplay.display_unconnected_events(time_min)
+
 
     def duplicate_event_for_next_week(self, request, queryset):
         if not request.user.is_superuser:

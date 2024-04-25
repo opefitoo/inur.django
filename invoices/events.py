@@ -21,6 +21,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django_rq import job
 
 from dependence.detailedcareplan import MedicalCareSummaryPerPatientDetail
 from invoices import settings
@@ -120,6 +121,7 @@ class Event(models.Model):
 
     def is_in_validated_state(self):
         return self.state in [Event.STATES[2][0], Event.STATES[3][0], Event.STATES[4][0]]
+
     def repeat_event_for_all_days_of_week(self, date):
         """
         Duplicate event, can be in the past as well, for example if day of week is Sunday, must duplicated for all days of the present week except for Sunday
@@ -273,25 +275,28 @@ class Event(models.Model):
                                                                              dry_run=dry_run))
         return deleted_evts
 
-    def display_unconnected_events(self):
+    @job("default", timeout=6000)
+    def display_unconnected_events(self, time_min=None):
         # FIXME not complete one
         calendar_gcalendar = PrestationGoogleCalendarSurLu()
         # calendar_gcalendar.q_delete_event(self)
-        inur_ids = calendar_gcalendar.list_event_with_sur_id()
+        inur_ids = calendar_gcalendar.list_event_with_sur_id(time_min=time_min)
         orphan_ids = []
         events_different_times = []
+        events_deleted_from_nuno_but_still_in_google = []
         localized_start = None
         localized_end = None
         for found_event in inur_ids:
             # '2022-07-22T11:00:00Z'
-            calendar_gcalendar.delete_event_by_google_id(calendar_id=found_event['email'],
-                                                         event_id=found_event['gId'],
-                                                         dry_run=True)
             lu_tz = pytz.timezone(found_event['start']['timeZone'])
             try:
                 inur_event = Event.objects.get(pk=found_event['inurId'])
             except ObjectDoesNotExist:
                 print(f"!! No Event found with id {found_event['inurId']} and google id {found_event['gId']}")
+                events_deleted_from_nuno_but_still_in_google.append(found_event)
+                calendar_gcalendar.delete_event_by_google_id(calendar_id=found_event['email'],
+                                                             event_id=found_event['gId'],
+                                                             dry_run=False)
             try:
                 localized_start = lu_tz.localize(
                     datetime.datetime.strptime(found_event['start']['dateTime'], '%Y-%m-%dT%H:%M:%SZ'))
@@ -318,7 +323,8 @@ class Event(models.Model):
             if not inur_event:
                 orphan_ids.append(found_event)
 
-            elif (localized_start and day_time_start_event != localized_start) or (localized_end and day_time_end_event != localized_end):
+            elif (localized_start and day_time_start_event != localized_start) or (
+                    localized_end and day_time_end_event != localized_end):
                 from dateutil.relativedelta import relativedelta
                 offset1 = relativedelta(day_time_start_event, localized_start)
                 offset2 = relativedelta(day_time_end_event, localized_end)
@@ -327,9 +333,11 @@ class Event(models.Model):
                     events_different_times.append(inur_event)
         print(orphan_ids)
         print(events_different_times)
-        send_email_notification("orphans", User.objects.get(id=1).email,
-                                " orphans %s and events_different_times %" % (
-            orphan_ids, events_different_times))
+        send_email_notification("! Google calendar problems starting from %s time_min !" % time_min,
+                                "Orphans: \n%s \nEvents_different_times \n%s \n(%d) Events deleted from NUNO app but are still in google \n%s"
+                                % (orphan_ids, events_different_times, len(events_deleted_from_nuno_but_still_in_google),
+                                   events_deleted_from_nuno_but_still_in_google),
+                                to_emails=[User.objects.get(id=1).email])
 
     @staticmethod
     def validate(model, instance_id, data):
@@ -633,7 +641,7 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
         print("Update without signals")
         return
     calendar_gcalendar = PrestationGoogleCalendarSurLu()
-    #if calendar_gcalendar.calendar is None:
+    # if calendar_gcalendar.calendar is None:
     #    print("No calendar_gcalendar")
     #    return
     if instance.pk and calendar_gcalendar.calendar:
@@ -652,9 +660,10 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
         else:
             print("Call post_save on Event %s via redis /rq " % instance)
             post_webhook.delay(instance.employees, instance.patient, instance.event_report, instance.state,
-                     event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
-                         ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls, event=instance,
-                     sub_contractor=instance.sub_contractor)
+                               event_date=datetime.datetime.combine(instance.day, instance.time_start_event).astimezone(
+                                   ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls,
+                               event=instance,
+                               sub_contractor=instance.sub_contractor)
     if instance.event_type_enum == EventTypeEnum.SUB_CARE and instance.sub_contractor and instance.state == 2:
         # check if instance is new
         url = "%s%s " % (config.ROOT_URL, instance.get_admin_url())
@@ -662,7 +671,7 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
         if instance.sub_contractor.email_address:
             send_email_notification(
                 subject='Nouveau soin en sous-traitance pour usager %s en date du %s ' % (
-                instance.patient, instance.day),
+                    instance.patient, instance.day),
                 message='Bonjour, \n\n'
                         'Un nouveau soin en sous-traitance a été créé pour vous.\n\n'
                         'Vous pouvez le consulter ici : %s\n\n' % url +
