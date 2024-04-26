@@ -122,6 +122,8 @@ class Employee(models.Model):
                                     max_length=3,
                                     default="XXX")
     phone_number = PhoneNumberField(blank=True)
+    additional_phone_number = PhoneNumberField(blank=True)
+    personal_email = models.EmailField(blank=True)
     bank_account_number = models.CharField("Numéro de compte IBAN", help_text="Code BIC + IBAN",
                                            max_length=50, blank=True)
     address = models.TextField("Adresse", max_length=100, blank=True, null=True)
