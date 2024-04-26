@@ -2309,9 +2309,10 @@ class EmployeePaySlipAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             self.message_user(request, "Vous n'avez pas le droit d'envoyer des fiches de paie.", level=messages.WARNING)
             return
+        payslip_sending_status = {}
         for payslip in queryset:
-            payslip.send_payslip_by_email_in_attachment()
-
+            payslip_sending_status[payslip.employee.user.username] = payslip.send_payslip_by_email_in_attachment()
+        self.message_user(request, "Fiches de paie envoyées par email : %s" % payslip_sending_status)
 
 
 # EmployeesMonthlyPayslipFile admin class
