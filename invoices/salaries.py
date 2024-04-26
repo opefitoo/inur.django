@@ -71,7 +71,7 @@ class EmployeePaySlip(models.Model):
         # Send the payslip by email as an attachment
         email_address = self.employee.user.email
         subject = f"Bulletin de salaire {self.year} - {self.month}"
-        message = "Veuillez trouver ci-joint votre bulletin de salaire. Si ce message vous est parvenu par erreur, veuillez nous en informer, merci."
+        message = "Veuillez trouver ci-joint votre bulletin de salaire. Si ce message vous est parvenu par erreur, veuillez le supprimer et nous en informer, merci. Cordialement."
         # Configure S3
         #s3 = boto3.client('s3')
         #load_dotenv(verbose=True)
@@ -86,7 +86,7 @@ class EmployeePaySlip(models.Model):
         mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
         part = MIMEApplication(file_content, 'pdf')
         part.add_header('Content-Disposition', 'attachment',
-                        filename='filename.pdf')  # You can replace 'filename.pdf' with your preferred filename
+                        filename= f"{self.year}_{self.month}_{self.employee.user.last_name}_{self.employee.user.first_name}_bulletin_de_salaire.pdf")
         mail.attach(part)
         # Open the file from the FileField and attach it to the email
 
