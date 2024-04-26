@@ -7,7 +7,6 @@ from django.utils.translation import gettext_lazy as _
 
 from invoices import settings
 from invoices.employee import Employee
-from invoices.models import InvoiceItemEmailLog
 from scripts.extract_salaries_from_pdf import read_pdf
 
 
