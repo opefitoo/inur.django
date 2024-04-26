@@ -69,6 +69,7 @@ from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
 from invoices.resources import ExpenseCard, Car, MaintenanceFile, ConvadisOAuth2Token, CarBooking
+from invoices.salaries import EmployeesMonthlyPayslipFile, EmployeePaySlip
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 from invoices.utils import EventCalendar
@@ -77,7 +78,8 @@ from invoices.xeromodels import XeroToken
 
 @admin.register(CarBooking)
 class CarBookingAdmin(admin.ModelAdmin):
-    list_display = ('booking_date', )
+    list_display = ('booking_date',)
+
 
 @admin.register(JobPosition)
 class JobPositionAdmin(admin.ModelAdmin):
@@ -165,7 +167,8 @@ class EmployeeAdmin(admin.ModelAdmin):
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
     readonly_fields = ['total_number_of_un_validated_events', 'minified_avatar', 'minified_avatar_base64']
     list_filter = [IsInvolvedInHealthCareFilter]
-    actions = ['work_certificate', 'contracts_situation_certificate', 'entry_declaration', 'export_employees_data_to_csv',
+    actions = ['work_certificate', 'contracts_situation_certificate', 'entry_declaration',
+               'export_employees_data_to_csv',
                create_google_contact, cleanup_contacts, cleanup_some_contacts,
                'generate_annual_report_for_2023']
 
@@ -429,25 +432,28 @@ class MaintenanceFileInline(TabularInline):
     extra = 0
     model = MaintenanceFile
 
+
 class NewCarList(Car):
     class Meta:
         proxy = True
         verbose_name = "Véhicule *"
         verbose_name_plural = "Véhicules *"
 
+
 @admin.register(NewCarList)
 class NewCarListAdmin(admin.ModelAdmin):
-    #change_list_template = 'car/new_car_list_admin.html'
+    # change_list_template = 'car/new_car_list_admin.html'
     change_list_template = 'angular-car/app-car-list.html'
+
     # reference the js file call it cars.js
     class Media:
         js = ('car/cars.js',)
-
 
     # display only cars that are is_blue_link_connected True
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.filter(is_connected_to_bluelink=True)
+
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
@@ -623,9 +629,11 @@ class PatientAdmin(CSVExportAdmin):
         for patient_id in patient_ids:
             patient = Patient.objects.get(id=patient_id)
             if patient.gender == 'FEM':
-                total_hospitalizations_f += Hospitalization.objects.filter(start_date__year=2023, patient=patient).count()
+                total_hospitalizations_f += Hospitalization.objects.filter(start_date__year=2023,
+                                                                           patient=patient).count()
             elif patient.gender == 'MAL':
-                total_hospitalizations_h += Hospitalization.objects.filter(start_date__year=2023, patient=patient).count()
+                total_hospitalizations_h += Hospitalization.objects.filter(start_date__year=2023,
+                                                                           patient=patient).count()
             else:
                 print("Patient %s has no gender" % patient)
         print("Nombre total d'hospitalisations  de femmes en 2023: %s" % total_hospitalizations_f)
@@ -633,8 +641,10 @@ class PatientAdmin(CSVExportAdmin):
 
     def number_of_dead_patients_in_2023(self, request, queryset):
         patient_ids = [1356, 1325, 1313, 1309, 1210, 1070, 1034, 945, 864, 749, 482, 480, 331, 198]
-        total_dead_patients_f = Patient.objects.filter(date_of_death__year=2023, gender='FEM', id__in=patient_ids).count()
-        total_dead_patients_h = Patient.objects.filter(date_of_death__year=2023, gender='MAL', id__in=patient_ids).count()
+        total_dead_patients_f = Patient.objects.filter(date_of_death__year=2023, gender='FEM',
+                                                       id__in=patient_ids).count()
+        total_dead_patients_h = Patient.objects.filter(date_of_death__year=2023, gender='MAL',
+                                                       id__in=patient_ids).count()
         print("Nombre total de patients f décédés en 2023: %s" % total_dead_patients_f)
         print("Nombre total de patients h décédés en 2023: %s" % total_dead_patients_h)
         list_names_patients_alive = []
@@ -680,7 +690,7 @@ class PatientAdmin(CSVExportAdmin):
 
         # Print the classification results
         for group in age_groups:
-            #print(f"Number of patients in the age group {group['name']}: {len(classification[group['name']])}")
+            # print(f"Number of patients in the age group {group['name']}: {len(classification[group['name']])}")
             print(f"Number of patients in the age group {group['name']}: {classification[group['name']]}")
 
     def filter_without_gender(self, request, queryset):
@@ -1005,7 +1015,8 @@ class InvoiceItemAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
             'fields': ('accident_id', 'accident_date', 'is_valid', 'validation_comment',
                        'patient_invoice_date', 'invoice_send_date', 'invoice_sent', 'invoice_paid',
-                       'medical_prescription', 'subcontractor', 'created_at', 'updated_at', 'batch', 'xero_invoice_url'),
+                       'medical_prescription', 'subcontractor', 'created_at', 'updated_at', 'batch',
+                       'xero_invoice_url'),
         }),
     )
     verbose_name = u"Mémoire d'honoraire"
@@ -1797,6 +1808,7 @@ class EventListAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
 
     form = EventForm
+
     @transaction.atomic
     def create_invoice_item_out_of_events(self, request, queryset):
         if not request.user.is_superuser:
@@ -1822,7 +1834,7 @@ class EventListAdmin(admin.ModelAdmin):
                     patient=patient)
                 invoices_created.append(invoice_item)
                 for event in queryset[i:i + 10]:
-                    prestations.append(event.create_prestation_out_of_event(invoice_item=invoice_item,))
+                    prestations.append(event.create_prestation_out_of_event(invoice_item=invoice_item, ))
             self.message_user(request, "Factures %s créées pour %s" % (invoices_created, patient))
         else:
             invoice_item = InvoiceItem.objects.create(
@@ -1832,7 +1844,6 @@ class EventListAdmin(admin.ModelAdmin):
             for event in queryset:
                 event.create_prestation_out_of_event(invoice_item=invoice_item)
             self.message_user(request, "Facture %s créée pour %s" % (invoice_item, patient))
-
 
     # create an action that will filter events that have no prestation associated to them on date
     def filter_events_with_no_invoiced_prestation_on_date(self, request, queryset):
@@ -1874,12 +1885,11 @@ class EventListAdmin(admin.ModelAdmin):
         for e in queryset:
             if isinstance(e, EventList):
                 time_min = datetime.datetime.combine(e.day, datetime.time(0, 0, 0)).astimezone(ZoneInfo("Europe"
-                                                                                                         "/Luxembourg"))
+                                                                                                        "/Luxembourg"))
                 if os.environ.get('LOCAL_ENV', None):
                     e.display_unconnected_events(time_min)
                 else:
                     e.deplay.display_unconnected_events(time_min)
-
 
     def duplicate_event_for_next_week(self, request, queryset):
         if not request.user.is_superuser:
@@ -2279,3 +2289,51 @@ class DistanceMatrixAdmin(admin.ModelAdmin):
         request.dynamic_patient_choices = [(str(patient_id), patient_name) for patient_id, patient_name in patients]
 
         return super().changelist_view(request, extra_context)
+
+
+@admin.register(EmployeePaySlip)
+class EmployeePaySlipAdmin(admin.ModelAdmin):
+    list_display = ['employee', 'month', 'year', 'file']
+    list_filter = ('employee', 'month', 'year')
+    readonly_fields = ('created_at', 'updated_at')
+    actions = ['send_payslip_by_email_in_attachment']
+
+    def get_queryset(self, request):
+        """
+        Filter the queryset to only include the employee data for the logged-in user.
+        """
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+    def send_payslip_by_email_in_attachment(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit d'envoyer des fiches de paie.", level=messages.WARNING)
+            return
+        for payslip in queryset:
+            payslip.send_payslip_by_email_in_attachment()
+
+
+
+# EmployeesMonthlyPayslipFile admin class
+@admin.register(EmployeesMonthlyPayslipFile)
+class EmployeesMonthlyPayslipFileAdmin(admin.ModelAdmin):
+    list_display = ['month', 'year', 'created_at', 'updated_at']
+    list_filter = ('month', 'year')
+    readonly_fields = ('created_at', 'updated_at')
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def get_queryset(self, request):
+        """
+        Filter the queryset to only include the employee data for the logged-in user.
+        """
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
