@@ -81,8 +81,10 @@ class EmployeePaySlip(models.Model):
         # Get the file content from S3
         #response = s3.get_object(Bucket=bucket_name, Key=key)
         file_content = self.file.read()
-
-        emails = [email_address]
+        if not self.employee.personal_email:
+            emails = [email_address]
+        else:
+            emails = [email_address, self.employee.personal_email]
         mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
         part = MIMEApplication(file_content, 'pdf')
         part.add_header('Content-Disposition', 'attachment',

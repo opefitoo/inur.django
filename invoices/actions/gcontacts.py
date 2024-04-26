@@ -411,12 +411,19 @@ class GoogleContacts:
             "emailAddresses": [
                 {
                     "value": employee.user.email,
+                },
+                {
+                    "value": employee.personal_email,
                 }
             ],
             "phoneNumbers": [
                 {
                     "value": str(employee.phone_number) if employee.phone_number else "",
                     "type": "mobile"
+                },
+                {
+                    "value": str(employee.additional_phone_number) if employee.additional_phone_number else "",
+                    "type": "phone"
                 },
             ],
             "userDefined": [
