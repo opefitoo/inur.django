@@ -7,7 +7,10 @@ from django.utils.translation import gettext_lazy as _
 
 from invoices import settings
 from invoices.employee import Employee
-from scripts.extract_salaries_from_pdf import read_pdf
+from invoices.helpers.pdf import extract_individual_paylip_pdf
+
+
+#from scripts.extract_salaries_from_pdf import read_pdf
 
 
 class EmployeesMonthlyPayslipFile(models.Model):
@@ -29,7 +32,7 @@ class EmployeesMonthlyPayslipFile(models.Model):
 
         # Open the file from the FileField
         with self.file.open('rb') as file_obj:
-            payslips = read_pdf(file_obj)
+            payslips = extract_individual_paylip_pdf(file_obj)
 
         for name, pdf_data in payslips.items():
             print("Processing payslip for %s" % name)
