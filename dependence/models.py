@@ -133,6 +133,9 @@ class TensionAndTemperatureParameters(models.Model):
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
     user = CurrentUserField()
 
+    def __str__(self):
+        return "Tension min/max, Pouls, Température, Selles, SATU. O2, EVA, POIDS, GLYCÉMIE, REMARQUES de %s" % self.monthly_params
+
 
 class PatientAnamnesis(models.Model):
     class Meta:
