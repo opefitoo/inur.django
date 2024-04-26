@@ -342,7 +342,7 @@ class Patient(models.Model):
         ordering = ['-id']
 
     code_sn = models.CharField(max_length=30, validators=[MyRegexValidator(
-        regex='^[12]\d{12}',
+        regex=r'^[12]\d{12}',
         message='Premier chiffre (1 à 2) suivi de 12 chiffres (0 à 9)',
         code='invalid_code_sn'
     ),
