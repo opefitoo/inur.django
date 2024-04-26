@@ -1,6 +1,6 @@
 import io
 
-from PyPDF2 import PdfReader, PdfWriter
+from pdfrw import PdfReader, PdfWriter
 
 
 def extract_individual_paylip_pdf(file_obj):
