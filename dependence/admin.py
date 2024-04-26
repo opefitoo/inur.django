@@ -871,6 +871,9 @@ class AAIObjectiveAdmin(admin.ModelAdmin):
 class AAITransDetailInLine(admin.TabularInline):
     extra = 0
     model = AAITransDetail
+    # I want certain fields to show first
+    fields = ('date_time_means_set', 'link_to_objectives', 'means', 'results', 'session_duration',
+              'transmission_picture', 'means_paraph')
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "link_to_objectives":
