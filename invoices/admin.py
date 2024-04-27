@@ -1889,7 +1889,7 @@ class EventListAdmin(admin.ModelAdmin):
                 if os.environ.get('LOCAL_ENV', None):
                     e.display_unconnected_events(time_min)
                 else:
-                    e.delay.display_unconnected_events(time_min)
+                    e.display_unconnected_events.delay(time_min)
 
     def duplicate_event_for_next_week(self, request, queryset):
         if not request.user.is_superuser:
