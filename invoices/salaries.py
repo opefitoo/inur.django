@@ -35,6 +35,8 @@ class EmployeesMonthlyPayslipFile(models.Model):
         # Open the file from the FileField
         with self.file.open('rb') as file_obj:
             payslips = extract_individual_paylip_pdf(file_obj)
+        if payslips is None:
+            raise ValueError("No payslips found in the PDF file")
 
         # Process the extracted payslips asynchronously if not local environment
         if os.environ.get('LOCAL_ENV', None):
