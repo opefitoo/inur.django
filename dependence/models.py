@@ -117,6 +117,7 @@ class TensionAndTemperatureParameters(models.Model):
     heart_pulse = models.PositiveSmallIntegerField("Pouls", default=None, blank=True, null=True)
     temperature = models.DecimalField("Température", max_digits=3, decimal_places=1, default=0, blank=True, null=True)
     stools_parameter = models.BooleanField("Selles",
+                                           help_text="Veuillez cocher si les selles sont normales",
                                         default=False)
     vas = models.PositiveSmallIntegerField("EVA", choices=VisualAnalogueScaleLvl.choices, default=None, blank=True,
                                            null=True)
