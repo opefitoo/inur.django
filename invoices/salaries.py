@@ -12,7 +12,7 @@ from invoices.employee import Employee
 from invoices.helpers.pdf import extract_individual_paylip_pdf
 
 
-#from scripts.extract_salaries_from_pdf import read_pdf
+# from scripts.extract_salaries_from_pdf import read_pdf
 
 
 class EmployeesMonthlyPayslipFile(models.Model):
@@ -40,25 +40,31 @@ class EmployeesMonthlyPayslipFile(models.Model):
 
         # Process the extracted payslips asynchronously if not local environment
         if os.environ.get('LOCAL_ENV', None):
-            self.async_process_extracted_payslip(payslips)
+            self._process_extracted_payslip(employeesMonthlyPayslipFileInstance=self,
+                                            payslips=payslips)
         else:
-            self.async_process_extracted_payslip.delay(payslips)
-    @job('default',timeout=600)
-    def async_process_extracted_payslip(self, payslips):
-        for name, pdf_data in payslips.items():
-            print("Processing payslip for %s" % name)
-            employee = Employee.objects.get(user__last_name__istartswith=name.split()[0])
-            if not employee:
-                raise ValueError(f"Employee with last name {name.split()[0]} not found")
-            payslip = EmployeePaySlip(employee=employee, year=self.year, month=self.month)
+            self._process_extracted_payslip.delay(employeesMonthlyPayslipFileInstance=self,
+                                                  payslips=payslips)
 
-            # Create a ContentFile object from the PDF data
-            pdf_file = ContentFile(pdf_data, name=f"{self.year}_{self.month}_{name.replace(' ', '_')}_payslip.pdf")
 
-            # Save the PDF file to the file field of the EmployeePaySlip object
-            payslip.file.save(pdf_file.name, pdf_file)
+@job("default", timeout=6000)
+def _process_extracted_payslip(employeesMonthlyPayslipFileInstance, payslips):
+    for name, pdf_data in payslips.items():
+        print("Processing payslip for %s" % name)
+        employee = Employee.objects.get(user__last_name__istartswith=name.split()[0])
+        if not employee:
+            raise ValueError(f"Employee with last name {name.split()[0]} not found")
+        payslip = EmployeePaySlip(employee=employee, year=employeesMonthlyPayslipFileInstance.year,
+                                  month=employeesMonthlyPayslipFileInstance.month)
 
-            payslip.save()
+        # Create a ContentFile object from the PDF data
+        pdf_file = ContentFile(pdf_data,
+                               name=f"{employeesMonthlyPayslipFileInstance.year}_{employeesMonthlyPayslipFileInstance.month}_{name.replace(' ', '_')}_payslip.pdf")
+
+        # Save the PDF file to the file field of the EmployeePaySlip object
+        payslip.file.save(pdf_file.name, pdf_file)
+
+        payslip.save()
 
 
 class EmployeePaySlip(models.Model):
@@ -84,13 +90,13 @@ class EmployeePaySlip(models.Model):
         subject = f"Bulletin de salaire {self.year} - {self.month}"
         message = "Veuillez trouver ci-joint votre bulletin de salaire. Si ce message vous est parvenu par erreur, veuillez le supprimer et nous en informer, merci. Cordialement."
         # Configure S3
-        #s3 = boto3.client('s3')
-        #load_dotenv(verbose=True)
+        # s3 = boto3.client('s3')
+        # load_dotenv(verbose=True)
         import os
         bucket_name = os.environ['AWS_STORAGE_BUCKET_NAME']
         key = self.file.name  # The file's path in S3
         # Get the file content from S3
-        #response = s3.get_object(Bucket=bucket_name, Key=key)
+        # response = s3.get_object(Bucket=bucket_name, Key=key)
         file_content = self.file.read()
         if not self.employee.personal_email:
             emails = [email_address]
@@ -99,7 +105,7 @@ class EmployeePaySlip(models.Model):
         mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
         part = MIMEApplication(file_content, 'pdf')
         part.add_header('Content-Disposition', 'attachment',
-                        filename= f"{self.year}_{self.month}_{self.employee.user.last_name}_{self.employee.user.first_name}_bulletin_de_salaire.pdf")
+                        filename=f"{self.year}_{self.month}_{self.employee.user.last_name}_{self.employee.user.first_name}_bulletin_de_salaire.pdf")
         mail.attach(part)
         # Open the file from the FileField and attach it to the email
 
