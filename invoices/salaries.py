@@ -40,10 +40,10 @@ class EmployeesMonthlyPayslipFile(models.Model):
 
         # Process the extracted payslips asynchronously if not local environment
         if os.environ.get('LOCAL_ENV', None):
-            self._process_extracted_payslip(employeesMonthlyPayslipFileInstance=self,
+            _process_extracted_payslip(employeesMonthlyPayslipFileInstance=self,
                                             payslips=payslips)
         else:
-            self._process_extracted_payslip.delay(employeesMonthlyPayslipFileInstance=self,
+            _process_extracted_payslip.delay(employeesMonthlyPayslipFileInstance=self,
                                                   payslips=payslips)
 
 
