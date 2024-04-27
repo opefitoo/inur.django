@@ -1,9 +1,11 @@
+import os
 from email.mime.application import MIMEApplication
 
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django_rq import job
 
 from invoices import settings
 from invoices.employee import Employee
@@ -34,6 +36,13 @@ class EmployeesMonthlyPayslipFile(models.Model):
         with self.file.open('rb') as file_obj:
             payslips = extract_individual_paylip_pdf(file_obj)
 
+        # Process the extracted payslips asynchronously if not local environment
+        if os.environ.get('LOCAL_ENV', None):
+            self.async_process_extracted_payslip(payslips)
+        else:
+            self.async_process_extracted_payslip.delay(payslips)
+    @job('default',timeout=600)
+    def async_process_extracted_payslip(self, payslips):
         for name, pdf_data in payslips.items():
             print("Processing payslip for %s" % name)
             employee = Employee.objects.get(user__last_name__istartswith=name.split()[0])
