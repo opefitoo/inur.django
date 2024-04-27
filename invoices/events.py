@@ -744,6 +744,19 @@ def delete_google_calendar(sender, instance: Event, **kwargs):
             return
         calendar_gcalendar.delete_event(instance)
 
+@receiver(pre_delete, sender=EventList, dispatch_uid="event_delete_gcalendar_event_list")
+def delete_google_calendar(sender, instance: Event, **kwargs):
+    if settings.TESTING:
+        print("** TEST mode")
+        return
+    if instance.calendar_id != 0:
+        calendar_gcalendar = PrestationGoogleCalendarSurLu()
+        if not calendar_gcalendar.calendar:
+            print("No calendar_gcalendar")
+            return
+        calendar_gcalendar.delete_event(instance)
+
+
 
 def event_end_time_and_address_is_sometimes_mandatory(data):
     messages = {}
