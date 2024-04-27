@@ -14,6 +14,7 @@ def extract_individual_paylip_pdf(file_obj):
                 name = " ".join(values[2:])
                 # remove "ADULTE" from the name
                 name = name.replace("ADULTE", "")
+                name = name.replace("FAMILIALE", "")
                 # remove any spaces at beginning and end of the name
                 name = name.strip()
                 # Teixeira Da Costa
