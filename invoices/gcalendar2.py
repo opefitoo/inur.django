@@ -344,6 +344,7 @@ class PrestationGoogleCalendarSurLu:
         employees = Employee.objects.filter(end_contract=None).filter(~Q(abbreviation='XXX'))
         inur_event_ids = []
         for emp in employees:
+            print("Processing %s" % emp.user.email)
             if not self.calendar_exists(self._service, emp.user.email):
                 print("Calendar does not exist for %s" % emp.user.email)
                 continue
