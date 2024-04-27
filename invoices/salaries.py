@@ -54,7 +54,7 @@ def _process_extracted_payslip(employeesMonthlyPayslipFileInstance, payslips):
         employee = Employee.objects.get(user__last_name__istartswith=name.split()[0])
         if not employee:
             raise ValueError(f"Employee with last name {name.split()[0]} not found")
-        payslip = EmployeePaySlip(employee=employee, year=employeesMonthlyPayslipFileInstance.year,
+        payslip = EmployeePaySlip.objects.get_or_create(employee=employee, year=employeesMonthlyPayslipFileInstance.year,
                                   month=employeesMonthlyPayslipFileInstance.month)
 
         # Create a ContentFile object from the PDF data
