@@ -58,6 +58,14 @@ class TypeDescriptionGenericInlineFormset(BaseInlineFormSet):
 
 class TensionAndTemperatureParametersFormset(BaseInlineFormSet):
 
+    def get_queryset(self):
+        """
+        Override the queryset to return items in the desired order.
+        """
+        qs = super().get_queryset()
+        # Reorder queryset; assuming 'created_at' is the timestamp field for sorting
+        return qs.order_by('-params_date_time')
+
     def clean(self):
         super(TensionAndTemperatureParametersFormset, self).clean()
         if hasattr(self, 'cleaned_data'):

@@ -449,7 +449,9 @@ class SocialHabitsInLine(admin.TabularInline):
 
 
 class TensionAndTemperatureParametersInLine(admin.TabularInline):
-    extra = 0
+    extra = 1
+    class Media:
+        js = ('js/admin_reorder_inlines.js',)
     model = TensionAndTemperatureParameters
     formset = TensionAndTemperatureParametersFormset
     fields = ('params_date_time', 'systolic_blood_press', 'diastolic_blood_press', 'heart_pulse', 'temperature',
