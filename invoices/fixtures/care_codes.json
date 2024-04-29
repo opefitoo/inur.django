@@ -1,1 +1,1315 @@
-[{"model": "invoices.CareCode", "pk": 3, "fields": {"id": 3, "code": "NF1_02", "name": "forfait d\u00e9placement", "description": "frais de d\u00e9placement (5.48)\r\n5.75", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 4, "fields": {"id": 4, "code": "N02_01", "name": "glycemie par glucometre", "description": "glycemie par glucometre (12.44)", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 5, "fields": {"id": 5, "code": "N11_03", "name": "injection intraveineuse IV", "description": "injection intraveineuse (ancien prix = 17.42)\r\n18.3", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 6, "fields": {"id": 6, "code": "N13_01", "name": "perfusions intraveineuse ou SC", "description": "perfusions intraveineuse ou SC (22,90)", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 7, "fields": {"id": 7, "code": "N14_01", "name": "enlevement perfusion intraveineuse", "description": "enlevement perfusion intraveineuse(7,45)", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 8, "fields": {"id": 8, "code": "N15_02", "name": "prises de sang (PS)", "description": "prises de sang (12,39)", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 9, "fields": {"id": 9, "code": "N18_02", "name": "injection SC", "description": "injection SC (7,40)", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 10, "fields": {"id": 10, "code": "N19_01", "name": "injection intramusculaire IM ou ID", "description": "injection intramusculaire IM ou ID (7,55)", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 16, "fields": {"id": 16, "code": "NF1_01", "name": "frais de d\u00e9placement (prive)", "description": "frais de d\u00e9placement (5,72)", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 18, "fields": {"id": 18, "code": "N21", "name": "pansement localis\u00e9 du tronc", "description": "pansement localis\u00e9 du tronc", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 19, "fields": {"id": 19, "code": "N24_01", "name": "pansements multiples", "description": "pansements multiples, grand pansement du tronc , pansement avec drain", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 20, "fields": {"id": 20, "code": "N25", "name": "2015 PST GANGRENE ESCARRE ULCERE >20CM2", "description": "PST GANGRENE ESCARRE ULCERE >20CM2", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 21, "fields": {"id": 21, "code": "N26_01", "name": "BANDAGE COMPRESSIF", "description": "BANDAGE COMPRESSIF", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 24, "fields": {"id": 24, "code": "N23_01", "name": "PST AVEC SONDE", "description": "PST AVEC SONDE ? CANULE OU STOMIE", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 26, "fields": {"id": 26, "code": "N72_01", "name": "aspiration pour encombrement trach\u00e9o-br", "description": "aspiration pour encombrement trach\u00e9o-br", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 27, "fields": {"id": 27, "code": "N20_01", "name": "ABLATION DE FILS", "description": "ABLATION DE FILS", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 28, "fields": {"id": 28, "code": "N19", "name": "2015 IM ou ID ", "description": "2015 injection IM ou ID", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 29, "fields": {"id": 29, "code": "NF1", "name": "2015 NF1", "description": "2015 NF1 DEPLACEMENT", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 30, "fields": {"id": 30, "code": "N11_01", "name": "2015 injection intraveineuse IV ", "description": "2015 injection intraveineuse IV ", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 31, "fields": {"id": 31, "code": "N20", "name": "2015 ablation de fils de suture ", "description": "2015 ablation de fils de suture ", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 32, "fields": {"id": 32, "code": "N26._01", "name": "BANDAGE COMPRESSIF 2\u00e8me jambe", "description": "BANDAGE COMPRESSIF 2\u00e8me jambe", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 33, "fields": {"id": 33, "code": "N26.", "name": "2015 BANDAGE COMPRESSIF 2\u00e8me jambe", "description": "2015 BANDAGE COMPRESSIF 2\u00e8me jambe", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 34, "fields": {"id": 34, "code": "N26", "name": "2015 BANDAGE COMPRESSIF", "description": "2015 BANDAGE COMPRESSIF ", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 35, "fields": {"id": 35, "code": "N13", "name": "2015 perfusions intraveineuse ou SC", "description": "2015 perfusions intraveineuse ou SC", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 36, "fields": {"id": 36, "code": "N14", "name": "2015 perfusions ENLEVEMENT", "description": "2015 perfusions ENLEVEMENT", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 37, "fields": {"id": 37, "code": "N15_01", "name": "2015 PS PRISE DE SANG", "description": "2015 PS PRISE DE SANG", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 38, "fields": {"id": 38, "code": "N24", "name": "2015 PANSEMENTS MULTIPLES", "description": "2015 PANSEMENTS MULTIPLES", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 39, "fields": {"id": 39, "code": "N72", "name": "2015 ASPIRATION TRACHEO BRONCHIQUE", "description": "2015 ASPIRATION TRACHEO BRONCHIQUE", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 40, "fields": {"id": 40, "code": "N23", "name": "2015 PEG PST AVEC SONDE", "description": "2015 PEG PST AVEC SONDE", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 41, "fields": {"id": 41, "code": "N11", "name": "IV PRIVEE 2015", "description": "IV PRIVEE 2015", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 42, "fields": {"id": 42, "code": "N02 ", "name": "glyc\u00e9mie priv\u00e9e", "description": "glyc\u00e9mie priv\u00e9e", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 48, "fields": {"id": 48, "code": "N02", "name": "GLYCEMIE 2015", "description": "GLYCEMIE 2015", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 49, "fields": {"id": 49, "code": "N29", "name": "2015 bain m\u00e9dicamenteux pour affection \u00e9tendue", "description": "2015 bain m\u00e9dicamenteux pour affection \u00e9tendue", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 51, "fields": {"id": 51, "code": "N21 ", "name": "2015 pansement simple ", "description": "2015 pansement simple ", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 52, "fields": {"id": 52, "code": "N01", "name": "2015 prelevement pour analyse microbiologique", "description": "prelevement pour analyse microbiologique", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 54, "fields": {"id": 54, "code": "N18_01", "name": "Injection sous-cutan\u00e9e 2015", "description": "Injection sous-cutan\u00e9e 2015", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 56, "fields": {"id": 56, "code": "N24 PRIVEE", "name": "pst multiples", "description": "pst multiples", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 61, "fields": {"id": 61, "code": "N73", "name": "Expectoration dirig\u00e9e", "description": "Expectoration dirig\u00e9e", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 62, "fields": {"id": 62, "code": "N18", "name": "2015 injection s/c", "description": "2015 injection s/c", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 69, "fields": {"id": 69, "code": "N106", "name": "Pr\u00e9l\u00e8vement de sang veineux pour analyse effectu\u00e9e au domicile de la personne prot\u00e9g\u00e9e, en cas de n\u00e9cessit\u00e9 m\u00e9dicale deffectuer le pr\u00e9l\u00e8vement au domicile certifi\u00e9e sur l'ordonnance du m\u00e9decin prescripteur", "description": "Pr\u00e9l\u00e8vement de sang veineux pour analyse effectu\u00e9e au domicile de la personne prot\u00e9g\u00e9e, en cas de n\u00e9cessit\u00e9 m\u00e9dicale deffectuer le pr\u00e9l\u00e8vement au domicile certifi\u00e9e sur l'ordonnance du m\u00e9decin prescripteur", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 70, "fields": {"id": 70, "code": "N203", "name": "Injection intraveineuse par ponction", "description": "Injection intraveineuse par ponction", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 71, "fields": {"id": 71, "code": "N205", "name": "Mise en place dune perfusion intraveineuse ou sous-cutan\u00e9e (hypodermoclyse) par gravit\u00e9 ou par pompe", "description": "Mise en place dune perfusion intraveineuse ou sous-cutan\u00e9e (hypodermoclyse) par gravit\u00e9 ou par pompe", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 72, "fields": {"id": 72, "code": "N206", "name": "Enl\u00e8vement dune perfusion intraveineuse ou sous-cutan\u00e9e", "description": "Enl\u00e8vement dune perfusion intraveineuse ou sous-cutan\u00e9e", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 73, "fields": {"id": 73, "code": "N210", "name": "Injection sous-cutan\u00e9e", "description": "Injection sous-cutan\u00e9e", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 74, "fields": {"id": 74, "code": "N211", "name": "Injection intramusculaire ou intradermique", "description": "Injection intramusculaire ou intradermique", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 75, "fields": {"id": 75, "code": "N102", "name": "Pr\u00e9l\u00e8vement et examen qualitatif des urines mi-jet par bandelette, avec enregistrement des r\u00e9sultats", "description": "Pr\u00e9l\u00e8vement et examen qualitatif des urines mi-jet par bandelette, avec enregistrement des r\u00e9sultats", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 81, "fields": {"id": 81, "code": "NF01", "name": "Forfait d\u00e9placement", "description": "Forfait d\u00e9placement", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 83, "fields": {"id": 83, "code": "N901", "name": "Forfait de 1-2 passages par jour m\u00e9sure des param\u00e8tres vitaux", "description": "Forfait de 1-2 passages par jour m\u00e9sure des param\u00e8tres vitaux", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 84, "fields": {"id": 84, "code": "N902", "name": "Forfait de 3-4 passages par jour", "description": "Forfait de 3-4 passages par jour", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 85, "fields": {"id": 85, "code": "N903", "name": "Forfait pour un minimum de 5 passages par jour", "description": "Forfait pour un minimum de 5 passages par jour", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 86, "fields": {"id": 86, "code": "N302", "name": "Pansement pour plaies simples", "description": "Pansement pour plaies simples", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 87, "fields": {"id": 87, "code": "N303", "name": "Pansement dun doigt, d'un orteil, dune main, dun pied, avec bain m\u00e9dicamenteux pr\u00e9alable", "description": "Pansement dun doigt, d'un orteil, dune main, dun pied, avec bain m\u00e9dicamenteux pr\u00e9alable", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 88, "fields": {"id": 88, "code": "N305", "name": "Pansement pour plaies multiples", "description": "Pansement pour plaies multiples", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 89, "fields": {"id": 89, "code": "N307", "name": "Bandage compressif ou bas de contention pour stase veineuse ou lymphatique pour affection aigu\u00eb dun membre", "description": "Bandage compressif ou bas de contention pour stase veineuse ou lymphatique pour affection aigu\u00eb dun membre", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 90, "fields": {"id": 90, "code": "N308", "name": "Bandage compressif ou bas de contention pour stase veineuse ou lymphatique pour affection aigu\u00eb de deux membres", "description": "Bandage compressif ou bas de contention pour stase veineuse ou lymphatique pour affection aigu\u00eb de deux membres", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 91, "fields": {"id": 91, "code": "N309", "name": "Bain entier m\u00e9dicamenteux pour affection cutan\u00e9e \u00e9tendue", "description": "Bain entier m\u00e9dicamenteux pour affection cutan\u00e9e \u00e9tendue", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 97, "fields": {"id": 97, "code": "N301", "name": "Ablation de fils de suture ou dagrafes ou redon, nettoyage et pansement avec soins de plaie simple", "description": "Ablation de fils de suture ou dagrafes ou redon, nettoyage et pansement avec soins de plaie simple", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 98, "fields": {"id": 98, "code": "N101", "name": "Pr\u00e9l\u00e8vement pour analyse microbiologique", "description": "Pr\u00e9l\u00e8vement pour analyse microbiologique", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 100, "fields": {"id": 100, "code": "N103", "name": "Pr\u00e9l\u00e8vement de selles pour analyses", "description": "Pr\u00e9l\u00e8vement de selles pour analyses", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 101, "fields": {"id": 101, "code": "N204", "name": "Injection intraveineuse sur cath\u00e9ter en place", "description": "Injection intraveineuse sur cath\u00e9ter en place", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 103, "fields": {"id": 103, "code": "N503", "name": "Lavement \u00e9vacuateur pour constipation neurog\u00e8ne ou m\u00e9gac\u00f4lon, maximum 2 s\u00e9ances par semaine", "description": "Lavement \u00e9vacuateur pour constipation neurog\u00e8ne ou m\u00e9gac\u00f4lon, maximum 2 s\u00e9ances par semaine", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 104, "fields": {"id": 104, "code": "N201", "name": "Injection par dispositif implant\u00e9", "description": "Injection par dispositif implant\u00e9", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 105, "fields": {"id": 105, "code": "N202", "name": "Perfusion par dispositif implant\u00e9", "description": "Perfusion par dispositif implant\u00e9", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 106, "fields": {"id": 106, "code": "N401", "name": "Cath\u00e9t\u00e9risme v\u00e9sical, mise en place ou changement dune sonde \u00e0 demeure", "description": "Cath\u00e9t\u00e9risme v\u00e9sical, mise en place ou changement dune sonde \u00e0 demeure", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 109, "fields": {"id": 109, "code": "N306", "name": "D\u00e9tersion, d\u00e9bridement m\u00e9canique et pansement dune plaie n\u00e9crotique, dune l\u00e9sion ulc\u00e9r\u00e9e ou dune br\u00fblure \u00e9tendue", "description": "D\u00e9tersion, d\u00e9bridement m\u00e9canique et pansement dune plaie n\u00e9crotique, dune l\u00e9sion ulc\u00e9r\u00e9e ou dune br\u00fblure \u00e9tendue", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 110, "fields": {"id": 110, "code": "N304", "name": "Pansement pour plaies avec dispositifs", "description": "Pansement pour plaies avec dispositifs", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 113, "fields": {"id": 113, "code": "N803", "name": "Forfait journalier dactes infirmiers pour des personnes d\u00e9pendantes \u00e0 domicile prises en charge par les r\u00e9seaux g\u00e9n\u00e9ralistes, indemnit\u00e9 de d\u00e9placement incluse", "description": "Forfait journalier dactes infirmiers pour des personnes d\u00e9pendantes \u00e0 domicile prises en charge par les r\u00e9seaux g\u00e9n\u00e9ralistes, indemnit\u00e9 de d\u00e9placement incluse", "reimbursed": true, "contribution_undue": true, "is_package": true}}, {"model": "invoices.CareCode", "pk": 122, "fields": {"id": 122, "code": "R\u00e9gine", "name": "R\u00e9gine", "description": "R\u00e9gine", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 129, "fields": {"id": 129, "code": "BY001", "name": "Prise de sang sur veine superficielle", "description": "Prise de sang sur veine superficielle", "reimbursed": true, "contribution_undue": true, "is_package": false}}, {"model": "invoices.CareCode", "pk": 131, "fields": {"id": 131, "code": "FSP2", "name": "Forfait pr patients en soins palliatifs maintenus \u00e0 domicile", "description": "Forfait journalier de prise en charge des patients en soins palliatifs maintenus \u00e0 domicile", "reimbursed": true, "contribution_undue": true, "is_package": true}}, {"model": "invoices.CareCode", "pk": 132, "fields": {"id": 132, "code": "N105", "name": "Pr\u00e9l\u00e8vement de sang capillaire et d\u00e9termination de la glyc\u00e9mie des personnes diab\u00e9tiques par glucom\u00e8tre", "description": "Pr\u00e9l\u00e8vement de sang capillaire et d\u00e9termination de la glyc\u00e9mie des personnes diab\u00e9tiques par glucom\u00e8tre", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 134, "fields": {"id": 134, "code": "N104", "name": "Pr\u00e9l\u00e8vement de sang capillaire pour analyse autre que la glyc\u00e9mie", "description": "Pr\u00e9l\u00e8vement de sang capillaire pour analyse autre que la glyc\u00e9mie", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 135, "fields": {"id": 135, "code": "N107", "name": "Bilan hydrique des entr\u00e9es et sorties", "description": "Bilan hydrique des entr\u00e9es et sorties", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 136, "fields": {"id": 136, "code": "N207", "name": "Changement du flacon dune perfusion", "description": "Changement du flacon dune perfusion", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 137, "fields": {"id": 137, "code": "N208", "name": "Contr\u00f4le dune perfusion de longue dur\u00e9e par pompe, forfait par jour", "description": "Contr\u00f4le dune perfusion de longue dur\u00e9e par pompe, forfait par jour", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 138, "fields": {"id": 138, "code": "N209", "name": "Pr\u00e9l\u00e8vement de sang capillaire et d\u00e9termination de la glyc\u00e9mie des personnes diab\u00e9tiques par glucom\u00e8tre et injection sous-cutan\u00e9e", "description": "Pr\u00e9l\u00e8vement de sang capillaire et d\u00e9termination de la glyc\u00e9mie des personnes diab\u00e9tiques par glucom\u00e8tre et injection sous-cutan\u00e9e", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 139, "fields": {"id": 139, "code": "N212", "name": "Application de collyre ou de pommade ophtalmique \u00e0 domicile, forfait par jour, en phase pr\u00e9op\u00e9ratoire en vue dune intervention relevant du domaine de la sp\u00e9cialit\u00e9 ophtalmologique et/ou en phase postop\u00e9ratoire pour une dur\u00e9e maximale de 15 jours pour une personne incapable de r\u00e9aliser le geste de fa\u00e7on autonome", "description": "Application de collyre ou de pommade ophtalmique \u00e0 domicile, forfait par jour, en phase pr\u00e9op\u00e9ratoire en vue dune intervention relevant du domaine de la sp\u00e9cialit\u00e9 ophtalmologique et/ou en phase postop\u00e9ratoire pour une dur\u00e9e maximale de 15 jours pour une personne incapable de r\u00e9aliser le geste de fa\u00e7on autonome", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 140, "fields": {"id": 140, "code": "N402", "name": "Cath\u00e9t\u00e9risme v\u00e9sical avec lavage de la vessie ou irrigation v\u00e9sicale", "description": "Cath\u00e9t\u00e9risme v\u00e9sical avec lavage de la vessie ou irrigation v\u00e9sicale", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 141, "fields": {"id": 141, "code": "N403", "name": "Lavage de la vessie sur sonde \u00e0 demeure en place et/ou enl\u00e8vement de la sonde \u00e0 demeure", "description": "Lavage de la vessie sur sonde \u00e0 demeure en place et/ou enl\u00e8vement de la sonde \u00e0 demeure", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 142, "fields": {"id": 142, "code": "N404", "name": "Changement ou vidange de mat\u00e9riel de stomie de lappareil urinaire", "description": "Changement ou vidange de mat\u00e9riel de stomie de lappareil urinaire", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 143, "fields": {"id": 143, "code": "N405", "name": "Mise en place dun \u00e9tui p\u00e9nien auto-adh\u00e9sif pour incontinence, maximum 3 s\u00e9ances par semaine", "description": "Mise en place dun \u00e9tui p\u00e9nien auto-adh\u00e9sif pour incontinence, maximum 3 s\u00e9ances par semaine", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 144, "fields": {"id": 144, "code": "N501", "name": "Mise en place ou changement dune sonde gastrique", "description": "Mise en place ou changement dune sonde gastrique", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 145, "fields": {"id": 145, "code": "N502", "name": "Changement ou vidange de mat\u00e9riel de stomie de lappareil digestif", "description": "Changement ou vidange de mat\u00e9riel de stomie de lappareil digestif", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 146, "fields": {"id": 146, "code": "N504", "name": "Evacuation manuelle pour f\u00e9calome y compris lavement, maximum une fois par semaine", "description": "Evacuation manuelle pour f\u00e9calome y compris lavement, maximum une fois par semaine", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 147, "fields": {"id": 147, "code": "N505", "name": "Lavement \u00e9vacuateur pour pr\u00e9paration \u00e0 un examen du rectum, lavement m\u00e9dicamenteux non laxatif", "description": "Lavement \u00e9vacuateur pour pr\u00e9paration \u00e0 un examen du rectum, lavement m\u00e9dicamenteux non laxatif", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 148, "fields": {"id": 148, "code": "N506", "name": "Branchement, d\u00e9branchement et surveillance dune nutrition ent\u00e9rale (forfait journalier)", "description": "Branchement, d\u00e9branchement et surveillance dune nutrition ent\u00e9rale (forfait journalier)", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 149, "fields": {"id": 149, "code": "N601", "name": "Lavage vaginal avec solution m\u00e9dicamenteuse en cas de pathologie infectieuse ou post-radique", "description": "Lavage vaginal avec solution m\u00e9dicamenteuse en cas de pathologie infectieuse ou post-radique", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 150, "fields": {"id": 150, "code": "N701", "name": "Traitement par a\u00e9rosols, par s\u00e9ance", "description": "Traitement par a\u00e9rosols, par s\u00e9ance", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 151, "fields": {"id": 151, "code": "N702", "name": "Aspiration pour encombrement trach\u00e9o-bronchique chez le patient trach\u00e9otomis\u00e9", "description": "Aspiration pour encombrement trach\u00e9o-bronchique chez le patient trach\u00e9otomis\u00e9", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 152, "fields": {"id": 152, "code": "N703", "name": "Expectoration dirig\u00e9e", "description": "Expectoration dirig\u00e9e", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 153, "fields": {"id": 153, "code": "N704", "name": "Oxyg\u00e9noth\u00e9rapie: branchement, d\u00e9branchement et surveillance (forfait par jour)", "description": "Oxyg\u00e9noth\u00e9rapie: branchement, d\u00e9branchement et surveillance (forfait par jour)", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 154, "fields": {"id": 154, "code": "N801", "name": "Forfait journalier dactes infirmiers prest\u00e9s dans les maisons de soins", "description": "Forfait journalier dactes infirmiers prest\u00e9s dans les maisons de soins", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 155, "fields": {"id": 155, "code": "N802", "name": "Forfait journalier dactes infirmiers prest\u00e9s dans les autres \u00e9tablissements daides et de soins", "description": "Forfait journalier dactes infirmiers prest\u00e9s dans les autres \u00e9tablissements daides et de soins", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 156, "fields": {"id": 156, "code": "N804", "name": "Forfait journalier dactes infirmiers pour des personnes d\u00e9pendantes \u00e0 domicile prises en charge par les r\u00e9seaux et les \u00e9tablissements relevant du secteur handicap, indemnit\u00e9 de d\u00e9placement incluse", "description": "Forfait journalier dactes infirmiers pour des personnes d\u00e9pendantes \u00e0 domicile prises en charge par les r\u00e9seaux et les \u00e9tablissements relevant du secteur handicap, indemnit\u00e9 de d\u00e9placement incluse", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 157, "fields": {"id": 157, "code": "ND01", "name": "Forfait unique pour proc\u00e9dure de d\u00e9contamination pour patient atteint de gale (y compris masques, surblouses, surchaussures et gants)", "description": "Forfait unique pour proc\u00e9dure de d\u00e9contamination pour patient atteint de gale (y compris masques, surblouses, surchaussures et gants)", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 160, "fields": {"id": 160, "code": "AEV par minute", "name": "Actes Essentiels de la Vie", "description": "Actes Essentiels de la Vie", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 194, "fields": {"id": 194, "code": "N845", "name": "Tarifs sp\u00e9ciaux : Forfait journalier pour mesures de surveillance m\u00e9dicale accrue temporaire dans le cadre de l\u2019\u00e9pid\u00e9mie COVID-19 pour des patients symptomatiques avec signes cliniques de gravit\u00e9 dans les \u00e9tablissements d\u2019aides et de soins", "description": "Tarifs sp\u00e9ciaux : Forfait journalier pour mesures de surveillance m\u00e9dicale accrue temporaire dans le cadre de l\u2019\u00e9pid\u00e9mie COVID-19 pour des patients symptomatiques avec signes cliniques de gravit\u00e9 dans les \u00e9tablissements d\u2019aides et de soins", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 195, "fields": {"id": 195, "code": " forfait par jour", "name": "Contr\u00f4le dune perfusion de longue dur\u00e9e par pompe", "description": "Contr\u00f4le dune perfusion de longue dur\u00e9e par pompe", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 196, "fields": {"id": 196, "code": " maximum 2 s\u00e9ances par semaine", "name": "Lavement \u00e9vacuateur pour constipation neurog\u00e8ne ou m\u00e9gac\u00f4lon", "description": "Lavement \u00e9vacuateur pour constipation neurog\u00e8ne ou m\u00e9gac\u00f4lon", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 197, "fields": {"id": 197, "code": " par s\u00e9ance", "name": "Traitement par a\u00e9rosols", "description": "Traitement par a\u00e9rosols", "reimbursed": true, "contribution_undue": false, "is_package": false}}, {"model": "invoices.CareCode", "pk": 198, "fields": {"id": 198, "code": " surchaussures et gants)", "name": "Forfait unique pour proc\u00e9dure de d\u00e9contamination pour patient atteint de gale (y compris masques, surblouses", "description": "Forfait unique pour proc\u00e9dure de d\u00e9contamination pour patient atteint de gale (y compris masques, surblouses", "reimbursed": true, "contribution_undue": false, "is_package": false}}]
+[
+  {
+    "model": "invoices.CareCode",
+    "pk": 3,
+    "fields": {
+      "id": 3,
+      "code": "NF1_02",
+      "name": "forfait d\u00e9placement",
+      "description": "frais de d\u00e9placement (5.48)\r\n5.75",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 4,
+    "fields": {
+      "id": 4,
+      "code": "N02_01",
+      "name": "glycemie par glucometre",
+      "description": "glycemie par glucometre (12.44)",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 5,
+    "fields": {
+      "id": 5,
+      "code": "N11_03",
+      "name": "injection intraveineuse IV",
+      "description": "injection intraveineuse (ancien prix = 17.42)\r\n18.3",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 6,
+    "fields": {
+      "id": 6,
+      "code": "N13_01",
+      "name": "perfusions intraveineuse ou SC",
+      "description": "perfusions intraveineuse ou SC (22,90)",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 7,
+    "fields": {
+      "id": 7,
+      "code": "N14_01",
+      "name": "enlevement perfusion intraveineuse",
+      "description": "enlevement perfusion intraveineuse(7,45)",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 8,
+    "fields": {
+      "id": 8,
+      "code": "N15_02",
+      "name": "prises de sang (PS)",
+      "description": "prises de sang (12,39)",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 9,
+    "fields": {
+      "id": 9,
+      "code": "N18_02",
+      "name": "injection SC",
+      "description": "injection SC (7,40)",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 10,
+    "fields": {
+      "id": 10,
+      "code": "N19_01",
+      "name": "injection intramusculaire IM ou ID",
+      "description": "injection intramusculaire IM ou ID (7,55)",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 16,
+    "fields": {
+      "id": 16,
+      "code": "NF1_01",
+      "name": "frais de d\u00e9placement (prive)",
+      "description": "frais de d\u00e9placement (5,72)",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 18,
+    "fields": {
+      "id": 18,
+      "code": "N21",
+      "name": "pansement localis\u00e9 du tronc",
+      "description": "pansement localis\u00e9 du tronc",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 19,
+    "fields": {
+      "id": 19,
+      "code": "N24_01",
+      "name": "pansements multiples",
+      "description": "pansements multiples, grand pansement du tronc , pansement avec drain",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 20,
+    "fields": {
+      "id": 20,
+      "code": "N25",
+      "name": "2015 PST GANGRENE ESCARRE ULCERE >20CM2",
+      "description": "PST GANGRENE ESCARRE ULCERE >20CM2",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 21,
+    "fields": {
+      "id": 21,
+      "code": "N26_01",
+      "name": "BANDAGE COMPRESSIF",
+      "description": "BANDAGE COMPRESSIF",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 24,
+    "fields": {
+      "id": 24,
+      "code": "N23_01",
+      "name": "PST AVEC SONDE",
+      "description": "PST AVEC SONDE ? CANULE OU STOMIE",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 26,
+    "fields": {
+      "id": 26,
+      "code": "N72_01",
+      "name": "aspiration pour encombrement trach\u00e9o-br",
+      "description": "aspiration pour encombrement trach\u00e9o-br",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 27,
+    "fields": {
+      "id": 27,
+      "code": "N20_01",
+      "name": "ABLATION DE FILS",
+      "description": "ABLATION DE FILS",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 28,
+    "fields": {
+      "id": 28,
+      "code": "N19",
+      "name": "2015 IM ou ID ",
+      "description": "2015 injection IM ou ID",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 29,
+    "fields": {
+      "id": 29,
+      "code": "NF1",
+      "name": "2015 NF1",
+      "description": "2015 NF1 DEPLACEMENT",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 30,
+    "fields": {
+      "id": 30,
+      "code": "N11_01",
+      "name": "2015 injection intraveineuse IV ",
+      "description": "2015 injection intraveineuse IV ",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 31,
+    "fields": {
+      "id": 31,
+      "code": "N20",
+      "name": "2015 ablation de fils de suture ",
+      "description": "2015 ablation de fils de suture ",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 32,
+    "fields": {
+      "id": 32,
+      "code": "N26._01",
+      "name": "BANDAGE COMPRESSIF 2\u00e8me jambe",
+      "description": "BANDAGE COMPRESSIF 2\u00e8me jambe",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 33,
+    "fields": {
+      "id": 33,
+      "code": "N26.",
+      "name": "2015 BANDAGE COMPRESSIF 2\u00e8me jambe",
+      "description": "2015 BANDAGE COMPRESSIF 2\u00e8me jambe",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 34,
+    "fields": {
+      "id": 34,
+      "code": "N26",
+      "name": "2015 BANDAGE COMPRESSIF",
+      "description": "2015 BANDAGE COMPRESSIF ",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 35,
+    "fields": {
+      "id": 35,
+      "code": "N13",
+      "name": "2015 perfusions intraveineuse ou SC",
+      "description": "2015 perfusions intraveineuse ou SC",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 36,
+    "fields": {
+      "id": 36,
+      "code": "N14",
+      "name": "2015 perfusions ENLEVEMENT",
+      "description": "2015 perfusions ENLEVEMENT",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 37,
+    "fields": {
+      "id": 37,
+      "code": "N15_01",
+      "name": "2015 PS PRISE DE SANG",
+      "description": "2015 PS PRISE DE SANG",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 38,
+    "fields": {
+      "id": 38,
+      "code": "N24",
+      "name": "2015 PANSEMENTS MULTIPLES",
+      "description": "2015 PANSEMENTS MULTIPLES",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 39,
+    "fields": {
+      "id": 39,
+      "code": "N72",
+      "name": "2015 ASPIRATION TRACHEO BRONCHIQUE",
+      "description": "2015 ASPIRATION TRACHEO BRONCHIQUE",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 40,
+    "fields": {
+      "id": 40,
+      "code": "N23",
+      "name": "2015 PEG PST AVEC SONDE",
+      "description": "2015 PEG PST AVEC SONDE",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 41,
+    "fields": {
+      "id": 41,
+      "code": "N11",
+      "name": "IV PRIVEE 2015",
+      "description": "IV PRIVEE 2015",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 42,
+    "fields": {
+      "id": 42,
+      "code": "N02 ",
+      "name": "glyc\u00e9mie priv\u00e9e",
+      "description": "glyc\u00e9mie priv\u00e9e",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 48,
+    "fields": {
+      "id": 48,
+      "code": "N02",
+      "name": "GLYCEMIE 2015",
+      "description": "GLYCEMIE 2015",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 49,
+    "fields": {
+      "id": 49,
+      "code": "N29",
+      "name": "2015 bain m\u00e9dicamenteux pour affection \u00e9tendue",
+      "description": "2015 bain m\u00e9dicamenteux pour affection \u00e9tendue",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 51,
+    "fields": {
+      "id": 51,
+      "code": "N21 ",
+      "name": "2015 pansement simple ",
+      "description": "2015 pansement simple ",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 52,
+    "fields": {
+      "id": 52,
+      "code": "N01",
+      "name": "2015 prelevement pour analyse microbiologique",
+      "description": "prelevement pour analyse microbiologique",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 54,
+    "fields": {
+      "id": 54,
+      "code": "N18_01",
+      "name": "Injection sous-cutan\u00e9e 2015",
+      "description": "Injection sous-cutan\u00e9e 2015",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 56,
+    "fields": {
+      "id": 56,
+      "code": "N24 PRIVEE",
+      "name": "pst multiples",
+      "description": "pst multiples",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 61,
+    "fields": {
+      "id": 61,
+      "code": "N73",
+      "name": "Expectoration dirig\u00e9e",
+      "description": "Expectoration dirig\u00e9e",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 62,
+    "fields": {
+      "id": 62,
+      "code": "N18",
+      "name": "2015 injection s/c",
+      "description": "2015 injection s/c",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 69,
+    "fields": {
+      "id": 69,
+      "code": "N106",
+      "name": "Pr\u00e9l\u00e8vement de sang veineux pour analyse effectu\u00e9e au domicile de la personne prot\u00e9g\u00e9e, en cas de n\u00e9cessit\u00e9 m\u00e9dicale deffectuer le pr\u00e9l\u00e8vement au domicile certifi\u00e9e sur l'ordonnance du m\u00e9decin prescripteur",
+      "description": "Pr\u00e9l\u00e8vement de sang veineux pour analyse effectu\u00e9e au domicile de la personne prot\u00e9g\u00e9e, en cas de n\u00e9cessit\u00e9 m\u00e9dicale deffectuer le pr\u00e9l\u00e8vement au domicile certifi\u00e9e sur l'ordonnance du m\u00e9decin prescripteur",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 70,
+    "fields": {
+      "id": 70,
+      "code": "N203",
+      "name": "Injection intraveineuse par ponction",
+      "description": "Injection intraveineuse par ponction",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 71,
+    "fields": {
+      "id": 71,
+      "code": "N205",
+      "name": "Mise en place dune perfusion intraveineuse ou sous-cutan\u00e9e (hypodermoclyse) par gravit\u00e9 ou par pompe",
+      "description": "Mise en place dune perfusion intraveineuse ou sous-cutan\u00e9e (hypodermoclyse) par gravit\u00e9 ou par pompe",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 72,
+    "fields": {
+      "id": 72,
+      "code": "N206",
+      "name": "Enl\u00e8vement dune perfusion intraveineuse ou sous-cutan\u00e9e",
+      "description": "Enl\u00e8vement dune perfusion intraveineuse ou sous-cutan\u00e9e",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 73,
+    "fields": {
+      "id": 73,
+      "code": "N210",
+      "name": "Injection sous-cutan\u00e9e",
+      "description": "Injection sous-cutan\u00e9e",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 74,
+    "fields": {
+      "id": 74,
+      "code": "N211",
+      "name": "Injection intramusculaire ou intradermique",
+      "description": "Injection intramusculaire ou intradermique",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 75,
+    "fields": {
+      "id": 75,
+      "code": "N102",
+      "name": "Pr\u00e9l\u00e8vement et examen qualitatif des urines mi-jet par bandelette, avec enregistrement des r\u00e9sultats",
+      "description": "Pr\u00e9l\u00e8vement et examen qualitatif des urines mi-jet par bandelette, avec enregistrement des r\u00e9sultats",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 81,
+    "fields": {
+      "id": 81,
+      "code": "NF01",
+      "name": "Forfait d\u00e9placement",
+      "description": "Forfait d\u00e9placement",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 83,
+    "fields": {
+      "id": 83,
+      "code": "N901",
+      "name": "Forfait de 1-2 passages par jour m\u00e9sure des param\u00e8tres vitaux",
+      "description": "Forfait de 1-2 passages par jour m\u00e9sure des param\u00e8tres vitaux",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 84,
+    "fields": {
+      "id": 84,
+      "code": "N902",
+      "name": "Forfait de 3-4 passages par jour",
+      "description": "Forfait de 3-4 passages par jour",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 85,
+    "fields": {
+      "id": 85,
+      "code": "N903",
+      "name": "Forfait pour un minimum de 5 passages par jour",
+      "description": "Forfait pour un minimum de 5 passages par jour",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 86,
+    "fields": {
+      "id": 86,
+      "code": "N302",
+      "name": "Pansement pour plaies simples",
+      "description": "Pansement pour plaies simples",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 87,
+    "fields": {
+      "id": 87,
+      "code": "N303",
+      "name": "Pansement dun doigt, d'un orteil, dune main, dun pied, avec bain m\u00e9dicamenteux pr\u00e9alable",
+      "description": "Pansement dun doigt, d'un orteil, dune main, dun pied, avec bain m\u00e9dicamenteux pr\u00e9alable",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 88,
+    "fields": {
+      "id": 88,
+      "code": "N305",
+      "name": "Pansement pour plaies multiples",
+      "description": "Pansement pour plaies multiples",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 89,
+    "fields": {
+      "id": 89,
+      "code": "N307",
+      "name": "Bandage compressif ou bas de contention pour stase veineuse ou lymphatique pour affection aigu\u00eb dun membre",
+      "description": "Bandage compressif ou bas de contention pour stase veineuse ou lymphatique pour affection aigu\u00eb dun membre",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 90,
+    "fields": {
+      "id": 90,
+      "code": "N308",
+      "name": "Bandage compressif ou bas de contention pour stase veineuse ou lymphatique pour affection aigu\u00eb de deux membres",
+      "description": "Bandage compressif ou bas de contention pour stase veineuse ou lymphatique pour affection aigu\u00eb de deux membres",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 91,
+    "fields": {
+      "id": 91,
+      "code": "N309",
+      "name": "Bain entier m\u00e9dicamenteux pour affection cutan\u00e9e \u00e9tendue",
+      "description": "Bain entier m\u00e9dicamenteux pour affection cutan\u00e9e \u00e9tendue",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 97,
+    "fields": {
+      "id": 97,
+      "code": "N301",
+      "name": "Ablation de fils de suture ou dagrafes ou redon, nettoyage et pansement avec soins de plaie simple",
+      "description": "Ablation de fils de suture ou dagrafes ou redon, nettoyage et pansement avec soins de plaie simple",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 98,
+    "fields": {
+      "id": 98,
+      "code": "N101",
+      "name": "Pr\u00e9l\u00e8vement pour analyse microbiologique",
+      "description": "Pr\u00e9l\u00e8vement pour analyse microbiologique",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 100,
+    "fields": {
+      "id": 100,
+      "code": "N103",
+      "name": "Pr\u00e9l\u00e8vement de selles pour analyses",
+      "description": "Pr\u00e9l\u00e8vement de selles pour analyses",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 101,
+    "fields": {
+      "id": 101,
+      "code": "N204",
+      "name": "Injection intraveineuse sur cath\u00e9ter en place",
+      "description": "Injection intraveineuse sur cath\u00e9ter en place",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 103,
+    "fields": {
+      "id": 103,
+      "code": "N503",
+      "name": "Lavement \u00e9vacuateur pour constipation neurog\u00e8ne ou m\u00e9gac\u00f4lon, maximum 2 s\u00e9ances par semaine",
+      "description": "Lavement \u00e9vacuateur pour constipation neurog\u00e8ne ou m\u00e9gac\u00f4lon, maximum 2 s\u00e9ances par semaine",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 104,
+    "fields": {
+      "id": 104,
+      "code": "N201",
+      "name": "Injection par dispositif implant\u00e9",
+      "description": "Injection par dispositif implant\u00e9",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 105,
+    "fields": {
+      "id": 105,
+      "code": "N202",
+      "name": "Perfusion par dispositif implant\u00e9",
+      "description": "Perfusion par dispositif implant\u00e9",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 106,
+    "fields": {
+      "id": 106,
+      "code": "N401",
+      "name": "Cath\u00e9t\u00e9risme v\u00e9sical, mise en place ou changement dune sonde \u00e0 demeure",
+      "description": "Cath\u00e9t\u00e9risme v\u00e9sical, mise en place ou changement dune sonde \u00e0 demeure",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 109,
+    "fields": {
+      "id": 109,
+      "code": "N306",
+      "name": "D\u00e9tersion, d\u00e9bridement m\u00e9canique et pansement dune plaie n\u00e9crotique, dune l\u00e9sion ulc\u00e9r\u00e9e ou dune br\u00fblure \u00e9tendue",
+      "description": "D\u00e9tersion, d\u00e9bridement m\u00e9canique et pansement dune plaie n\u00e9crotique, dune l\u00e9sion ulc\u00e9r\u00e9e ou dune br\u00fblure \u00e9tendue",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 110,
+    "fields": {
+      "id": 110,
+      "code": "N304",
+      "name": "Pansement pour plaies avec dispositifs",
+      "description": "Pansement pour plaies avec dispositifs",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 113,
+    "fields": {
+      "id": 113,
+      "code": "N803",
+      "name": "Forfait journalier dactes infirmiers pour des personnes d\u00e9pendantes \u00e0 domicile prises en charge par les r\u00e9seaux g\u00e9n\u00e9ralistes, indemnit\u00e9 de d\u00e9placement incluse",
+      "description": "Forfait journalier dactes infirmiers pour des personnes d\u00e9pendantes \u00e0 domicile prises en charge par les r\u00e9seaux g\u00e9n\u00e9ralistes, indemnit\u00e9 de d\u00e9placement incluse",
+      "reimbursed": true,
+      "contribution_undue": true,
+      "is_package": true
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 122,
+    "fields": {
+      "id": 122,
+      "code": "R\u00e9gine",
+      "name": "R\u00e9gine",
+      "description": "R\u00e9gine",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 129,
+    "fields": {
+      "id": 129,
+      "code": "BY001",
+      "name": "Prise de sang sur veine superficielle",
+      "description": "Prise de sang sur veine superficielle",
+      "reimbursed": true,
+      "contribution_undue": true,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 131,
+    "fields": {
+      "id": 131,
+      "code": "FSP2",
+      "name": "Forfait pr patients en soins palliatifs maintenus \u00e0 domicile",
+      "description": "Forfait journalier de prise en charge des patients en soins palliatifs maintenus \u00e0 domicile",
+      "reimbursed": true,
+      "contribution_undue": true,
+      "is_package": true
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 132,
+    "fields": {
+      "id": 132,
+      "code": "N105",
+      "name": "Pr\u00e9l\u00e8vement de sang capillaire et d\u00e9termination de la glyc\u00e9mie des personnes diab\u00e9tiques par glucom\u00e8tre",
+      "description": "Pr\u00e9l\u00e8vement de sang capillaire et d\u00e9termination de la glyc\u00e9mie des personnes diab\u00e9tiques par glucom\u00e8tre",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 134,
+    "fields": {
+      "id": 134,
+      "code": "N104",
+      "name": "Pr\u00e9l\u00e8vement de sang capillaire pour analyse autre que la glyc\u00e9mie",
+      "description": "Pr\u00e9l\u00e8vement de sang capillaire pour analyse autre que la glyc\u00e9mie",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 135,
+    "fields": {
+      "id": 135,
+      "code": "N107",
+      "name": "Bilan hydrique des entr\u00e9es et sorties",
+      "description": "Bilan hydrique des entr\u00e9es et sorties",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 136,
+    "fields": {
+      "id": 136,
+      "code": "N207",
+      "name": "Changement du flacon dune perfusion",
+      "description": "Changement du flacon dune perfusion",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 137,
+    "fields": {
+      "id": 137,
+      "code": "N208",
+      "name": "Contr\u00f4le dune perfusion de longue dur\u00e9e par pompe, forfait par jour",
+      "description": "Contr\u00f4le dune perfusion de longue dur\u00e9e par pompe, forfait par jour",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 138,
+    "fields": {
+      "id": 138,
+      "code": "N209",
+      "name": "Pr\u00e9l\u00e8vement de sang capillaire et d\u00e9termination de la glyc\u00e9mie des personnes diab\u00e9tiques par glucom\u00e8tre et injection sous-cutan\u00e9e",
+      "description": "Pr\u00e9l\u00e8vement de sang capillaire et d\u00e9termination de la glyc\u00e9mie des personnes diab\u00e9tiques par glucom\u00e8tre et injection sous-cutan\u00e9e",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 139,
+    "fields": {
+      "id": 139,
+      "code": "N212",
+      "name": "Application de collyre ou de pommade ophtalmique \u00e0 domicile, forfait par jour, en phase pr\u00e9op\u00e9ratoire en vue dune intervention relevant du domaine de la sp\u00e9cialit\u00e9 ophtalmologique et/ou en phase postop\u00e9ratoire pour une dur\u00e9e maximale de 15 jours pour une personne incapable de r\u00e9aliser le geste de fa\u00e7on autonome",
+      "description": "Application de collyre ou de pommade ophtalmique \u00e0 domicile, forfait par jour, en phase pr\u00e9op\u00e9ratoire en vue dune intervention relevant du domaine de la sp\u00e9cialit\u00e9 ophtalmologique et/ou en phase postop\u00e9ratoire pour une dur\u00e9e maximale de 15 jours pour une personne incapable de r\u00e9aliser le geste de fa\u00e7on autonome",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 140,
+    "fields": {
+      "id": 140,
+      "code": "N402",
+      "name": "Cath\u00e9t\u00e9risme v\u00e9sical avec lavage de la vessie ou irrigation v\u00e9sicale",
+      "description": "Cath\u00e9t\u00e9risme v\u00e9sical avec lavage de la vessie ou irrigation v\u00e9sicale",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 141,
+    "fields": {
+      "id": 141,
+      "code": "N403",
+      "name": "Lavage de la vessie sur sonde \u00e0 demeure en place et/ou enl\u00e8vement de la sonde \u00e0 demeure",
+      "description": "Lavage de la vessie sur sonde \u00e0 demeure en place et/ou enl\u00e8vement de la sonde \u00e0 demeure",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 142,
+    "fields": {
+      "id": 142,
+      "code": "N404",
+      "name": "Changement ou vidange de mat\u00e9riel de stomie de lappareil urinaire",
+      "description": "Changement ou vidange de mat\u00e9riel de stomie de lappareil urinaire",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 143,
+    "fields": {
+      "id": 143,
+      "code": "N405",
+      "name": "Mise en place dun \u00e9tui p\u00e9nien auto-adh\u00e9sif pour incontinence, maximum 3 s\u00e9ances par semaine",
+      "description": "Mise en place dun \u00e9tui p\u00e9nien auto-adh\u00e9sif pour incontinence, maximum 3 s\u00e9ances par semaine",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 144,
+    "fields": {
+      "id": 144,
+      "code": "N501",
+      "name": "Mise en place ou changement dune sonde gastrique",
+      "description": "Mise en place ou changement dune sonde gastrique",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 145,
+    "fields": {
+      "id": 145,
+      "code": "N502",
+      "name": "Changement ou vidange de mat\u00e9riel de stomie de lappareil digestif",
+      "description": "Changement ou vidange de mat\u00e9riel de stomie de lappareil digestif",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 146,
+    "fields": {
+      "id": 146,
+      "code": "N504",
+      "name": "Evacuation manuelle pour f\u00e9calome y compris lavement, maximum une fois par semaine",
+      "description": "Evacuation manuelle pour f\u00e9calome y compris lavement, maximum une fois par semaine",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 147,
+    "fields": {
+      "id": 147,
+      "code": "N505",
+      "name": "Lavement \u00e9vacuateur pour pr\u00e9paration \u00e0 un examen du rectum, lavement m\u00e9dicamenteux non laxatif",
+      "description": "Lavement \u00e9vacuateur pour pr\u00e9paration \u00e0 un examen du rectum, lavement m\u00e9dicamenteux non laxatif",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 148,
+    "fields": {
+      "id": 148,
+      "code": "N506",
+      "name": "Branchement, d\u00e9branchement et surveillance dune nutrition ent\u00e9rale (forfait journalier)",
+      "description": "Branchement, d\u00e9branchement et surveillance dune nutrition ent\u00e9rale (forfait journalier)",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 149,
+    "fields": {
+      "id": 149,
+      "code": "N601",
+      "name": "Lavage vaginal avec solution m\u00e9dicamenteuse en cas de pathologie infectieuse ou post-radique",
+      "description": "Lavage vaginal avec solution m\u00e9dicamenteuse en cas de pathologie infectieuse ou post-radique",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 150,
+    "fields": {
+      "id": 150,
+      "code": "N701",
+      "name": "Traitement par a\u00e9rosols, par s\u00e9ance",
+      "description": "Traitement par a\u00e9rosols, par s\u00e9ance",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 151,
+    "fields": {
+      "id": 151,
+      "code": "N702",
+      "name": "Aspiration pour encombrement trach\u00e9o-bronchique chez le patient trach\u00e9otomis\u00e9",
+      "description": "Aspiration pour encombrement trach\u00e9o-bronchique chez le patient trach\u00e9otomis\u00e9",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 152,
+    "fields": {
+      "id": 152,
+      "code": "N703",
+      "name": "Expectoration dirig\u00e9e",
+      "description": "Expectoration dirig\u00e9e",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 153,
+    "fields": {
+      "id": 153,
+      "code": "N704",
+      "name": "Oxyg\u00e9noth\u00e9rapie: branchement, d\u00e9branchement et surveillance (forfait par jour)",
+      "description": "Oxyg\u00e9noth\u00e9rapie: branchement, d\u00e9branchement et surveillance (forfait par jour)",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 154,
+    "fields": {
+      "id": 154,
+      "code": "N801",
+      "name": "Forfait journalier dactes infirmiers prest\u00e9s dans les maisons de soins",
+      "description": "Forfait journalier dactes infirmiers prest\u00e9s dans les maisons de soins",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 155,
+    "fields": {
+      "id": 155,
+      "code": "N802",
+      "name": "Forfait journalier dactes infirmiers prest\u00e9s dans les autres \u00e9tablissements daides et de soins",
+      "description": "Forfait journalier dactes infirmiers prest\u00e9s dans les autres \u00e9tablissements daides et de soins",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 156,
+    "fields": {
+      "id": 156,
+      "code": "N804",
+      "name": "Forfait journalier dactes infirmiers pour des personnes d\u00e9pendantes \u00e0 domicile prises en charge par les r\u00e9seaux et les \u00e9tablissements relevant du secteur handicap, indemnit\u00e9 de d\u00e9placement incluse",
+      "description": "Forfait journalier dactes infirmiers pour des personnes d\u00e9pendantes \u00e0 domicile prises en charge par les r\u00e9seaux et les \u00e9tablissements relevant du secteur handicap, indemnit\u00e9 de d\u00e9placement incluse",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 157,
+    "fields": {
+      "id": 157,
+      "code": "ND01",
+      "name": "Forfait unique pour proc\u00e9dure de d\u00e9contamination pour patient atteint de gale (y compris masques, surblouses, surchaussures et gants)",
+      "description": "Forfait unique pour proc\u00e9dure de d\u00e9contamination pour patient atteint de gale (y compris masques, surblouses, surchaussures et gants)",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 160,
+    "fields": {
+      "id": 160,
+      "code": "AEV par minute",
+      "name": "Actes Essentiels de la Vie",
+      "description": "Actes Essentiels de la Vie",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 194,
+    "fields": {
+      "id": 194,
+      "code": "N845",
+      "name": "Tarifs sp\u00e9ciaux : Forfait journalier pour mesures de surveillance m\u00e9dicale accrue temporaire dans le cadre de l\u2019\u00e9pid\u00e9mie COVID-19 pour des patients symptomatiques avec signes cliniques de gravit\u00e9 dans les \u00e9tablissements d\u2019aides et de soins",
+      "description": "Tarifs sp\u00e9ciaux : Forfait journalier pour mesures de surveillance m\u00e9dicale accrue temporaire dans le cadre de l\u2019\u00e9pid\u00e9mie COVID-19 pour des patients symptomatiques avec signes cliniques de gravit\u00e9 dans les \u00e9tablissements d\u2019aides et de soins",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 195,
+    "fields": {
+      "id": 195,
+      "code": " forfait par jour",
+      "name": "Contr\u00f4le dune perfusion de longue dur\u00e9e par pompe",
+      "description": "Contr\u00f4le dune perfusion de longue dur\u00e9e par pompe",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 196,
+    "fields": {
+      "id": 196,
+      "code": " maximum 2 s\u00e9ances par semaine",
+      "name": "Lavement \u00e9vacuateur pour constipation neurog\u00e8ne ou m\u00e9gac\u00f4lon",
+      "description": "Lavement \u00e9vacuateur pour constipation neurog\u00e8ne ou m\u00e9gac\u00f4lon",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 197,
+    "fields": {
+      "id": 197,
+      "code": " par s\u00e9ance",
+      "name": "Traitement par a\u00e9rosols",
+      "description": "Traitement par a\u00e9rosols",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  },
+  {
+    "model": "invoices.CareCode",
+    "pk": 198,
+    "fields": {
+      "id": 198,
+      "code": " surchaussures et gants)",
+      "name": "Forfait unique pour proc\u00e9dure de d\u00e9contamination pour patient atteint de gale (y compris masques, surblouses",
+      "description": "Forfait unique pour proc\u00e9dure de d\u00e9contamination pour patient atteint de gale (y compris masques, surblouses",
+      "reimbursed": true,
+      "contribution_undue": false,
+      "is_package": false
+    }
+  }
+]
