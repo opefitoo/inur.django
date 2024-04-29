@@ -165,7 +165,7 @@ class AAITransDetail(models.Model):
     # can link to multiple objectives
     link_to_objectives = models.ManyToManyField(AAIObjective, verbose_name="Lien avec objectifs")
     means = models.TextField("Moyens/Actions", max_length=500, null=True, blank=True, default=None)
-    results = models.TextField(u"Résultats", max_length=300,
+    results = models.TextField(u"Résultats", max_length=600,
                                null=True, blank=True, default=None)
     session_duration = models.DurationField("Durée",
                                             help_text="Durée de la séance sous format HH:MM:SS",
