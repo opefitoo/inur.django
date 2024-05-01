@@ -1,30 +1,29 @@
-document.addEventListener("DOMContentLoaded", function() {
-    function moveNewFormsToTop() {
-        console.log('Attempting to move new forms to the top in TabularInline...');
+window.onload = function () {
+  // Delay execution of your script by 500 milliseconds
+  setTimeout(function () {
+    //console.log("Custom script loaded for admin inline forms.");
 
-        // Target the inline table specifically
-        django.jQuery('.tabular.inline-related.last-related').each(function() {
-          console.log('Found a TabularInline.');
-            var $inlineTable = django.jQuery(this);
+    django.jQuery('.tabular.inline-related.last-related').each(function () {
+      // find table element
+      var $inlineTable = django.jQuery(this);
+      var $tbody = $inlineTable.find('tbody');
+      // find last row
+      var $lastRow = $tbody.find('tr').last();
+      //console.log('lastRow:', $lastRow);
+      // move last row to the top
+      $lastRow.detach().prependTo($tbody);
+    });
+  }, 500);  // Adjust the delay as needed
+};
 
-            // Find all rows and check if they are new
-            $inlineTable.find('tr.form-row').each(function() {
-                var isNew = !django.jQuery(this).find('input[id$="-id"]').val();
-                if (isNew) {
-                    console.log('Moving a new tabular form row to the top.');
-                    // Move this new row to right after the header row in the table
-                    django.jQuery(this).insertAfter($inlineTable.find('tr:first'));
-                }
-            });
-        });
-    }
-
-    // Initial call
-    moveNewFormsToTop();
-
-    // Bind to the 'Add another' link to handle dynamic form addition
-    django.jQuery('.add-row a').click(function() {
-        console.log('Add another clicked in TabularInline.');
-        setTimeout(moveNewFormsToTop, 100);  // Delay to allow form to be added
+// if add new button is clicked then move the last row to the top
+document.addEventListener("DOMContentLoaded", function () {
+    django.jQuery(document).on('formset:added', function(event, $row, formsetName, addRowButton) {
+      // now find the target element
+      var $newlyCreatedRow = django.jQuery(event.target);
+      // now find the parent element of the $newlyCreatedRow
+      var $tbody = $newlyCreatedRow.parent();
+      // move it right after the first add-row button
+      $newlyCreatedRow.detach().insertAfter($tbody.find('.add-row'));
     });
 });

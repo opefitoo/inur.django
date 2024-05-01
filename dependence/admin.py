@@ -449,7 +449,7 @@ class SocialHabitsInLine(admin.TabularInline):
 
 
 class TensionAndTemperatureParametersInLine(admin.TabularInline):
-    extra = 1
+    extra = 0
     class Media:
         js = ('js/admin_reorder_inlines.js',)
     model = TensionAndTemperatureParameters
