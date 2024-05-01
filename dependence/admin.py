@@ -871,7 +871,7 @@ class AAIObjectiveAdmin(admin.ModelAdmin):
 
 
 class AAITransDetailInLine(admin.TabularInline):
-    extra = 0
+    extra = 1
     model = AAITransDetail
     # I want certain fields to show first
     fields = ('date_time_means_set', 'link_to_objectives', 'means', 'results', 'session_duration',
