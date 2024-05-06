@@ -59,6 +59,17 @@ def process_post_save(instance):
             buffer.seek(0)
             instance.generated_invoice_files = ContentFile(buffer.read(), 'invoice.pdf')
 
+
+            buffer_12_pct = BytesIO()
+            doc_12_pct = SimpleDocTemplate(buffer_12_pct, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=1 * cm,
+                                    bottomMargin=1 * cm)
+            from invoices.action_private_participation import pdf_private_invoice_pp
+            pdf_elements_12_pct = pdf_private_invoice_pp(modeladmin=None, request=None, queryset=batch_invoices,
+                                                         return_elements=True)
+            doc_12_pct.build(pdf_elements_12_pct)
+            buffer_12_pct.seek(0)
+            instance.generated_12_percent_invoice_files = ContentFile(buffer_12_pct.read(), 'invoice_12_pct.pdf')
+
             merger = PdfMerger()
             for file in copies_of_medical_prescriptions:
                 merger.append(file)

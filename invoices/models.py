@@ -30,12 +30,12 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from invoices.actions.gcontacts import GoogleContacts, async_delete_patient, async_create_or_update_new_patient
 from invoices.actions.helpers import invoice_itembatch_medical_prescription_filename, invoice_itembatch_prefac_filename, \
-    invoice_itembatch_ordo_filename, update_bedsore_pictures_filenames
+    invoice_itembatch_ordo_filename, update_bedsore_pictures_filenames, invoice_itembatch_12_pct_filename
 from invoices.employee import Employee
 from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.enums.medical import BedsoreEvolutionStatus
 from invoices.modelspackage import InvoicingDetails
-from invoices.processors.tasks import process_post_save, update_events_address
+#from invoices.processors.tasks import process_post_save, update_events_address
 from invoices.validators.validators import MyRegexValidator
 from invoices.xero.utils import get_xero_token, ensure_sub_contractor_contact_exists
 
@@ -1061,6 +1061,8 @@ class InvoiceItemBatch(models.Model):
                                    upload_to=invoice_itembatch_prefac_filename)
     generated_invoice_files = models.FileField("Facture CNS PDF", blank=True, null=True,
                                                upload_to=invoice_itembatch_medical_prescription_filename)
+    generated_12_percent_invoice_files = models.FileField("Facture 12% PDF", blank=True, null=True,
+                                                          upload_to=invoice_itembatch_12_pct_filename)
     batch_type = models.CharField(max_length=50, choices=BatchTypeChoices.choices, default=BatchTypeChoices.CNS_INF)
 
     # creation technical fields
@@ -1144,6 +1146,7 @@ class InvoiceItemBatch(models.Model):
 
 @receiver(post_save, sender=InvoiceItemBatch, dispatch_uid="invoiceitembatch_post_save")
 def invoiceitembatch_generate_pdf(sender, instance, **kwargs):
+    from invoices.processors.tasks import process_post_save
     if os.environ.get('LOCAL_ENV', None):
         print("Direct call post_save on InvoiceItemBatch %s" % instance)
         process_post_save(instance)

@@ -18,13 +18,12 @@ from reportlab.platypus.para import Paragraph
 from reportlab.platypus.tables import Table, TableStyle
 
 from invoices import settings
-from invoices.models import InvoiceItemEmailLog
 from invoices.xero.exceptions import XeroTokenRefreshError
 from invoices.xero.invoice import create_xero_invoice
 
 
 def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False,
-                           only_to_xero_or_any_accounting_system=False):
+                           only_to_xero_or_any_accounting_system=False, return_elements=False):
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(content_type='application/pdf')
     # Append invoice number and invoice date
@@ -62,7 +61,7 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False,
         for _prestations in dd:
             _inv = qs.invoice_number + (
                 ("" + str(dd.index(_prestations) + 1) + qs.invoice_date.strftime('%m%Y')) if len(dd) > 1 else "")
-            _result = _build_invoices(_prestations,
+            invoice_elmts = _build_invoices(_prestations,
                                       _inv,
                                       qs.invoice_date,
                                       qs.medical_prescription,
@@ -70,12 +69,15 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False,
                                       qs.accident_date,
                                       qs.patient_invoice_date,
                                       qs.patient)
-
-            elements.extend(_result["elements"])
-            recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_pp"]))
+            if invoice_elmts["elements"] is None:
+                continue
+            elements.extend(invoice_elmts["elements"])
+            recapitulatif_data.append((invoice_elmts["invoice_number"], invoice_elmts["patient_name"], invoice_elmts["invoice_pp"]))
             elements.append(PageBreak())
 
     elements.extend(_build_recap(_recap_date, _payment_ref, recapitulatif_data))
+    if return_elements:
+        return elements
     doc.build(elements)
     if attach_to_email:
         subject = "Votre Facture %s" % _payment_ref
@@ -93,7 +95,7 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False,
                 emails += config.CC_EMAIL_SENT.split(",")
             mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
             mail.attach("%s.pdf" % _payment_ref, io_buffer.getvalue(), 'application/pdf')
-
+            from invoices.models import InvoiceItemEmailLog
             try:
                 status = mail.send(fail_silently=False)
                 InvoiceItemEmailLog.objects.create(item=qs, recipient=qs.patient.email_address,
@@ -157,6 +159,12 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
             newData.append(('', '', '', 'Sous-Total', "%10.2f" % _gross_sum, "%10.2f" % _net_sum, "%10.2f" % _part_sum))
     _total_facture = _compute_sum(data[1:], 5)
     _participation_personnelle = decimal.Decimal(_compute_sum(data[1:], 4)) - decimal.Decimal(_total_facture)
+    if _participation_personnelle <= 0:
+        return {"elements": None
+            , "invoice_number": None
+            , "patient_name": patientName + " " + patient_first_name
+            , "invoice_amount": None
+            , "invoice_pp": None}
     newData.append(('', '', '', 'Total', "%10.2f" % _compute_sum(data[1:], 4), "%10.2f" % _compute_sum(data[1:], 5),
                     "%10.2f" % _compute_sum(data[1:], 6)))
 
