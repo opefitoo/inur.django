@@ -37,5 +37,5 @@ class Command(BaseCommand):
         # log output notify_system_via_google_webhook execution result
         exec_result = notify_system_via_google_webhook(string_events_by_patient)
         #exec_result = notify_system_via_google_webhook(string_events_by_patient)
-        self.stdout.write(self.style.SUCCESS('Notify result %s') % exec_result)
+        self.stdout.write(self.style.SUCCESS('Notify result %s' % exec_result))
         self.stdout.write(self.style.SUCCESS('Done'))
