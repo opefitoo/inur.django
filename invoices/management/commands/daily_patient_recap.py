@@ -1,6 +1,7 @@
 import datetime
 
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 from invoices.events import Event
 
@@ -10,8 +11,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         events_by_patient = {}
-        # loop through all events today's events
-        for event in Event.objects.filter(day=datetime.date.today()).order_by('time_start_event'):
+        # Get tomorrow's date
+        tomorrow = timezone.now().date() + datetime.timedelta(days=1)
+
+        # loop through all events of tomorrow's date
+        for event in Event.objects.filter(day=tomorrow).order_by('time_start_event'):
             if event.patient not in events_by_patient:
                 events_by_patient[event.patient] = []
             events_by_patient[event.patient].append(event)
@@ -22,7 +26,7 @@ class Command(BaseCommand):
             print(f"Patient: {patient}")
             string_events_by_patient += f"Patient: {patient}\n"
             for event in events:
-                if event.event_address:
+                if event.event_address or event.event_address.strip() != "":
                     string_events_by_patient += f"  *passage de {event.time_start_event} assigné à {event.employees} !!ATTENTION ADRESSE!! {event.event_address} *\n"
                 else:
                     string_events_by_patient += f"  passage de {event.time_start_event} assigné à {event.employees}\n"
