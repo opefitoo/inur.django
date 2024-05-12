@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from invoices.events import Event
+from invoices.notifications import notify_system_via_google_webhook
 
 
 class Command(BaseCommand):
@@ -34,6 +35,7 @@ class Command(BaseCommand):
 
         print(string_events_by_patient)
         # log output notify_system_via_google_webhook execution result
+        exec_result = notify_system_via_google_webhook(string_events_by_patient)
         #exec_result = notify_system_via_google_webhook(string_events_by_patient)
-        #self.stdout.write(self.style.SUCCESS('Notify result %s') % exec_result)
+        self.stdout.write(self.style.SUCCESS('Notify result %s') % exec_result)
         self.stdout.write(self.style.SUCCESS('Done'))
