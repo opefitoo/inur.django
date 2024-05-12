@@ -35,7 +35,8 @@ from invoices.employee import Employee
 from invoices.enums.generic import GenderType, BatchTypeChoices
 from invoices.enums.medical import BedsoreEvolutionStatus
 from invoices.modelspackage import InvoicingDetails
-#from invoices.processors.tasks import process_post_save, update_events_address
+from invoices.notifications import notify_system_via_google_webhook
+# from invoices.processors.tasks import process_post_save, update_events_address
 from invoices.validators.validators import MyRegexValidator
 from invoices.xero.utils import get_xero_token, ensure_sub_contractor_contact_exists
 
@@ -669,12 +670,17 @@ class AlternateAddress(models.Model):
             print("Found %d events : %s" % (events.count(), events))
         if len(events) > 5 and not os.environ.get('LOCAL_ENV', None):
             # call async task
+            from processors.tasks import update_events_address
             update_events_address.delay(events, self.full_address)
+            message = "Found %d events, will update address asynchronously" % events.count()
+            notify_system_via_google_webhook(message)
         else:
             for event in events:
                 event.event_address = self.full_address
                 event.clean()
                 event.save()
+                message = "Found %d events, will update address synchronously" % events.count()
+                notify_system_via_google_webhook(message)
 
 
 class Hospitalization(models.Model):
