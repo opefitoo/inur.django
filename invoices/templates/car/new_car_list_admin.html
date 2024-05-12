@@ -1,11 +1,14 @@
 {% load static %}
+{% csrf_token %}
 {% block content %}
+<a href="/admin" class="btn btn-primary">Home</a>
 <table id="carTable">
     <thead>
     <tr>
         <th>Car Name</th>
         <th>Locked</th>
         <th>Location</th>
+        <th>Booked For</th>
         <th>Lock</th>
         <th>Unlock</th>
     </tr>
