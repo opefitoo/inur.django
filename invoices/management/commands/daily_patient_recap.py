@@ -23,9 +23,9 @@ class Command(BaseCommand):
             string_events_by_patient += f"Patient: {patient}\n"
             for event in events:
                 if event.event_address:
-                    string_events_by_patient += f"  {event} at {event.time_start_event} assigned to {event.employees} in address {event.event_address}\n"
+                    string_events_by_patient += f"  *passage de {event.time_start_event} assigné à {event.employees} !!ATTENTION ADRESSE!! {event.event_address} *\n"
                 else:
-                    string_events_by_patient += f"  {event} at {event.time_start_event} assigned to {event.employees}\n"
+                    string_events_by_patient += f"  passage de {event.time_start_event} assigné à {event.employees}\n"
                 print(f"  {event} assigned to {event.employees} in address {event.event_address}")
 
         print(string_events_by_patient)
