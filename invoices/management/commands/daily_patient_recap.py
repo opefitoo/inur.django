@@ -22,8 +22,8 @@ class Command(BaseCommand):
             print(f"Patient: {patient}")
             string_events_by_patient += f"Patient: {patient}\n"
             for event in events:
-                string_events_by_patient += f"  {event} assigned to {event.employees} in address {event.address}\n"
-                print(f"  {event} assigned to {event.employees} in address {event.address}")
+                string_events_by_patient += f"  {event} assigned to {event.employees} in address {event.event_address}\n"
+                print(f"  {event} assigned to {event.employees} in address {event.event_address}")
 
         print(string_events_by_patient)
         # log output notify_system_via_google_webhook execution result
