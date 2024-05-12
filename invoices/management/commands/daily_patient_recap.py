@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         events_by_patient = {}
         # loop through all events today's events
-        for event in Event.objects.filter(day=datetime.date.today()):
+        for event in Event.objects.filter(day=datetime.date.today()).order_by('time_start_event'):
             if event.patient not in events_by_patient:
                 events_by_patient[event.patient] = []
             events_by_patient[event.patient].append(event)
@@ -22,7 +22,10 @@ class Command(BaseCommand):
             print(f"Patient: {patient}")
             string_events_by_patient += f"Patient: {patient}\n"
             for event in events:
-                string_events_by_patient += f"  {event} assigned to {event.employees} in address {event.event_address}\n"
+                if event.event_address:
+                    string_events_by_patient += f"  {event} at {event.time_start_event} assigned to {event.employees} in address {event.event_address}\n"
+                else:
+                    string_events_by_patient += f"  {event} at {event.time_start_event} assigned to {event.employees}\n"
                 print(f"  {event} assigned to {event.employees} in address {event.event_address}")
 
         print(string_events_by_patient)
