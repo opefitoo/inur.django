@@ -22,13 +22,14 @@ class Command(BaseCommand):
             events_by_patient[event.patient].append(event)
 
         string_events_by_patient = ""
+        string_events_by_patient += f"**Récapitulatif des passages du {tomorrow}**\n"
 
         for patient, events in events_by_patient.items():
             print(f"Patient: {patient}")
-            string_events_by_patient += f"Patient: {patient}\n"
+            string_events_by_patient += f"**Patient: {patient}**\n"
             for event in events:
                 if event.event_address or event.event_address.strip() != "":
-                    string_events_by_patient += f"  *passage de {event.time_start_event} assigné à {event.employees} !!ATTENTION ADRESSE!! {event.event_address} *\n"
+                    string_events_by_patient += f"  **passage de {event.time_start_event} assigné à {event.employees} !!ATTENTION ADRESSE!! {event.event_address} **\n"
                 else:
                     string_events_by_patient += f"  passage de {event.time_start_event} assigné à {event.employees}\n"
                 print(f"  {event} assigned to {event.employees} in address {event.event_address}")
@@ -37,5 +38,6 @@ class Command(BaseCommand):
         # log output notify_system_via_google_webhook execution result
         exec_result = notify_system_via_google_webhook(string_events_by_patient)
         #exec_result = notify_system_via_google_webhook(string_events_by_patient)
-        self.stdout.write(self.style.SUCCESS('Notify result %s' % exec_result))
+        print(f"Notify result {exec_result}")
+        self.stdout.write(self.style.SUCCESS('Notify result %s') % exec_result)
         self.stdout.write(self.style.SUCCESS('Done'))
