@@ -1,12 +1,11 @@
-
-
-# django model to store Employees Visits data got from Ios app that uses CLLocationManager
-
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from invoices.employee import Employee
 from invoices.models import Patient
+
+
+# django model to store Employees Visits data got from Ios app that uses CLLocationManager
 
 
 class EmployeeVisit(models.Model):
@@ -16,8 +15,8 @@ class EmployeeVisit(models.Model):
     class Meta:
         verbose_name = _("Visite d'employé")
         verbose_name_plural = _("Visites d'employés")
-
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name=_("Employé"))
+    # user instead of employee
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("Utilisateur"))
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, verbose_name=_("Patient"), blank=True, null=True)
     latitude = models.FloatField(_("Latitude"))
     longitude = models.FloatField(_("Longitude"))
