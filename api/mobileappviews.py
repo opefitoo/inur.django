@@ -38,7 +38,7 @@ class MobileVisitsViewSet(viewsets.ModelViewSet):
     queryset = EmployeeVisit.objects.all()
     serializer_class = MobileVisitsSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    search_fields = ['employee', 'patient', 'arrival', 'departure']
+    search_fields = ['user', 'patient', 'arrival_date_time', 'departure_date_time']
 
     def get_queryset(self):
         """
