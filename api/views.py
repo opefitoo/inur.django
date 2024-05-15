@@ -32,7 +32,7 @@ from api.serializers import UserSerializer, GroupSerializer, CareCodeSerializer,
     EmployeeAvatarSerializer, EmployeeSerializer, EmployeeContractSerializer, FullCalendarEventSerializer, \
     FullCalendarEmployeeSerializer, FullCalendarPatientSerializer, \
     LongTermMonthlyActivitySerializer, DistanceMatrixSerializer, ShiftSerializer, EmployeeShiftSerializer, \
-    SubContractorSerializer, SimplifiedTimesheetSerializer, CarSerializer
+    SubContractorSerializer, SimplifiedTimesheetSerializer, CarSerializer, CarBookingSerializer
 from api.utils import get_settings
 from dependence.activity import LongTermMonthlyActivity
 from dependence.careplan import CarePlanDetail, CarePlanMaster
@@ -63,6 +63,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
+
 
 class EmployeeAvatarSerializerViewSet(viewsets.ModelViewSet):
     """
@@ -661,6 +662,7 @@ def memory_profile(request):
     response_content = "\n".join(f"{typ}: {num}" for typ, num in top_types)
     return HttpResponse(response_content, content_type="text/plain")
 
+
 def my_memory_debug_view(request):
     objects_of_type = objgraph.by_type('builtins.list')
     if not objects_of_type:
@@ -821,6 +823,8 @@ def get_bank_holidays(request):
     if 'GET' == request.method:  # user posting data
         reqs = holidays.get_bank_holidays(request.GET.get("year"), request.GET.get("month"))
         return Response(reqs, status=status.HTTP_200_OK)
+
+
 @cache_page(60 * 60 * 24)  # Cache page for 24 hours
 @api_view(['GET'])
 def how_many_care_given(request):
@@ -828,12 +832,14 @@ def how_many_care_given(request):
         reqs = Prestation.objects.all().count() + Event.objects.filter(state=3).count()
         return Response(reqs, status=status.HTTP_200_OK)
 
+
 @cache_page(60 * 60 * 24)
 @api_view(['GET'])
 def how_many_patients(request):
     if 'GET' == request.method:
         reqs = Patient.objects.all().count()
         return Response(reqs, status=status.HTTP_200_OK)
+
 
 @cache_page(60 * 60 * 24)
 @api_view(['GET'])
@@ -944,6 +950,16 @@ class LockCarView(APIView):
         if json.loads(lock_response['message'])['success']:
             car.get_current_booking(request.user).lock_car()
         return JsonResponse(lock_response)
+
+
+class CurrentUserCarBookingView(generics.ListAPIView):
+    serializer_class = CarBookingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        current_time = timezone.now()
+        return CarBooking.objects.filter(user=self.request.user, start_time__lte=current_time,
+                                         end_time__gte=current_time)
 
 
 class CarBookingListView(APIView):

@@ -6,7 +6,8 @@ from rest_framework.authtoken.views import obtain_auth_token
 from api import views, cnsstatsviews
 from api.clockinview import simplified_timesheet_clock_in_view, simplified_timesheet_clock_out_view
 from api.converterview import MT940toOFXConverterView
-from api.views import LockCarView, UnlockCarView, car_location, is_car_locked, can_user_lock_car, CarBookingListView
+from api.views import LockCarView, UnlockCarView, car_location, is_car_locked, can_user_lock_car, CarBookingListView, \
+    CurrentUserCarBookingView
 
 router = routers.DefaultRouter()
 # router.register(r'users', views.UserViewSet)
@@ -65,6 +66,7 @@ urlpatterns += [
     path('v1/is_car_locked/<int:car_id>/', is_car_locked, name='is_car_locked'),
     path('v1/can_user_lock_car/<int:car_id>/', can_user_lock_car, name='can_user_lock_car'),
     path('v1/car_bookings/', CarBookingListView.as_view(), name='car_booking_list'),
+    path('current-user-car-booking/', CurrentUserCarBookingView.as_view(), name='current-user-car-booking'),
 ]
 
 urlpatterns += [
@@ -81,4 +83,12 @@ urlpatterns += [
     path('v1/memory_profile/', views.memory_profile, name='memory_profile'),
     # my_memory_debug_view
     path('v1/my_memory_debug_view/', views.my_memory_debug_view, name='my_memory_debug_view'),
+]
+
+
+# urls for mobile app
+
+
+urlpatterns += [
+    path('v1/mobile/', include('api.mobileurls')),
 ]

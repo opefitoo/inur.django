@@ -21,7 +21,7 @@ from invoices.holidays import HolidayRequest
 from invoices.models import CareCode, Patient, Prestation, InvoiceItem, Physician, MedicalPrescription, Hospitalization, \
     ValidityDate, InvoiceItemBatch, extract_birth_date_iso, SubContractor
 from invoices.modelspackage import InvoicingDetails
-from invoices.resources import Car
+from invoices.resources import Car, CarBooking
 from invoices.timesheet import Timesheet, TimesheetTask, SimplifiedTimesheet
 
 
@@ -626,7 +626,31 @@ class LongTermMonthlyActivitySerializer(serializers.ModelSerializer):
 
         return instance
 
+
+class CarBookingSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = CarBooking
+        exclude = ['car_link']
+
+
 class CarSerializer(serializers.ModelSerializer):
+    can_lock = serializers.SerializerMethodField()
+    can_unlock = serializers.SerializerMethodField()
+    booked_for = CarBookingSerializer(read_only=True)
+    #booked_for = serializers.SerializerMethodField()
+
     class Meta:
         model = Car
-        fields = ['id', 'name', 'vin_number']
+        fields = ['id', 'name', 'vin_number', 'can_lock', 'can_unlock', 'booked_for']
+
+    def get_can_lock(self, obj):
+        # Assuming you have a method in your Car model that takes a user and returns a boolean
+        return obj.can_user_lock(self.context['request'].user)
+
+    def get_can_unlock(self, obj):
+        # Assuming you have a method in your Car model that takes a user and returns a boolean
+        return obj.can_user_unlock(self.context['request'].user)
+
+
