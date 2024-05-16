@@ -114,7 +114,7 @@ class LongTermCareMonthlyStatementSendingInline(admin.TabularInline):
 @admin.register(LongTermCareMonthlyStatement)
 class LongTermCareMonthlyStatementAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
     list_display = ('year', 'month', 'date_of_submission', 'display_object_actions_list')
-    readonly_fields = ('created_on', 'updated_on')
+    readonly_fields = ('created_on', 'updated_on', 'display_longTermCareInvoiceFiles')
     inlines = [LongTermCareMonthlyStatementSendingInline]
 
     object_actions = [

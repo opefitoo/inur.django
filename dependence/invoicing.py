@@ -140,6 +140,12 @@ class LongTermCareMonthlyStatement(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    def get_invoices(self):
+        return LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement=self).all().all().order_by('id')
+
+    def display_longTermCareInvoiceFiles(self):
+        return mark_safe('<br>'.join([f"{invoice}" for invoice in self.get_invoices]))
+
     def generate_invoice_pdf_from_template_from_field_forms(self, sending_to_update=None):
         pdf_path = 'dependence/pdf/ASS_DEP_TEMPL_WIT_FORMS.pdf'
         doc = fitz.open(pdf_path)
