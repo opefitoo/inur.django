@@ -732,6 +732,8 @@ class LongTermCareInvoiceFile(models.Model):
     # patient only under dependance_insurance
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='patient',
                                 limit_choices_to=Q(is_under_dependence_insurance=True))
+    long_term_invoice_file_that_corrects = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
+    invoice_sequence_number = models.PositiveIntegerField(_('Invoice Sequence Number'), default=1)
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
