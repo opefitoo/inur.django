@@ -1657,6 +1657,7 @@ class GenericTaskDescriptionInline(admin.TabularInline):
 class EventLinkToCareCodeInline(admin.TabularInline):
     extra = 0
     model = EventLinkToCareCode
+    autocomplete_fields = ['care_code']
 
 
 class EventLinkToMedicalCareSummaclryPerPatientDetailInline(admin.TabularInline):
