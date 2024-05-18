@@ -1582,7 +1582,7 @@ class Prestation(models.Model):
         return self.invoice_item.patient
 
     def __str__(self):  # Python 3: def __str__(self):
-        return '%s - %s' % (self.carecode.code, self.carecode.name)
+        return '%s - %s on %s' % (self.carecode.code, self.carecode.name, self.date)
 
     @staticmethod
     def autocomplete_search_fields():
