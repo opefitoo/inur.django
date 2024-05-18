@@ -166,6 +166,12 @@ class Event(models.Model):
                         medical_care_summary_per_patient_detail=medical_care_summary.medical_care_summary_per_patient_detail)
                     new_event_link_to_medical_care_summary.save()
                 new_event.save()
+                # duplicate EventGenericLink objects
+                for event_generic_link in self.eventgenericlink_set.all():
+                    new_event_generic_link = EventGenericLink.objects.create(event=new_event,
+                                                                            content_type=event_generic_link.content_type,
+                                                                            object_id=event_generic_link.object_id)
+                    new_event_generic_link.save()
                 events_created.append(new_event)
         return events_created
 
