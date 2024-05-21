@@ -180,15 +180,15 @@ class EmployeeAdmin(admin.ModelAdmin):
             return
         # get all the events for tomorrow and send them by email to employee
         tomorrow = timezone.now() + datetime.timedelta(days=1)
-        tomorrow_events = Event.objects.filter(day=tomorrow)
-        # create a beautiful text in french that lists all events of the day
-        text = ""
-        if len(tomorrow_events) == 0:
-            text = "Pas d'événements pour demain."
-        for event in tomorrow_events:
-            text += f"{event.day} {event.time_start_event} {event.time_end_event} {event.event_type_enum} {event.patient} : {event.notes} \n"
         # send the email
         for emp in queryset:
+            tomorrow_events = Event.objects.filter(day=tomorrow, employees=emp)
+            # create a beautiful text in french that lists all events of the day
+            text = ""
+            if len(tomorrow_events) == 0:
+                text = "Pas d'événements pour demain."
+            for event in tomorrow_events:
+                text += f"{event.day} {event.time_start_event} {event.time_end_event} {event.event_type_enum} {event.patient} : {event.notes} \n"
             emp.send_email_with_events(text, tomorrow)
         self.message_user(request, "Email envoyé avec succès.",
                             level=messages.INFO)
