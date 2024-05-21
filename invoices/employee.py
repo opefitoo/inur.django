@@ -229,10 +229,10 @@ class Employee(models.Model):
 
     def send_email_with_events(self, text, date_planning):
         # send email text to employee
-        employee_email = self.user.email
+        employee_email = self.user.personal_email
         admin_email = Employee.objects.get(id=1).user.email
         # send email to employee
-        to_emails = [employee_email, admin_email]
+        to_emails = [self.user.email, employee_email, admin_email]
         # format date to french only DD-MM-YYYY
         date_planning = date_planning.strftime('%d-%m-%Y')
         from invoices.notifications import send_email_notification
