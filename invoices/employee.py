@@ -229,7 +229,7 @@ class Employee(models.Model):
 
     def send_email_with_events(self, text, date_planning):
         # send email text to employee
-        employee_email = self.user.personal_email
+        employee_email = self.personal_email
         admin_email = Employee.objects.get(id=1).user.email
         # send email to employee
         to_emails = [self.user.email, employee_email, admin_email]
