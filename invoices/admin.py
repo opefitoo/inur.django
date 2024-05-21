@@ -186,7 +186,7 @@ class EmployeeAdmin(admin.ModelAdmin):
         if len(tomorrow_events) == 0:
             text = "Pas d'événements pour demain."
         for event in tomorrow_events:
-            text += f"{event.day} {event.start_time} {event.end_time} {event.event_type_enum} {event.patient} {event.description} \n"
+            text += f"{event.day} {event.time_start_event} {event.time_end_event} {event.event_type_enum} {event.patient} : {event.notes} \n"
         # send the email
         for emp in queryset:
             emp.send_email_with_events(text, tomorrow)
