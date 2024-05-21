@@ -189,7 +189,7 @@ class EmployeeAdmin(admin.ModelAdmin):
                 text = "Pas d'événements pour demain."
             for event in tomorrow_events:
                 event_notes = event.notes if event.notes else "Soins habituels"
-                text += f"{event.day} entre approx. {event.time_start_event} et approx. {event.time_end_event} chez {event.patient}: {event_notes} \n"
+                text += f"🔘 de approx. {event.time_start_event} à approx. {event.time_end_event} chez {event.patient}: {event_notes} \n"
             emp.send_email_with_events(text, tomorrow)
         self.message_user(request, "Email envoyé avec succès.",
                             level=messages.INFO)
