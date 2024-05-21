@@ -181,6 +181,7 @@ class EmployeeAdmin(admin.ModelAdmin):
         # get all the events for tomorrow and send them by email to employee
         tomorrow = timezone.now() + datetime.timedelta(days=1)
         # send the email
+        employees_who_will_receive_email = []
         for emp in queryset:
             tomorrow_events = Event.objects.filter(day=tomorrow, employees=emp)
             # create a beautiful text in french that lists all events of the day
@@ -191,9 +192,10 @@ class EmployeeAdmin(admin.ModelAdmin):
                 event_notes = event.notes if event.notes else "Soins habituels"
                 text += f"🔘 de approx. {event.time_start_event} à approx. {event.time_end_event} chez {event.patient}: {event_notes} \n"
             emp.send_email_with_events(text, tomorrow)
-        self.message_user(request, "Email envoyé avec succès.",
-                            level=messages.INFO)
-
+            employees_who_will_receive_email.append(emp)
+        self.message_user(request, "Email envoyé à %s employés. %s " % (len(employees_who_will_receive_email),
+                                                                        employees_who_will_receive_email),
+                          level=messages.INFO)
 
     def save_model(self, request, obj, form, change):
         if 'avatar' in form.changed_data:
