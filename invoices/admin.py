@@ -586,7 +586,8 @@ class PatientAdmin(CSVExportAdmin):
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
                   'country', 'phone_number', 'email_address', 'date_of_death']
-    readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions', 'link_to_events')
+    readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions', 'link_to_events',
+                       'link_to_all_events_of_last_3_months')
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode', 'city', 'phone_number', 'email_address']
     # actions = [calculate_distance_matrix]
     form = PatientForm
@@ -781,6 +782,14 @@ class PatientAdmin(CSVExportAdmin):
             '<a href="%s">%s</a>' % (url, "Tous les événements Generic du patient ici (%d)" % Event.objects.filter(
                 patient_id=instance.id, event_type_enum__exact=EventTypeEnum.GENERIC).count()))
 
+    def link_to_all_events_of_last_3_months(self, instance):
+        url = f'{reverse("admin:invoices_eventlist_changelist")}?patient__id={instance.id}&day__gte={datetime.date.today() - datetime.timedelta(days=90)}&day__lte={datetime.date.today()}&o=-1.-2'
+        return mark_safe(
+            '<a href="%s">%s</a>' % (url, "Deniers passages du patient (%d)" % Event.objects.filter(
+                patient_id=instance.id, day__gte=datetime.date.today() - datetime.timedelta(days=90),
+                day__lte=datetime.date.today()).count()))
+
+    link_to_all_events_of_last_3_months.short_description = "Deniers passages du patient"
     link_to_medical_prescriptions.short_description = "Ordonnances client"
     link_to_events.short_description = "Evénements client"
 
