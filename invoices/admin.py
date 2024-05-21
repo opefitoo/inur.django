@@ -167,10 +167,32 @@ class EmployeeAdmin(admin.ModelAdmin):
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
     readonly_fields = ['total_number_of_un_validated_events', 'minified_avatar', 'minified_avatar_base64']
     list_filter = [IsInvolvedInHealthCareFilter]
-    actions = ['work_certificate', 'contracts_situation_certificate', 'entry_declaration',
+    actions = ['send_tomorrows_events', 'work_certificate', 'contracts_situation_certificate', 'entry_declaration',
                'export_employees_data_to_csv',
                create_google_contact, cleanup_contacts, cleanup_some_contacts,
                'generate_annual_report_for_2023']
+
+    def send_tomorrows_events(self, request, queryset):
+        # if not super user, return
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
+                              level=messages.ERROR)
+            return
+        # get all the events for tomorrow and send them by email to employee
+        tomorrow = timezone.now() + datetime.timedelta(days=1)
+        tomorrow_events = Event.objects.filter(day=tomorrow)
+        # create a beautiful text in french that lists all events of the day
+        text = ""
+        if len(tomorrow_events) == 0:
+            text = "Pas d'événements pour demain."
+        for event in tomorrow_events:
+            text += f"{event.day} {event.start_time} {event.end_time} {event.event_type_enum} {event.patient} {event.description} \n"
+        # send the email
+        for emp in queryset:
+            emp.send_email_with_events(text, tomorrow)
+        self.message_user(request, "Email envoyé avec succès.",
+                            level=messages.INFO)
+
 
     def save_model(self, request, obj, form, change):
         if 'avatar' in form.changed_data:

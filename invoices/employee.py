@@ -227,6 +227,19 @@ class Employee(models.Model):
         else:
             return None
 
+    def send_email_with_events(self, text, date_planning):
+        # send email text to employee
+        employee_email = self.user.email
+        admin_email = Employee.objects.get(id=1).user.email
+        # send email to employee
+        to_emails = [employee_email, admin_email]
+        # format date to french only DD-MM-YYYY
+        date_planning = date_planning.strftime('%d-%m-%Y')
+        from invoices.notifications import send_email_notification
+        send_email_notification(u'Programme de la journée du %s' % date_planning,
+                                'Bonjour %s, Voici le planning du %s \n%s' % (self.user.first_name, date_planning, text),
+                                to_emails)
+
     def get_contracts_between_dates(self, start_date, end_date):
         return self.employeecontractdetail_set.filter(
             Q(start_date__lte=end_date, end_date__gte=start_date) |
