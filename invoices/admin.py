@@ -183,7 +183,8 @@ class EmployeeAdmin(admin.ModelAdmin):
         # send the email
         employees_who_will_receive_email = []
         for emp in queryset:
-            tomorrow_events = Event.objects.filter(day=tomorrow, employees=emp)
+            tomorrow_events = Event.objects.filter(day=tomorrow, employees=emp, state__in=[1, 2]).order_by(
+                'time_start_event')
             # create a beautiful text in french that lists all events of the day
             text = ""
             if len(tomorrow_events) == 0:
