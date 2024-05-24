@@ -167,7 +167,7 @@ class EmployeeAdmin(admin.ModelAdmin):
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
     readonly_fields = ['total_number_of_un_validated_events', 'minified_avatar', 'minified_avatar_base64']
     list_filter = [IsInvolvedInHealthCareFilter]
-    actions = ['send_tomorrows_events', 'work_certificate', 'contracts_situation_certificate', 'entry_declaration',
+    actions = ['send_tomorrows_events', 'send_todays_events', 'work_certificate', 'contracts_situation_certificate', 'entry_declaration',
                'export_employees_data_to_csv',
                create_google_contact, cleanup_contacts, cleanup_some_contacts,
                'generate_annual_report_for_2023']
@@ -184,7 +184,7 @@ class EmployeeAdmin(admin.ModelAdmin):
         employees_who_will_receive_email = []
         for emp in queryset:
             tomorrow_events = Event.objects.filter(day=tomorrow, employees=emp, state__in=[1, 2]).order_by(
-                'time_start_event')
+                '-time_start_event')
             # create a beautiful text in french that lists all events of the day
             text = ""
             if len(tomorrow_events) == 0:
@@ -193,6 +193,27 @@ class EmployeeAdmin(admin.ModelAdmin):
                 event_notes = event.notes if event.notes else "Soins habituels"
                 text += f"🔘 de approx. {event.time_start_event} à approx. {event.time_end_event} chez {event.patient}: {event_notes} \n"
             emp.send_email_with_events(text, tomorrow)
+            employees_who_will_receive_email.append(emp)
+        self.message_user(request, "Email envoyé à %s employés. %s " % (len(employees_who_will_receive_email),
+                                                                        employees_who_will_receive_email),
+                          level=messages.INFO)
+    def send_todays_events(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
+                              level=messages.ERROR)
+            return
+        today = timezone.now()
+        employees_who_will_receive_email = []
+        for emp in queryset:
+            today_events = Event.objects.filter(day=today, employees=emp, state__in=[1, 2]).order_by(
+                '-time_start_event')
+            text = ""
+            if len(today_events) == 0:
+                text = "Pas d'événements pour aujourd'hui."
+            for event in today_events:
+                event_notes = event.notes if event.notes else "Soins habituels"
+                text += f"🔘 de approx. {event.time_start_event} à approx. {event.time_end_event} chez {event.patient}: {event_notes} \n"
+            emp.send_email_with_events(text, today)
             employees_who_will_receive_email.append(emp)
         self.message_user(request, "Email envoyé à %s employés. %s " % (len(employees_who_will_receive_email),
                                                                         employees_who_will_receive_email),
