@@ -1855,7 +1855,7 @@ class EventListAdmin(admin.ModelAdmin):
                "duplicate_event_for_the_hole_week",
                'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
-               'send_webhook_message', 'create_invoice_item_out_of_events']
+               'send_webhook_message', 'create_assurance_dependance_invoice_out_of_events']
     inlines = (ReportPictureInLine, EventLinkToCareCodeInline,
                EventLinkToMedicalCareSummaclryPerPatientDetailInline,
                EventGenericLinkInline,
@@ -1980,6 +1980,13 @@ class EventListAdmin(admin.ModelAdmin):
             self.message_user(request, "Vous n'avez pas le droit de créer des factures d'assurance dépendance.",
                               level=messages.WARNING)
             return
+        if len(set([e.patient for e in queryset])) > 1:
+            self.message_user(request, "Tous les événements doivent être pour le même patient. or vous avez sélectionné des patients suivants %s" % set([e.patient for e in queryset]), level=messages.WARNING)
+            return
+        # check that all events are in the same month
+        if len(set([e.day.month for e in queryset])) > 1:
+            self.message_user(request, "Tous les événements doivent être pour le même mois.", level=messages.WARNING)
+            return
         # check event start is the first day of the month
         invoice_start_period = queryset[0].day.replace(day=1)
         # invoice end date should be the last day of the month
@@ -1991,7 +1998,7 @@ class EventListAdmin(admin.ModelAdmin):
                                                                    patient=queryset[0].patient)
         # FIXME: hardcoded values
         long_term_care_package_amd_gi = LongTermPackage.objects.get(code="AMDGI")
-        subcontractor = SubContractor.objects.get(name="APEMH home-service")
+        subcontractor = SubContractor.objects.get(name="OP DER SCHOCK a.s.b.l. et s.c.")
         for event in queryset:
             if event.state == 3:
                 LongTermCareInvoiceItem.objects.create(invoice=long_term_invoice, care_date=event.day,

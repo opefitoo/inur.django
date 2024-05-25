@@ -540,6 +540,9 @@ class PatientSubContractorRelationship(models.Model):
     subcontractor = models.ForeignKey(SubContractor, on_delete=models.CASCADE)
     relationship_type = models.CharField(max_length=50, choices=RELATIONSHIP_TYPE_CHOICES)
 
+    def is_main_company(self):
+        return self.relationship_type == 'main_company'
+
     def __str__(self):
         return f"{self.patient.name} - {self.subcontractor.name} ({self.get_relationship_type_display()})"
 

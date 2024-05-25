@@ -941,6 +941,14 @@ class LongTermCareInvoiceItem(models.Model):
         verbose_name = _("Item facture assurance dépendance")
         verbose_name_plural = _("Item de facture assurance dépendance")
 
+    # get who really did the care
+    def get_caregiver(self):
+        if self.subcontractor:
+            relationship = PatientSubContractorRelationship.objects.filter(patient=self.invoice.patient, subcontractor=self.subcontractor).get()
+            if relationship.relationship_type == PatientSubContractorRelationship.RELATIONSHIP_TYPE_CHOICES[0][0]:
+                return InvoicingDetails.objects.filter(default_invoicing=True).first().name
+            else:
+                return self.subcontractor
     def calculate_price(self, take_paid_or_refused_by_insurance_into_account=True, take_subcontractor_into_account=True):
         if take_paid_or_refused_by_insurance_into_account and (self.paid or self.refused_by_insurance):
             return 0
@@ -976,6 +984,9 @@ class LongTermCareInvoiceItem(models.Model):
             # price for specific care_date
             return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
                                                                     month=self.care_date.month)
+    def gross_unit_price(self):
+        return self.long_term_care_package.price_per_year_month(year=self.care_date.year,
+                                                                month=self.care_date.month)
 
     def clean(self):
         self.validate_item_dates_are_in_same_month_year_as_invoice()
