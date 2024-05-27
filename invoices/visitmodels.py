@@ -26,4 +26,4 @@ class EmployeeVisit(models.Model):
     updated_at = models.DateTimeField(_("Dernière mise à jour"), auto_now=True)
 
     def __str__(self):
-        return f"{self.user} - {self.patient} - {self.timestamp}"
+        return f"{self.user} - {self.patient} - {self.arrival_date_time}"
