@@ -22,6 +22,8 @@ class EmployeeVisit(models.Model):
     longitude = models.FloatField(_("Longitude"))
     arrival_date_time = models.DateTimeField(_("Arrivée"))
     departure_date_time = models.DateTimeField(_("Départ"), blank=True, null=True)
+    created_at = models.DateTimeField(_("Date de création"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Dernière mise à jour"), auto_now=True)
 
     def __str__(self):
         return f"{self.employee} - {self.patient} - {self.timestamp}"

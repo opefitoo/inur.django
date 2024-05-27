@@ -73,6 +73,7 @@ from invoices.salaries import EmployeesMonthlyPayslipFile, EmployeePaySlip
 from invoices.timesheet import Timesheet, TimesheetDetail, TimesheetTask, \
     SimplifiedTimesheetDetail, SimplifiedTimesheet, PublicHolidayCalendarDetail, PublicHolidayCalendar
 from invoices.utils import EventCalendar
+from invoices.visitmodels import EmployeeVisit
 from invoices.xeromodels import XeroToken
 
 
@@ -2402,3 +2403,10 @@ class EmployeesMonthlyPayslipFileAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
+
+
+@admin.register(EmployeeVisit)
+class EmployeeVisitAdmin(admin.ModelAdmin):
+    list_filter = ('user', 'patient')
+    search_fields = ('patient__user', )
+    readonly_fields = ('created_at', 'updated_at')
