@@ -85,34 +85,33 @@ class EmployeePaySlip(models.Model):
         return f"{self.employee} - {self.year} - {self.month}"
 
     def send_payslip_by_email_in_attachment(self):
-        # Send the payslip by email as an attachment
-        email_address = self.employee.user.email
-        subject = f"Bulletin de salaire {self.year} - {self.month}"
-        message = "Veuillez trouver ci-joint votre bulletin de salaire. Si ce message vous est parvenu par erreur, veuillez le supprimer et nous en informer, merci. Cordialement."
-        # Configure S3
-        # s3 = boto3.client('s3')
-        # load_dotenv(verbose=True)
-        import os
-        bucket_name = os.environ['AWS_STORAGE_BUCKET_NAME']
-        key = self.file.name  # The file's path in S3
-        # Get the file content from S3
-        # response = s3.get_object(Bucket=bucket_name, Key=key)
-        file_content = self.file.read()
-        if not self.employee.personal_email:
-            emails = [email_address]
-        else:
-            emails = [email_address, self.employee.personal_email]
-        mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
-        part = MIMEApplication(file_content, 'pdf')
-        part.add_header('Content-Disposition', 'attachment',
-                        filename=f"{self.year}_{self.month}_{self.employee.user.last_name}_{self.employee.user.first_name}_bulletin_de_salaire.pdf")
-        mail.attach(part)
-        # Open the file from the FileField and attach it to the email
-
         try:
+            # Send the payslip by email as an attachment
+            email_address = self.employee.user.email
+            subject = f"Bulletin de salaire {self.year} - {self.month}"
+            message = "Veuillez trouver ci-joint votre bulletin de salaire. Si ce message vous est parvenu par erreur, veuillez le supprimer et nous en informer, merci. Cordialement."
+            # Configure S3
+            # s3 = boto3.client('s3')
+            # load_dotenv(verbose=True)
+            # Get the file content from S3
+            # response = s3.get_object(Bucket=bucket_name, Key=key)
+            file_content = self.file.read()
+            if not self.employee.personal_email:
+                emails = [email_address]
+            else:
+                emails = [email_address, self.employee.personal_email]
+            mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, emails)
+            part = MIMEApplication(file_content, 'pdf')
+            part.add_header('Content-Disposition', 'attachment',
+                            filename=f"{self.year}_{self.month}_{self.employee.user.last_name}_{self.employee.user.first_name}_bulletin_de_salaire.pdf")
+            mail.attach(part)
+            # Open the file from the FileField and attach it to the email
+
             status = mail.send(fail_silently=False)
             print("Email sent successfully to %s" % email_address)
             return status
         except Exception as e:
             print("Error sending email to %s" % email_address)
+            # Log the error
+            print("Error: %s" % e)
             return False
