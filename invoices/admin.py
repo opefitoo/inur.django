@@ -41,7 +41,7 @@ from invoices.action_private import pdf_private_invoice
 from invoices.action_private_participation import pdf_private_invoice_pp
 from invoices.actions.carecodes import update_prices_for_september_2023
 from invoices.actions.certificates import generate_pdf
-from invoices.actions.invoices import generer_forfait_aev_avril_2024
+from invoices.actions.invoices import generer_forfait_aev_mai_2024
 # from invoices.actions.maps import calculate_distance_matrix
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.distancematrix import DistanceMatrix
@@ -639,7 +639,7 @@ class PatientAdmin(CSVExportAdmin):
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode', 'city', 'phone_number', 'email_address']
     # actions = [calculate_distance_matrix]
     form = PatientForm
-    actions = [generer_forfait_aev_avril_2024, "generate_annual_report_for_2023",
+    actions = [generer_forfait_aev_mai_2024, "generate_annual_report_for_2023",
                "number_of_hospitalizations_in_2023",
                "number_of_dead_patients_in_2023", "number_of_patients_in_2023", "filter_without_gender", ]
     inlines = [HospitalizationInline, MedicalPrescriptionInlineAdmin, PatientAdminFileInline, AlternateAddressInline,
