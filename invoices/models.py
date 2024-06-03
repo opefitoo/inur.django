@@ -244,7 +244,7 @@ class Physician(models.Model):
 
     @staticmethod
     def autocomplete_search_fields():
-        return 'name', 'first_name'
+        return 'name', 'first_name', 'full_name_from_cns', 'provider_code'
 
     # do some validations
     def clean(self, *args, **kwargs):
@@ -263,6 +263,9 @@ class Physician(models.Model):
         return messages
 
     def __str__(self):
+        # if name and first_name are empty, return the full_name_from_cns
+        if self.name is None and self.first_name is None:
+            return self.full_name_from_cns
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
     def __str__(self):  # Python 3: def __str__(self):
