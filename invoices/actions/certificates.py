@@ -51,8 +51,9 @@ def generate_pdf(queryset):
                                                                    w_position.number_of_hours,
                                                                    queryset[0].occupation),
                 styles['Justify']))
+            elements.append(Spacer(2, 20))
             elements.append(Paragraph(
-                u"L'employé est tenu de respecter le secret professionnel et de ne pas divulguer des informations "
+                u"L'employé(e) est tenu de respecter le secret professionnel et de ne pas divulguer des informations "
                 u"confidentielles concernant les usagers (patients), les collègues et l'entreprise.",
                 styles['Justify']))
         else:
@@ -64,7 +65,7 @@ def generate_pdf(queryset):
             # add another paragraph that stipulates that employee needs to respect professional secrecy
             elements.append(Spacer(2, 20))
             elements.append(Paragraph(
-                u"L'employé est tenu de respecter le secret professionnel et de ne pas divulguer des informations "
+                u"L'employé(e) est tenu de respecter le secret professionnel et de ne pas divulguer des informations "
                 u"confidentielles concernant les usagers (patients), les collègues et l'entreprise.",
                 styles['Justify']))
         elements.append(Spacer(1, 20))
