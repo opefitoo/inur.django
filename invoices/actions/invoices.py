@@ -24,7 +24,7 @@ def generer_forfait_aev_mai_2024(self, request, queryset):
     if len(final_result) > 0:
         #  final_result string with list of invoice numbers
         invoice_numbers = ", ".join([str(x) for x in final_result])
-        self.message_user(request, "Forfait AEV Fevrier généré avec succès %s factures générées %s" % (
+        self.message_user(request, "Forfait AEV Mai généré avec succès %s factures générées %s" % (
             len(final_result), invoice_numbers),
                           level=messages.INFO)
     else:
