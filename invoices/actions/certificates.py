@@ -51,6 +51,10 @@ def generate_pdf(queryset):
                                                                    w_position.number_of_hours,
                                                                    queryset[0].occupation),
                 styles['Justify']))
+            elements.append(Paragraph(
+                u"L'employé est tenu de respecter le secret professionnel et de ne pas divulguer des informations "
+                u"confidentielles concernant les usagers (patients), les collègues et l'entreprise.",
+                styles['Justify']))
         else:
             elements.append(Paragraph(
                 u"du %s jusqu´à présent %s h./semaine en qualité de : %s" % (w_position.start_date.strftime('%d/%m/%Y'),
