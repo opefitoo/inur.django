@@ -2407,6 +2407,7 @@ class EmployeesMonthlyPayslipFileAdmin(admin.ModelAdmin):
 
 @admin.register(EmployeeVisit)
 class EmployeeVisitAdmin(admin.ModelAdmin):
-    list_filter = ('user', 'patient')
+    list_filter = ('user', SmartPatientFilter)
+    list_display = ('user', 'arrival_date_time', 'departure_date_time','created_at')
     search_fields = ('patient__user', )
     readonly_fields = ('created_at', 'updated_at')
