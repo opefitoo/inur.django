@@ -563,18 +563,28 @@ def has_no_anomalie_prestation(element):
     return not element.find('.//anomaliePrestation') is not None
 
 def detect_anomalies(instance):
+    # Get the current script's directory
+    current_directory = os.path.dirname(os.path.abspath(__file__))
     # Parse the XML file
-    tree = ET.parse(instance.received_invoice_file_response)
-    root = tree.getroot()
+    # Load the XSD schema file
+    xsd_path = os.path.join(current_directory, 'xsd', 'ad-fichierfacturationretour-506.xsd')
+    xsd_schema = xmlschema.XMLSchema(xsd_path)
 
-    # Navigate to the 'montantNet' element and extract its text content
-    montant_net_element = root.find('./entete/paiementGroupeTraitement/montantNet')
-    montant_brut_element = root.find('./entete/paiementGroupeTraitement/montantBrut')
-    if montant_brut_element is None or montant_net_element is None:
-        raise ValueError("Could not find montantBrut or montantNet in the XML.")
+    #xml_file = instance.received_invoice_file_response.storage.open(instance.received_invoice_file_response.name)
 
-    montant_brut = float(montant_brut_element.text)
-    montant_net = float(montant_net_element.text)
+    # Parse and validate the XML document
+    try:
+        xml_document = xsd_schema.to_dict(instance.received_invoice_file_response.file)
+    except xmlschema.XMLSchemaValidationError as e:
+        print(f"XML document is not valid: {e}")
+        return
+
+    # Now xml_document is a Python dictionary that represents your XML document
+    # You can navigate and validate the XML document using standard Python dictionary operations
+
+    # Extract montantBrut and montantNet
+    montant_brut = xml_document['fichierFacturation']['montantBrut']
+    montant_net = xml_document['fichierFacturation']['montantNet']
 
     # Compare montantBrut and montantNet
     if montant_brut != montant_net:
@@ -587,7 +597,7 @@ def detect_anomalies(instance):
 
         # Extract facture elements with anomalies
         anomalies = []
-        for facture in root.findall('.//facture'):
+        for facture in invoice_root.findall('.//facture'):
             reference_facture = facture.find('./referenceFacture').text if facture.find(
                 './referenceFacture') is not None else "Unknown"
             anomalie = facture.find('./anomalieFacture')

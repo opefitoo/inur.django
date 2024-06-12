@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2018 sp1 (x64) (http://www.altova.com) by  (Centre Commun de la Securite) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+	<xs:simpleType name="T_IdentifiantUnique">
+		<xs:annotation>
+			<xs:documentation>Format d'identifiant unique pour un patient</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="13"/>
+			<xs:pattern value="[123456789]\p{Nd}{12}">
+				<xs:annotation>
+					<xs:documentation>Premier chiffre (1 à 9) suivi de 12 chiffres (0 à 9)</xs:documentation>
+				</xs:annotation>
+			</xs:pattern>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_CodePrestataire">
+		<xs:annotation>
+			<xs:documentation>Format pour un code Fournisseur à 8 positions</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:int">
+			<xs:maxInclusive value="99999999"/>
+			<xs:minInclusive value="10000000"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_Montant">
+		<xs:annotation>
+			<xs:documentation>Format pour un montant</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:fractionDigits value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_Devise">
+		<xs:annotation>
+			<xs:documentation>Format pour devise</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="EUR"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_ReferenceExterne">
+		<xs:annotation>
+			<xs:documentation>Format pour une référence externe</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="50"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_NumeroAccident">
+		<xs:annotation>
+			<xs:documentation>Format pour un numéro accident</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[UL]\d{9}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="T_IdentifiantOrganisme">
+		<xs:annotation>
+			<xs:documentation>Format pour un identifiant Organisme</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="50"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="T_Periode">
+		<xs:annotation>
+			<xs:documentation>Type composé pour une periode</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="dateDebut" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>Date Début</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="heureDebut" type="xs:time" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Heure Début</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="dateFin" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Date Fin</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="heureFin" type="xs:time" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Heure Fin</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Acte">
+		<xs:annotation>
+			<xs:documentation>Type composé pour identifier un acte</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="codeTarif" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Code acte SANS préfixes ou suffixes</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="complementTarif" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Liste des characteristiques pour le code acte, i.e. la liste des suffixes ou préfixes appliqués à l'acte</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Anomalie">
+		<xs:annotation>
+			<xs:documentation>Type composé pour un message retour au prestataire sur base d'une anomalie</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="type" type="xs:string" nillable="false">
+				<xs:annotation>
+					<xs:documentation>Type de message</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="code" type="xs:string" nillable="false">
+				<xs:annotation>
+					<xs:documentation>Code du motif de contestation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="motif" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Motif optionnel pour les anomalies qui disposent d'un motif non-standard</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Demande">
+		<xs:annotation>
+			<xs:documentation>Type composé pour les demandés </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="nombre" type="xs:int"/>
+			<xs:element name="devise" type="T_Devise"/>
+			<xs:element name="montantBrut" type="T_Montant"/>
+			<xs:element name="montantNet" type="T_Montant"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Paiement">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le paiement de postes montants</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="nombre" type="xs:int"/>
+			<xs:element name="devise" type="T_Devise"/>
+			<xs:element name="montantBrut" type="xs:decimal"/>
+			<xs:element name="montantNet" type="xs:decimal"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_FactureFichier">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le retour d'une facture du fichier de facturation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="referenceFacture" type="T_ReferenceExterne">
+				<xs:annotation>
+					<xs:documentation>Référence du facturier pour la facture</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantFactureOrganisme" type="T_IdentifiantOrganisme">
+				<xs:annotation>
+					<xs:documentation>Identifiant interne de la facture</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="dateEntreeFacture" minOccurs="0"/>
+			<xs:element name="identifiantBeneficiaire" minOccurs="0"/>
+			<xs:element name="montantBrut" type="xs:decimal"/>
+			<xs:element name="montantNet" type="xs:decimal"/>
+			<xs:element name="devise" type="T_Devise"/>
+			<xs:element name="anomalieFacture" type="T_Anomalie" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Motifs de contestations facture</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="prestation" type="T_PrestationFichier" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_PrestationFichier">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le retour d'une prestation du fichier de facturation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="referencePrestation" type="T_ReferenceExterne"/>
+			<xs:element name="identifiantPrestationOrganisme" type="T_IdentifiantOrganisme"/>
+			<xs:element name="codeActePaye" type="xs:string"/>
+			<xs:element name="codeActeOrdonnance" type="xs:string" minOccurs="0"/>
+			<xs:element name="paiementPrestation" type="T_Paiement"/>
+			<xs:element name="anomaliePrestation" type="T_Anomalie" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Motifs de contestations facture</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_FactureAjoutee">
+		<xs:annotation>
+			<xs:documentation>Type composé pour une facture ajoutée</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="referenceFacture" type="T_ReferenceExterne">
+				<xs:annotation>
+					<xs:documentation>Numéro facture du prestataire.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantFactureOrganisme" type="T_IdentifiantOrganisme">
+				<xs:annotation>
+					<xs:documentation>Id technique (UTA)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="typeFactureAjoutee" type="xs:string"/>
+			<xs:element name="identifiantPersonneProtegee" type="T_IdentifiantUnique">
+				<xs:annotation>
+					<xs:documentation>Identifiant unique de la personne protégée</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantBeneficiaire" type="T_IdentifiantUnique" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Identifiant unique du bénéficaire</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="dateEtablissementFacture" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Date à laquelle la facture a été établie.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="montantBrutDemande" type="T_Montant"/>
+			<xs:element name="montantNetDemande" type="T_Montant"/>
+			<xs:element name="deviseDemandee" type="T_Devise"/>
+			<xs:element name="dateEntreeFacture" type="xs:date" minOccurs="0"/>
+			<xs:element name="anomalieFacture" type="T_Anomalie" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Motifs de contestations facture</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="prestation" type="T_PrestationAjoutee" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Prestations de l'UTA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="montantBrutPaye" type="T_Montant"/>
+			<xs:element name="montantNetPaye" type="T_Montant"/>
+			<xs:element name="devisePaye" type="T_Devise"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_PrestationAjoutee">
+		<xs:annotation>
+			<xs:documentation>Type composé pour une prestation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="referencePrestation" type="T_ReferenceExterne">
+				<xs:annotation>
+					<xs:documentation>Référence prestataire. Par exemple numéro de ligne de la prestation dans la facture</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantPrestationOrganisme" type="T_IdentifiantOrganisme">
+				<xs:annotation>
+					<xs:documentation>id technique (UTA Ligne)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="acte" type="T_Acte">
+				<xs:annotation>
+					<xs:documentation>Code de l’acte exécuté selon la nomenclature des actes de l'assurance dépendance.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="periodePrestation" type="T_Periode">
+				<xs:annotation>
+					<xs:documentation>Date Prestation de l'analyse médicale</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="montantUnitaire" type="T_Montant" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indique le montant officiel pour un acte, y compris la participation statutaire en euro.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="demandePrestation" type="T_Demande">
+				<xs:annotation>
+					<xs:documentation>Montant prestation(s) demandé</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantExecutant" type="T_CodePrestataire">
+				<xs:annotation>
+					<xs:documentation>Prestataire exécutant de l'analyse médicale</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="codeActePaye" type="xs:string"/>
+			<xs:element name="codeActeOrdonnance" type="xs:string" minOccurs="0"/>
+			<xs:element name="paiementPrestation" type="T_Paiement"/>
+			<xs:element name="anomaliePrestation" type="T_Anomalie" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Motifs de contestations prestations</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Accident">
+		<xs:annotation>
+			<xs:documentation>Type composé pour un accident</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="numeroAccident" type="T_NumeroAccident" minOccurs="0"/>
+			<xs:element name="dateAccident" type="xs:date" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_RetourFacturation">
+		<xs:annotation>
+			<xs:documentation>Type composé pour un Retour de facturation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="typeDecompte" type="T_TypeDecompte">
+				<xs:annotation>
+					<xs:documentation>Type du décompte</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="entete" type="T_RetourGT">
+				<xs:annotation>
+					<xs:documentation>informations de retour du groupe traitement</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="fichierFacturation" type="T_RetourFichierFacturation">
+				<xs:annotation>
+					<xs:documentation>Informations de retour pour le fichier de facturation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ajouts" type="T_RetourAjouts" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Informations de retour concernant les factures ajoutées</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="stornos" type="T_RetourStornos" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Informations de retour concernant les factures ajoutées</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="acompte" type="T_RetourAcomptes" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Informations de retour concernant les acomptes et avances</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="recouvrement" type="T_RetourRecouvrement" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Informations de retour concernant les recourvrements</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_RetourGT">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le retour des informations GT</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="identifiantGroupeTraitementOrganisme" type="T_IdentifiantOrganisme">
+				<xs:annotation>
+					<xs:documentation>Identifiant interne du groupe traitement</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="dateEnvoi" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>Date d'envoi au prestataire</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="paiementGroupeTraitement" type="T_Paiement">
+				<xs:annotation>
+					<xs:documentation>Paiement global fait pour le groupe traitement</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_RetourFichierFacturation">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le retour fichier de facturation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="referenceFichierFacturation" type="T_ReferenceExterne">
+				<xs:annotation>
+					<xs:documentation>Référence du facturier pour le fichier de facturation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantFichierFacturationOrganisme" type="T_IdentifiantOrganisme">
+				<xs:annotation>
+					<xs:documentation>Identifiant interne du fichier de facturation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="dateEntreeOrganisme" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>Date de réception par l'Organisme</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="montantBrut" type="xs:decimal"/>
+			<xs:element name="montantNet" type="xs:decimal"/>
+			<xs:element name="devise" type="T_Devise"/>
+			<xs:element name="facture" type="T_FactureFichier" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_RetourAjouts">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le retour des factures ajoutées/stornées</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="paiementAjouts" type="T_Paiement"/>
+			<xs:element name="facture" type="T_FactureAjoutee" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_RetourAcomptes">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le retour des acomptes/avances</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="nombre" type="xs:int"/>
+			<xs:element name="montantNet" type="xs:decimal"/>
+			<xs:element name="devise" type="T_Devise"/>
+			<xs:element name="acompte" type="T_Acompte" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_RetourRecouvrement">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le retour des recouvrements</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="nombre" type="xs:int"/>
+			<xs:element name="montantNet" type="xs:decimal"/>
+			<xs:element name="devise" type="T_Devise"/>
+			<xs:element name="recouvrement" type="T_Recouvrement" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Acompte">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le retour des acomptes/avances</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="anneeDecompte"/>
+			<xs:element name="moisDecompte"/>
+			<xs:element name="numeroAcompteOrganisme" type="T_IdentifiantOrganisme"/>
+			<xs:element name="montantNet"/>
+			<xs:element name="devise"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_Recouvrement">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le retour des recourvements</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="numeroRecouvrementOrganisme" type="T_IdentifiantOrganisme"/>
+			<xs:element name="montantNet"/>
+			<xs:element name="devise"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_TypeDecompte">
+		<xs:annotation>
+			<xs:documentation>Type composé qui permet d'identifier le type du décompte en entrée</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="cadreLegal">
+				<xs:annotation>
+					<xs:documentation>Cadre légal</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="3"/>
+						<xs:pattern value="ASD"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="layout">
+				<xs:annotation>
+					<xs:documentation>Version du layout. Indique la version du layout utilisée pour le Decompte</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:int">
+						<xs:pattern value="1"/>
+						<xs:pattern value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="type">
+				<xs:annotation>
+					<xs:documentation>Type Decompte</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="3"/>
+						<xs:maxLength value="6"/>
+						<xs:pattern value="RETFAC"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="retourFacturation" type="T_RetourFacturation">
+		<xs:annotation>
+			<xs:documentation>Root element</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="T_RetourStornos">
+		<xs:annotation>
+			<xs:documentation>Type composé pour le retour des stornos</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="paiementStornos" type="T_Paiement"/>
+			<xs:element name="facture" type="T_FactureStornee" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_FactureStornee">
+		<xs:annotation>
+			<xs:documentation>Type composé pour une facture stornée</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="referenceFacture" type="T_ReferenceExterne">
+				<xs:annotation>
+					<xs:documentation>Numéro facture du prestataire.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantFactureOrganisme" type="T_IdentifiantOrganisme">
+				<xs:annotation>
+					<xs:documentation>Id technique (UTA)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantPersonneProtegee" type="T_IdentifiantUnique">
+				<xs:annotation>
+					<xs:documentation>Identifiant unique de la personne protégée</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantBeneficiaire" type="T_IdentifiantUnique" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Identifiant unique du bénéficaire</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="dateEtablissementFacture" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Date à laquelle la facture a été établie.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="montantBrutDemande" type="T_Montant"/>
+			<xs:element name="montantNetDemande" type="T_Montant"/>
+			<xs:element name="deviseDemandee" type="T_Devise"/>
+			<xs:element name="dateEntreeFacture" minOccurs="0"/>
+			<xs:element name="montantBrutPaye" type="xs:decimal"/>
+			<xs:element name="montantNetPaye" type="xs:decimal"/>
+			<xs:element name="devisePayee" type="T_Devise"/>
+			<xs:element name="anomalieFacture" type="T_Anomalie" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Motifs de contestations facture</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="prestation" type="T_PrestationStornee" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Prestations de l'UTA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T_PrestationStornee">
+		<xs:annotation>
+			<xs:documentation>Type composée pour prestation stornée</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="referencePrestation" type="T_ReferenceExterne">
+				<xs:annotation>
+					<xs:documentation>Référence prestataire. Par exemple numéro de ligne de la prestation dans la facture</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantPrestationOrganisme" type="T_IdentifiantOrganisme">
+				<xs:annotation>
+					<xs:documentation>id technique (UTA Ligne)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="acte" type="T_Acte">
+				<xs:annotation>
+					<xs:documentation>Code de l’acte exécuté selon la nomenclature des actes de l'assurance dépendance.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="periodePrestation" type="T_Periode">
+				<xs:annotation>
+					<xs:documentation>Date Prestation de l'analyse médicale</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="montantUnitaire" type="T_Montant" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indique le montant officiel pour un acte, y compris la participation statutaire en euro.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="demandePrestation" type="T_Demande">
+				<xs:annotation>
+					<xs:documentation>Montant prestation(s) demandé</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="identifiantExecutant" type="T_CodePrestataire">
+				<xs:annotation>
+					<xs:documentation>Prestataire exécutant de l'analyse médicale</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="codeActePaye" type="xs:string"/>
+			<xs:element name="codeActeOrdonnance" type="xs:string" minOccurs="0"/>
+			<xs:element name="paiementPrestation" type="T_Paiement"/>
+			<xs:element name="anomaliePrestation" type="T_Anomalie" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Motifs de contestations prestations</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>
+
