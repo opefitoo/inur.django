@@ -734,21 +734,23 @@ class LongTermCareInvoiceFile(models.Model):
                                 limit_choices_to=Q(is_under_dependence_insurance=True))
     long_term_invoice_file_that_corrects = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
     invoice_sequence_number = models.PositiveIntegerField(_('Invoice Sequence Number'), default=1)
+    invoice_to_be_sent_to_CNS = models.BooleanField(_('Invoice to be sent to CNS'), default=True)
     # Technical Fields
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
     # must be linked to a monthly statement that is same period as invoice file
     def clean(self):
-        # MedicalCareSummaryPerPatient
-        if self.link_to_monthly_statement.month != self.invoice_start_period.month:
-            raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
-        if self.link_to_monthly_statement.year != self.invoice_start_period.year:
-            raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
-        if self.link_to_monthly_statement.month != self.invoice_end_period.month:
-            raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
-        if self.link_to_monthly_statement.year != self.invoice_end_period.year:
-            raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
+        if self.invoice_to_be_sent_to_CNS:
+            # MedicalCareSummaryPerPatient
+            if self.link_to_monthly_statement.month != self.invoice_start_period.month:
+                raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
+            if self.link_to_monthly_statement.year != self.invoice_start_period.year:
+                raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
+            if self.link_to_monthly_statement.month != self.invoice_end_period.month:
+                raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
+            if self.link_to_monthly_statement.year != self.invoice_end_period.year:
+                raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
 
     def export_to_xero(self):
         # send invoice to xero

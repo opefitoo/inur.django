@@ -105,7 +105,7 @@ def registration_card_storage_location(instance, filename):
 
 def generate_token():
     # Define the secret key
-    secret_key = 'eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTcxMDYwMzYwMywiaWF0IjoxNzEwNjAzNjAzfQ.2q3oiYi0xw_xY5Nh1na8dbj7wxDxBMh68ueS-KP-_34'
+    secret_key = 'e--------*****masked-_34'
 
     # Define the payload
     payload = {
