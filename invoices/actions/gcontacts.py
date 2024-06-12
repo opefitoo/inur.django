@@ -301,7 +301,7 @@ class GoogleContacts:
                 from invoices.notifications import notify_system_via_google_webhook
                 print("Patient %s has no birth date" % patient)
                 notify_system_via_google_webhook(
-                   "*WARNING* While creating patient on Google contacts, we noticed that Patient %s has no birth date" % patient)
+                    "*WARNING* While creating patient on Google contacts, we noticed that Patient %s has no birth date" % patient)
             contacts_to_create_in_batches.append(new_contact)
         # Make the request
         print("Creating %s new Clients by Batch ..." % len(contacts_to_create_in_batches))
@@ -322,12 +322,14 @@ class GoogleContacts:
             }
         ).execute()
         print("Group add result: %s" % response)
+
     def batch_create_new_patients(self, patients):
         # divide the contacts into batches of 200
         print("Creating %s new Clients..." % len(patients))
         batches = [patients[i:i + 200] for i in range(0, len(patients), 200)]
         for batch in batches:
             self.batch_create_new_patients_max_200(batch)
+
     def create_or_update_new_patient(self, patient):
         new_contact = {
             "names": [{
@@ -478,7 +480,8 @@ class GoogleContacts:
                 "Patient %s %s with SN Code %s deleted from Google contacts for email %s" % (
                     first_name, family_name, sn_code, self.email))
         else:
-            print(f"Patient {first_name} {family_name} with SN Code {sn_code} not found on Google contacts of {self.email}")
+            print(
+                f"Patient {first_name} {family_name} with SN Code {sn_code} not found on Google contacts of {self.email}")
 
     def delete_patient(self, patient):
         self.delete_patient_by_details(patient.first_name, patient.name, sn_code=patient.code_sn)
@@ -509,16 +512,20 @@ class GoogleContacts:
         results = self.service.people().searchDirectoryPeople(query=query).execute()
         return results.get('people', [])
 
+
 @job("default", timeout=6000)
 def async_create_or_update_new_patient(google_contacts_instance, patient):
     google_contacts_instance.create_or_update_new_patient(patient)
+
+
 @job("default", timeout=6000)
 def async_delete_patient(google_contacts_instance, patient):
     google_contacts_instance.delete_patient(patient)
 
-    def delete_employee(self, employee):
-        contact = self.find_contact_by_details(employee.user.first_name, employee.user.last_name)
-        if contact:
-            self.delete_contact(contact['resourceName'])
-        else:
-            print(f"Employee {employee} not found on Google contacts of {self.email}")
+
+def delete_employee(self, employee):
+    contact = self.find_contact_by_details(employee.user.first_name, employee.user.last_name)
+    if contact:
+        self.delete_contact(contact['resourceName'])
+    else:
+        print(f"Employee {employee} not found on Google contacts of {self.email}")
