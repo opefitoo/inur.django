@@ -512,6 +512,13 @@ class GoogleContacts:
         results = self.service.people().searchDirectoryPeople(query=query).execute()
         return results.get('people', [])
 
+    def delete_employee(self, employee):
+        contact = self.find_contact_by_details(employee.user.first_name, employee.user.last_name)
+        if contact:
+            self.delete_contact(contact['resourceName'])
+        else:
+            print(f"Employee {employee} not found on Google contacts of {self.email}")
+
 
 @job("default", timeout=6000)
 def async_create_or_update_new_patient(google_contacts_instance, patient):
@@ -523,9 +530,3 @@ def async_delete_patient(google_contacts_instance, patient):
     google_contacts_instance.delete_patient(patient)
 
 
-def delete_employee(self, employee):
-    contact = self.find_contact_by_details(employee.user.first_name, employee.user.last_name)
-    if contact:
-        self.delete_contact(contact['resourceName'])
-    else:
-        print(f"Employee {employee} not found on Google contacts of {self.email}")
