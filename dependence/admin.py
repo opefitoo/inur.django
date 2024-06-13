@@ -100,13 +100,6 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
         for obj in queryset:
             obj.export_to_xero()
 
-    def link_invoice_to_LongTermCareMonthlyStatement(self, request, queryset):
-        # test if super user
-        if not request.user.is_superuser:
-            self.message_user(request, "Only superuser can link to LongTermCareMonthlyStatement", level=messages.ERROR)
-            return
-        for obj in queryset:
-            obj.link_invoice_to_LongTermCareMonthlyStatement()
 
     def has_errors_col(self, obj):
         return not obj.has_errors
