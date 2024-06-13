@@ -66,7 +66,7 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
     date_hierarchy = 'invoice_start_period'
     readonly_fields = ('has_errors_col', 'display_errors_as_html',
                        'invoice_reference', 'created_on', 'updated_on')
-    actions = ['create_pdf_version', 'export_to_xero']
+    actions = ['create_pdf_version', 'export_to_xero', 'link_invoice_to_LongTermCareMonthlyStatement']
 
     object_actions = [
         {
@@ -83,6 +83,15 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
         },
 
     ]
+
+    def link_invoice_to_LongTermCareMonthlyStatement(self, request, queryset):
+        # test if super user
+        if not request.user.is_superuser:
+            self.message_user(request, "Only superuser can link to LongTermCareMonthlyStatement", level=messages.ERROR)
+            return
+        longTermCareMonthlyStatement_id = None
+        for obj in queryset:
+            longTermCareMonthlyStatement_id = obj.link_invoice_to_LongTermCareMonthlyStatement(longTermCareMonthlyStatement_id)
 
     def export_to_xero(self, request, queryset):
         if not request.user.is_superuser:

@@ -749,6 +749,21 @@ class LongTermCareInvoiceFile(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    def link_invoice_to_LongTermCareMonthlyStatement(self, LongTermCareMonthlyStatement_id=None):
+        # link the invoice to the monthly statement
+        # get the monthly statement
+        if LongTermCareMonthlyStatement_id:
+            monthly_statement = LongTermCareMonthlyStatement.objects.get(id=LongTermCareMonthlyStatement_id)
+        else:
+            monthly_statement = LongTermCareMonthlyStatement.objects.create(year=self.invoice_start_period.year,
+                                                                        month=self.invoice_start_period.month)
+        if monthly_statement:
+            self.link_to_monthly_statement = monthly_statement
+            self.save()
+        else:
+            raise ValidationError("Le décompte mensuel n'existe pas")
+        return monthly_statement.id
+
     # must be linked to a monthly statement that is same period as invoice file
     def clean(self):
         if self.invoice_to_be_sent_to_CNS:
