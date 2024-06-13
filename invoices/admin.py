@@ -2412,3 +2412,15 @@ class EmployeeVisitAdmin(admin.ModelAdmin):
     list_display = ('user', 'arrival_date_time', 'departure_date_time','patient')
     search_fields = ('patient', 'user')
     readonly_fields = ('created_at', 'updated_at')
+    actions = ['check_patient_addresses']
+
+    def check_patient_addresses(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'avez pas le droit de vérifier les adresses des patients.", level=messages.WARNING)
+            return
+        visits_patients_found_dict = {}
+        for visitq in queryset:
+            visits_patients_found_dict[visitq] = visitq.check_if_address_is_known(visitq)
+        self.message_user(request, "Adresses des patients vérifiées : %s" % visits_patients_found_dict)
+
+

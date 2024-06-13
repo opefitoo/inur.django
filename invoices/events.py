@@ -400,6 +400,11 @@ class Event(models.Model):
     @property
     def fullname_state(self):
         return self.STATES[self.state - 1][1]
+    def get_event_address(self):
+        if self.patient and not self.event_address and not self.at_office:
+            return self.patient.get_full_address_date_based(current_date=self.day,
+                                                            current_time=self.time_start_event)
+        return self.event_address
 
     def create_prestation_out_of_event(self, invoice_item):
         # create invoice item out of event

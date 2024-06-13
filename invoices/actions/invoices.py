@@ -29,7 +29,7 @@ def generer_forfait_aev_mai_2024(self, request, queryset):
                           level=messages.INFO)
     else:
         self.message_user(request, "BUG", level=messages.ERROR)
-
+   
 def create_prestations_for_month_v2(patient, year, month):
     infi_job_position = JobPosition.objects.filter(name__istartswith="infi").get()
     employees_id = Employee.objects.filter(Q(occupation=infi_job_position) | Q(id=1)).all().values_list('id',

@@ -532,6 +532,10 @@ class Patient(models.Model):
             return FallDeclaration.objects.filter(patient_id=self.id).count()
         return 0
 
+    def list_all_events_for_patient(self):
+        from invoices.events import Event
+        return Event.objects.filter(patient=self)
+
 
 class PatientSubContractorRelationship(models.Model):
     RELATIONSHIP_TYPE_CHOICES = [
