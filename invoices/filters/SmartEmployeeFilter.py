@@ -4,6 +4,28 @@ from django.utils.translation import gettext_lazy as _
 
 from invoices.employee import Employee
 
+class SmartUserFilter(admin.SimpleListFilter):
+    title = _('user')
+    parameter_name = 'user_id'
+
+    def lookups(self, request, model_admin):
+        # request is manipulated in ModelAdmin.changelist_view
+        if isinstance(request, HttpRequest) and hasattr(request, "dynamic_user_choices"):
+            return request.dynamic_user_choices
+        return ()
+
+    def queryset(self, request, queryset):
+        # Handle empty or invalid filter values
+        value = self.value()
+        if value is None:
+            return queryset  # No filtering
+        try:
+            if self.value():
+                return queryset.filter(user_id=self.value())
+            else:
+                return queryset
+        except (ValueError, TypeError):
+            return queryset  # Return the original queryset if the value is invalid
 
 class SmartEmployeeFilter(admin.SimpleListFilter):
     # Human-readable title which will be displayed in the
