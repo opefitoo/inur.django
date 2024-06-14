@@ -91,7 +91,7 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
             return
         longTermCareMonthlyStatement_id = None
         for obj in queryset:
-            longTermCareMonthlyStatement_id = obj.link_invoice_to_monthly_statement(LongTermCareMonthlyStatement_id=longTermCareMonthlyStatement_id)
+            longTermCareMonthlyStatement_id = obj.link_operation_invoice_to_monthly_statement(LongTermCareMonthlyStatement_id=longTermCareMonthlyStatement_id)
 
     def export_to_xero(self, request, queryset):
         if not request.user.is_superuser:
