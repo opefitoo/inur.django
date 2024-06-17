@@ -43,9 +43,13 @@ class MedicalCareSummary(models.Model):
 
 def get_description_by_code_acte(data, code_acte):
     # Loop through each item in the 'Descriptions' list
+    descriptions = []
     for item in data.get('PriseEnCharge', [])[0].get('Descriptions'):
         if item.get('CodeActe') == code_acte:
-            return item.get('Description')
+            descriptions.append(item.get('Description'))
+    if descriptions:
+        # return descriptions as a beuatiful string
+        return ', '.join(descriptions)
     return None
 def parse_xml_using_xmlschema(instance):
     # Load the XSD schema file
