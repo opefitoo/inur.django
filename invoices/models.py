@@ -585,7 +585,7 @@ def validate_image(image):
 class BedsoreEvaluation(models.Model):
     bedsore = models.ForeignKey(Bedsore, on_delete=models.CASCADE)
     evaluation_date = models.DateField()
-    stage = models.IntegerField(choices=[(1, 'Stage 1'), (2, 'Stage 2'), (3, 'Stage 3'), (4, 'Stage 4')])
+    stage = models.IntegerField(choices=[(1, 'Stade 1'), (2, 'Stade 2'), (3, 'Stade 3'), (4, 'Stade 4')])
     size = models.DecimalField(verbose_name="Taille en cm", max_digits=5, decimal_places=2)  # Size in cm² for example
     depth = models.DecimalField(verbose_name="Profondeur en cm", max_digits=5, decimal_places=2)  # Depth in cm
     bedsore_evolution = models.CharField(
