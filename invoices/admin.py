@@ -55,7 +55,8 @@ from invoices.filters.HolidayRequestFilters import FilteringYears, FilteringMont
 from invoices.filters.SmartEmployeeFilter import SmartEmployeeFilter, SmartUserFilterForVisits, SmartPatientFilter, \
     SmartMedicalPrescriptionFilter, DistanceMatrixSmartPatientFilter, IsInvolvedInHealthCareFilter, \
     SmarPatientFilterForVisits
-from invoices.filters.SmartPatientFilter import UnderAssuranceDependanceFilter
+from invoices.filters.SmartPatientFilter import UnderAssuranceDependanceFilter, UnderHeatWaveRiskFilter, \
+    IsPatientDeceasedFilter
 from invoices.forms import ValidityDateFormSet, HospitalizationFormSet, \
     PrestationInlineFormSet, PatientForm, SimplifiedTimesheetForm, SimplifiedTimesheetDetailForm, EventForm, \
     InvoiceItemForm, MedicalPrescriptionForm, AlternateAddressFormSet, EventLinkToMedicalCareSummaryPerPatientDetailForm
@@ -631,7 +632,7 @@ class SubContractorInline(admin.TabularInline):
 
 @admin.register(Patient)
 class PatientAdmin(CSVExportAdmin):
-    list_filter = ('is_under_dependence_insurance',)
+    list_filter = ('is_under_dependence_insurance', UnderHeatWaveRiskFilter, IsPatientDeceasedFilter)
     list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
                   'country', 'phone_number', 'email_address', 'date_of_death']
