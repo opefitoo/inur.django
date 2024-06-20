@@ -633,7 +633,7 @@ class SubContractorInline(admin.TabularInline):
 @admin.register(Patient)
 class PatientAdmin(CSVExportAdmin):
     list_filter = ('is_under_dependence_insurance', UnderHeatWaveRiskFilter, IsPatientDeceasedFilter)
-    list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire')
+    list_display = ('name', 'first_name', 'phone_number', 'code_sn', 'participation_statutaire', 'age')
     csv_fields = ['name', 'first_name', 'address', 'zipcode', 'city',
                   'country', 'phone_number', 'email_address', 'date_of_death']
     readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions', 'link_to_events',
