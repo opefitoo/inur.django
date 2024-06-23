@@ -142,9 +142,10 @@ class EmployeeVisit(models.Model):
 
     @property
     def calcuate_duration_of_visit(self):
-        if self.departure_date_time:
+        # if visit departure time is Jan. 1, 4001, 1 a.m., then the visit is still ongoing
+        if self.departure_date_time is not None and self.departure_date_time.year != 4001:
             return self.departure_date_time - self.arrival_date_time
-        return None
+        return 'Ongoing'
 
     def __str__(self):
         return f"{self.user} - {self.patient} - {self.arrival_date_time}"
