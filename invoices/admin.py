@@ -2410,7 +2410,8 @@ class EmployeesMonthlyPayslipFileAdmin(admin.ModelAdmin):
 @admin.register(EmployeeVisit)
 class EmployeeVisitAdmin(admin.ModelAdmin):
     list_filter = (SmartUserFilterForVisits, SmarPatientFilterForVisits)
-    list_display = ('user', 'arrival_date_time', 'departure_date_time','display_url_on_google_maps','patient')
+    list_display = ('user', 'arrival_date_time', 'departure_date_time','display_url_on_google_maps',
+                    'calcuate_duration_of_visit', 'patient')
     search_fields = ('patient', 'user')
     readonly_fields = ('created_at', 'updated_at', 'get_url_on_google_maps')
     actions = ['check_patient_addresses']

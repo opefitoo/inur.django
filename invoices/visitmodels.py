@@ -140,5 +140,11 @@ class EmployeeVisit(models.Model):
         # https://maps.google.com/?q=49.593366,6.148933
         return f"https://maps.google.com/?q={self.latitude},{self.longitude}"
 
+    @property
+    def calcuate_duration_of_visit(self):
+        if self.departure_date_time:
+            return self.departure_date_time - self.arrival_date_time
+        return None
+
     def __str__(self):
         return f"{self.user} - {self.patient} - {self.arrival_date_time}"
