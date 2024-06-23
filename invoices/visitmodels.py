@@ -5,7 +5,6 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from invoices.events import Event
-from invoices.helpers.patienthelpers import list_patients_who_had_events_at_least_5_times_since_one_year
 from invoices.models import Patient
 
 
@@ -136,6 +135,10 @@ class EmployeeVisit(models.Model):
             #                 print(f"Error: {data}")
                 # Convert the event address to GPS coordinates
         return visit.patient
+    @property
+    def get_url_on_google_maps(self):
+        # https://maps.google.com/?q=49.593366,6.148933
+        return f"https://maps.google.com/?q={self.latitude},{self.longitude}"
 
     def __str__(self):
         return f"{self.user} - {self.patient} - {self.arrival_date_time}"

@@ -2410,10 +2410,14 @@ class EmployeesMonthlyPayslipFileAdmin(admin.ModelAdmin):
 @admin.register(EmployeeVisit)
 class EmployeeVisitAdmin(admin.ModelAdmin):
     list_filter = (SmartUserFilterForVisits, SmarPatientFilterForVisits)
-    list_display = ('user', 'arrival_date_time', 'departure_date_time','patient')
+    list_display = ('user', 'arrival_date_time', 'departure_date_time','display_url_on_google_maps','patient')
     search_fields = ('patient', 'user')
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at', 'get_url_on_google_maps')
     actions = ['check_patient_addresses']
+
+    def display_url_on_google_maps(self, obj):
+        # return a url to google maps with the patient address
+        return mark_safe(f'<a href="{obj.get_url_on_google_maps}" target="_blank">{obj.id}</a>')
 
     def check_patient_addresses(self, request, queryset):
         if not request.user.is_superuser:
