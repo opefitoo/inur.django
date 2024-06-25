@@ -788,7 +788,7 @@ def employee_maybe_mandatory(data):
 
 def patient_maybe_mandatory(data):
     messages = {}
-    if data['event_type_enum'] == EventTypeEnum.GENERIC and data['patient_id'] is None:
+    if data['event_type_enum'] in [EventTypeEnum.GENERIC, EventTypeEnum.ASS_DEP, EventTypeEnum.CARE] and data['patient_id'] is None:
         messages = {'patient': _("Patient est obligatoire pour %s") % _(data['event_type_enum'])}
     return messages
 
