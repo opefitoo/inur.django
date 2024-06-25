@@ -187,7 +187,7 @@ class EmployeeAdmin(admin.ModelAdmin):
         employees_who_will_receive_email = []
         for emp in queryset:
             tomorrow_events = Event.objects.filter(day=tomorrow, employees=emp, state__in=[1, 2]).order_by(
-                '-time_start_event')
+                'time_start_event')
             # create a beautiful text in french that lists all events of the day
             text = ""
             if len(tomorrow_events) == 0:
@@ -209,7 +209,7 @@ class EmployeeAdmin(admin.ModelAdmin):
         employees_who_will_receive_email = []
         for emp in queryset:
             today_events = Event.objects.filter(day=today, employees=emp, state__in=[1, 2]).order_by(
-                '-time_start_event')
+                'time_start_event')
             text = ""
             if len(today_events) == 0:
                 text = "Pas d'événements pour aujourd'hui."
