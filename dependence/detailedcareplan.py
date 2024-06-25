@@ -137,8 +137,9 @@ class MedicalCareSummaryPerPatientDetail(models.Model):
         ('A', _('Annually')),))
 
     def __str__(self):
-        # code de l'acte / fréquence / périodicité
-        return " {0} / {1} / {2}".format(self.item.code, self.number_of_care, self.periodicity)
+        # code de l'acte / fréquence / périodicité / 10 premiers caractères de la description
+        return " {0}({1}/{2}) {3}...".format(self.item.code, self.number_of_care, self.periodicity,
+                                               self.custom_description[:30])
 
 
 class SharedMedicalCareSummaryPerPatientDetail(models.Model):

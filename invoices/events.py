@@ -433,10 +433,11 @@ class Event(models.Model):
             return '%s for %s on %s' % (self.event_type_enum, cached_patient, self.day)
         if self.event_type_enum == EventTypeEnum.SUB_CARE:
             return '%s : %s for %s on %s' % (self.sub_contractor, self.event_type_enum, cached_patient, self.day)
-        cached_employees = cache.get('event_employees_cache_%s' % self.employees.id)
-        if not cached_employees:
-            cache.set('event_employees_cache_%s' % self.employees.id, self.employees)
+        if self.employees:
             cached_employees = cache.get('event_employees_cache_%s' % self.employees.id)
+            if not cached_employees:
+                cache.set('event_employees_cache_%s' % self.employees.id, self.employees)
+                cached_employees = cache.get('event_employees_cache_%s' % self.employees.id)
         if self.event_assigned.count() > 1:
             return '%s ++ %s' % (
                 ",".join(a.assigned_additional_employee.abbreviation for a in self.event_assigned.all()),
@@ -780,7 +781,7 @@ def event_end_time_and_address_is_sometimes_mandatory(data):
 
 def employee_maybe_mandatory(data):
     messages = {}
-    if data['event_type_enum'] == EventTypeEnum.GNRC_EMPL and data['employees_id'] is None:
+    if data['event_type_enum'] in [EventTypeEnum.GNRC_EMPL, EventTypeEnum.ASS_DEP, EventTypeEnum.CARE] and data['employees_id'] is None:
         messages = {'employees': _("Employees est obligatoire pour %s") % _(data['event_type_enum'])}
     return messages
 
