@@ -53,7 +53,7 @@ def create_xero_invoice(invoice_item: InvoiceItem, invoice_amount: Decimal, invo
                         "Quantity": 1.0,
                         "UnitAmount":str(invoice_amount),
                         "TaxType": "NONE",
-                        "AccountCode": "200"  # Replace with a valid account code
+                        "AccountCode": "70330010"  # Replace with a valid account code
                     }
                 ],
                 # ... additional invoice details ...
