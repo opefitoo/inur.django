@@ -138,8 +138,10 @@ class MedicalCareSummaryPerPatientDetail(models.Model):
 
     def __str__(self):
         # code de l'acte / fréquence / périodicité / 10 premiers caractères de la description
-        return " {0}({1}/{2}) {3}...".format(self.item.code, self.number_of_care, self.periodicity,
+        if self.custom_description:
+            return " {0}({1}/{2}) {3}...".format(self.item.code, self.number_of_care, self.periodicity,
                                                self.custom_description[:30])
+        return " {0}({1}/{2})".format(self.item.code, self.number_of_care, self.periodicity)
 
 
 class SharedMedicalCareSummaryPerPatientDetail(models.Model):
