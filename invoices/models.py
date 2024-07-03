@@ -1615,6 +1615,34 @@ def create_prestation_at_home_pair(sender, instance, **kwargs):
             pair.save()
 
 
+
+@receiver(post_delete, sender=AlternateAddress, dispatch_uid="delete_alternate_addresses_from_events")
+def delete_alternate_addresses_from_events(sender, instance, **kwargs):
+    from invoices.events import Event
+    events = Event.objects.filter(patient=instance.patient).filter(day__gte=instance.start_date).filter(
+        day__lte=instance.end_date, time_start_event__gte=instance.start_time if instance.start_time else '00:00:00',
+        time_end_event__lte=instance.end_time if instance.end_time else '23:59:59')
+    events = events.filter(state__in=[1, 2])
+    print("Found %d events : %s" % (events.count(), events))
+    if len(events) > 5 and not os.environ.get('LOCAL_ENV', None):
+        # call async task
+        from processors.tasks import update_events_address
+        update_events_address.delay(events, None)
+        # list the events and send a message to the system
+        message = "The following events will be updated asynchronously %s" % events
+        notify_system_via_google_webhook(message)
+    else:
+        for event in events:
+            event.event_address = None
+            event.clean()
+            event.save()
+            message = "The following events will be updated asynchronously %s" % events
+            notify_system_via_google_webhook(message)
+
+    for event in events:
+        event.alternate_address = None
+        event.save()
+
 @receiver(post_save, sender=Patient, dispatch_uid="create_contact_in_employees_google_contacts")
 def create_contact_in_employees_google_contacts(sender, instance, **kwargs):
     all_active_employees = Employee.objects.filter(end_contract__isnull=True)
