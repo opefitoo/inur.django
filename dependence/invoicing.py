@@ -749,6 +749,10 @@ class LongTermCareInvoiceFile(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    @property
+    def has_subcontractor(self):
+        return LongTermCareInvoiceLine.objects.filter(invoice=self).filter(subcontractor__isnull=False).exists() or LongTermCareInvoiceItem.objects.filter(invoice=self).filter(subcontractor__isnull=False).exists()
+
     def link_operation_invoice_to_monthly_statement(self, LongTermCareMonthlyStatement_id=None):
         # link the invoice to the monthly statement
         # get the monthly statement
