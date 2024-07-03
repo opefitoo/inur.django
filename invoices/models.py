@@ -673,7 +673,7 @@ class AlternateAddress(models.Model):
             print("Found %d events : %s" % (events.count(), events))
         else:
             events = Event.objects.filter(patient=self.patient).filter(day__gte=self.start_date).filter(
-                day__lte=self.end_date)
+                day__lte=self.end_date, time_start_event__gte=self.start_time if self.start_time else '00:00:00', time_end_event__lte=self.end_time if self.end_time else '23:59:59')
             # filter events that are in state (1, _('Waiting for validation')),
             #         (2, _('Valid')),
             events = events.filter(state__in=[1, 2])
@@ -682,14 +682,15 @@ class AlternateAddress(models.Model):
             # call async task
             from processors.tasks import update_events_address
             update_events_address.delay(events, self.full_address)
-            message = "Found %d events, will update address asynchronously" % events.count()
+            # list the events and send a message to the system
+            message = "The following events will be updated asynchronously %s" % events
             notify_system_via_google_webhook(message)
         else:
             for event in events:
                 event.event_address = self.full_address
                 event.clean()
                 event.save()
-                message = "Found %d events, will update address synchronously" % events.count()
+                message = "The following events will be updated asynchronously %s" % events
                 notify_system_via_google_webhook(message)
 
 
