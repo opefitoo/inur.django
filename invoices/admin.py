@@ -1779,7 +1779,7 @@ class EventAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        if not request.user.is_superuser:
+        if not request.user.is_superuser and not request.user.groups.filter(name="planning manager").exists():
             if len(form.base_fields) > 0:
                 form.base_fields["event_report"].required = True
                 form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'))
@@ -1793,7 +1793,7 @@ class EventAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
-            if not request.user.is_superuser:
+            if not request.user.is_superuser and not request.user.groups.filter(name="planning manager").exists():
                 fs = [field.name for field in Event._meta.fields if field.name != "id"]
                 if obj.employees is not None and obj.employees.user.id == request.user.id:
                     return [f for f in fs if f not in ['event_report', 'state']]
@@ -1952,7 +1952,7 @@ class EventListAdmin(admin.ModelAdmin):
                     e.display_unconnected_events.delay(time_min)
 
     def duplicate_event_for_next_week(self, request, queryset):
-        if not request.user.is_superuser:
+        if not request.user.is_superuser or not request.user.groups.filter(name="planning manager").exists():
             self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.verbose_name_plural,
                               level=messages.WARNING)
 
@@ -2015,7 +2015,7 @@ class EventListAdmin(admin.ModelAdmin):
 
     @transaction.atomic
     def duplicate_event_for_the_hole_week(self, request, queryset):
-        if not request.user.is_superuser:
+        if not request.user.is_superuser or not request.user.groups.filter(name="planning manager").exists():
             self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.verbose_name_plural,
                               level=messages.WARNING)
             return
@@ -2031,7 +2031,7 @@ class EventListAdmin(admin.ModelAdmin):
                     [str(e.id) for e in events_duplicated]))
 
     def duplicate_event_for_next_day(self, request, queryset):
-        if not request.user.is_superuser:
+        if not request.user.is_superuser or not request.user.groups.filter(name="planning manager").exists():
             self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.verbose_name_plural,
                               level=messages.WARNING)
             return
@@ -2126,7 +2126,7 @@ class EventListAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        if not request.user.is_superuser:
+        if not request.user.is_superuser or not request.user.groups.filter(name="planning manager").exists():
             if len(form.base_fields) > 0:
                 form.base_fields["event_report"].required = True
                 form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done')), (6, _('Cancelled'))
@@ -2245,7 +2245,7 @@ class EventWeekListAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        if not request.user.is_superuser:
+        if not request.user.is_superuser or not request.user.groups.filter(name="planning manager").exists():
             if len(form.base_fields) > 0:
                 form.base_fields["event_report"].required = True
                 form.base_fields["state"].choices = (3, _('Done')), (5, _('Not Done'))

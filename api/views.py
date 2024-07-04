@@ -437,9 +437,9 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
 
     def patch(self, request, *args, **kwargs):
         # if not superuser, can only validate events assigned to him
-        if not request.user.is_superuser or request.user.groups.filter(name="planning manager").exists():
+        if not request.user.is_superuser and not request.user.groups.filter(name="planning manager").exists():
             event = Event.objects.get(pk=request.data['id'])
-            if event.employees.user != request.user:
+            if event.employees and event.employees.user != request.user:
                 return JsonResponse({'error': _('You are not allowed to validate this event')},
                                     status=status.HTTP_400_BAD_REQUEST)
         event = Event.objects.get(pk=request.data['id'])
@@ -464,6 +464,8 @@ class FullCalendarEventViewSet(generics.ListCreateAPIView):
             event.employees = employee
         if request.data['end'].endswith('Z'):
             event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M:%S.%fZ').time()
+        elif request.data['end'].startswith('NaN'):
+            event.time_end_event = None
         else:
             event.time_end_event = datetime.strptime(request.data['end'], '%Y-%m-%dT%H:%M:%S').time()
         if request.data.get('notes', None):

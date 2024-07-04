@@ -876,6 +876,8 @@ def validate_date_range(instance_id, data):
         ).filter(
             employees_id=data['patient_id']).exclude(
             pk=instance_id).exclude(state=Event.STATES[5][0]).exclude(state=Event.STATES[4][0])
+    # filter birthday events types
+    conflicts = conflicts.exclude(event_type_enum__in=[EventTypeEnum.BIRTHDAY, EventTypeEnum.GENERIC])
     if conflicts and 0 < conflicts.count():
         messages = {'state': _("Intersection with other %s, here : %s from %s to %s") %
                              (Event._meta.verbose_name_plural, conflicts[0], conflicts[0].time_start_event,
