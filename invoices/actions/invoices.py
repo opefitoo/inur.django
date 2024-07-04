@@ -13,18 +13,18 @@ from invoices.modelspackage import InvoicingDetails
 
 
 @transaction.atomic
-def generer_forfait_aev_mai_2024(self, request, queryset):
+def generer_forfait_aev_juin_2024(self, request, queryset):
     # only for superuser
     if not request.user.is_superuser:
         return
     final_result = []
     for patient in queryset:
         if patient.is_under_dependence_insurance:
-            final_result.append(create_prestations_for_month_v2(patient, 2024, 5))
+            final_result.append(create_prestations_for_month_v2(patient, 2024, 6))
     if len(final_result) > 0:
         #  final_result string with list of invoice numbers
         invoice_numbers = ", ".join([str(x) for x in final_result])
-        self.message_user(request, "Forfait AEV Mai généré avec succès %s factures générées %s" % (
+        self.message_user(request, "Forfait AEV Juin généré avec succès %s factures générées %s" % (
             len(final_result), invoice_numbers),
                           level=messages.INFO)
     else:
