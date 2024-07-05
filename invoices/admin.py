@@ -2031,8 +2031,8 @@ class EventListAdmin(admin.ModelAdmin):
                     [str(e.id) for e in events_duplicated]))
 
     def duplicate_event_for_next_day(self, request, queryset):
-        if not request.user.is_superuser or not request.user.groups.filter(name="planning manager").exists():
-            self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.verbose_name_plural,
+        if not request.user.is_superuser and not request.user.groups.filter(name="planning manager").exists():
+            self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.model._meta.verbose_name_plural,
                               level=messages.WARNING)
             return
         # only one event at a time
