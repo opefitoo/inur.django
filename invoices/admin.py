@@ -1952,8 +1952,8 @@ class EventListAdmin(admin.ModelAdmin):
                     e.display_unconnected_events.delay(time_min)
 
     def duplicate_event_for_next_week(self, request, queryset):
-        if not request.user.is_superuser or not request.user.groups.filter(name="planning manager").exists():
-            self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.verbose_name_plural,
+        if not request.user.is_superuser and not request.user.groups.filter(name="planning manager").exists():
+            self.message_user(request, "Vous n'avez pas le droit de dupliquer des %s." % self.model._meta.verbose_name_plural,
                               level=messages.WARNING)
 
             return
