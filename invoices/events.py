@@ -345,6 +345,13 @@ class Event(models.Model):
                                    events_deleted_from_nuno_but_still_in_google),
                                 to_emails=[User.objects.get(id=1).email])
 
+    @property
+    def aevs_stats(self):
+        # return how many EventLinkToMedicalCareSummaryPerPatientDetail are there and how many are done
+        # something like AEV 1/2
+        total = self.eventlinktomedicalcaresummaryperpatientdetail_set.count()
+        done = self.eventlinktomedicalcaresummaryperpatientdetail_set.filter(is_done=True).count()
+        return "%s/%s" % (done, total)
     @staticmethod
     def validate(model, instance_id, data):
         result = {}
