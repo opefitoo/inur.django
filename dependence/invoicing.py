@@ -560,7 +560,8 @@ def normalize_and_hash_xml(xml_file):
     return sha256.hexdigest()
 
 def has_no_anomalie_prestation(element):
-    return not element.find('.//anomaliePrestation') is not None
+    # if element has key 'anomaliePrestation' and its value is not None, return False
+    return 'anomaliePrestation' not in element or element['anomaliePrestation'] is None
 
 def detect_anomalies(instance):
     # Get the current script's directory
@@ -597,10 +598,14 @@ def detect_anomalies(instance):
 
         # Extract facture elements with anomalies
         anomalies = []
-        for facture in invoice_root.findall('.//facture'):
-            reference_facture = facture.find('./referenceFacture').text if facture.find(
-                './referenceFacture') is not None else "Unknown"
-            anomalie = facture.find('./anomalieFacture')
+        # loop through all 'facture' elements in xml_document
+        for facture in xml_document['fichierFacturation']['facture']:
+        #for facture in invoice_root.findall('.//facture'):
+            anomaliesFactures = None
+            reference_facture = facture['referenceFacture'] if facture['referenceFacture'] is not None else "Unknown"
+            # check if there's  'anomalieFacture' key first in facture element
+            if 'anomalieFacture' in facture and facture['anomalieFacture'] is not None:
+                anomaliesFactures = facture['anomalieFacture']
             items = LongTermCareInvoiceFile.objects.annotate(
                 invoice_reference_filter=Concat(
                     ExtractYear('invoice_start_period'),
@@ -609,19 +614,19 @@ def detect_anomalies(instance):
                     output_field=CharField()
                 )
             )
-            if anomalie is not None:
+            if anomaliesFactures is not None:
                 # find prestation without anomalies
                 # Manually filter the prestations
-                prestations_without_anomalies = [prestation for prestation in facture.findall('.//prestation') if
+                prestations_without_anomalies = [prestation for prestation in facture['prestation'] if
                                                  has_no_anomalie_prestation(prestation)]
                 invoice_in_error = items.filter(invoice_reference_filter=reference_facture).get()
                 for prestation in prestations_without_anomalies:
                     invoiced_prestation = invoice_root.find('.//facture/prestation/[referencePrestation="{}"]'.format(
-                        prestation.find('referencePrestation').text))
+                        prestation['referencePrestation']))
                     date_prestation_text = invoiced_prestation.find('periodePrestation/dateDebut').text
                     date_prestation = date.fromisoformat(date_prestation_text)
                     invoiced_code_acte = invoiced_prestation.find('acte/codeTarif').text
-                    reference_prestation = prestation.find('referencePrestation').text
+                    reference_prestation = prestation['referencePrestation']
                     if len(LongTermCareInvoiceLine.objects.filter(invoice=invoice_in_error).filter(long_term_care_package__code=invoiced_code_acte)) == 1:
                         LongTermCareInvoiceLine.objects.filter(invoice=invoice_in_error).filter(
                             long_term_care_package__code=invoiced_code_acte).update(paid=True,
@@ -632,26 +637,25 @@ def detect_anomalies(instance):
                             long_term_care_package__code=invoiced_code_acte).filter(care_date=date_prestation).update(paid=True,
                                                                                                                       refused_by_insurance=False,
                                                                                                                       comment="")
-                code = anomalie.find('./code').text if anomalie.find('./code') is not None else "Unknown"
-                motif = anomalie.find('./motif').text if anomalie.find('./motif') is not None else "Unknown"
                 error_messages = []
+                for anom in anomaliesFactures:
+                    error_messages.append(f"Facture {reference_facture} has anomaly {anom['code']} - {anom['motif']}")
                 # Find all 'prestation' elements with 'anomaliePrestation' child within the current 'facture'
-                prestations_with_anomalies = facture.findall('.//prestation[anomaliePrestation]')
-                error_messages.append(f"Facture {reference_facture} has anomaly {code} - {motif}")
+                prestations_with_anomalies = [prestation for prestation in facture['prestation'] if not has_no_anomalie_prestation(prestation)]
                 for prestation in prestations_with_anomalies:
                     # find the invoiced prestation from the invoice file
                     invoiced_prestation = invoice_root.find('.//facture/prestation/[referencePrestation="{}"]'.format(
-                        prestation.find('referencePrestation').text))
+                        prestation['referencePrestation']))
                     date_prestation_text = invoiced_prestation.find('periodePrestation/dateDebut').text
                     date_prestation = date.fromisoformat(date_prestation_text)
                     invoiced_code_acte = invoiced_prestation.find('acte/codeTarif').text
-                    reference_prestation = prestation.find('referencePrestation').text
-                    anomalies = prestation.findall('anomaliePrestation')
+                    reference_prestation = prestation['referencePrestation']
+                    anomaliesPrestations = prestation['anomaliePrestation']
                     anomlies_text = ""
-                    for anomalie in anomalies:
-                        anomalie_type = anomalie.find('type').text
-                        anomalie_code = anomalie.find('code').text
-                        anomalie_motif = anomalie.find('motif').text
+                    for anomalie in anomaliesPrestations:
+                        anomalie_type = anomalie['type']
+                        anomalie_code = anomalie['code']
+                        anomalie_motif = anomalie['motif']
                         anomlies_text += f"Type: {anomalie_type} - Code: {anomalie_code} - Motif: {anomalie_motif}"
                     if len(LongTermCareInvoiceLine.objects.filter(invoice=invoice_in_error).filter(long_term_care_package__code=invoiced_code_acte)) == 1:
                         LongTermCareInvoiceLine.objects.filter(invoice=invoice_in_error).filter(
@@ -663,23 +667,23 @@ def detect_anomalies(instance):
                             long_term_care_package__code=invoiced_code_acte).filter(care_date=date_prestation).update(paid=False,
                                                                                                                       refused_by_insurance=True,
                                                                                                                       comment=anomlies_text)
-                    code_acte_paye = prestation.find('codeActePaye').text
-                    anomalie = prestation.find('anomaliePrestation')
-                    anomalie_type = anomalie.find('type').text
-                    anomalie_code = anomalie.find('code').text
-                    anomalie_motif = anomalie.find('motif').text
+                    code_acte_paye = prestation['codeActePaye']
+                    anomalies = prestation['anomaliePrestation']
+                    anomaliesPrestationsText = ""
+                    for anomalie in anomalies:
+                        anomalie_type = anomalie['type']
+                        anomalie_code = anomalie['code']
+                        anomalie_motif = anomalie['motif']
+                        anomaliesPrestationsText += f"Type: {anomalie_type} - Code: {anomalie_code} - Motif: {anomalie_motif}"
                     # prestation reference looks like "%s%s%s" % (self.invoice.id, self.long_term_care_package.id, date_of_line_str) extract long_term_care_package.id knowing that invoice.id is invoice_in_error.id
                     long_term_care_package_id = reference_prestation[len(str(invoice_in_error.id)):-10]
                     print(long_term_care_package_id)
                     long_term_care_package = LongTermPackage.objects.get(code=code_acte_paye)
 
                     # Display the extracted information
-                    print(f"  - Prestation Reference: {reference_prestation}")
-                    print(f"    Anomalie Type: {anomalie_type}")
-                    print(f"    Anomalie Code: {anomalie_code}")
-                    print(f"    Anomalie Motif: {anomalie_motif}")
+                    print(f"  - Prestation Reference: {reference_prestation} - anomalies : {anomaliesPrestationsText}")
                     error_messages.append(
-                        f"reference prestation : {reference_prestation} - Error messages: {anomlies_text}")
+                        f"reference prestation : {reference_prestation} - Error messages: {anomaliesPrestationsText}")
 
                 # generate a hash for all error_messages
                 error_messages_hash = hashlib.sha256(str(error_messages).encode('utf-8')).hexdigest()
@@ -689,16 +693,18 @@ def detect_anomalies(instance):
                     InvoiceError.objects.create(invoice=invoice_in_error,
                                                 statement_sending=instance,
                                                 error_message=error_messages)
-                    print(f"Facture {invoice_in_error} has anomaly {code} - {motif}")
+                    print(f"Facture {invoice_in_error} has anomaly {error_messages}")
                 else:
                     print(f"deleting error message for facture {invoice_in_error} and sending {instance}")
                     InvoiceError.objects.filter(invoice=invoice_in_error,
                                                 statement_sending=instance).delete()
-                anomalies.append((reference_facture, code, motif))
+                # appends anomaliesFactures to anomalies
+                anomalies.append((reference_facture, anomaliesFactures))
+                #anomalies.append((reference_facture, code, motif))
             else:
                 print(f"Facture {reference_facture} has no anomalies")
-                montant_net_facture = facture.find('./montantNet').text
-                montant_brut_facture = facture.find('./montantBrut').text
+                montant_net_facture = facture['montantNet']
+                montant_brut_facture = facture['montantBrut']
                 if float(montant_net_facture) == float(montant_brut_facture):
                     invoice_paid = items.filter(invoice_reference_filter=reference_facture).get()
                     # set lines and items as paid
