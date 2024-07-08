@@ -66,7 +66,7 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
     date_hierarchy = 'invoice_start_period'
     readonly_fields = ('has_errors_col', 'display_errors_as_html',
                        'invoice_reference', 'created_on', 'updated_on')
-    actions = ['create_pdf_version', 'export_to_xero', 'link_invoice_to_LongTermCareMonthlyStatement']
+    actions = ['create_pdf_version', 'copy_prestations_in_error_to_new_invoice', 'link_invoice_to_LongTermCareMonthlyStatement']
 
     object_actions = [
         {
@@ -99,6 +99,16 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
             return
         for obj in queryset:
             obj.export_to_xero()
+
+    def copy_prestations_in_error_to_new_invoice(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Only superuser can copy to new invoice", level=messages.ERROR)
+            return
+        invoices_copied = []
+        for obj in queryset:
+            invoices_copied = obj.copy_prestations_in_error_to_new_invoice()
+        self.message_user(request, "Invoices copied %s" % invoices_copied)
+
 
 
     def has_errors_col(self, obj):

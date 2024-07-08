@@ -797,6 +797,31 @@ class LongTermCareInvoiceFile(models.Model):
         xero_account_code = get_xero_account_code(self.patient)
         # get xero tracking category id
 
+    def copy_prestations_in_error_to_new_invoice(self):
+        # copy all prestations in error to a new invoice
+        # create a new invoice
+        new_invoice = LongTermCareInvoiceFile.objects.create(invoice_start_period=self.invoice_start_period,
+                                                             invoice_end_period=self.invoice_end_period,
+                                                             patient=self.patient)
+        # get all prestations in error
+        prestations_in_error = LongTermCareInvoiceLine.objects.filter(invoice=self).filter(refused_by_insurance=True).all()
+        for prestation in prestations_in_error:
+            prestation.pk = None
+            prestation.invoice = new_invoice
+            prestation.refused_by_insurance = False
+            prestation.save()
+        prestations_in_error = LongTermCareInvoiceItem.objects.filter(invoice=self).filter(refused_by_insurance=True).all()
+        for prestation in prestations_in_error:
+            prestation.pk = None
+            prestation.invoice = new_invoice
+            prestation.refused_by_insurance = False
+            prestation.save()
+
+        #for prestation in prestations_in_error:
+        #    prestation.invoice = new_invoice
+        #    prestation.save()
+        return new_invoice
+
     def calculate_price(self):
         lines = LongTermCareInvoiceLine.objects.filter(invoice=self)
         total = 0
