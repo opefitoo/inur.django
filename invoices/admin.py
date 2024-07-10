@@ -1893,7 +1893,9 @@ class EventListAdmin(admin.ModelAdmin):
 
         # Create the Excel response
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename="validation.xlsx"'
+        # file name should be validation_patient_name_month_year.xlsx
+        response['Content-Disposition'] = 'attachment; filename="validation_%s_%s_%s.xlsx"' % (
+            queryset.first().patient, queryset.first().day.strftime('%m'), queryset.first().day.strftime('%Y'))
 
         wb = openpyxl.Workbook()
         ws = wb.active
