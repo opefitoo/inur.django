@@ -4,6 +4,7 @@ import csv
 import datetime
 import io
 import os
+import re
 from collections import defaultdict
 from datetime import datetime as dt
 from decimal import Decimal
@@ -1935,9 +1936,9 @@ class EventListAdmin(admin.ModelAdmin):
         ws.append([])
 
         # Append a row with validations of the month of the events selected in bold styling
-        validation_month_cell = ws.cell(row=ws.max_row + 2, column=1, value="Validation du mois")
+        validation_month_cell = ws.cell(row=ws.max_row + 2, column=1, value="Validation du Mois")
         validation_month_cell.font = bold_larger_font
-        validation_month_value_cell = ws.cell(row=ws.max_row, column=2, value=queryset.first().day.strftime('%m %Y'))
+        validation_month_value_cell = ws.cell(row=ws.max_row, column=2, value=queryset.first().day.strftime('%m/%Y'))
         validation_month_value_cell.font = bold_larger_font
         ws.append([])
 
@@ -1956,16 +1957,24 @@ class EventListAdmin(admin.ModelAdmin):
             for link in event.eventlinktomedicalcaresummaryperpatientdetail_set.all():
                 care_code_data[link.medical_care_summary_per_patient_detail.item.code][event.day] += link.quantity
 
-        # Sort and group codes by their starting letters
+        # Function to clean up codes
+        def clean_code(code):
+            return re.sub(r'\W+', '', code)  # Remove non-alphanumeric characters
+
+        # Determine grouping rules dynamically
         grouped_codes = defaultdict(list)
         for care_code in care_code_data.keys():
-            starting_letter = care_code[0]
-            grouped_codes[starting_letter].append(care_code)
+            cleaned_code = clean_code(care_code)
+            if len(cleaned_code) >= 4:
+                group_key = cleaned_code[:4]
+            else:
+                group_key = cleaned_code
+            grouped_codes[group_key].append(care_code)
 
         # Populate the worksheet with grouped codes
-        for starting_letter in sorted(grouped_codes.keys()):
+        for group in sorted(grouped_codes.keys()):
             ws.append([])  # Add an empty row before each new group
-            for care_code in sorted(grouped_codes[starting_letter]):
+            for care_code in sorted(grouped_codes[group]):
                 day_data = care_code_data[care_code]
                 row = [care_code] + [" "] * days_in_month  # Initialize row with zeros for each day
                 for day, quantity in day_data.items():
