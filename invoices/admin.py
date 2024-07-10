@@ -1875,27 +1875,31 @@ class EventListAdmin(admin.ModelAdmin):
     form = EventForm
 
     def export_to_excel(self, request, queryset):
-        # check if the user is a superuser
+        # Check if the user is a superuser
         if not request.user.is_superuser:
-            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
-                                    level=messages.ERROR)
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.", level=messages.ERROR)
             return
-        # check that all events are for the same patient
+
+        # Check that all events are for the same patient
         if len(set([e.patient for e in queryset])) > 1:
-            self.message_user(request, "Tous les événements doivent être pour le même patient.",
-                                    level=messages.ERROR)
+            self.message_user(request, "Tous les événements doivent être pour le même patient.", level=messages.ERROR)
             return
-        # check that all events are for the same year/month
+
+        # Check that all events are for the same year/month
         if len(set([e.day.year for e in queryset])) > 1 or len(set([e.day.month for e in queryset])) > 1:
-            self.message_user(request, "Tous les événements doivent être pour le même mois.",
-                                    level=messages.ERROR)
+            self.message_user(request, "Tous les événements doivent être pour le même mois.", level=messages.ERROR)
             return
+
+        # Create the Excel response
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename="validation.xlsx"'
+
         wb = openpyxl.Workbook()
         ws = wb.active
-        # ws.title should be month and year
+
+        # Set the sheet title to month and year
         ws.title = queryset.first().day.strftime('%m-%Y')
+
         # Determine the month and year from the queryset
         if queryset.exists():
             event_month = queryset.first().day.month
@@ -1907,6 +1911,7 @@ class EventListAdmin(admin.ModelAdmin):
         # Define fill patterns for alternating colors
         fill_color_1 = PatternFill(start_color="FFFFCC", end_color="FFFFCC", fill_type="solid")
         fill_color_2 = PatternFill(start_color="CCFFFF", end_color="CCFFFF", fill_type="solid")
+
         # Initialize a flag to alternate colors
         use_color_1 = True
 
@@ -1928,14 +1933,13 @@ class EventListAdmin(admin.ModelAdmin):
 
         # Add an empty row
         ws.append([])
-        # append a row with validations of the month of the events selected in bold styling
+
+        # Append a row with validations of the month of the events selected in bold styling
         validation_month_cell = ws.cell(row=ws.max_row + 2, column=1, value="Validation du mois")
         validation_month_cell.font = bold_larger_font
         validation_month_value_cell = ws.cell(row=ws.max_row, column=2, value=queryset.first().day.strftime('%m %Y'))
         validation_month_value_cell.font = bold_larger_font
         ws.append([])
-
-
 
         # Prepare headers with dates of the month
         days_in_month = calendar.monthrange(event_year, event_month)[1]
@@ -1952,27 +1956,34 @@ class EventListAdmin(admin.ModelAdmin):
             for link in event.eventlinktomedicalcaresummaryperpatientdetail_set.all():
                 care_code_data[link.medical_care_summary_per_patient_detail.item.code][event.day] += link.quantity
 
-        # Populate the worksheet
-        for care_code, day_data in care_code_data.items():
-            row = [care_code] + [" "] * days_in_month  # Initialize row with zeros for each day
-            for day, quantity in day_data.items():
-                day_index = day.day - 1
-                row[day_index + 1] = quantity
-            ws.append(row)
-            current_row = ws.max_row
-            for cell in ws[current_row]:
-                # Apply alternating color fills
-                cell.fill = fill_color_1 if use_color_1 else fill_color_2
+        # Sort and group codes by their starting letters
+        grouped_codes = defaultdict(list)
+        for care_code in care_code_data.keys():
+            starting_letter = care_code[0]
+            grouped_codes[starting_letter].append(care_code)
 
-            # Toggle the flag for the next row
-            use_color_1 = not use_color_1
+        # Populate the worksheet with grouped codes
+        for starting_letter in sorted(grouped_codes.keys()):
+            ws.append([])  # Add an empty row before each new group
+            for care_code in sorted(grouped_codes[starting_letter]):
+                day_data = care_code_data[care_code]
+                row = [care_code] + [" "] * days_in_month  # Initialize row with zeros for each day
+                for day, quantity in day_data.items():
+                    day_index = day.day - 1
+                    row[day_index + 1] = quantity
+                ws.append(row)
+                current_row = ws.max_row
+                for cell in ws[current_row]:
+                    # Apply alternating color fills
+                    cell.fill = fill_color_1 if use_color_1 else fill_color_2
+                # Toggle the flag for the next row
+                use_color_1 = not use_color_1
 
         column_width = 20  # Set the desired width for the first column
         ws.column_dimensions['A'].width = column_width
 
         wb.save(response)
         return response
-
 
 
     @transaction.atomic
