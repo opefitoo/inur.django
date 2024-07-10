@@ -4,10 +4,12 @@ import csv
 import datetime
 import io
 import os
+from collections import defaultdict
 from datetime import datetime as dt
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
+import openpyxl
 from PIL import Image
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
 from constance import config
@@ -29,6 +31,7 @@ from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_csv_exports.admin import CSVExportAdmin
+from openpyxl.styles import PatternFill, Font
 
 from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceItem
 from dependence.longtermcareitem import LongTermPackage
@@ -1859,7 +1862,8 @@ class EventListAdmin(admin.ModelAdmin):
                "duplicate_event_for_the_hole_week",
                'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
-               'send_webhook_message', 'create_assurance_dependance_invoice_out_of_events']
+               'send_webhook_message', 'export_to_excel']
+
     inlines = (ReportPictureInLine, EventLinkToCareCodeInline,
                EventLinkToMedicalCareSummaclryPerPatientDetailInline,
                EventGenericLinkInline,
@@ -1869,6 +1873,107 @@ class EventListAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
 
     form = EventForm
+
+    def export_to_excel(self, request, queryset):
+        # check if the user is a superuser
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.",
+                                    level=messages.ERROR)
+            return
+        # check that all events are for the same patient
+        if len(set([e.patient for e in queryset])) > 1:
+            self.message_user(request, "Tous les événements doivent être pour le même patient.",
+                                    level=messages.ERROR)
+            return
+        # check that all events are for the same year/month
+        if len(set([e.day.year for e in queryset])) > 1 or len(set([e.day.month for e in queryset])) > 1:
+            self.message_user(request, "Tous les événements doivent être pour le même mois.",
+                                    level=messages.ERROR)
+            return
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="validation.xlsx"'
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        # ws.title should be month and year
+        ws.title = queryset.first().day.strftime('%m-%Y')
+        # Determine the month and year from the queryset
+        if queryset.exists():
+            event_month = queryset.first().day.month
+            event_year = queryset.first().day.year
+        else:
+            self.message_user(request, "No events selected.", level=messages.ERROR)
+            return
+
+        # Define fill patterns for alternating colors
+        fill_color_1 = PatternFill(start_color="FFFFCC", end_color="FFFFCC", fill_type="solid")
+        fill_color_2 = PatternFill(start_color="CCFFFF", end_color="CCFFFF", fill_type="solid")
+        # Initialize a flag to alternate colors
+        use_color_1 = True
+
+        # Create a bold and larger font style
+        bold_larger_font = Font(size=12, bold=True)
+        # Create a bold font style
+        bold_font = Font(bold=True)
+
+        # Append a row with the name of the patient in bold and the matricule
+        patient_cell = ws.cell(row=ws.max_row + 1, column=1, value="Patient")
+        patient_cell.font = bold_larger_font
+        patient_name_cell = ws.cell(row=ws.max_row, column=2, value=str(queryset.first().patient))
+        patient_name_cell.font = bold_larger_font
+
+        matricule_cell = ws.cell(row=ws.max_row + 1, column=1, value="Matricule")
+        matricule_cell.font = bold_larger_font
+        matricule_value_cell = ws.cell(row=ws.max_row, column=2, value=queryset.first().patient.code_sn)
+        matricule_value_cell.font = bold_larger_font
+
+        # Add an empty row
+        ws.append([])
+        # append a row with validations of the month of the events selected in bold styling
+        validation_month_cell = ws.cell(row=ws.max_row + 2, column=1, value="Validation du mois")
+        validation_month_cell.font = bold_larger_font
+        validation_month_value_cell = ws.cell(row=ws.max_row, column=2, value=queryset.first().day.strftime('%m %Y'))
+        validation_month_value_cell.font = bold_larger_font
+        ws.append([])
+
+
+
+        # Prepare headers with dates of the month
+        days_in_month = calendar.monthrange(event_year, event_month)[1]
+        headers = ['Care Code']
+        for day in range(1, days_in_month + 1):
+            headers.append(datetime.date(event_year, event_month, day).strftime('%d'))
+        ws.append(headers)
+        for cell in ws[ws.max_row]:
+            cell.font = bold_font
+
+        # Aggregate data
+        care_code_data = defaultdict(lambda: defaultdict(int))  # {care_code: {day: quantity}}
+        for event in queryset:
+            for link in event.eventlinktomedicalcaresummaryperpatientdetail_set.all():
+                care_code_data[link.medical_care_summary_per_patient_detail.item.code][event.day] += link.quantity
+
+        # Populate the worksheet
+        for care_code, day_data in care_code_data.items():
+            row = [care_code] + [" "] * days_in_month  # Initialize row with zeros for each day
+            for day, quantity in day_data.items():
+                day_index = day.day - 1
+                row[day_index + 1] = quantity
+            ws.append(row)
+            current_row = ws.max_row
+            for cell in ws[current_row]:
+                # Apply alternating color fills
+                cell.fill = fill_color_1 if use_color_1 else fill_color_2
+
+            # Toggle the flag for the next row
+            use_color_1 = not use_color_1
+
+        column_width = 20  # Set the desired width for the first column
+        ws.column_dimensions['A'].width = column_width
+
+        wb.save(response)
+        return response
+
+
 
     @transaction.atomic
     def create_invoice_item_out_of_events(self, request, queryset):
