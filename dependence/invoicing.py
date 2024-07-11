@@ -1098,6 +1098,14 @@ class LongTermCareInvoiceLine(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    def get_line_care_givers(self):
+        if self.subcontractor:
+            relationship = PatientSubContractorRelationship.objects.filter(patient=self.invoice.patient, subcontractor=self.subcontractor).get()
+            if relationship.relationship_type == PatientSubContractorRelationship.RELATIONSHIP_TYPE_CHOICES[0][0]:
+                return InvoicingDetails.objects.filter(default_invoicing=True).first().name
+            else:
+                return self.subcontractor
+
     def calculate_price(self):
         if self.paid or self.refused_by_insurance:
             return 0

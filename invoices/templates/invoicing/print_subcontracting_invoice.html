@@ -188,7 +188,7 @@
         {% for line in obj.get_lines_assigned_to_subcontractor %}
         <tr class="item">
             <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
-            <td>{{ line.subcontractor|default:line.get_caregiver }}</td>
+            <td>{{ line.get_line_care_givers }}</td>
             <td>{{ line.start_period }}</td>
             <td>{{ line.end_period }}</td>
             <td>{{ line.long_term_care_package.code }}</td>
