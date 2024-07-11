@@ -2049,8 +2049,8 @@ class EventListAdmin(admin.ModelAdmin):
             e.display_unconnected_events()
 
     def safe_delete(self, request, queryset):
-        if not request.user.is_superuser:
-            self.message_user(request, "Vous n'avez pas le droit de supprimer des %s." % self.verbose_name_plural,
+        if not request.user.is_superuser and not request.user.groups.filter(name="planning manager").exists():
+            self.message_user(request, "Vous n'avez pas le droit de supprimer des %s." % self.model._meta.verbose_name_plural,
                               level=messages.WARNING)
             return
         for e in queryset:
