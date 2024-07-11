@@ -1104,8 +1104,11 @@ class LongTermCareInvoiceLine(models.Model):
         number_of_days_inclusive = (self.end_period - self.start_period).days + 1
         if self.long_term_care_package.package:
             # deduct the retrocession in case of subcontractor
-            return self.long_term_care_package.price_per_year_month(year=self.start_period.year,
+            if self.subcontractor:
+                return self.long_term_care_package.price_per_year_month(year=self.start_period.year,
                                                                     month=self.start_period.month) * number_of_days_inclusive * ( 1 - self.subcontractor.billing_retrocession / 100)
+            return self.long_term_care_package.price_per_year_month(year=self.start_period.year, month=self.start_period.month) * number_of_days_inclusive
+
         else:
             raise ValidationError("Line seulement pour un forfait (package doit etre true)")
 
