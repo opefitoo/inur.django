@@ -1084,6 +1084,7 @@ class LongTermCareInvoiceLine(models.Model):
                                                related_name='long_term_care_package')
     paid = models.BooleanField(_('Paid'), default=False)
     refused_by_insurance = models.BooleanField(_('Refused by insurance'), default=False)
+    skip_aev_check = models.BooleanField(_('Skip AEV Check'), default=False)
     comment = models.CharField(_('Comment'), max_length=500, blank=True, null=True)
     xml_invoice_reference = models.CharField(_('Référence de facturation'), max_length=255, blank=True, null=True)
     subcontractor = models.ForeignKey(

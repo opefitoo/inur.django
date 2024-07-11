@@ -158,6 +158,7 @@ class LongTermCareInvoiceLineInlineFormset(forms.BaseInlineFormSet):
         for form in self.forms:
             if not form.cleaned_data.get('DELETE'):
                 instance = form.instance
-                instance.validate_line_are_coherent_with_medical_care_summary_per_patient()
+                if not form.cleaned_data.get('skip_aev_check'):
+                    instance.validate_line_are_coherent_with_medical_care_summary_per_patient()
                 instance.validate_lines_are_same_period()
                 instance.validate_lines_are_made_by_correct_sub_contractor()
