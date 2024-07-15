@@ -680,7 +680,7 @@ class AlternateAddress(models.Model):
             print("Found %d events : %s" % (events.count(), events))
         if len(events) > 5 and not os.environ.get('LOCAL_ENV', None):
             # call async task
-            from processors.tasks import update_events_address
+            from invoices.processors.tasks import update_events_address
             update_events_address.delay(events, self.full_address)
             # list the events and send a message to the system
             message = "The following events will be updated asynchronously %s" % events
