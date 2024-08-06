@@ -180,7 +180,7 @@ class PatientAnamnesis(models.Model):
                                          null=True
                                          )
     reason_for_dependence = models.CharField(u"Motif de prise en charge",  #
-                                             max_length=45,
+                                             max_length=150,
                                              blank=True,
                                              null=True
                                              )
