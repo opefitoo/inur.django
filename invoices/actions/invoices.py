@@ -13,7 +13,7 @@ from invoices.modelspackage import InvoicingDetails
 
 
 @transaction.atomic
-def generer_forfait_aev_juin_2024(self, request, queryset):
+def generer_forfait_aev_july_2024(self, request, queryset):
     # only for superuser
     if not request.user.is_superuser:
         return
