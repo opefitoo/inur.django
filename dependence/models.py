@@ -167,11 +167,11 @@ class PatientAnamnesis(models.Model):
                                     blank=True,
                                     null=True
                                     )
-    plan_of_share = models.CharField(u"Plan de partage",  #
-                                     max_length=45,
-                                     blank=True,
-                                     null=True
-                                     )
+    # plan_of_share = models.CharField(u"Plan de partage",  #
+    #                                  max_length=45,
+    #                                  blank=True,
+    #                                  null=True
+    #                                  )
     help_for_cleaning = models.CharField(u"Aide pour le ménage",  #
                                          max_length=10,
                                          choices=HelpForCleaning.choices,
@@ -179,7 +179,7 @@ class PatientAnamnesis(models.Model):
                                          blank=True,
                                          null=True
                                          )
-    reason_for_dependence = models.CharField(u"Motif de prise en charge",  #
+    reason_for_dependence = models.TextField(u"Motif de prise en charge",  #
                                              max_length=150,
                                              blank=True,
                                              null=True
@@ -370,7 +370,9 @@ class PatientAnamnesis(models.Model):
                 shared_care_plan_dict['sn_code_aidant'] = care_summary_per_patient[0].sn_code_aidant
                 return shared_care_plan_dict
             else:
-                raise shared_care_plan_dict
+                shared_care_plan_dict['shared_plan'] = False
+                shared_care_plan_dict['sn_code_aidant'] = None
+                return shared_care_plan_dict
 
     def clean(self, *args, **kwargs):
         super(PatientAnamnesis, self).clean_fields()

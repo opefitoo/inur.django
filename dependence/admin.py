@@ -664,7 +664,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
 
     readonly_fields = ("created_on", "updated_on",
                        'display_object_actions_detail',
-                       'medical_prescriptions_details'
+                       'medical_prescriptions_details', 'shared_care_plan'
                        )
 
     fieldsets_with_inlines = [
@@ -672,7 +672,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
             'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link',
                        'birth_place', 'contract_start_date', 'contract_end_date', 'contract_signed_date',
                        'contract_file',
-                       'plan_of_share', 'help_for_cleaning', 'reason_for_dependence', 'anticipated_directives',
+                       'shared_care_plan', 'help_for_cleaning', 'reason_for_dependence', 'anticipated_directives',
                        'anticipated_directives_doc_link',
                        'religious_beliefs',
                        'created_on', 'updated_on', 'display_object_actions_detail')
@@ -802,6 +802,15 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
 
     bedsore_count.short_description = "Nombre d'escarres"
 
+    def shared_care_plan(self, obj):
+        shared_plan = obj.shared_care_plan.get('shared_plan', False)
+        sn_code_aidant = obj.shared_care_plan.get('sn_code_aidant', 'N/A')
+        checkbox = '<img src="/static/admin/img/icon-yes.svg" alt="True">' if shared_plan else '<img src="/static/admin/img/icon-no.svg" alt="False">'
+        if not sn_code_aidant or sn_code_aidant == 'None':
+            return mark_safe(f"<b>Partage:</b> {checkbox}")
+        return mark_safe(f"<b>Partage:</b> {checkbox}<br><b>SN Code Aidant:</b> {sn_code_aidant}")
+
+    shared_care_plan.short_description = _('Plan de partage')
     def fall_count(self, obj):
         # Assuming the related model for falls is named 'FallDeclaration' and has a ForeignKey to 'Patient'
         count = obj.patient.fall_count()
