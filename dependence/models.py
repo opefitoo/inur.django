@@ -359,6 +359,16 @@ class PatientAnamnesis(models.Model):
             care_summary_per_patient = MedicalCareSummaryPerPatient.objects.filter(patient_id=self.patient_id).all()
             # if more than one throw an error
             if len(care_summary_per_patient) > 1:
+                for c in care_summary_per_patient:
+                    if c.is_latest_plan:
+                        shared_care = SharedMedicalCareSummaryPerPatientDetail.objects.filter(
+                            medical_care_summary_per_patient_id=c.id).all()
+                        shared_plan = False
+                        if len(shared_care) > 1:
+                            shared_plan = True
+                        shared_care_plan_dict['shared_plan'] = shared_plan
+                        shared_care_plan_dict['sn_code_aidant'] = c.sn_code_aidant
+                        return shared_care_plan_dict
                 raise Exception("More than one medical care summary per patient %s" % self.patient)
             elif len(care_summary_per_patient) == 1:
                 shared_care = SharedMedicalCareSummaryPerPatientDetail.objects.filter(
