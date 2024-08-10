@@ -261,7 +261,7 @@ class PatientAnamnesis(models.Model):
                                                     default=None,
                                                     blank=True,
                                                     null=True)
-    informal_caregiver = models.CharField("Aidant informel", max_length=50, default=None, blank=True, null=True)
+    informal_caregiver = models.CharField("Aidant formel", max_length=50, default=None, blank=True, null=True)
     pathologies = models.TextField("Pathologies", max_length=500, default=None, blank=True, null=True)
     technical_help = models.TextField("Aides techniques", max_length=500, default=None, blank=True, null=True)  #
 
