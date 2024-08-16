@@ -33,6 +33,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_csv_exports.admin import CSVExportAdmin
 from openpyxl.styles import PatternFill, Font
+from openpyxl.styles.alignment import Alignment
 
 from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceItem
 from dependence.longtermcareitem import LongTermPackage
@@ -1958,6 +1959,12 @@ class EventListAdmin(admin.ModelAdmin):
         for event in queryset:
             for link in event.eventlinktomedicalcaresummaryperpatientdetail_set.all():
                 care_code_data[link.medical_care_summary_per_patient_detail.item.code][event.day] += link.quantity
+                # align text to the left
+                ws.cell(row=ws.max_row, column=1).alignment = Alignment(horizontal='left')
+                # if day is weekend color it in grey
+                if datetime.date(event_year, event_month, event.day).weekday() in [5, 6]:
+                    for cell in ws[ws.max_row]:
+                        cell.fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
 
         # Function to clean up codes
         def clean_code(code):
