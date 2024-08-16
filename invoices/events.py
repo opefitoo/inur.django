@@ -29,7 +29,7 @@ from invoices.employee import Employee
 from invoices.enums.event import EventTypeEnum
 from invoices.gcalendar2 import PrestationGoogleCalendarSurLu
 from invoices.googlemessages import post_webhook, post_webhook_pic_as_image
-from invoices.models import Patient, SubContractor
+from invoices.models import Patient, SubContractor, PatientSubContractorRelationship
 from invoices.notifications import send_email_notification
 
 
@@ -817,14 +817,21 @@ def event_report_mandatory_validated_events(data):
 def event_sub_contractor_mandatory_if_event_type_is_sub_care(data):
     messages = {}
     if data['event_type_enum'] == EventTypeEnum.SUB_CARE and data['sub_contractor_id'] is None:
-        messages = {'sub_contractor': _("Sous-traitant est obligatoire pour %s") % _(data['event_type_enum'])}
+        messages.update({'sub_contractor': _("Sous-traitant est obligatoire pour %s") % _(data['event_type_enum'])})
     if data['event_type_enum'] == EventTypeEnum.SUB_CARE and data['sub_contractor_id'] is not None:
-        if data['employees_id'] is not None:
-            messages = {'employees': _("champ Employé non autorisé car de type %s") % _(data['event_type_enum'])}
+        # check what kind of relation is between sub-contractor and patient
+        if data['patient_id'] is not None:
+            subcontractor_relatinship = PatientSubContractorRelationship.objects.filter(patient__id=data['patient_id'],
+                                                            subcontractor__id=data['sub_contractor_id']).get()
+            if not subcontractor_relatinship:
+                messages.update({'sub_contractor': _("Sous-traitant n'est pas lié au patient")})
+            if subcontractor_relatinship and subcontractor_relatinship.is_main_company() and data['employees_id'] is not None:
+                messages.update({'sub_contractor': _("Sous-traitant est la société principale")})
+                messages.update({'employees': _("champ Employé non autorisé car de type %s") % _(data['event_type_enum'])})
     if data['sub_contractor_id'] is not None and (
             data['event_type_enum'] is None or data['event_type_enum'] != EventTypeEnum.SUB_CARE):
-        messages = {'event_type_enum': _("champ Type non autorisé car de type %s doit être de type %s") % (_(
-            data['event_type_enum']), _(EventTypeEnum.SUB_CARE))}
+        messages.update({'event_type_enum': _("champ Type non autorisé car de type %s doit être de type %s") % (_(
+            data['event_type_enum']), _(EventTypeEnum.SUB_CARE))})
     return messages
 
 
