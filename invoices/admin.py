@@ -10,6 +10,7 @@ from datetime import datetime as dt
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
+import holidays
 import openpyxl
 from PIL import Image
 from admin_object_actions.admin import ModelAdminObjectActionsMixin
@@ -1961,10 +1962,16 @@ class EventListAdmin(admin.ModelAdmin):
                 care_code_data[link.medical_care_summary_per_patient_detail.item.code][event.day] += link.quantity
                 # align text to the left
                 ws.cell(row=ws.max_row, column=1).alignment = Alignment(horizontal='left')
-                # if day is weekend color it in grey
-                if datetime.date(event_year, event_month, event.day).weekday() in [5, 6]:
-                    for cell in ws[ws.max_row]:
-                        cell.fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
+                if event.day.weekday() in [5, 6]:
+                    # colorize the column (all rows) that are saturday or sunday in grey
+                    ws.cell(row=ws.max_row, column=event.day.day + 1).fill = PatternFill(start_color="D3D3D3",
+                                                                                            end_color="D3D3D3",
+                                                                                            fill_type="solid")
+                # if is bank holiday colorize the column (all rows) in yellow using library holidays
+                if event.day in holidays.LU():
+                    ws.cell(row=ws.max_row, column=event.day.day + 1).fill = PatternFill(start_color="FFFF00",
+                                                                                        end_color="FFFF00",
+                                                                                        fill_type="solid")
 
         # Function to clean up codes
         def clean_code(code):
@@ -1994,6 +2001,7 @@ class EventListAdmin(admin.ModelAdmin):
                 for cell in ws[current_row]:
                     # Apply alternating color fills
                     cell.fill = fill_color_1 if use_color_1 else fill_color_2
+                    cell.alignment = Alignment(horizontal='left')
                 # Toggle the flag for the next row
                 use_color_1 = not use_color_1
 
