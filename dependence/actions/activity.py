@@ -1,5 +1,7 @@
 from django.db import transaction
 
+from dependence.activity import LongTermMonthlyActivityDetail
+
 
 @transaction.atomic
 def duplicate_for_next_month(self, request, queryset):
@@ -50,3 +52,20 @@ def export_selected_to_csv(modeladmin, request, queryset):
 
 
 export_selected_to_csv.short_description = "Export selected to CSV"
+
+
+def generate_activity_details_from_events(year, month, patient):
+    # check AEV codes in events and generate activity details
+    # filter events for year, month and patient
+    from invoices.events import Event
+    events = Event.objects.filter(patient=patient, day__year=year, day__month=month).all()
+    for event in events:
+        for aev_dtl in event.eventlinktomedicalcaresummaryperpatientdetail_set.all():
+            activity_detail = LongTermMonthlyActivityDetail.objects.create(
+                activity=aev_dtl.activity,
+                activity_date=aev_dtl.start_date,
+                patient=patient,
+                quantity=aev_dtl.quantity,
+            )
+            activity_detail.save()
+
