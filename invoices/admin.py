@@ -72,7 +72,7 @@ from invoices.holidays import HolidayRequest, AbsenceRequestFile
 from invoices.models import CareCode, Prestation, Patient, InvoiceItem, Physician, ValidityDate, MedicalPrescription, \
     Hospitalization, InvoiceItemBatch, InvoiceItemEmailLog, PatientAdminFile, InvoiceItemPrescriptionsList, \
     AlternateAddress, Alert, Bedsore, BedsoreEvaluation, BedsoreRiskAssessment, SubContractor, SubContractorAdminFile, \
-    PatientSubContractorRelationship, ClientPatientRelationship
+    PatientSubContractorRelationship, ClientPatientRelationship, InsuranceCompany
 from invoices.modelspackage import InvoicingDetails
 from invoices.notifications import notify_holiday_request_validation
 from invoices.prefac import generate_flat_file, generate_flat_file_for_control
@@ -636,6 +636,13 @@ class SubContractorInline(admin.TabularInline):
     extra = 1
 
 
+
+@admin.register(InsuranceCompany)
+class InsuranceCompanyAdmin(admin.ModelAdmin):
+    # todo:
+    list_display = ('name', 'phone_number', 'email_address')
+
+
 @admin.register(Patient)
 class PatientAdmin(CSVExportAdmin):
     list_filter = ('is_under_dependence_insurance', UnderHeatWaveRiskFilter, IsPatientDeceasedFilter)
@@ -645,6 +652,7 @@ class PatientAdmin(CSVExportAdmin):
     readonly_fields = ('age', 'link_to_invoices', 'link_to_medical_prescriptions', 'link_to_events',
                        'link_to_all_events_of_last_3_months')
     search_fields = ['name', 'first_name', 'code_sn', 'zipcode', 'city', 'phone_number', 'email_address']
+    filter_horizontal = ('insurance_companies',)
     # actions = [calculate_distance_matrix]
     form = PatientForm
     actions = [generer_forfait_aev_july_2024, "generate_annual_report_for_2023",
