@@ -425,7 +425,7 @@ class CarePlanMasterAdmin(admin.ModelAdmin):
 class AssignedPhysicianInLine(admin.TabularInline):
     extra = 0
     model = AssignedPhysician
-    fields = ('assigned_physician',)
+    fields = ('assigned_physician', 'main_attending_physician')
     autocomplete_fields = ['assigned_physician']
 
 
