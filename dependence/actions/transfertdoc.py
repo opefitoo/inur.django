@@ -63,13 +63,14 @@ def generate_transfer_document(patientAnamnesis):
     # Create the footer with a table
     footer = section.footer
     table = footer.add_table(rows=1, cols=2, width=docx.shared.Inches(6.5))
-    table.cell(0, 0).width = docx.shared.Inches(4.5)
-    table.cell(0, 1).width = docx.shared.Inches(2.0)
+    table.cell(0, 0).width = docx.shared.Inches(5.5)
+    table.cell(0, 1).width = docx.shared.Inches(1.0)
 
     # Add text to the left side of the footer
     left_cell = table.cell(0, 0).paragraphs[0]
     run = left_cell.add_run(
-        'Fiche de transfert de %s %s' % (patientAnamnesis.patient.first_name, patientAnamnesis.patient.name))
+        'Fiche de transfert de %s %s (%s)' % (patientAnamnesis.patient.first_name, patientAnamnesis.patient.name,
+                                              patientAnamnesis.updated_on.strftime('%d-%m-%Y %H:%M')))
     run.italic = True
     run.font.size = Pt(9)  # Smaller font size
     run.font.color.rgb = RGBColor(128, 128, 128)  # Gray color (RGB 128, 128, 128)
@@ -91,7 +92,8 @@ def generate_transfer_document(patientAnamnesis):
     paragraph.add_run().add_break(docx.enum.text.WD_BREAK.LINE)
 
     # Add a title
-    doc.add_heading('FICHE DE TRANSFERT', 0)
+    doc.add_heading('FICHE DE TRANSFERT',
+                    level=0)
 
     # Add the base data section
     doc.add_heading('Données de base', level=1)
