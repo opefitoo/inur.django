@@ -10,7 +10,7 @@ from dependence.detailedcareplan import MedicalCareSummaryPerPatient, SharedMedi
 from invoices.db.fields import CurrentUserField
 from invoices.enums.generic import CivilStatus, HouseType, RemoteAlarm, DentalProsthesis, HearingAid, DrugManagement, \
     MobilizationsType, NutritionAutonomyLevel, HabitType, DependenceInsuranceLevel, ActivityType, SocialHabitType, \
-    MonthsNames, VisualAnalogueScaleLvl, HelpForCleaning
+    MonthsNames, VisualAnalogueScaleLvl, HelpForCleaning, LegalProtectionRegimes
 from invoices.models import Patient, Physician, Bedsore
 
 
@@ -159,6 +159,18 @@ class PatientAnamnesis(models.Model):
     contract_start_date = models.DateField(u"Date de début du contrat", default=None, blank=True, null=True)
     contract_end_date = models.DateField(u"Date de fin du contrat", default=None, blank=True, null=True)
     spoken_languages = models.CharField(u'Langues parlées', max_length=40, default=None, blank=True, null=True)
+    legal_protection_regimes = models.CharField(u"Régimes de protection légale", max_length=50, default=None, blank=True,
+                                               null=True,
+                                                choices=LegalProtectionRegimes.choices)
+    legal_protection_regimes_doc_link = models.FileField(u"Doc. régimes de protection légale",  #
+                                                         upload_to='documents/legal_protection_regimes',
+                                                         default=None,
+                                                         blank=True,
+                                                         null=True
+                                                         )
+    legal_protector_name_and_contact = models.CharField(u"Nom et contact du protecteur légal",
+                                                        max_length=250,
+                                                        default=None, blank=True, null=True)
     external_doc_link = models.URLField("URL doc. externe", default=None, blank=True, null=True)
     civil_status = models.CharField(u"État civil",
                                     max_length=7,
@@ -353,6 +365,44 @@ class PatientAnamnesis(models.Model):
         return None
 
     @property
+    def dependance_insurance_level(self):
+        if self.id:
+            care_summary_per_patient = MedicalCareSummaryPerPatient.objects.filter(patient_id=self.patient_id).all()
+            if len(care_summary_per_patient) > 1:
+                for c in care_summary_per_patient:
+                    if c.is_latest_plan:
+                        return c.level_of_needs
+                raise Exception("More than one medical care summary per patient %s" % self.patient)
+            elif len(care_summary_per_patient) == 1:
+                return care_summary_per_patient[0].level_of_needs
+            else:
+                return "N.D."
+
+    def get_list_of_beautiful_string_for_contact_persons(self):
+        if self.id:
+            # name (relation) - phone / phone2
+            contact_persons = ContactPerson.objects.filter(patient_anamnesis_id=self.id).order_by('priority')
+            if contact_persons:
+                return [f"{c.priority} - {c.contact_name} ({c.contact_relationship}) - {c.contact_private_phone_nbr} / {c.contact_business_phone_nbr}" for c in contact_persons]
+        return ["N.D."]
+
+    def get_list_of_beautiful_string_for_main_assigned_physicians(self):
+        if self.id:
+            # name (relation) - phone / phone2
+            assigned_physicians = AssignedPhysician.objects.filter(anamnesis_id=self.id).filter(main_attending_physician=True).all()
+            if assigned_physicians:
+                return [f"{c.assigned_physician.get_name_first_name_physician_speciality()} - {c.assigned_physician.phone_number}" for c in assigned_physicians]
+        return None
+
+    def get_list_of_beautiful_string_for_other_assigned_physicians(self):
+        if self.id:
+            # name (relation) - phone / phone2
+            assigned_physicians = AssignedPhysician.objects.filter(anamnesis_id=self.id).filter(main_attending_physician=False).all()
+            if assigned_physicians:
+                return [f"{c.assigned_physician.get_name_first_name_physician_speciality()} - {c.assigned_physician.phone_number}" for c in assigned_physicians]
+        return None
+
+    @property
     def shared_care_plan(self):
         shared_care_plan_dict = {}
         if self.id:
@@ -500,6 +550,7 @@ class AssignedPhysician(models.Model):
                                            help_text='Please enter physician of the patient',
                                            verbose_name=u"Médecin",
                                            on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    main_attending_physician = models.BooleanField(u"Traitant principal", default=False)
     anamnesis = models.ForeignKey(PatientAnamnesis, related_name='dep_patient_anamnesis',
                                   help_text='Please enter hospitalization dates of the patient',
                                   on_delete=models.SET_NULL, null=True, blank=True, default=None)

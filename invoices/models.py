@@ -262,14 +262,15 @@ class Physician(models.Model):
                     'is_foreign_physician': 'Le code prestataire doit être un nombre, sauf si le médecin est étranger.'}
         return messages
 
+    def get_name_first_name_physician_speciality(self):
+        return '%s %s (%s)' % (self.name.strip(), self.first_name.strip(), self.physician_speciality.strip())
+
     def __str__(self):
         # if name and first_name are empty, return the full_name_from_cns
         if self.name is None and self.first_name is None:
             return self.full_name_from_cns
         return '%s %s' % (self.name.strip(), self.first_name.strip())
 
-    def __str__(self):  # Python 3: def __str__(self):
-        return '%s %s' % (self.name.strip(), self.first_name.strip())
 
 
 class SubContractor(models.Model):
@@ -341,6 +342,22 @@ class SubContractorAdminFile(models.Model):
         return f"{self.subcontractor.name} - {self.description}"
 
 
+class InsuranceCompany(models.Model):
+    name = models.CharField(max_length=50)
+    description = models.CharField(max_length=255)
+    address = models.TextField(max_length=255)
+    phone_number = PhoneNumberField("Numéro de tél.")
+    fax_number = PhoneNumberField("Numéro de fax", blank=True, null=True)
+    email_address = models.EmailField(default=None, blank=True, null=True)
+    website = models.URLField("Site web", blank=True, null=True)
+    # Technical Fields
+    created_on = models.DateTimeField("Date création", auto_now_add=True)
+    updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
+
+
+    def __str__(self):
+        return self.name
+
 class Patient(models.Model):
     class Meta:
         ordering = ['-id']
@@ -351,6 +368,7 @@ class Patient(models.Model):
         code='invalid_code_sn'
     ),
     ])
+    insurance_companies = models.ManyToManyField(InsuranceCompany, blank=True)
     first_name = models.CharField(max_length=30)
     name = models.CharField(max_length=30)
     gender = models.CharField("Sex",
@@ -389,6 +407,9 @@ class Patient(models.Model):
             if self.zipcode[:2] != 'L-':
                 self.zipcode = 'L-' + self.zipcode
         return "%s %s %s, %s" % (self.address, self.zipcode, self.city, self.country)
+
+    def get_caisse_maladie_display(self):
+        return ', '.join([str(insurance_company) for insurance_company in self.insurance_companies.all()])
 
     def get_full_address_date_based(self, current_date=now().date(), current_time=now().time()):
         # gets the address where start_date is less than or equal to current_date

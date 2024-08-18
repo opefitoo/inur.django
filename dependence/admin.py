@@ -21,9 +21,11 @@ from fieldsets_with_inlines import FieldsetsInlineMixin
 from reportlab.pdfgen import canvas
 
 from dependence.aai import AAITransmission, AAITransDetail, AAIObjective, AAIObjectiveFiles
-from dependence.actions.activity import duplicate_for_next_month, export_selected_to_csv
+from dependence.actions.activity import duplicate_for_next_month, export_selected_to_csv, \
+    generate_activity_details_from_events
 from dependence.actions.initial_data import create_or_update_long_term_item_based_on_fixture
 from dependence.actions.monthly import create_assurance_dependance_invoices_april_2024
+from dependence.actions.transfertdoc import generate_transfer_document
 from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivityDetail, LongTermMonthlyActivityFile
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
 from dependence.careplan_pdf import generate_pdf
@@ -552,7 +554,15 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
     list_filter = ('patient', DeceasedFilter, ClientLeftFilter)
     autocomplete_fields = ['patient']
 
-    actions = ["generate_csv_report_2023"]
+    actions = ["generate_transfer_doc", "generate_activities_for_march_2024"]
+
+    def generate_transfer_doc(self, request, queryset):
+        for anamnesis in queryset:
+            return generate_transfer_document(anamnesis)
+
+    def generate_activities_for_march_2024(self, request, queryset):
+        for anamnesis in queryset:
+            generate_activity_details_from_events(patient=anamnesis.patient, year=2024, month=3)
 
     def generate_csv_report_2023(self, request, queryset):
         # only for superuser
@@ -671,7 +681,8 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         ('Patient', {
             'fields': ('patient', 'nationality', 'civil_status', 'spoken_languages', 'external_doc_link',
                        'birth_place', 'contract_start_date', 'contract_end_date', 'contract_signed_date',
-                       'contract_file',
+                       'contract_file', 'legal_protection_regimes', 'legal_protection_regimes_doc_link',
+                       'legal_protector_name_and_contact',
                        'shared_care_plan', 'help_for_cleaning', 'reason_for_dependence', 'anticipated_directives',
                        'anticipated_directives_doc_link',
                        'religious_beliefs',
