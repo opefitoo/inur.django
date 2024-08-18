@@ -11,6 +11,13 @@ class CivilStatus(models.TextChoices):
     SEP = 'SEP', _('Separated')
     OTH = 'OTH', _('Other')
 
+class LegalProtectionRegimes(models.TextChoices):
+    TUT = 'TUT', _('Tutelle')
+    CUR = 'CUR', _('Curatelle')
+    SAV = 'SAV', _('Sauvegarde de justice')
+    OTH = 'OTH', _('Autre')
+    NONE = 'NONE', _('Aucun')
+    ND = 'ND', _('Non Connu')
 
 class RemoteAlarm(models.TextChoices):
     RK = 'RK', ('Roude Knap')
