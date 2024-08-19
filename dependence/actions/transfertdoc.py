@@ -118,8 +118,8 @@ def generate_transfer_document(patientAnamnesis):
     # Create the footer with a table
     section = doc.sections[0]
     footer = section.footer
-    table = footer.add_table(rows=1, cols=2, width=docx.shared.Inches(6.5))
-    table.cell(0, 0).width = docx.shared.Inches(6.0)
+    table = footer.add_table(rows=1, cols=2, width=docx.shared.Inches(6.0))
+    table.cell(0, 0).width = docx.shared.Inches(5.5)
     table.cell(0, 1).width = docx.shared.Inches(0.5)
 
     # Add text to the left side of the footer
