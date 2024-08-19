@@ -228,15 +228,35 @@ def generate_transfer_document(patientAnamnesis):
 
     # Add mobilization section
     doc.add_heading('Mobilisation', level=1)
-    doc.add_paragraph(patientAnamnesis.get_mobilization_display())
-    doc.add_paragraph(f"Description: {patientAnamnesis.mobilization_description}")
+    doc.add_paragraph(patientAnamnesis.get_mobilization_display() + " // " + f"Description: {patientAnamnesis.mobilization_description}")
 
     # Add nutrition autonomy section
     doc.add_heading('Autonomie alimentaire', level=1)
-    doc.add_paragraph(patientAnamnesis.get_nutrition_autonomy_display())
-    doc.add_paragraph(f"Régime: {patientAnamnesis.diet}")
+    doc.add_paragraph(patientAnamnesis.get_nutrition_autonomy_display() + " // " +  f"Régime: {patientAnamnesis.diet}")
 
+    # Add drug Soins d'hygiène section
+    doc.add_heading('Soins d\'hygiène', level=1)
+    doc.add_paragraph(patientAnamnesis.hygiene_care_location + "// Jours de Douche: " + patientAnamnesis.shower_days + " // " + f"Lavage cheveux: {patientAnamnesis.hair_wash_days}")
+    ## add dotted line
+    add_dotted_line(doc)
+    # Add elimitation section
+    doc.add_heading('Elimination', level=1)
+    # if TRUE display "OUI" else "NON"
+    doc.add_paragraph( f"Incontinence Urinaire: {'OUI' if patientAnamnesis.urinary_incontinence else 'NON'} // " + f"Incontinence fécale: '{'OUI' if patientAnamnesis.fecal_incontinence else 'NON'}")
+    doc.add_paragraph(f"Protections: {'OUI' if patientAnamnesis.protection else 'NON'} // " + f"Protection Pendant la journée: {patientAnamnesis.day_protection} // " + f"Protection Pendant la nuit: {patientAnamnesis.night_protection}")
+    # urinary_catheter = models.BooleanField(u"Sonde urinaire", default=None, blank=True, null=True)
+    # crystofix_catheter = models.BooleanField(u"Crystofix", default=None, blank=True, null=True)
+    # elimination_addnl_details = models.TextField(u"Autres détails ou remarques", max_length=500, default=None,
+    #                                              blank=True, null=True)
+    other_elimination_param_list = []
+    if patientAnamnesis.urinary_catheter:
+        other_elimination_param_list.append("Sonde urinaire: OUI")
+    if patientAnamnesis.crystofix_catheter:
+        other_elimination_param_list.append("Crystofix: OUI")
+    if patientAnamnesis.elimination_addnl_details:
+        other_elimination_param_list.append(patientAnamnesis.elimination_addnl_details)
 
+    doc.add_paragraph('\n'.join(other_elimination_param_list))
     # Save the document to a temporary in-memory buffer
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
     response['Content-Disposition'] = 'attachment; filename="Fiche_Transfert_%s_%s_du_%s.docx"' % (
