@@ -197,6 +197,16 @@ def generate_transfer_document(patientAnamnesis):
     if patientAnamnesis.other_prosthesis is not None:
         additional_parameters_list.append(f"Autres: {patientAnamnesis.other_prosthesis}")
 
+    # Add mobilization section
+    doc.add_heading('Mobilisation', level=1)
+    doc.add_paragraph(patientAnamnesis.get_mobilization_display())
+    doc.add_paragraph(f"Description: {patientAnamnesis.mobilization_description}")
+
+    # Add nutrition autonomy section
+    doc.add_heading('Autonomie alimentaire', level=1)
+    doc.add_paragraph(patientAnamnesis.get_nutrition_autonomy_display())
+    doc.add_paragraph(f"Régime: {patientAnamnesis.diet}")
+
     # Add the additional parameters to the document
     if additional_parameters_list:
         doc.add_paragraph('\n'.join(additional_parameters_list))
