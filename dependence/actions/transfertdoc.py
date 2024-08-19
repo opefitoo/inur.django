@@ -6,6 +6,24 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 
 
+def add_dotted_line(doc):
+    p = doc.add_paragraph()
+    p_format = p.paragraph_format
+
+    # Create the border element
+    bottom_border = OxmlElement('w:pBdr')
+    border = OxmlElement('w:bottom')
+    border.set(qn('w:val'), 'dotted')
+    border.set(qn('w:sz'), '6')  # Border size (1/8 pt, so this is 0.75 pt)
+    border.set(qn('w:space'), '1')  # Space between text and border
+    border.set(qn('w:color'), '000000')  # Border color (black)
+
+    bottom_border.append(border)
+
+    # Apply the border to the paragraph
+    p._element.get_or_add_pPr().append(bottom_border)
+
+
 def add_page_number(paragraph):
     # Create a PAGE field
     fldChar1 = OxmlElement('w:fldChar')  # Create the <w:fldChar> element
@@ -119,6 +137,8 @@ def generate_transfer_document(patientAnamnesis):
     for contact_string in contact_string_list:
         doc.add_paragraph(contact_string)
 
+    add_dotted_line(doc)
+
     # Add doctor and medical sections
     doc.add_heading('Médecin(s) traitant(s) :', level=1)
     if patientAnamnesis.get_list_of_beautiful_string_for_main_assigned_physicians():
@@ -132,10 +152,14 @@ def generate_transfer_document(patientAnamnesis):
         for doctor in patientAnamnesis.get_list_of_beautiful_string_for_other_assigned_physicians():
             doc.add_paragraph(doctor)
 
+    add_dotted_line(doc)
+
     # Add medical data
     doc.add_heading('Données médicales', level=1)
     doc.add_heading('Pathologies', level=2)
     doc.add_paragraph(patientAnamnesis.pathologies)
+
+    add_dotted_line(doc)
 
     doc.add_heading('Antécédents', level=2)
     doc.add_paragraph(patientAnamnesis.medical_background)
@@ -178,7 +202,7 @@ def generate_transfer_document(patientAnamnesis):
 
     # Add the parameters to the document
     doc.add_paragraph('\n'.join(parameters_list))
-
+    add_dotted_line(doc)
     # Add Aides techniques section
     doc.add_heading('Aides techniques', level=1)
     doc.add_paragraph(patientAnamnesis.technical_help)
@@ -193,9 +217,14 @@ def generate_transfer_document(patientAnamnesis):
     if patientAnamnesis.hearing_aid is not None:
         additional_parameters_list.append(f"Appareil auditif: {patientAnamnesis.get_hearing_aid_display()}")
     if patientAnamnesis.glasses is not None:
-        additional_parameters_list.append(f"Lunettes: {patientAnamnesis.get_glasses_display()}")
+        # if True display "OUI" else "NON"
+        additional_parameters_list.append(f"Lunettes: {'OUI' if patientAnamnesis.glasses else 'NON'}")
     if patientAnamnesis.other_prosthesis is not None:
         additional_parameters_list.append(f"Autres: {patientAnamnesis.other_prosthesis}")
+
+    # Add the additional parameters to the document
+    if additional_parameters_list:
+        doc.add_paragraph('\n'.join(additional_parameters_list))
 
     # Add mobilization section
     doc.add_heading('Mobilisation', level=1)
@@ -206,10 +235,6 @@ def generate_transfer_document(patientAnamnesis):
     doc.add_heading('Autonomie alimentaire', level=1)
     doc.add_paragraph(patientAnamnesis.get_nutrition_autonomy_display())
     doc.add_paragraph(f"Régime: {patientAnamnesis.diet}")
-
-    # Add the additional parameters to the document
-    if additional_parameters_list:
-        doc.add_paragraph('\n'.join(additional_parameters_list))
 
 
     # Save the document to a temporary in-memory buffer
