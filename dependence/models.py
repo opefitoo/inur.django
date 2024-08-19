@@ -364,6 +364,14 @@ class PatientAnamnesis(models.Model):
             return [p.assigned_physician for p in AssignedPhysician.objects.filter(anamnesis_id=self.id)]
         return None
 
+    def get_last_tension_and_temperature_parameters(self):
+        if self.id:
+            monthly_params = MonthlyParameters.objects.filter(patient_id=self.patient_id).first()
+            if monthly_params:
+                return TensionAndTemperatureParameters.objects.filter(monthly_params_id=monthly_params.id).order_by(
+                    'params_date_time').last()
+        return None
+
     @property
     def dependance_insurance_level(self):
         if self.id:
@@ -382,9 +390,18 @@ class PatientAnamnesis(models.Model):
         if self.id:
             # name (relation) - phone / phone2
             contact_persons = ContactPerson.objects.filter(patient_anamnesis_id=self.id).order_by('priority')
-            if contact_persons:
-                return [f"{c.priority} - {c.contact_name} ({c.contact_relationship}) - {c.contact_private_phone_nbr} / {c.contact_business_phone_nbr}" for c in contact_persons]
-        return ["N.D."]
+            return [
+                " - ".join(
+                    filter(None, [
+                        f"{c.priority}" if c.priority is not None else None,
+                        f"{c.contact_name}" if c.contact_name is not None else None,
+                        f"({c.contact_relationship})" if c.contact_relationship is not None else None,
+                        f"{c.contact_private_phone_nbr}" if c.contact_private_phone_nbr is not None else None,
+                        f"{c.contact_business_phone_nbr}" if c.contact_business_phone_nbr is not None else None
+                    ])
+                )
+                for c in contact_persons
+            ] or ["N.D."]
 
     def get_list_of_beautiful_string_for_main_assigned_physicians(self):
         if self.id:
