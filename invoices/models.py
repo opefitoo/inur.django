@@ -718,8 +718,10 @@ class AlternateAddress(models.Model):
 class Hospitalization(models.Model):
     class Meta:
         ordering = ['-id']
+        verbose_name = "Hospitalisation ou absence"
+        verbose_name_plural = "Hospitalisations ou absences"
 
-    start_date = models.DateField(u"Début d'hospitlisation")
+    start_date = models.DateField(u"Date début")
     end_date = models.DateField(u"Date de fin", default=None, blank=True, null=True)
     description = models.TextField(max_length=50, default=None, blank=True, null=True)
     patient = models.ForeignKey(Patient, related_name='hospitalizations',
