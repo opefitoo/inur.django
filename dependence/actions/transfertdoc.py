@@ -179,7 +179,28 @@ def generate_transfer_document(patientAnamnesis):
     # Add the parameters to the document
     doc.add_paragraph('\n'.join(parameters_list))
 
-    # Add the rest of the sections similarly...
+    # Add Aides techniques section
+    doc.add_heading('Aides techniques', level=1)
+    doc.add_paragraph(patientAnamnesis.technical_help)
+    if patientAnamnesis.other_technical_help:
+        doc.add_paragraph(patientAnamnesis.other_technical_help)
+    doc.add_heading('Autres Aides techniques', level=2)
+    doc.add_paragraph(patientAnamnesis.other_technical_help)
+    # Add additional parameters if they are not None
+    additional_parameters_list = []
+    if patientAnamnesis.dental_prosthesis is not None:
+        additional_parameters_list.append(f"Prothèses dentaires: {patientAnamnesis.get_dental_prosthesis_display()}")
+    if patientAnamnesis.hearing_aid is not None:
+        additional_parameters_list.append(f"Appareil auditif: {patientAnamnesis.get_hearing_aid_display()}")
+    if patientAnamnesis.glasses is not None:
+        additional_parameters_list.append(f"Lunettes: {patientAnamnesis.get_glasses_display()}")
+    if patientAnamnesis.other_prosthesis is not None:
+        additional_parameters_list.append(f"Autres: {patientAnamnesis.other_prosthesis}")
+
+    # Add the additional parameters to the document
+    if additional_parameters_list:
+        doc.add_paragraph('\n'.join(additional_parameters_list))
+
 
     # Save the document to a temporary in-memory buffer
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
