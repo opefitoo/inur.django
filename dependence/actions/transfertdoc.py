@@ -187,7 +187,7 @@ def generate_transfer_document(patientAnamnesis):
         doc.add_paragraph('Aucun médecin traitant assigné')
     # Other doctors section
     if patientAnamnesis.get_list_of_beautiful_string_for_other_assigned_physicians():
-        doc.add_heading('Autre(s) médecin(s) :', level=1)
+        doc.add_heading('Autre(s) médecin(s)', level=1)
         for doctor in patientAnamnesis.get_list_of_beautiful_string_for_other_assigned_physicians():
             doc.add_paragraph(doctor)
 
