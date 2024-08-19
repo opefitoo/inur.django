@@ -279,7 +279,7 @@ def generate_transfer_document(patientAnamnesis):
     else:
         doc.add_paragraph(f"Régime: {patientAnamnesis.diet}")
 
-    # Add drug Soins d'hygiène section
+    # Add Soins d'hygiène section
     doc.add_heading('Soins d\'hygiène', level=1)
     doc.add_paragraph(patientAnamnesis.hygiene_care_location + "// Jours de Douche: " + patientAnamnesis.shower_days + " // " + f"Lavage cheveux: {patientAnamnesis.hair_wash_days}")
     doc.add_paragraph(f"Autres détails ou remarques: {patientAnamnesis.hygiene_general_remarks}")
@@ -299,6 +299,15 @@ def generate_transfer_document(patientAnamnesis):
     if patientAnamnesis.elimination_addnl_details:
         other_elimination_param_list.append(patientAnamnesis.elimination_addnl_details)
     doc.add_paragraph('\n'.join(other_elimination_param_list))
+
+    # Add section for habits
+    doc.add_heading('Habitudes', level=1)
+    habits = patientAnamnesis.get_biography_habits()
+    for habit in habits:
+        paragraph = doc.add_paragraph()
+        run = paragraph.add_run(habit)
+        paragraph.style = 'List Bullet'
+
     # Save the document to a temporary in-memory buffer
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
     response['Content-Disposition'] = 'attachment; filename="Fiche_Transfert_%s_%s_du_%s.docx"' % (

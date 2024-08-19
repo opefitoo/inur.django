@@ -406,6 +406,15 @@ class PatientAnamnesis(models.Model):
                 for c in contact_persons
             ] or ["N.D."]
 
+    def get_biography_habits(self):
+        list_habits_strings = []
+        if self.id:
+            habits = BiographyHabits.objects.filter(biography_id=self.id).all()
+            for habit in habits:
+                list_habits_strings.append(
+                    f"{habit.get_habit_type_display()} - {habit.habit_time} - {habit.habit_ritual} - {habit.habit_preferences}")
+            return list_habits_strings
+
     def get_list_of_beautiful_string_for_main_assigned_physicians(self):
         if self.id:
             # name (relation) - phone / phone2
