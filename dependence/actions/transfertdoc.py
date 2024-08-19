@@ -139,7 +139,7 @@ def generate_transfer_document(patientAnamnesis):
     run.font.size = Pt(8)  # Smaller font size
     run = right_cell.add_run('Page ')
     add_field(right_cell, 'PAGE')
-    run = right_cell.add_run(' sur ')
+    run = right_cell.add_run('/')
     add_field(right_cell, 'NUMPAGES')
 
     table.cell(0, 1).vertical_alignment = docx.enum.table.WD_ALIGN_VERTICAL.BOTTOM
@@ -279,6 +279,7 @@ def generate_transfer_document(patientAnamnesis):
     # Add drug Soins d'hygiène section
     doc.add_heading('Soins d\'hygiène', level=1)
     doc.add_paragraph(patientAnamnesis.hygiene_care_location + "// Jours de Douche: " + patientAnamnesis.shower_days + " // " + f"Lavage cheveux: {patientAnamnesis.hair_wash_days}")
+    doc.add_paragraph(f"Autres détails ou remarques: {patientAnamnesis.hygiene_general_remarks}")
     ## add dotted line
     add_dotted_line(doc)
     # Add elimitation section
@@ -286,10 +287,7 @@ def generate_transfer_document(patientAnamnesis):
     # if TRUE display "OUI" else "NON"
     doc.add_paragraph( f"Incontinence Urinaire: {'OUI' if patientAnamnesis.urinary_incontinence else 'NON'} // " + f"Incontinence fécale: {'OUI' if patientAnamnesis.faecal_incontinence else 'NON'}")
     doc.add_paragraph(f"Protections: {'OUI' if patientAnamnesis.protection else 'NON'} // " + f"Protection Pendant la journée: {patientAnamnesis.day_protection} // " + f"Protection Pendant la nuit: {patientAnamnesis.night_protection}")
-    # urinary_catheter = models.BooleanField(u"Sonde urinaire", default=None, blank=True, null=True)
-    # crystofix_catheter = models.BooleanField(u"Crystofix", default=None, blank=True, null=True)
-    # elimination_addnl_details = models.TextField(u"Autres détails ou remarques", max_length=500, default=None,
-    #                                              blank=True, null=True)
+
     other_elimination_param_list = []
     if patientAnamnesis.urinary_catheter:
         other_elimination_param_list.append("Sonde urinaire: OUI")
@@ -297,8 +295,6 @@ def generate_transfer_document(patientAnamnesis):
         other_elimination_param_list.append("Crystofix: OUI")
     if patientAnamnesis.elimination_addnl_details:
         other_elimination_param_list.append(patientAnamnesis.elimination_addnl_details)
-    doc.add_paragraph(f"Autres détails ou remarques: {patientAnamnesis.hygiene_general_remarks}")
-
     doc.add_paragraph('\n'.join(other_elimination_param_list))
     # Save the document to a temporary in-memory buffer
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
