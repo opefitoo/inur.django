@@ -300,6 +300,8 @@ def generate_transfer_document(patientAnamnesis):
         other_elimination_param_list.append(patientAnamnesis.elimination_addnl_details)
     doc.add_paragraph('\n'.join(other_elimination_param_list))
 
+    add_dotted_line(doc)
+
     # Add section for habits
     doc.add_heading('Habitudes', level=1)
     habits = patientAnamnesis.get_biography_habits()
@@ -308,6 +310,11 @@ def generate_transfer_document(patientAnamnesis):
         run = paragraph.add_run(habit)
         paragraph.style = 'List Bullet'
 
+    add_dotted_line(doc)
+
+    # Add an empty section Annexes
+    doc.add_heading('Annexes', level=1)
+    doc.add_paragraph('')
     # Save the document to a temporary in-memory buffer
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
     response['Content-Disposition'] = 'attachment; filename="Fiche_Transfert_%s_%s_du_%s.docx"' % (
