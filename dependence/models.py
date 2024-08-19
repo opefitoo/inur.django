@@ -329,6 +329,8 @@ class PatientAnamnesis(models.Model):
                                              blank=True, null=True)
     new_laundry_location = models.CharField(u"Les vêtements/serviettes etc. se trouvent où ?", max_length=50,
                                             default=None, blank=True, null=True)
+    hygiene_general_remarks = models.TextField(u"Remarques générales", max_length=250, default=None, blank=True,
+                                              null=True)
     # Nutrition
     weight = models.PositiveSmallIntegerField("Poids", default=None)
     size = models.PositiveSmallIntegerField("Taille en cm.", default=None)

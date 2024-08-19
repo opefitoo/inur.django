@@ -713,7 +713,7 @@ class PatientAnamnesisAdmin(ModelAdminObjectActionsMixin, FieldsetsInlineMixin, 
         }),
         (u"Soins d'hygiène", {
             'fields': ('hygiene_care_location', 'shower_days', 'hair_wash_days', 'bed_manager', 'bed_sheets_manager',
-                       'laundry_manager', 'laundry_drop_location', 'new_laundry_location'),
+                       'laundry_manager', 'laundry_drop_location', 'new_laundry_location','hygiene_general_remarks'),
         }),
         (u"Nutrition", {
             'fields': ('weight', 'size', 'nutrition_autonomy', 'diet', 'meal_on_wheels', 'shopping_management',

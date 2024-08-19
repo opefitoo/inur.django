@@ -297,6 +297,7 @@ def generate_transfer_document(patientAnamnesis):
         other_elimination_param_list.append("Crystofix: OUI")
     if patientAnamnesis.elimination_addnl_details:
         other_elimination_param_list.append(patientAnamnesis.elimination_addnl_details)
+    doc.add_paragraph(f"Autres détails ou remarques: {patientAnamnesis.hygiene_general_remarks}")
 
     doc.add_paragraph('\n'.join(other_elimination_param_list))
     # Save the document to a temporary in-memory buffer
