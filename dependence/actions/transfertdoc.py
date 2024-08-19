@@ -102,7 +102,8 @@ def generate_transfer_document(patientAnamnesis):
     doc.add_paragraph('Matricule : %s' % patientAnamnesis.patient.code_sn)
     doc.add_paragraph('Tél: %s' % patientAnamnesis.patient.phone_number)
     doc.add_paragraph('Caisse(s) de maladie : %s' % patientAnamnesis.patient.get_caisse_maladie_display())
-    doc.add_paragraph('Etat civil : %s' % patientAnamnesis.civil_status)
+    # translate it to french using
+    doc.add_paragraph('Etat civil : %s' % patientAnamnesis.get_civil_status_display())
     # if is_under_dependence_insurance is True display "OUI" else "NON"
     doc.add_paragraph(
         'Assurance dépendance : %s' % ('OUI' if patientAnamnesis.patient.is_under_dependence_insurance else 'NON'))
@@ -133,19 +134,50 @@ def generate_transfer_document(patientAnamnesis):
 
     # Add medical data
     doc.add_heading('Données médicales', level=1)
-    doc.add_paragraph('Pathologies')
+    doc.add_heading('Pathologies', level=2)
     doc.add_paragraph(patientAnamnesis.pathologies)
 
-    doc.add_paragraph('Antécédents')
+    doc.add_heading('Antécédents', level=2)
     doc.add_paragraph(patientAnamnesis.medical_background)
 
     # Add treatment
-    doc.add_heading('Traitement', level=1)
+    doc.add_heading('Traitement', level=2)
     doc.add_paragraph(patientAnamnesis.treatments)
 
     # Add allergies
-    doc.add_heading('Allergies', level=1)
+    doc.add_heading('Allergies', level=2)
     doc.add_paragraph(patientAnamnesis.allergies)
+
+    # Add last parameters
+    doc.add_heading('Paramètres', level=1)
+    last_parameters = patientAnamnesis.get_last_tension_and_temperature_parameters()
+    # Create a list of strings for each parameter, only if the parameter is not None
+    parameters_list = []
+    if last_parameters:
+        if last_parameters.systolic_blood_press is not None and last_parameters.systolic_blood_press > 0:
+            parameters_list.append(f"Tension max: {last_parameters.systolic_blood_press} mmHg")
+        if last_parameters.diastolic_blood_press is not None and last_parameters.diastolic_blood_press > 0:
+            parameters_list.append(f"Tension min: {last_parameters.diastolic_blood_press} mmHg")
+        if last_parameters.heart_pulse is not None and last_parameters.heart_pulse > 0:
+            parameters_list.append(f"Pouls: {last_parameters.heart_pulse} bpm")
+        if last_parameters.temperature is not None and last_parameters.temperature > 0:
+            parameters_list.append(f"Température: {last_parameters.temperature} °C")
+        if last_parameters.stools_parameter is not None:
+            parameters_list.append(f"Selles: {'OUI' if last_parameters.stools_parameter else 'NON'}")
+        if last_parameters.vas is not None:
+            parameters_list.append(f"EVA: {last_parameters.vas}")
+        if last_parameters.weight is not None:
+            parameters_list.append(f"Poids: {last_parameters.weight} kg")
+        if last_parameters.oximeter_saturation is not None:
+            parameters_list.append(f"Saturation O2: {last_parameters.oximeter_saturation} %")
+        if last_parameters.blood_glucose is not None:
+            parameters_list.append(f"Glycémie: {last_parameters.blood_glucose} g/L")
+        if last_parameters.general_remarks:
+            parameters_list.append(f"Remarques générales: {last_parameters.general_remarks}")
+        parameters_list.append(f"Dernière mise à jour: {last_parameters.updated_on.strftime('%d/%m/%Y %H:%M')}")
+
+    # Add the parameters to the document
+    doc.add_paragraph('\n'.join(parameters_list))
 
     # Add the rest of the sections similarly...
 
