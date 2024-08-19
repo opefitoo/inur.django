@@ -46,7 +46,6 @@ class InvoicingDetails(models.Model):
     def __str__(self):
         return '%s - %s' % (self.name, self.provider_code)
 
-
 def get_default_invoicing_details():
     # if rc column does not exist, return None
     if not InvoicingDetails._meta.get_field('rc'):

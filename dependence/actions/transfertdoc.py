@@ -5,6 +5,8 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 
+from invoices.modelspackage.invoice import get_default_invoicing_details
+
 
 def add_dotted_line(doc):
     p = doc.add_paragraph()
@@ -65,24 +67,60 @@ def add_field(paragraph, field_type):
     run._r.append(fldChar4)
 
 
+def add_header_with_line(doc):
+    section = doc.sections[0]
+    header = section.header
+
+    # Add a paragraph to the header
+    paragraph = header.paragraphs[0]
+
+    # Add logo on the left side of the header
+    run = paragraph.add_run()
+    run.add_picture('invoices/static/images/Logo_SUR_quadri_transparent_pour_copas.png', width=docx.shared.Inches(0.75))
+
+    # Add details on the right side of the header
+    run = paragraph.add_run(get_default_invoicing_details_string_for_header())
+    run.font.size = Pt(8)  # Smaller font size
+    run.font.color.rgb = RGBColor(128, 128, 128)  # Gray color (RGB 128, 128, 128)
+    paragraph.alignment = docx.enum.text.WD_PARAGRAPH_ALIGNMENT.RIGHT
+
+    # Add another paragraph for the line separator
+    p = header.add_paragraph()
+
+    # Create the border element for the line
+    bottom_border = OxmlElement('w:pBdr')
+    border = OxmlElement('w:bottom')
+    border.set(qn('w:val'), 'single')  # Solid line
+    border.set(qn('w:sz'), '6')  # Border size (1/8 pt, so this is 0.75 pt)
+    border.set(qn('w:space'), '1')  # Space between text and border
+    border.set(qn('w:color'), '000000')  # Border color (black)
+
+    bottom_border.append(border)
+
+    # Apply the border to the paragraph
+    p._element.get_or_add_pPr().append(bottom_border)
+
+def get_default_invoicing_details_string_for_header():
+    default_invoicing_details = get_default_invoicing_details()
+    if not default_invoicing_details:
+        return "SUR.LU SARL"
+
+    return f"{default_invoicing_details.name} {default_invoicing_details.get_full_address()} - email:{default_invoicing_details.email_address}/tel:{default_invoicing_details.phone_number}"
+
+
 
 def generate_transfer_document(patientAnamnesis):
     # Create a new Document
     doc = Document()
 
-    # Add logo in every page (header)
-    section = doc.sections[0]
-    header = section.header
-    paragraph = header.paragraphs[0]
-    run = paragraph.add_run()
-    paragraph.alignment = docx.enum.text.WD_PARAGRAPH_ALIGNMENT.RIGHT
-    run.add_picture('invoices/static/images/Logo_SUR_quadri_transparent_pour_copas.png', width=docx.shared.Inches(0.75))
+    add_header_with_line(doc)
 
     # Create the footer with a table
+    section = doc.sections[0]
     footer = section.footer
     table = footer.add_table(rows=1, cols=2, width=docx.shared.Inches(6.5))
-    table.cell(0, 0).width = docx.shared.Inches(5.5)
-    table.cell(0, 1).width = docx.shared.Inches(1.0)
+    table.cell(0, 0).width = docx.shared.Inches(6.0)
+    table.cell(0, 1).width = docx.shared.Inches(0.5)
 
     # Add text to the left side of the footer
     left_cell = table.cell(0, 0).paragraphs[0]
@@ -90,7 +128,7 @@ def generate_transfer_document(patientAnamnesis):
         'Fiche de transfert de %s %s (%s)' % (patientAnamnesis.patient.first_name, patientAnamnesis.patient.name,
                                               patientAnamnesis.updated_on.strftime('%d-%m-%Y %H:%M')))
     run.italic = True
-    run.font.size = Pt(9)  # Smaller font size
+    run.font.size = Pt(8)  # Smaller font size
     run.font.color.rgb = RGBColor(128, 128, 128)  # Gray color (RGB 128, 128, 128)
 
     table.cell(0, 0).vertical_alignment = docx.enum.table.WD_ALIGN_VERTICAL.BOTTOM
@@ -98,6 +136,7 @@ def generate_transfer_document(patientAnamnesis):
     # Add page numbers to the right side of the footer
     right_cell = table.cell(0, 1).paragraphs[0]
     right_cell.alignment = docx.enum.text.WD_PARAGRAPH_ALIGNMENT.RIGHT
+    run.font.size = Pt(8)  # Smaller font size
     run = right_cell.add_run('Page ')
     add_field(right_cell, 'PAGE')
     run = right_cell.add_run(' sur ')
@@ -232,7 +271,10 @@ def generate_transfer_document(patientAnamnesis):
 
     # Add nutrition autonomy section
     doc.add_heading('Autonomie alimentaire', level=1)
-    doc.add_paragraph(patientAnamnesis.get_nutrition_autonomy_display() + " // " +  f"Régime: {patientAnamnesis.diet}")
+    if patientAnamnesis.nutrition_autonomy:
+        doc.add_paragraph(patientAnamnesis.get_nutrition_autonomy_display() + " // " + f"Régime: {patientAnamnesis.diet}")
+    else:
+        doc.add_paragraph(f"Régime: {patientAnamnesis.diet}")
 
     # Add drug Soins d'hygiène section
     doc.add_heading('Soins d\'hygiène', level=1)
@@ -242,7 +284,7 @@ def generate_transfer_document(patientAnamnesis):
     # Add elimitation section
     doc.add_heading('Elimination', level=1)
     # if TRUE display "OUI" else "NON"
-    doc.add_paragraph( f"Incontinence Urinaire: {'OUI' if patientAnamnesis.urinary_incontinence else 'NON'} // " + f"Incontinence fécale: '{'OUI' if patientAnamnesis.fecal_incontinence else 'NON'}")
+    doc.add_paragraph( f"Incontinence Urinaire: {'OUI' if patientAnamnesis.urinary_incontinence else 'NON'} // " + f"Incontinence fécale: '{'OUI' if patientAnamnesis.faecal_incontinence else 'NON'}")
     doc.add_paragraph(f"Protections: {'OUI' if patientAnamnesis.protection else 'NON'} // " + f"Protection Pendant la journée: {patientAnamnesis.day_protection} // " + f"Protection Pendant la nuit: {patientAnamnesis.night_protection}")
     # urinary_catheter = models.BooleanField(u"Sonde urinaire", default=None, blank=True, null=True)
     # crystofix_catheter = models.BooleanField(u"Crystofix", default=None, blank=True, null=True)
