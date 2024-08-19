@@ -154,7 +154,10 @@ def generate_transfer_document(patientAnamnesis):
 
     # Add the base data section
     doc.add_heading('Données de base', level=1)
-    doc.add_paragraph('Nom Prénom : %s %s' % (patientAnamnesis.patient.first_name, patientAnamnesis.patient.name))
+    paragraph = doc.add_paragraph()
+    run = paragraph.add_run('Nom Prénom : ')
+    run.bold = True
+    paragraph.add_run('%s %s' % (patientAnamnesis.patient.name, patientAnamnesis.patient.first_name))
     doc.add_paragraph('Adresse: %s' % patientAnamnesis.patient.get_full_address_date_based())
     doc.add_paragraph('Matricule : %s' % patientAnamnesis.patient.code_sn)
     doc.add_paragraph('Tél: %s' % patientAnamnesis.patient.phone_number)
