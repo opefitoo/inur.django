@@ -284,7 +284,7 @@ def generate_transfer_document(patientAnamnesis):
     # Add elimitation section
     doc.add_heading('Elimination', level=1)
     # if TRUE display "OUI" else "NON"
-    doc.add_paragraph( f"Incontinence Urinaire: {'OUI' if patientAnamnesis.urinary_incontinence else 'NON'} // " + f"Incontinence fécale: '{'OUI' if patientAnamnesis.faecal_incontinence else 'NON'}")
+    doc.add_paragraph( f"Incontinence Urinaire: {'OUI' if patientAnamnesis.urinary_incontinence else 'NON'} // " + f"Incontinence fécale: {'OUI' if patientAnamnesis.faecal_incontinence else 'NON'}")
     doc.add_paragraph(f"Protections: {'OUI' if patientAnamnesis.protection else 'NON'} // " + f"Protection Pendant la journée: {patientAnamnesis.day_protection} // " + f"Protection Pendant la nuit: {patientAnamnesis.night_protection}")
     # urinary_catheter = models.BooleanField(u"Sonde urinaire", default=None, blank=True, null=True)
     # crystofix_catheter = models.BooleanField(u"Crystofix", default=None, blank=True, null=True)
