@@ -397,7 +397,8 @@ class PatientAnamnesis(models.Model):
                         f"{c.contact_name}" if c.contact_name is not None else None,
                         f"({c.contact_relationship})" if c.contact_relationship is not None else None,
                         f"{c.contact_private_phone_nbr}" if c.contact_private_phone_nbr is not None else None,
-                        f"{c.contact_business_phone_nbr}" if c.contact_business_phone_nbr is not None else None
+                        f"{c.contact_business_phone_nbr}" if c.contact_business_phone_nbr is not None else None,
+                        f"{c.contact_address}" if c.contact_address is not None else None
                     ])
                 )
                 for c in contact_persons
@@ -623,6 +624,10 @@ class ContactPerson(models.Model):
                                                 blank=True,
                                                 null=True)
     contact_name = models.CharField("Nom", max_length=50)
+    contact_address = models.CharField("Adresse", max_length=50,
+                                       default=None,
+                                       blank=True,
+                                       null=True)
     contact_relationship = models.CharField("Relation", max_length=20,
                                             default=None,
                                             blank=True,

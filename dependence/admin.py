@@ -433,7 +433,7 @@ class ContactPersonInLine(admin.TabularInline):
     extra = 0
     model = ContactPerson
     fields = ('priority', 'contact_name', 'contact_relationship', 'contact_private_phone_nbr',
-              'contact_business_phone_nbr')
+              'contact_business_phone_nbr', 'contact_address')
 
 
 class DependenceInsuranceInLine(admin.TabularInline):
