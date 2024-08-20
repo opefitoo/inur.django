@@ -36,7 +36,7 @@ class HolidayRequest(models.Model):
         (1, u'Congés'),
         (2, u'Maladie'),
         (3, u'Formation'),
-        #(4, u'Desiderata'),
+        (4, u'Desiderata'),
         (5, u'Exceptionnel')
     ]
 
@@ -314,7 +314,7 @@ def validate_date_range(instance_id, data):
 
 def validate_requests_from_other_employees(instance_id, data):
     messages = {}
-    if data['force_creation']:
+    if data['force_creation'] or data['reason'] > 1:
         return messages
     conflicts = HolidayRequest.objects.filter(
         end_date__lte=data['end_date'], end_date__gte=data['start_date']) | \
