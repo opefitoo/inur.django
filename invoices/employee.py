@@ -3,6 +3,7 @@ import os
 
 from colorfield.fields import ColorField
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -19,6 +20,7 @@ from rest_framework.authtoken.models import Token
 
 from invoices import settings
 from invoices.actions.gcontacts import GoogleContacts
+from invoices.enums.event import EventTypeEnum
 from invoices.enums.generic import GenderType
 from invoices.enums.holidays import ContractType
 
@@ -161,6 +163,21 @@ class Employee(models.Model):
 
     def get_current_contract(self):
         return EmployeeContractDetail.objects.filter(employee_link=self, end_date__isnull=True).get()
+
+    @property
+    def get_link_to_holiday_requests(self):
+        return mark_safe('<a href="%s?employee__id__exact=%s">Voir les demandes de congés</a>' % (
+            reverse("admin:invoices_holidayrequest_changelist"), self.user.id))
+
+    def create_or_update_events_for_trainings(self):
+        # get all trainings for this employee
+        trainings = EmployeeTraining.objects.filter(employee=self)
+        for training in trainings:
+            # get all training dates for this training
+            training_dates = TrainingDates.objects.filter(training=training.training_link)
+            for training_date in training_dates:
+                # create or update event for this training date
+                training_date.create_or_update_event_for_training_date(self, employee=self)
 
     @property
     def employee_fte(self):
@@ -461,6 +478,69 @@ class EmployeeAdminFile(models.Model):
     document_expiry_date = models.DateField(u'Date d\'expiration du document', blank=True, null=True)
     file_upload = models.FileField(null=True, blank=True, upload_to=update_filename)
 
+class Training(models.Model):
+    name = models.CharField("Nom de la formation", max_length=100)
+    description = models.TextField("Description de la formation", max_length=200)
+    # can be followed remotely
+    remote = models.BooleanField("Formation à distance", default=False)
+    training_location = models.TextField("Lieu de la formation", max_length=500, blank=True, null=True)
+    training_cost = models.DecimalField("Coût de la formation", max_digits=8, decimal_places=2,
+                                        blank=True, null=True)
+    # meta
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    # verbose name
+    class Meta:
+        verbose_name = "Formation"
+        verbose_name_plural = "Formations"
+
+    def __str__(self):
+        return self.name
+# a model that will store the training dates and times, a training can have multiple dates and times
+class TrainingDates(models.Model):
+    training = models.ForeignKey(Training, on_delete=models.CASCADE)
+    training_start_date_time = models.DateTimeField(u'Date de début de la formation')
+    training_end_date_time = models.DateTimeField(u'Date de fin de la formation')
+
+    def __str__(self):
+        return f"{self.training.name} - {self.training_start_date_time} - {self.training_end_date_time}"
+
+    def create_or_update_event_for_training_date(self, employee):
+        from invoices.events import Event, EventGenericLink
+        training_event = Event.objects.filter(day=self.training_start_date_time.date(),
+                                     time_start_event=self.training_start_date_time.time(),
+                                     time_end_event=self.training_end_date_time.time(),
+                                     employee=employee).first()
+        if training_event:
+            training_event.update(title=self.training.name, start_date=self.training_start_date_time, end_date=self.training_end_date_time)
+        else:
+            training_event = Event.objects.create(
+                day=self.training_start_date_time.date(),
+                time_start_event=self.training_start_date_time.time(),
+                time_end_event=self.training_end_date_time.time(),
+                event_type_enum=EventTypeEnum.GNRC_EMPL,
+                state=2,
+                event_address=self.training.training_location,
+                notes='Training event',
+                employees=employee,
+                created_by='system'
+            )
+
+            event_generic_link = EventGenericLink.objects.create(
+                event=training_event,
+                content_type=ContentType.objects.get_for_model(self),
+                object_id=self.id
+            )
+
+
+class EmployeeTraining(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    training_link = models.ForeignKey(Training, on_delete=models.CASCADE)
+    training_certificate = models.FileField(null=True, blank=True, upload_to="training_certificates/")
+    training_completed_date = models.DateField(u'Date de fin de la formation', blank=True, null=True)
+    training_success = models.BooleanField("Formation réussie", default=False)
+    training_paid_by_company = models.BooleanField("Formation payée par l'entreprise", default=False)
+
 
 class EmployeeProxy(Employee):
     class Meta:
@@ -485,6 +565,14 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         instance.user.is_active = True
         instance.user.save()
         Token.objects.create(user=instance.user)
+
+@receiver(post_save, sender=Employee, dispatch_uid='create_or_update_employees_events_for_trainings')
+def create_or_update_employees_events_for_trainings(sender, instance=None, created=False, **kwargs):
+    if instance and instance.end_contract is None:
+        employees = Employee.objects.get(id=instance.id)
+        from invoices.processors.tasks import create_or_update_events_for_trainings_task
+        create_or_update_events_for_trainings_task.delay(employees)
+
 
 
 

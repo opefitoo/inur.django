@@ -51,7 +51,8 @@ from invoices.actions.invoices import generer_forfait_aev_july_2024
 # from invoices.actions.maps import calculate_distance_matrix
 from invoices.actions.print_pdf import do_it, PdfActionType
 from invoices.distancematrix import DistanceMatrix
-from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile, EmployeeProxy
+from invoices.employee import Employee, EmployeeContractDetail, JobPosition, EmployeeAdminFile, EmployeeProxy, \
+    EmployeeTraining, Training, TrainingDates
 from invoices.enums.event import EventTypeEnum
 from invoices.enums.holidays import HolidayRequestWorkflowStatus
 from invoices.events import EventType, Event, AssignedAdditionalEmployee, ReportPicture, \
@@ -152,6 +153,10 @@ class CareCodeAdmin(admin.ModelAdmin):
     # actions = [update_prices_for_april_2022]
 
 
+class EmployeeTrainingInline(TabularInline):
+    extra = 0
+    model = EmployeeTraining
+
 class EmployeeContractDetailInline(TabularInline):
     extra = 0
     model = EmployeeContractDetail
@@ -168,18 +173,36 @@ class ClientPatientRelationshipAdmin(admin.ModelAdmin):
     autocomplete_fields = ['user', 'patient']
 
 
+class TrainingDatesInline(admin.TabularInline):
+    model = TrainingDates
+    extra = 0
+
+@admin.register(Training)
+class TrainingAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'training_location')
+    readonly_fields = ('created_at', 'updated_at')
+    search_fields = ['name', 'description', 'location']
+    inlines = [TrainingDatesInline]
+
+
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    inlines = [EmployeeContractDetailInline, EmployeeAdminFileInline]
+    inlines = [EmployeeContractDetailInline, EmployeeAdminFileInline, EmployeeTrainingInline]
     list_display = ('user', 'phone_number', 'start_contract', 'end_contract', 'occupation', 'abbreviation',
-                    'employee_fte',)
+                    'employee_fte', 'link_to_holiday_requests')
     search_fields = ['user__last_name', 'user__first_name', 'user__email']
-    readonly_fields = ['total_number_of_un_validated_events', 'minified_avatar', 'minified_avatar_base64']
+    readonly_fields = ['total_number_of_un_validated_events', 'minified_avatar', 'minified_avatar_base64',
+                       'link_to_holiday_requests']
     list_filter = [IsInvolvedInHealthCareFilter]
     actions = ['send_tomorrows_events', 'send_todays_events', 'work_certificate', 'contracts_situation_certificate', 'entry_declaration',
                'export_employees_data_to_csv',
                create_google_contact, cleanup_contacts, cleanup_some_contacts,
                'generate_annual_report_for_2023']
+
+    def link_to_holiday_requests(self, instance):
+        return instance.get_link_to_holiday_requests
+
+    link_to_holiday_requests.short_description = "Demandes d'absences"
 
     def send_tomorrows_events(self, request, queryset):
         # if not super user, return
