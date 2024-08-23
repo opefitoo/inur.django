@@ -184,6 +184,7 @@ class PrestationGoogleCalendarSurLu:
         descr_line = "<b>%s</b> %s<br>"
         description = descr_line
         address = None
+        location = None
         if event.patient:
             description = descr_line % ('Patient:', event.patient)
         if event.at_office:

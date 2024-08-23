@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -44,6 +44,7 @@ def avatar_storage_location(instance, filename):
         "avatar",
         file_extension)
     return os.path.join(path, filename)
+
 
 def minified_avatar_storage_location(instance, filename):
     file_name, file_extension = os.path.splitext(filename)
@@ -169,16 +170,6 @@ class Employee(models.Model):
         return mark_safe('<a href="%s?employee__id__exact=%s">Voir les demandes de congés</a>' % (
             reverse("admin:invoices_holidayrequest_changelist"), self.user.id))
 
-    def create_or_update_events_for_trainings(self):
-        # get all trainings for this employee
-        trainings = EmployeeTraining.objects.filter(employee=self)
-        for training in trainings:
-            # get all training dates for this training
-            training_dates = TrainingDates.objects.filter(training=training.training_link)
-            for training_date in training_dates:
-                # create or update event for this training date
-                training_date.create_or_update_event_for_training_date(self, employee=self)
-
     @property
     def employee_fte(self):
         if self.end_contract:
@@ -206,7 +197,8 @@ class Employee(models.Model):
         else:
             ratio = 100
         return mark_safe(
-            '<a href="%s">%s</a>' % (url, "%d / %d (%d %%)"  % (unvalidated_events.count(), validated_events.count(), ratio)))
+            '<a href="%s">%s</a>' % (
+            url, "%d / %d (%d %%)" % (unvalidated_events.count(), validated_events.count(), ratio)))
 
     @property
     def age_group(self):
@@ -254,7 +246,8 @@ class Employee(models.Model):
         date_planning = date_planning.strftime('%d-%m-%Y')
         from invoices.notifications import send_email_notification
         send_email_notification(u'Programme de la journée du %s' % date_planning,
-                                'Bonjour %s, Voici le planning du %s \n%s' % (self.user.first_name, date_planning, text),
+                                'Bonjour %s, Voici le planning du %s \n%s' % (
+                                self.user.first_name, date_planning, text),
                                 to_emails)
 
     def get_contracts_between_dates(self, start_date, end_date):
@@ -478,6 +471,7 @@ class EmployeeAdminFile(models.Model):
     document_expiry_date = models.DateField(u'Date d\'expiration du document', blank=True, null=True)
     file_upload = models.FileField(null=True, blank=True, upload_to=update_filename)
 
+
 class Training(models.Model):
     name = models.CharField("Nom de la formation", max_length=100)
     description = models.TextField("Description de la formation", max_length=200)
@@ -489,6 +483,7 @@ class Training(models.Model):
     # meta
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
     # verbose name
     class Meta:
         verbose_name = "Formation"
@@ -496,6 +491,8 @@ class Training(models.Model):
 
     def __str__(self):
         return self.name
+
+
 # a model that will store the training dates and times, a training can have multiple dates and times
 class TrainingDates(models.Model):
     training = models.ForeignKey(Training, on_delete=models.CASCADE)
@@ -508,22 +505,25 @@ class TrainingDates(models.Model):
     def create_or_update_event_for_training_date(self, employee):
         from invoices.events import Event, EventGenericLink
         training_event = Event.objects.filter(day=self.training_start_date_time.date(),
-                                     time_start_event=self.training_start_date_time.time(),
-                                     time_end_event=self.training_end_date_time.time(),
-                                     employee=employee).first()
+                                              time_start_event=self.training_start_date_time.time(),
+                                              time_end_event=self.training_end_date_time.time(),
+                                              event_type_enum=EventTypeEnum.EMPL_TRNG,
+                                              employees=employee).first()
         if training_event:
-            training_event.update(title=self.training.name, start_date=self.training_start_date_time, end_date=self.training_end_date_time)
+            training_event.update(title=self.training.name,
+                                  start_date=self.training_start_date_time,
+                                  end_date=self.training_end_date_time)
         else:
             training_event = Event.objects.create(
                 day=self.training_start_date_time.date(),
                 time_start_event=self.training_start_date_time.time(),
                 time_end_event=self.training_end_date_time.time(),
-                event_type_enum=EventTypeEnum.GNRC_EMPL,
+                event_type_enum=EventTypeEnum.EMPL_TRNG,
                 state=2,
-                event_address=self.training.training_location,
-                notes='Training event',
+                event_address=self.training.training_location if self.training.training_location else 'lieu de formation non défini',
+                notes='Formation %s' % self.training.name,
                 employees=employee,
-                created_by='system'
+                created_by='when crud training'
             )
 
             event_generic_link = EventGenericLink.objects.create(
@@ -531,6 +531,19 @@ class TrainingDates(models.Model):
                 content_type=ContentType.objects.get_for_model(self),
                 object_id=self.id
             )
+            return training_event
+
+    def delete_event_for_training_date(self, employee):
+        # find event through event_generic_link
+        from invoices.events import Event, EventGenericLink
+
+        event_generic_link = EventGenericLink.objects.filter(content_type=ContentType.objects.get_for_model(self),
+                                                             object_id=self.id).first()
+        if event_generic_link:
+            event = Event.objects.filter(id=event_generic_link.event.id).first()
+            if event:
+                event.delete()
+
 
 
 class EmployeeTraining(models.Model):
@@ -540,6 +553,22 @@ class EmployeeTraining(models.Model):
     training_completed_date = models.DateField(u'Date de fin de la formation', blank=True, null=True)
     training_success = models.BooleanField("Formation réussie", default=False)
     training_paid_by_company = models.BooleanField("Formation payée par l'entreprise", default=False)
+
+    def _create_or_update_events_for_trainings(self):
+        training_dates = TrainingDates.objects.filter(training=self.training_link)
+        for training_date in training_dates:
+            # create or update event for this training date
+            training_date.create_or_update_event_for_training_date(employee=self.employee)
+
+    def _delete_events_for_trainings(self):
+        training_dates = TrainingDates.objects.filter(training=self.training_link)
+        for training_date in training_dates:
+            # create or update event for this training date
+            training_date.delete_event_for_training_date(employee=self.employee)
+
+    def __str__(self):
+        return f"{self.employee} - {self.training_link} - {self.training_completed_date}"
+    # validate that dates
 
 
 class EmployeeProxy(Employee):
@@ -566,14 +595,26 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         instance.user.save()
         Token.objects.create(user=instance.user)
 
-@receiver(post_save, sender=Employee, dispatch_uid='create_or_update_employees_events_for_trainings')
+
+@receiver(post_save, sender=EmployeeTraining, dispatch_uid='create_or_update_employees_events_for_trainings')
 def create_or_update_employees_events_for_trainings(sender, instance=None, created=False, **kwargs):
-    if instance and instance.end_contract is None:
-        employees = Employee.objects.get(id=instance.id)
+    if instance and instance.employee.end_contract is None:
         from invoices.processors.tasks import create_or_update_events_for_trainings_task
-        create_or_update_events_for_trainings_task.delay(employees)
+        # if used in local development, do not use celery
+        if os.environ.get('LOCAL_ENV', None):
+            create_or_update_events_for_trainings_task(instance)
+            return None
+        create_or_update_events_for_trainings_task.delay(instance)
 
-
+@receiver(post_delete, sender=EmployeeTraining, dispatch_uid='delete_employees_events_for_trainings')
+def delete_employees_events_for_trainings(sender, instance=None, **kwargs):
+    if instance and instance.employee.end_contract is None:
+        from invoices.processors.tasks import delete_events_for_trainings_task
+        # if used in local development, do not use celery
+        if os.environ.get('LOCAL_ENV', None):
+            delete_events_for_trainings_task(instance)
+            return None
+        delete_events_for_trainings_task.delay(instance)
 
 
 @receiver(post_save, sender=Employee, dispatch_uid='create_or_update_google_contact')
@@ -585,4 +626,7 @@ def create_or_update_google_contact(sender, instance=None, created=False, **kwar
     if instance and instance.end_contract is None:
         from invoices.processors.tasks import sync_google_contacts_for_single_employee as sync_google_contacts_task
         employees = Employee.objects.get(id=instance.id)
+        if os.environ.get('SKIP_GOOGLE_SYNCS', None):
+            print("Skipping google syncs")
+            return
         sync_google_contacts_task.delay(employees)

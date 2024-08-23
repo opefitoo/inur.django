@@ -191,7 +191,7 @@ def sync_google_contacts_for_single_employee(employee):
             "*An error occurred while syncing google contacts: {0}*\nDetails:\n{1}".format(e, error_detail))
 
 @job("default", timeout=6000)
-def create_or_update_events_for_trainings_task(employee):
+def create_or_update_events_for_trainings_task(training):
     """
     Create or update events for the given employee
     @param employee:
@@ -199,16 +199,34 @@ def create_or_update_events_for_trainings_task(employee):
     """
     start = datetime.now()
     try:
-        employee.create_or_update_events_for_trainings()
+        training._create_or_update_events_for_trainings()
         end = datetime.now()
         notify_system_via_google_webhook(
             "Les événements de formation pour l'employé suivant ont été créés ou mis à jour: {0} et cela a pris {1} sec pour générer".format(
-                employee, (end - start).seconds))
+                training.employee, (end - start).seconds))
     except Exception as e:
         error_detail = traceback.format_exc()
         notify_system_via_google_webhook(
             "*Une erreur s'est produite lors de la création ou de la mise à jour des événements de formation: {0}*\nDétails:\n{1}".format(e, error_detail))
 
+@job("default", timeout=6000)
+def delete_events_for_trainings_task(training):
+    """
+    Delete events for the given employee
+    @param employee:
+    @return:
+    """
+    start = datetime.now()
+    try:
+        training._delete_events_for_trainings()
+        end = datetime.now()
+        notify_system_via_google_webhook(
+            "Les événements de formation pour l'employé suivant ont été supprimés: {0} et cela a pris {1} sec pour générer".format(
+                training.employee, (end - start).seconds))
+    except Exception as e:
+        error_detail = traceback.format_exc()
+        notify_system_via_google_webhook(
+            "*Une erreur s'est produite lors de la suppression des événements de formation: {0}*\nDétails:\n{1}".format(e, error_detail))
 
 @job("default", timeout=6000)
 def delete_all_contacts(employees):
