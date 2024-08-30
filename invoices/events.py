@@ -169,8 +169,8 @@ class Event(models.Model):
                 # duplicate EventGenericLink objects
                 for event_generic_link in self.eventgenericlink_set.all():
                     new_event_generic_link = EventGenericLink.objects.create(event=new_event,
-                                                                            content_type=event_generic_link.content_type,
-                                                                            object_id=event_generic_link.object_id)
+                                                                             content_type=event_generic_link.content_type,
+                                                                             object_id=event_generic_link.object_id)
                     new_event_generic_link.save()
                 events_created.append(new_event)
         return events_created
@@ -341,8 +341,9 @@ class Event(models.Model):
         print(events_different_times)
         send_email_notification("! Google calendar problems starting from %s time_min !" % time_min,
                                 "Orphans: \n%s \nEvents_different_times \n%s \n(%d) Events deleted from NUNO app but are still in google \n%s"
-                                % (orphan_ids, events_different_times, len(events_deleted_from_nuno_but_still_in_google),
-                                   events_deleted_from_nuno_but_still_in_google),
+                                % (
+                                orphan_ids, events_different_times, len(events_deleted_from_nuno_but_still_in_google),
+                                events_deleted_from_nuno_but_still_in_google),
                                 to_emails=[User.objects.get(id=1).email])
 
     @property
@@ -352,6 +353,7 @@ class Event(models.Model):
         total = self.eventlinktomedicalcaresummaryperpatientdetail_set.count()
         done = self.eventlinktomedicalcaresummaryperpatientdetail_set.filter(is_done=True).count()
         return "%s/%s" % (done, total)
+
     @staticmethod
     def validate(model, instance_id, data):
         result = {}
@@ -407,6 +409,7 @@ class Event(models.Model):
     @property
     def fullname_state(self):
         return self.STATES[self.state - 1][1]
+
     def get_event_address(self):
         if self.patient and not self.event_address and not self.at_office:
             return self.patient.get_full_address_date_based(current_date=self.day,
@@ -683,7 +686,7 @@ def create_or_update_google_calendar_via_signal(sender, instance: Event, **kwarg
                                    ZoneInfo("Europe/Luxembourg")), event_pictures_urls=event_pictures_urls,
                                event=instance,
                                sub_contractor=instance.sub_contractor)
-    if instance.event_type_enum == EventTypeEnum.SUB_CARE and instance.sub_contractor and instance.state == 2:
+    if instance.event_type_enum == EventTypeEnum.SUB_CARE and instance.sub_contractor and instance.state == 2 and instance.sub_contractor.notify_subcontractor:
         # check if instance is new
         url = "%s%s " % (config.ROOT_URL, instance.get_admin_url())
         # send notification by email to sub-contractor
@@ -763,6 +766,7 @@ def delete_google_calendar(sender, instance: Event, **kwargs):
             return
         calendar_gcalendar.delete_event(instance)
 
+
 @receiver(pre_delete, sender=EventList, dispatch_uid="event_delete_gcalendar_event_list")
 def delete_google_calendar(sender, instance: Event, **kwargs):
     if settings.TESTING:
@@ -776,7 +780,6 @@ def delete_google_calendar(sender, instance: Event, **kwargs):
         calendar_gcalendar.delete_event(instance)
 
 
-
 def event_end_time_and_address_is_sometimes_mandatory(data):
     messages = {}
     if data['event_type_enum'] != EventTypeEnum.BIRTHDAY and data['time_end_event'] is None:
@@ -788,14 +791,16 @@ def event_end_time_and_address_is_sometimes_mandatory(data):
 
 def employee_maybe_mandatory(data):
     messages = {}
-    if data['event_type_enum'] in [EventTypeEnum.GNRC_EMPL, EventTypeEnum.ASS_DEP, EventTypeEnum.CARE] and data['employees_id'] is None:
+    if data['event_type_enum'] in [EventTypeEnum.GNRC_EMPL, EventTypeEnum.ASS_DEP, EventTypeEnum.CARE] and data[
+        'employees_id'] is None:
         messages = {'employees': _("Employees est obligatoire pour %s") % _(data['event_type_enum'])}
     return messages
 
 
 def patient_maybe_mandatory(data):
     messages = {}
-    if data['event_type_enum'] in [EventTypeEnum.GENERIC, EventTypeEnum.ASS_DEP, EventTypeEnum.CARE] and data['patient_id'] is None:
+    if data['event_type_enum'] in [EventTypeEnum.GENERIC, EventTypeEnum.ASS_DEP, EventTypeEnum.CARE] and data[
+        'patient_id'] is None:
         messages = {'patient': _("Patient est obligatoire pour %s") % _(data['event_type_enum'])}
     return messages
 
@@ -821,13 +826,19 @@ def event_sub_contractor_mandatory_if_event_type_is_sub_care(data):
     if data['event_type_enum'] == EventTypeEnum.SUB_CARE and data['sub_contractor_id'] is not None:
         # check what kind of relation is between sub-contractor and patient
         if data['patient_id'] is not None:
-            subcontractor_relatinship = PatientSubContractorRelationship.objects.filter(patient__id=data['patient_id'],
-                                                            subcontractor__id=data['sub_contractor_id']).get()
+            try:
+                subcontractor_relatinship = PatientSubContractorRelationship.objects.filter(patient__id=data['patient_id'],
+                                                                                            subcontractor__id=data[
+                                                                                                'sub_contractor_id']).get()
+            except PatientSubContractorRelationship.DoesNotExist:
+                subcontractor_relatinship = None
             if not subcontractor_relatinship:
                 messages.update({'sub_contractor': _("Sous-traitant n'est pas lié au patient")})
-            if subcontractor_relatinship and subcontractor_relatinship.is_main_company() and data['employees_id'] is not None:
+            if subcontractor_relatinship and subcontractor_relatinship.is_main_company() and data[
+                'employees_id'] is not None:
                 messages.update({'sub_contractor': _("Sous-traitant est la société principale")})
-                messages.update({'employees': _("champ Employé non autorisé car de type %s") % _(data['event_type_enum'])})
+                messages.update(
+                    {'employees': _("champ Employé non autorisé car de type %s") % _(data['event_type_enum'])})
     if data['sub_contractor_id'] is not None and (
             data['event_type_enum'] is None or data['event_type_enum'] != EventTypeEnum.SUB_CARE):
         messages.update({'event_type_enum': _("champ Type non autorisé car de type %s doit être de type %s") % (_(

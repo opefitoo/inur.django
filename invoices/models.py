@@ -289,6 +289,7 @@ class SubContractor(models.Model):
     mobile_number = PhoneNumberField("Numéro de tél. mobile", blank=True, null=True)
     fax_number = models.CharField(max_length=30, blank=True, null=True)
     email_address = models.EmailField(default=None, blank=True, null=True)
+    notify_subcontractor = models.BooleanField("Notifier le sous-traitant", default=False)
     provider_code = models.CharField("Code Prestataire", max_length=30, blank=True, null=True)
     contractor_profession = models.CharField("Profession", max_length=30, blank=True, null=True)
     billing_retrocession = models.DecimalField("Rétrocession facturation",
