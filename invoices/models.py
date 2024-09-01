@@ -700,6 +700,10 @@ class AlternateAddress(models.Model):
             #         (2, _('Valid')),
             events = events.filter(state__in=[1, 2])
             print("Found %d events : %s" % (events.count(), events))
+            # and find the events which are after the end date and set the address to the full_address
+            events_after_end_date = Event.objects.filter(patient=self.patient).filter(day__gt=self.end_date)
+            events_after_end_date = events_after_end_date.filter(state__in=[1, 2])
+            print("Found %d events after end date : %s" % (events_after_end_date.count(), events_after_end_date))
         if len(events) > 5 and not os.environ.get('LOCAL_ENV', None):
             # call async task
             from invoices.processors.tasks import update_events_address
@@ -713,6 +717,20 @@ class AlternateAddress(models.Model):
                 event.clean()
                 event.save()
                 message = "The following events will be updated asynchronously %s" % events
+                notify_system_via_google_webhook(message)
+        if len(events_after_end_date) > 5 and not os.environ.get('LOCAL_ENV', None):
+            # call async task
+            from invoices.processors.tasks import update_events_address
+            update_events_address.delay(events_after_end_date, self.patient.full_address)
+            # list the events and send a message to the system
+            message = "The following events will be updated asynchronously %s" % events_after_end_date
+            notify_system_via_google_webhook(message)
+        else:
+            for event in events_after_end_date:
+                event.event_address = self.patient.full_address
+                event.clean()
+                event.save()
+                message = "The following events will be updated asynchronously %s" % events_after_end_date
                 notify_system_via_google_webhook(message)
 
 
