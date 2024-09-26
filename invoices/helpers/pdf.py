@@ -19,6 +19,7 @@ def extract_individual_paylip_pdf(file_obj):
                 name = name.strip()
                 # Teixeira Da Costa
                 name = name.replace("TEIXERA", "Teixeira")
+                name = name.replace("DIPLOMEE D'ETAT Teixeira", "Teixeira")
                 #print(name)
                 #print("Page number is %s" % page_number)
 
