@@ -208,7 +208,7 @@ def _build_invoices(prestations, invoice_number, invoice_date, prescription_date
                                                                                patient.is_private,
                                                                                patient.participation_statutaire and patient.age > 18))) * decimal.Decimal(
                          presta.quantity)),
-                     presta.employee))
+                     presta.employee.provider_code))
 
     for x in range(len(data), 22):
         data.append((x, '', '', '', '', '', '', '', ''))
