@@ -778,13 +778,13 @@ class LongTermCareInvoiceFile(models.Model):
     def clean(self):
         if self.invoice_to_be_sent_to_CNS:
             # MedicalCareSummaryPerPatient
-            if self.link_to_monthly_statement.month != self.invoice_start_period.month:
+            if self.link_to_monthly_statement and self.link_to_monthly_statement.month != self.invoice_start_period.month:
                 raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
-            if self.link_to_monthly_statement.year != self.invoice_start_period.year:
+            if self.link_to_monthly_statement and self.link_to_monthly_statement.year != self.invoice_start_period.year:
                 raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
-            if self.link_to_monthly_statement.month != self.invoice_end_period.month:
+            if self.link_to_monthly_statement and self.link_to_monthly_statement.month != self.invoice_end_period.month:
                 raise ValidationError("Le mois de la facture doit être le même que le mois du décompte mensuel")
-            if self.link_to_monthly_statement.year != self.invoice_end_period.year:
+            if self.link_to_monthly_statement and self.link_to_monthly_statement.year != self.invoice_end_period.year:
                 raise ValidationError("L'année de la facture doit être la même que l'année du décompte mensuel")
 
     def export_to_xero(self):
