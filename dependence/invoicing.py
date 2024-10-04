@@ -524,7 +524,7 @@ def create_and_save_invoice_file(sender, instance, **kwargs):
 
 
 class LongTermCareMonthlyStatementSending(models.Model):
-    link_to_monthly_statement = models.ForeignKey(LongTermCareMonthlyStatement, on_delete=models.CASCADE,
+    link_to_monthly_statement = models.ForeignKey(LongTermCareMonthlyStatement, on_delete=models.PROTECT,
                                                   related_name='monthly_statement_xml_file', blank=True, null=True)
     xml_invoice_file = models.FileField(_('Generated Invoice File'),
                                         upload_to=long_term_care_monthly_statement_file_path_bis,
