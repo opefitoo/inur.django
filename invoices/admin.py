@@ -351,8 +351,14 @@ class EmployeeAdmin(admin.ModelAdmin):
                     _career_anniversary = "Anniversaire de carrière virtuelle: %s" % "Non défini"
                 _citizenship = "Nationalité: %s" % emp.citizenship
                 cd = EmployeeContractDetail.objects.filter(employee_link_id=emp.id, end_date__isnull=True).first()
-                _contract_situation = "Contrat %s %s h. / semaine - salaire: %s / mois" % (
-                    cd.contract_type, cd.number_of_hours, cd.monthly_wage)
+                if cd:
+                    _contract_situation = "Contrat %s %s h. / semaine - salaire: %s / mois" % (
+                        cd.contract_type, cd.number_of_hours, cd.monthly_wage)
+                else:
+                    # get the most recent contract detail
+                    cd = EmployeeContractDetail.objects.filter(employee_link_id=emp.id).order_by('-start_date').first()
+                    _contract_situation = "Contrat %s %s h. / semaine - salaire: %s / mois" % (
+                        cd.contract_type, cd.number_of_hours, cd.monthly_wage)
                 if emp.end_trial_period:
                     _trial_period = "Date fin période d'essai: %s" % emp.end_trial_period.strftime("%d/%m/%Y")
                 else:
