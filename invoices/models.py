@@ -330,6 +330,20 @@ class SubContractor(models.Model):
                                                        self)
         return contact
 
+    # do some validations
+    def clean(self, *args, **kwargs):
+        super(SubContractor, self).clean_fields()
+        messages = self.validate_provider_code_is_unique(self.id, self.__dict__)
+        if messages:
+            raise ValidationError(messages)
+
+    def validate_provider_code_is_unique(self, instance_id, data):
+        messages = {}
+        if 'provider_code' in data and data['provider_code'] is not None:
+            if SubContractor.objects.filter(provider_code=data['provider_code']).exclude(pk=instance_id).count() > 0:
+                messages = {'provider_code': 'Code prestataire doit être unique'}
+        return messages
+
     def __str__(self):
         return self.name
 
