@@ -1,6 +1,7 @@
 import datetime
 
 from django.contrib.auth.models import User, Group
+from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.encoding import force_str
@@ -401,10 +402,14 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
         return data
 
     def get_minified_avatar_svg(self, obj):
-        if obj.employees is not None and obj.employees.minified_avatar_base64 is not None:
-            return obj.employees.minified_avatar_base64
-        # return a random svg
-        return None
+        cache_key = f"minified_avatar_svg_{obj.employees.id}"
+        minified_avatar_svg = cache.get(cache_key)
+
+        if minified_avatar_svg is None:
+            minified_avatar_svg = obj.employees.minified_avatar_base64 if obj.employees and obj.employees.minified_avatar_base64 else None
+            cache.set(cache_key, minified_avatar_svg, timeout=60 * 60)  # Cache for 1 hour
+
+        return minified_avatar_svg
 
     def get_minified_avatar(self, obj):
         if obj.employees is not None and obj.employees.avatar is not None:
