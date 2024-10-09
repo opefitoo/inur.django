@@ -127,6 +127,7 @@ class LongTermCareMonthlyStatement(models.Model):
     generated_invoice_file = models.FileField(_('Generated Invoice File'),
                                               upload_to=long_term_care_monthly_statement_file_path,
                                               blank=True, null=True)
+    description = models.TextField(_('Description'), blank=True, null=True)
     force_regeneration = models.BooleanField(_('Force Regeneration'), default=False)
     # dateEnvoi
     date_of_submission = models.DateField(_('Date d\'envoi du fichier'), blank=True, null=True)
@@ -740,7 +741,7 @@ def process_xml_response_file(sender, instance, **kwargs):
 
 
 class LongTermCareInvoiceFile(models.Model):
-    link_to_monthly_statement = models.ForeignKey(LongTermCareMonthlyStatement, on_delete=models.CASCADE,
+    link_to_monthly_statement = models.ForeignKey(LongTermCareMonthlyStatement, on_delete=models.PROTECT,
                                                   related_name='monthly_statement', blank=True, null=True)
     # invoice year is positive integer
     invoice_start_period = models.DateField(_('Invoice Start Period'), )

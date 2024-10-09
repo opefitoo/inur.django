@@ -138,6 +138,7 @@ class LongTermCareMonthlyStatementAdmin(ModelAdminObjectActionsMixin, admin.Mode
     list_display = ('year', 'month', 'date_of_submission', 'display_object_actions_list')
     readonly_fields = ('created_on', 'updated_on', 'display_longTermCareInvoiceFiles')
     inlines = [LongTermCareMonthlyStatementSendingInline]
+    actions = ['merge_selected_invoices']
 
     object_actions = [
         {
@@ -175,6 +176,33 @@ class LongTermCareMonthlyStatementAdmin(ModelAdminObjectActionsMixin, admin.Mode
         from django.template.response import TemplateResponse
         obj = self.get_object(request, object_id)
         return TemplateResponse(request, 'invoicing/print_statement_invoice_to_be_sent.html', {'obj': obj})
+
+    def merge_selected_invoices(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Only superuser can merge invoices", level=messages.ERROR)
+            return
+        # all LongTermCareMonthlyStatement must be same year and month
+        year = None
+        month = None
+        for obj in queryset:
+            if year is None:
+                year = obj.year
+                month = obj.month
+            if year != obj.year or month != obj.month:
+                self.message_user(request, "All selected invoices must be from the same year and month",
+                                  level=messages.ERROR)
+                return
+        # create a new invoice that will contain all the selected invoices
+        new_invoice = LongTermCareMonthlyStatement.objects.create(year=year,
+                                                                    month=month,
+                                                                    date_of_submission=timezone.now(),
+                                                                    description="Merged invoice %s" % queryset)
+       # take all LongTermCareInvoiceFile and link them to the new invoice
+        all_LongTermCareInvoiceFiles = LongTermCareInvoiceFile.objects.filter(link_to_monthly_statement__in=queryset)
+        for invoice_file in all_LongTermCareInvoiceFiles:
+            invoice_file.link_to_monthly_statement = new_invoice
+            invoice_file.save()
+        self.message_user(request, "LongTermCareInvoiceFile %s linked to new invoice %s" % (all_LongTermCareInvoiceFiles, new_invoice))
 
 
 class LongTermPackagePriceInline(admin.TabularInline):
