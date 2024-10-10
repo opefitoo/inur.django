@@ -61,7 +61,7 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False,
         for _prestations in dd:
             _inv = qs.invoice_number + (
                 ("" + str(dd.index(_prestations) + 1) + qs.invoice_date.strftime('%m%Y')) if len(dd) > 1 else "")
-            invoice_elmts = _build_invoices(_prestations,
+            _result = _build_invoices(_prestations,
                                       _inv,
                                       qs.invoice_date,
                                       qs.medical_prescription,
@@ -69,10 +69,10 @@ def pdf_private_invoice_pp(modeladmin, request, queryset, attach_to_email=False,
                                       qs.accident_date,
                                       qs.patient_invoice_date,
                                       qs.patient)
-            if invoice_elmts["elements"] is None:
+            if _result["elements"] is None:
                 continue
-            elements.extend(invoice_elmts["elements"])
-            recapitulatif_data.append((invoice_elmts["invoice_number"], invoice_elmts["patient_name"], invoice_elmts["invoice_pp"]))
+            elements.extend(_result["elements"])
+            recapitulatif_data.append((_result["invoice_number"], _result["patient_name"], _result["invoice_pp"]))
             elements.append(PageBreak())
 
     elements.extend(_build_recap(_recap_date, _payment_ref, recapitulatif_data))
