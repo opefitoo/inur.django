@@ -402,7 +402,7 @@ class FullCalendarEventSerializer(serializers.ModelSerializer):
         return data
 
     def get_minified_avatar_svg(self, obj):
-        cache_key = f"minified_avatar_svg_{obj.employees.id}"
+        cache_key = f"minified_avatar_svg_{obj.employees.user.id}"
         minified_avatar_svg = cache.get(cache_key)
 
         if minified_avatar_svg is None:
