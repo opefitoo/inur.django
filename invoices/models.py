@@ -345,7 +345,10 @@ class SubContractor(models.Model):
         return messages
 
     def __str__(self):
-        return self.name
+        # if provider_code is empty, return the name
+        if self.provider_code is None:
+            return self.name
+        return '%s (%s)' % (self.name, self.provider_code)
 
 
 class SubContractorAdminFile(models.Model):
