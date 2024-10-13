@@ -402,8 +402,9 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": os.environ.get('HEROKU_REDIS_WHITE_TEMPORARY_URL'),
-        "OPTIONS": {
-            "CONNECTION_POOL_KWARGS": {"ssl": True, "ssl_cert_reqs": None},
+         "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SSL": True,  # SSL flag directly here
         },
     }
 }
@@ -412,8 +413,9 @@ RQ_QUEUES = {
     'default': {
         'URL': os.getenv('HEROKU_REDIS_WHITE_TEMPORARY_URL', 'redis://localhost:6379'), # Set to REDIS_URL if deploying on Heroku
         'DEFAULT_TIMEOUT': 500,
-        "OPTIONS": {
-            "CONNECTION_POOL_KWARGS": {"ssl": True, "ssl_cert_reqs": None},
+         "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SSL": True,  # SSL flag directly here
         },
     },
 }
