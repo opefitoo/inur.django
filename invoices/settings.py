@@ -401,10 +401,7 @@ if DJANGO_ADMIN_COLOR:
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": os.environ.get('HEROKU_REDIS_WHITE_TLS_URL'),
-        "OPTIONS": {
-                "ssl_cert_reqs": None
-        }
+        "LOCATION": os.environ.get('REDIS_URL')
     }
 }
 
