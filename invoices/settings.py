@@ -404,7 +404,7 @@ CACHES = {
         "LOCATION": os.environ.get('HEROKU_REDIS_WHITE_TLS_URL'),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None},
+            "CONNECTION_POOL_KWARGS": {"ssl": True, "ssl_cert_reqs": None},
         },
     }
 }
@@ -412,7 +412,10 @@ CACHES = {
 RQ_QUEUES = {
     'default': {
         'URL': os.getenv('HEROKU_REDIS_WHITE_TLS_URL', 'redis://localhost:6379'), # Set to REDIS_URL if deploying on Heroku
-        'DEFAULT_TIMEOUT': 500
+        'DEFAULT_TIMEOUT': 500,
+        "OPTIONS": {
+            "CONNECTION_POOL_KWARGS": {"ssl": True, "ssl_cert_reqs": None},
+        },
     },
 }
 
