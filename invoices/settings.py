@@ -399,21 +399,18 @@ if DJANGO_ADMIN_COLOR:
 
 # Redis configuration
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.getenv('REDIS_URL', 'redis://localhost:6379/1'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'PASSWORD': os.getenv('REDIS_PASSWORD', None),
-            'SSL': True,  # Enable SSL if required
-            'SSL_CERT_REQS': None,  # Disable SSL certificate verification if necessary
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ.get('HEROKU_REDIS_WHITE_TLS_URL'),
+        "OPTIONS": {
+                "ssl_cert_reqs": None
         }
     }
 }
 
 RQ_QUEUES = {
     'default': {
-        'URL': os.getenv('HEROKU_REDIS_WHITE_URL', 'redis://localhost:6379'), # Set to REDIS_URL if deploying on Heroku
+        'URL': os.getenv('HEROKU_REDIS_WHITE_TLS_URL', 'redis://localhost:6379'), # Set to REDIS_URL if deploying on Heroku
         'DEFAULT_TIMEOUT': 500
     },
 }
