@@ -400,6 +400,7 @@ RQ_QUEUES = {
     'default': {
         'URL': os.getenv('HEROKU_REDIS_WHITE_URL', 'redis://localhost:6379'), # Set to REDIS_URL if deploying on Heroku
         'DEFAULT_TIMEOUT': 500,
+        'ssl': {'ssl_cert_reqs': None}
     },
 }
 
