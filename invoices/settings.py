@@ -403,8 +403,9 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": os.environ.get('HEROKU_REDIS_WHITE_TLS_URL'),
         "OPTIONS": {
-                "ssl_cert_reqs": None
-        }
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None},
+        },
     }
 }
 
