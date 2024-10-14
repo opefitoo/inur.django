@@ -58,6 +58,22 @@ class LongTermCareInvoiceItemInLine(admin.TabularInline):
     model = LongTermCareInvoiceItem
     extra = 0
 
+    # fields : all fields + copy
+    fields = ('care_date', 'long_term_care_package', 'quantity', "paid","refused_by_insurance","comment",
+              "xml_invoice_reference","subcontractor", 'copy')
+    readonly_fields = ('copy', )
+
+    class Media:
+        js = ['admin/js/vendor/jquery/jquery.min.js',
+            'admin/js/jquery.init.js',
+              "js/aev-inline-copy.js"]
+
+    def copy(self, obj):
+        return format_html("<a href='#' class='copy_inline'>copy</a>")
+    copy.allow_tags = True
+
+
+
 
 @admin.register(LongTermCareInvoiceFile)
 class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmin):
