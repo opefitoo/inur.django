@@ -24,7 +24,7 @@ from dependence.aai import AAITransmission, AAITransDetail, AAIObjective, AAIObj
 from dependence.actions.activity import duplicate_for_next_month, export_selected_to_csv, \
     generate_activity_details_from_events
 from dependence.actions.initial_data import create_or_update_long_term_item_based_on_fixture
-from dependence.actions.monthly import create_assurance_dependance_invoices_may_2024
+from dependence.actions.monthly import create_assurance_dependance_invoices_june_2024
 from dependence.actions.transfertdoc import generate_transfer_document
 from dependence.activity import LongTermMonthlyActivity, LongTermMonthlyActivityDetail, LongTermMonthlyActivityFile
 from dependence.careplan import CarePlanDetail, CarePlanMaster, CareOccurrence
@@ -293,7 +293,7 @@ class MedicalCareSummaryPerPatientAdmin(admin.ModelAdmin):
               'end_of_support', 'date_of_decision', 'special_package', 'nature_package', 'cash_package',
               'fmi_right', 'sn_code_aidant', 'link_to_declaration_detail', 'date_of_notification_to_provider')
     list_filter = (FilteringPatientsForMedicalCareSummaryPerPatient, 'date_of_decision')
-    actions = [create_assurance_dependance_invoices_may_2024]
+    actions = [create_assurance_dependance_invoices_june_2024]
 
     def is_latest_plan(self, obj):
         return obj.is_latest_plan
