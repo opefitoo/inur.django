@@ -1000,6 +1000,11 @@ class LongTermCareInvoiceItem(models.Model):
         return "Item de facture assurance dépendance de {0} patient {1}".format(self.care_date,
                                                                                 self.invoice.patient)
 
+    def get_formatted_care_date(self):
+        locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
+        # should be Lundi 01/01/2021 explictly transalted to FRENCH
+        return self.care_date.strftime("%A %d/%m/%Y")
+
     class Meta:
         verbose_name = _("Item facture assurance dépendance")
         verbose_name_plural = _("Item de facture assurance dépendance")

@@ -167,7 +167,7 @@
         {% for item in obj.get_invoice_items %}
         <tr class="item">
             <td>{{ forloop.counter }}</td> <!-- Add this line for the counter -->
-            <td>{{ item.care_date }}</td>
+            <td>{{ item.get_formatted_care_date }}</td>
             <td>-</td>
             <td>{{ item.long_term_care_package.code }}</td>
             <td>{{ item.calculate_unit_price }}</td>
