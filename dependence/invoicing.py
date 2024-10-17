@@ -756,6 +756,29 @@ class LongTermCareInvoiceFile(models.Model):
     created_on = models.DateTimeField("Date création", auto_now_add=True)
     updated_on = models.DateTimeField("Dernière mise à jour", auto_now=True)
 
+    def add_line_forfait(self, forfait_number, date_of_care, subcontractor):
+        # add a line forfait to the invoice
+        # get the forfait
+        forfait = LongTermPackage.objects.get(code="AEVF%s" % forfait_number)
+        # create a line forfait
+        LongTermCareInvoiceLine.objects.get_or_create(invoice=self, long_term_care_package=forfait,
+                                                      start_period=date_of_care,
+                                               end_period=date_of_care, comment="Added from script Forfait %s" % forfait_number,
+                                                        subcontractor=subcontractor)
+        return
+    def add_item_with_code(self, code, date_of_care, quantity, subcontractor):
+        # add a line forfait to the invoice
+        # get the forfait
+        aevcare = LongTermPackage.objects.get(code=code)
+        # create a line forfait
+        LongTermCareInvoiceItem.objects.get_or_create(invoice=self,
+                                                      long_term_care_package=aevcare,
+                                                      care_date=date_of_care,
+                                                      quantity=quantity,
+                                                      comment="Added from script %s" % code,
+                                                        subcontractor=subcontractor)
+        return
+
     @property
     def has_subcontractor(self):
         return LongTermCareInvoiceLine.objects.filter(invoice=self).filter(subcontractor__isnull=False).exists() or LongTermCareInvoiceItem.objects.filter(invoice=self).filter(subcontractor__isnull=False).exists()

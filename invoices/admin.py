@@ -36,6 +36,7 @@ from django_csv_exports.admin import CSVExportAdmin
 from openpyxl.styles import PatternFill, Font
 from openpyxl.styles.alignment import Alignment
 
+from dependence.actions.invoice_helpers import generate_aev_invoice_for_pinto
 from dependence.invoicing import LongTermCareInvoiceFile, LongTermCareInvoiceItem
 from dependence.longtermcareitem import LongTermPackage
 from helpers.timesheet import build_use_case_objects
@@ -1902,7 +1903,7 @@ class EventListAdmin(admin.ModelAdmin):
                "duplicate_event_for_the_hole_week",
                'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
-               'send_webhook_message', 'export_to_excel']
+               'send_webhook_message', 'export_to_excel', 'generate_aev_invoice_for_pinto']
 
     inlines = (ReportPictureInLine, EventLinkToCareCodeInline,
                EventLinkToMedicalCareSummaclryPerPatientDetailInline,
@@ -1913,6 +1914,31 @@ class EventListAdmin(admin.ModelAdmin):
     autocomplete_fields = ['patient']
 
     form = EventForm
+
+    @transaction.atomic
+    def generate_aev_invoice_for_pinto(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.", level=messages.ERROR)
+            return
+        # check if same patient
+        if len(set([e.patient for e in queryset])) > 1:
+            self.message_user(request, "Tous les événements doivent être pour le même patient.", level=messages.ERROR)
+            return
+        # check if same year/month
+        if len(set([e.day.year for e in queryset])) > 1 or len(set([e.day.month for e in queryset])) > 1:
+            self.message_user(request, "Tous les événements doivent être pour le même mois.", level=messages.ERROR)
+            return
+        all_done_or_valid_events = queryset.filter(state__in=[3, 4]).order_by('day')
+        if not all_done_or_valid_events:
+            self.message_user(request, "Tous les événements doivent être validés ou terminés.", level=messages.ERROR)
+            return
+        longterm_invoice_file, days_bizarre = generate_aev_invoice_for_pinto(all_done_or_valid_events)
+        if days_bizarre:
+            self.message_user(request, "Les factures ont été générées avec succès pour %s mais les jours suivants "
+                                      "sont des jours fériés ou week-end." % longterm_invoice_file, level=messages.WARNING)
+        else:
+            self.message_user(request, "Les factures ont été générées avec succès pour %s" % longterm_invoice_file, level=messages.INFO)
+        return
 
     def export_to_excel(self, request, queryset):
         # Check if the user is a superuser
