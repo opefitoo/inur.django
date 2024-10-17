@@ -290,5 +290,13 @@ def create_monthly_invoice_items(patient, statement, month, year):
                                                                       long_term_care_package=LongTermPackage.objects.filter(
                                                                           code="AMDGG").get(),
                                                                       quantity=dtl.quantity * 2)
+        elif "AMD-GDD" == dtl.activity.code:
+            print(dtl.activity.code + " " + str(dtl.activity_date) + " " + str(dtl.quantity))
+            # create as many invoice items as quantity
+            invoice_item = LongTermCareInvoiceItem.objects.create(invoice=invoice,
+                                                                      care_date=dtl.activity_date,
+                                                                      long_term_care_package=LongTermPackage.objects.filter(
+                                                                          code="AMDGD").get(),
+                                                                      quantity=dtl.quantity * 2)
 
 
