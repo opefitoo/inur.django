@@ -28,18 +28,22 @@ def create_aev_invoices_mars_2023(self, request, queryset):
     statement = create_monthly_invoice(patients, 3, 2023)
 
 @transaction.atomic
-def create_assurance_dependance_invoices_july_2024(self, request, queryset):
+def create_assurance_dependance_invoices_august_2024(self, request, queryset):
     """
     Create AEV invoices for all patients for the month of April 2024
     """
     # get all patients
     # exit date based on timezones
-    start_period = datetime(2024, 7, 1, tzinfo=timezone.utc)
+    start_period = datetime(2024, 8, 1, tzinfo=timezone.utc)
     # either less or equal to end period or null
     patients = Patient.objects.filter(is_under_dependence_insurance=True).filter(
         Q(date_of_exit__gte=start_period) | Q(date_of_exit__isnull=True)).filter(Q(date_of_death__gte=start_period) | Q(date_of_death__isnull=True))
+    print("Patients found in August 2024: ", len(patients))
+    # filter patients who have not had any activity in the month of August
+    patients = [patient for patient in patients if LongTermMonthlyActivity.objects.filter(patient=patient, year=2024, month=8).count() > 0]
+    print("Remaining patients: ", len(patients))
     # create invoices for each patient
-    statement = create_monthly_invoice(patients, 7, 2024)
+    statement = create_monthly_invoice(patients, 8, 2024)
 
 @transaction.atomic
 def create_assurance_dependance_invoices_septembre_2023(self, request, queryset):
