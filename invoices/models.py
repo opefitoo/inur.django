@@ -331,7 +331,7 @@ class SubContractor(models.Model):
         return contact
 
     def get_abbreviated_name(self):
-        return self.name[:5]
+        return self.name[:10]
 
     # do some validations
     def clean(self, *args, **kwargs):
