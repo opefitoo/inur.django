@@ -790,7 +790,7 @@ class LongTermCareInvoiceFile(models.Model):
         for item in LongTermCareInvoiceItem.objects.filter(invoice=self).all():
             if item.subcontractor:
                 subcontractors.append(item.subcontractor.get_abbreviated_name())
-        return subcontractors
+        return set(subcontractors)
 
     def link_operation_invoice_to_monthly_statement(self, LongTermCareMonthlyStatement_id=None):
         # link the invoice to the monthly statement
