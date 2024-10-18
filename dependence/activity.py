@@ -70,6 +70,17 @@ class LongTermMonthlyActivityFile(models.Model):
     def __str__(self):
         return f"{self.file.name}"
 
+    def has_return_file(self):
+        return self.return_file is not None
+
+    def has_errors_in_return_file(self):
+        # parse xml file and if there is AnomalieActivite tag return True
+        if self.return_file:
+            tree = ElementTree.parse(self.return_file)
+            root = tree.getroot()
+            if root.find('AnomalieActivite') is not None:
+                return True
+
     def save(self, *args, **kwargs):
         # if self.force_creation:
         #     self.file.delete(save=False)

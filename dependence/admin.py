@@ -1014,7 +1014,7 @@ class LongTermMonthlyActivityAdmin(admin.ModelAdmin):
 
 @admin.register(LongTermMonthlyActivityFile)
 class LongTermMonthlyActivityFileAdmin(admin.ModelAdmin):
-    list_display = ('month', 'year')
+    list_display = ('month', 'year', 'has_errors_in_return_file', 'has_return_file')
     readonly_fields = ('created_on', 'updated_on')
     form = LongTermMonthlyActivityFileAdminForm
 
