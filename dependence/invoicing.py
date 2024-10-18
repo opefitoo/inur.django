@@ -781,7 +781,16 @@ class LongTermCareInvoiceFile(models.Model):
 
     @property
     def has_subcontractor(self):
-        return LongTermCareInvoiceLine.objects.filter(invoice=self).filter(subcontractor__isnull=False).exists() or LongTermCareInvoiceItem.objects.filter(invoice=self).filter(subcontractor__isnull=False).exists()
+        # if there's no subcontractor, return False, if not return a conactenad list of subcontractors
+        subcontractors = []
+        for line in LongTermCareInvoiceLine.objects.filter(invoice=self).all():
+            if line.subcontractor:
+                # take the 4 first characters of the contractor name
+                subcontractors.append(line.subcontractor.get_abbreviated_name())
+        for item in LongTermCareInvoiceItem.objects.filter(invoice=self).all():
+            if item.subcontractor:
+                subcontractors.append(item.subcontractor.get_abbreviated_name())
+        return subcontractors
 
     def link_operation_invoice_to_monthly_statement(self, LongTermCareMonthlyStatement_id=None):
         # link the invoice to the monthly statement

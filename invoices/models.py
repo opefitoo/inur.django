@@ -330,6 +330,9 @@ class SubContractor(models.Model):
                                                        self)
         return contact
 
+    def get_abbreviated_name(self):
+        return self.name[:5]
+
     # do some validations
     def clean(self, *args, **kwargs):
         super(SubContractor, self).clean_fields()
