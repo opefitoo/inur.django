@@ -793,7 +793,7 @@ class LongTermCareInvoiceFile(models.Model):
         if len(subcontractors) == 0:
             return False
         # return a nice string
-        return ", ".join(subcontractors)
+        return ", ".join(set(subcontractors))
     def link_operation_invoice_to_monthly_statement(self, LongTermCareMonthlyStatement_id=None):
         # link the invoice to the monthly statement
         # get the monthly statement
