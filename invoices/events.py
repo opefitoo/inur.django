@@ -192,6 +192,7 @@ class Event(models.Model):
                                              employees=employee_num_1,
                                              patient=self.patient,
                                              event_address=self.event_address,
+                                             sub_contractor=self.sub_contractor,
                                              created_by='duplicate_event_for_next_day')
             # duplicate GenericTaskDescription
             for generic_task in self.generictaskdescription_set.all():
