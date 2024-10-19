@@ -1916,6 +1916,20 @@ class EventListAdmin(admin.ModelAdmin):
     form = EventForm
 
     @transaction.atomic
+    def set_subcontractor_to_events(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.", level=messages.ERROR)
+            return
+        if queryset.count() != 1:
+            self.message_user(request, "Vous devez sélectionner un seul événement.", level=messages.ERROR)
+            return
+        for event in queryset:
+            event.sub_contractor = SubContractor.objects.get(id=12)
+            event.save()
+        self.message_user(request, "Le sous-traitant a été affecté aux événjsonements sélectionnés.",
+                            level=messages.INFO)
+
+    @transaction.atomic
     def generate_aev_invoice_for_pinto(self, request, queryset):
         if not request.user.is_superuser:
             self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.", level=messages.ERROR)
