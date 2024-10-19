@@ -1891,7 +1891,7 @@ class EventAdmin(admin.ModelAdmin):
 @admin.register(EventList)
 class EventListAdmin(admin.ModelAdmin):
     list_display = ['day', 'time_start_event', 'time_end_event', 'patient', 'employees', 'state',
-                    'created_on', 'aevs_stats']
+                    'created_on', 'aevs_stats', 'sub_contractor']
     change_list_template = 'admin/change_list.html'
     list_filter = (
         'employees', 'event_type_enum', 'state', SmartPatientFilter, 'created_by', UnderAssuranceDependanceFilter)
