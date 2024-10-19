@@ -1921,9 +1921,6 @@ class EventListAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.", level=messages.ERROR)
             return
-        if queryset.count() != 1:
-            self.message_user(request, "Vous devez sélectionner un seul événement.", level=messages.ERROR)
-            return
         for event in queryset:
             event.sub_contractor = SubContractor.objects.get(id=12)
             event.save()
