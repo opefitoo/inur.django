@@ -1903,7 +1903,8 @@ class EventListAdmin(admin.ModelAdmin):
                "duplicate_event_for_the_hole_week",
                'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
-               'send_webhook_message', 'export_to_excel', 'generate_aev_invoice_for_pinto']
+               'send_webhook_message', 'export_to_excel', 'generate_aev_invoice_for_pinto',
+               'set_subcontractor_to_events']
 
     inlines = (ReportPictureInLine, EventLinkToCareCodeInline,
                EventLinkToMedicalCareSummaclryPerPatientDetailInline,
