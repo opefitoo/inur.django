@@ -63,8 +63,36 @@ function fetchLockStatus(carId) {
 
 async function fetchCarDataAndStatus(id) {
   try {
-    await fetchCarLocationsAndStatus(id);
-    //fetchLockStatus(id);
+    /*await fetchCarLocationsAndStatus(id);
+    fetchLockStatus(id).then((lockedData) => {
+      if (lockedData.locked.isLocked == true) {
+        $('#car-lock-status-' + id).text('Locked');
+      } else {
+        $('#car-lock-status-' + id).text('-');
+      }
+    });*/
+
+    var csrftoken = getCookie('csrftoken');
+    var cookietoken = getCookie('auth_token');
+
+    // Call the can_user_lock_car API
+    $.ajax({
+      url: '/api/v1/can_user_lock_car/' + id + '/',
+      type: 'GET',
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader('X-CSRFToken', csrftoken);
+        xhr.setRequestHeader('Authorization', 'Token ' + cookietoken);
+      },
+      success: function (data) {
+        if (data.error || !data.can_lock) {
+          $('#car-lock-status-' + id).text('Indispo');
+          $('#lock-unlock-button').prop('disabled', false);
+        }
+      },
+      error: function (xhr, textStatus, errorThrown) {
+        console.error('Error fetching car lock status:', errorThrown);
+      }
+    });
   } catch (error) {
     console.error('Error:', error);
   }
@@ -88,11 +116,27 @@ $(document).ready(function () {
     success: function (data) {
       $.each(data, function (key, val) {
         var row = '<tr>';
+        let bookedForName = val.booked_for ? val.booked_for.user.first_name : 'Not booked';
+
         row += '<td>' + val.name + '</td>';
         row += '<td id="car-lock-status-' + val.id + '">Loading...</td>';
         row += '<td id="car-location-' + val.id + '">Loading...</td>';
-        row += '<td><button class="lock" data-id="' + val.id + '">Lock</button></td>';
-        row += '<td><button class="unlock" data-id="' + val.id + '">Unlock</button></td>';
+        row += '<td id="car-booked-for' + val.id + '">' + bookedForName + '</td>';
+        let canLock = val.can_lock;
+        let canUnlock = val.can_unlock;
+        if (canLock) {
+          row += '<td><button class="lock" data-id="' + val.id + '">Lock</button></td>';
+        } else {
+          row += '<td><button class="lock" data-id="' + val.id + '" disabled>Lock</button></td>';
+        }
+
+        if (canUnlock) {
+          row += '<td><button class="unlock" data-id="' + val.id + '">Unlock</button></td>';
+        } else {
+          row += '<td><button class="unlock" data-id="' + val.id + '" disabled>Unlock</button></td>';
+        }
+        //row += '<td><button class="lock" data-id="' + val.id + '">Lock</button></td>';
+        //row += '<td><button class="unlock" data-id="' + val.id + '">Unlock</button></td>';
         row += '</tr>';
         $('#carTable tbody').append(row);
 
@@ -116,6 +160,12 @@ $(document).ready(function () {
       },
       success: function () {
         alert('Car locked successfully');
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        // Handle error here
+        console.error("Error locking car: ", textStatus, ", Details: ", errorThrown);
+        console.error("Response: ", jqXHR.responseText);
+        alert("An error occurred while locking the car: " + jqXHR.responseText);
       }
     });
   });
@@ -131,6 +181,12 @@ $(document).ready(function () {
       },
       success: function () {
         alert('Car unlocked successfully');
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        // Handle error here
+        console.error("Error unlocking car: ", textStatus, ", Details: ", errorThrown);
+        console.error("Response: ", jqXHR.responseText);
+        alert("An error occurred while unlocking the car: " + jqXHR.responseText);
       }
     });
   });
