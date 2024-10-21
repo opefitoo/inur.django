@@ -92,7 +92,7 @@ DATABASES = {
         'NAME': 'nuno',         # Database name
         'USER': 'nuno',         # Database user
         'PASSWORD': 'nuno',     # Database password
-        'HOST': 'host.docker.internal',  # This points to the host machine from within Docker
+        'HOST': '172.17.0.1',  # Use the actual IP address of the Docker bridge
         'PORT': '5432',         # PostgreSQL default port
     }
 }
