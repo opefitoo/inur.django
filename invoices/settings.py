@@ -87,9 +87,14 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 
 # Database configuration
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL', 'postgres://inur:inur@db:5432/inur')  # Default to PostgreSQL
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'nuno',         # Database name
+        'USER': 'nuno',         # Database user
+        'PASSWORD': 'nuno',     # Database password
+        'HOST': 'host.docker.internal',  # This points to the host machine from within Docker
+        'PORT': '5432',         # PostgreSQL default port
+    }
 }
 DATABASES['default']['AUTOCOMMIT'] = True
 
