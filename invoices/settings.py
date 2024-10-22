@@ -89,11 +89,11 @@ WSGI_APPLICATION = 'invoices.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'nuno',         # Database name
-        'USER': 'nuno',         # Database user
-        'PASSWORD': 'nuno',     # Database password
-        'HOST': '172.17.0.1',  # Use the actual IP address of the Docker bridge
-        'PORT': '5432',         # PostgreSQL default port
+        'NAME': os.getenv('DB_NAME'),          # Database name
+        'USER': os.getenv('DB_USER'),          # Database user
+        'PASSWORD': os.getenv('DB_PASSWORD'),  # Database password
+        'HOST': os.getenv('DB_HOST'),  # Use the actual IP address of the Docker bridge
+        'PORT': os.getenv('DB_PORT'),  # PostgreSQL default port
     }
 }
 DATABASES['default']['AUTOCOMMIT'] = True
