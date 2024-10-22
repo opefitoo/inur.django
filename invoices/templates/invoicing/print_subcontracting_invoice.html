@@ -180,7 +180,7 @@
             <td>Date Fin</td>
             <td>Code</td>
             <td>Prix unitaire Brut</td>
-            <td>Prix unitaire - frais admin.</td>
+            <td>Ss Total - frais admin.</td>
             <td>Qté</td>
             <td>Total</td>
         </tr>
@@ -194,7 +194,7 @@
             <td>{{ line.long_term_care_package.code }}</td>
             <td>{{ line.calculate_price_per_day }}</td>
             <td>{{ line.calculate_price }}</td>
-            <td>1</td>
+            <td>{{ line.calculate_quantity_on_line_period }}</td>
             <td>{{ line.calculate_price }}</td>
             <!-- if no subcontractor, display '-' -->
         </tr>
