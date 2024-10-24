@@ -1904,7 +1904,7 @@ class EventListAdmin(admin.ModelAdmin):
                'delete_in_google_calendar', 'list_orphan_events', 'force_gcalendar_sync',
                'cleanup_events_event_types', 'print_unsynced_events', 'cleanup_all_events_on_google',
                'send_webhook_message', 'export_to_excel', 'generate_aev_invoice_for_pinto',
-               'set_subcontractor_to_events']
+               'set_subcontractor_to_events', 'generate_total_sundays_worked']
 
     inlines = (ReportPictureInLine, EventLinkToCareCodeInline,
                EventLinkToMedicalCareSummaclryPerPatientDetailInline,
@@ -1926,6 +1926,17 @@ class EventListAdmin(admin.ModelAdmin):
             event.save()
         self.message_user(request, "Le sous-traitant a été affecté aux événjsonements sélectionnés.",
                             level=messages.INFO)
+
+    def generate_total_sundays_worked(self, request, queryset):
+        if not request.user.is_superuser:
+            self.message_user(request, "Vous n'êtes pas autorisé à effectuer cette action.", level=messages.ERROR)
+            return
+        total_sundays = 0
+        for event in queryset:
+            if event.day.weekday() == 6:
+                total_sundays += event.duration_in_hours()
+        self.message_user(request, "Total des durées les dimanches: %s" % total_sundays,
+                          level=messages.INFO)
 
     @transaction.atomic
     def generate_aev_invoice_for_pinto(self, request, queryset):
