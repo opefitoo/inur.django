@@ -1145,6 +1145,9 @@ class LongTermCareInvoiceLine(models.Model):
                 return InvoicingDetails.objects.filter(default_invoicing=True).first().name
             else:
                 return self.subcontractor
+    def calculate_quantity_on_line_period(self):
+        number_of_days_inclusive = (self.end_period - self.start_period).days + 1
+        return number_of_days_inclusive
 
     def calculate_price(self):
         if self.paid or self.refused_by_insurance:

@@ -33,6 +33,7 @@ from dependence.cnscommunications import ChangeDeclarationFile, DeclarationDetai
 from dependence.detailedcareplan import MedicalCareSummaryPerPatient, MedicalCareSummaryPerPatientDetail, \
     SharedMedicalCareSummaryPerPatientDetail
 from dependence.falldeclaration import FallDeclaration, FallDeclarationReportPicture
+from dependence.filters import SubContractorFilter
 from dependence.forms import FallDeclarationForm, TypeDescriptionGenericInlineFormset, \
     TensionAndTemperatureParametersFormset, CarePlanDetailForm, LongTermMonthlyActivityFileAdminForm, \
     LongTermCareInvoiceLineInlineFormset
@@ -80,7 +81,8 @@ class LongTermCareInvoiceFileAdmin(ModelAdminObjectActionsMixin, admin.ModelAdmi
     inlines = [LongTermCareInvoiceLineInline, LongTermCareInvoiceItemInLine]
     list_display = ('patient', 'invoice_start_period', 'invoice_end_period', 'invoice_reference', 'has_errors_col',
                     'display_object_actions_list', 'has_subcontractor', 'link_to_monthly_statement')
-    list_filter = ('patient', 'invoice_start_period', 'invoice_end_period', 'link_to_monthly_statement')
+    list_filter = ('patient', 'invoice_start_period', 'invoice_end_period', 'link_to_monthly_statement',
+                   SubContractorFilter)
     date_hierarchy = 'invoice_start_period'
     readonly_fields = ('has_errors_col', 'display_errors_as_html',
                        'invoice_reference', 'created_on', 'updated_on')
